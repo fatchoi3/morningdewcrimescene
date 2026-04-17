@@ -1,0 +1,11 @@
+{
+  "name": "crime-scene-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.13.0"
+  }
+}
