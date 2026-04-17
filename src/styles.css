@@ -1,0 +1,238 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #070b14;
+  color: #f4f6ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, rgba(53, 74, 170, 0.22), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(207, 55, 117, 0.16), transparent 25%),
+    #070b14;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.app-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.topbar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20px;
+}
+
+.title-block {
+  min-width: 260px;
+}
+
+.title-block h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+}
+
+.title-block p {
+  margin: 8px 0 0;
+  color: #a9b0d9;
+}
+
+.role-select {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.role-select button,
+.control-button,
+.small-button {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  background: linear-gradient(135deg, #3b66ff, #7953ff);
+  color: white;
+  box-shadow: 0 10px 25px rgba(16, 22, 66, 0.24);
+}
+
+.role-select button:hover,
+.control-button:hover,
+.small-button:hover {
+  transform: translateY(-1px);
+}
+
+.role-select button:disabled,
+.control-button:disabled,
+.small-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.card {
+  background: rgba(18, 25, 55, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+}
+
+.card h2,
+.card h3 {
+  margin-top: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  background: rgba(88, 144, 255, 0.12);
+  color: #c3d4ff;
+}
+
+.form-group {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.form-group label {
+  font-size: 0.95rem;
+  color: #c8d0ef;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: #eef2ff;
+  padding: 12px 14px;
+}
+
+.form-group textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.tab-button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #dce3ff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.tab-button.active,
+.tab-button:hover {
+  background: rgba(83, 101, 255, 0.95);
+  color: white;
+}
+
+.tab-content {
+  margin-top: 10px;
+}
+
+.hint-box,
+.scan-hint {
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid rgba(83, 101, 255, 0.9);
+  padding: 14px 16px;
+  border-radius: 12px;
+  color: #d7dbff;
+}
+
+.message-box {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(59, 68, 123, 0.95);
+  color: #eef6ff;
+}
+
+.evidence-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.evidence-item:last-child {
+  border-bottom: none;
+}
+
+.evidence-code {
+  font-weight: 700;
+  color: #a9d6ff;
+}
+
+.video-frame {
+  width: 100%;
+  min-height: 240px;
+  background: #0b1124;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.video-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-frame .video-placeholder {
+  width: 100%;
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  color: #9ca8e1;
+  text-align: center;
+  padding: 24px;
+}
+
+@media (max-width: 960px) {
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
