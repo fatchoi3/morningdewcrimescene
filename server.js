@@ -1,5 +1,11 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// WebSocket 서버 — 소켓 기반 멀티플레이어 버전에서 사용하던 서버
+// 오프라인 단독 버전으로 전환 후 미사용
+// 방 생성·입장, 게임 상태 브로드캐스트, 증거 수집 중계 로직 포함
+// ─────────────────────────────────────────────────────────────────────────────
+/*
 import { WebSocketServer } from 'ws';
-import { evidenceMap } from './src/data/gameData.js';
+import { evidenceMap } from './data/gameData.js';
 
 const PORT = 3001;
 const wss = new WebSocketServer({ port: PORT });
@@ -16,7 +22,6 @@ const send = (ws, payload) => {
 const broadcastRoom = (roomCode, payload) => {
   const room = rooms.get(roomCode);
   if (!room) return;
-
   const clients = [room.host, ...room.participants];
   clients.forEach((client) => {
     if (client.readyState === client.OPEN) {
@@ -41,11 +46,15 @@ const cleanupConnection = (ws) => {
   }
 };
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
+  const clientAddress = req.socket.remoteAddress;
+  console.log(`WebSocket client connected: ${clientAddress}`);
+
   ws.roomCode = '';
   ws.isHost = false;
 
   ws.on('message', (message) => {
+    console.log(`Received message from ${clientAddress}: ${message.toString()}`);
     let data;
     try {
       data = JSON.parse(message.toString());
@@ -75,7 +84,6 @@ wss.on('connection', (ws) => {
           send(ws, { type: 'join_error', error: '존재하지 않는 방 코드입니다.' });
           return;
         }
-
         room.participants.push(ws);
         ws.roomCode = data.roomCode;
         ws.isHost = false;
@@ -114,30 +122,19 @@ wss.on('connection', (ws) => {
           send(ws, { type: 'scan_result', success: false, message: '게임이 시작되지 않았습니다.' });
           return;
         }
-
         const code = data.code.trim().toUpperCase();
         const evidence = evidenceMap[code];
         if (!evidence) {
           send(ws, { type: 'scan_result', success: false, message: '알 수 없는 QR 코드입니다.' });
           return;
         }
-
         if (room.evidence.some((item) => item.code === code)) {
-          send(ws, {
-            type: 'scan_result',
-            success: false,
-            message: `이미 수집된 증거입니다: ${evidence.title}`
-          });
+          send(ws, { type: 'scan_result', success: false, message: `이미 수집된 증거입니다: ${evidence.title}` });
           return;
         }
-
         room.evidence.push({ code, ...evidence });
         broadcastRoom(data.roomCode, { type: 'game_state', gameActive: room.gameActive, evidence: room.evidence });
-        send(ws, {
-          type: 'scan_result',
-          success: true,
-          message: `증거 수집 완료: ${evidence.title}`
-        });
+        send(ws, { type: 'scan_result', success: true, message: `증거 수집 완료: ${evidence.title}` });
         break;
       }
       default: {
@@ -146,9 +143,11 @@ wss.on('connection', (ws) => {
     }
   });
 
-  ws.on('close', () => {
+  ws.on('close', (code, reason) => {
+    console.log(`WebSocket client disconnected: ${clientAddress} (code=${code}, reason=${reason})`);
     cleanupConnection(ws);
   });
 });
 
-console.log(`WebSocket server listening on wss://localhost:${PORT}`);
+console.log(`WebSocket server listening on ws://localhost:${PORT}`);
+*/
