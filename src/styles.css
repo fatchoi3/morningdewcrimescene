@@ -90,6 +90,10 @@ textarea {
   gap: 18px;
 }
 
+.grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .grid-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -185,6 +189,27 @@ textarea {
   border-radius: 14px;
   background: rgba(59, 68, 123, 0.95);
   color: #eef6ff;
+}
+
+.evidence-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  margin-top: 8px;
+}
+
+.evidence-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.evidence-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.evidence-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
 }
 
 .evidence-item {
@@ -371,17 +396,235 @@ textarea {
   line-height: 1.6;
 }
 
-/* --- Camera QR scan overlay --- */
-.video-frame {
-  position: relative;
+/* --- Manual (paginated) modal --- */
+.manual-panel {
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
+.manual-pagination-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0 20px;
+}
+
+.manual-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.manual-dot--active {
+  background: #5365ff;
+  transform: scale(1.3);
+}
+
+.manual-content {
+  flex: 1;
+  min-height: 200px;
+}
+
+.manual-title {
+  margin: 0 0 14px;
+  font-size: 1.25rem;
+  color: #eef2ff;
+}
+
+.manual-body p {
+  color: #c8d0ef;
+  line-height: 1.75;
+  margin: 0 0 12px;
+}
+
+.manual-body p:last-child {
+  margin-bottom: 0;
+}
+
+.manual-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.manual-nav-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #c8d0ef;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.12s ease;
+}
+
+.manual-nav-btn:hover:not(:disabled) {
+  background: rgba(83, 101, 255, 0.5);
+  color: #fff;
+}
+
+.manual-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.manual-page-count {
+  font-size: 0.85rem;
+  color: #8899ff;
+}
+
+/* --- Person chips --- */
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
+  color: #dce3ff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background 0.12s ease, transform 0.1s ease, border-color 0.12s ease;
+}
+
+.chip:hover {
+  background: rgba(83, 101, 255, 0.75);
+  border-color: rgba(83, 101, 255, 0.6);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* 피해자 칩은 붉은 계열로 구분 */
+.chip--victim {
+  border-color: rgba(200, 60, 80, 0.5);
+  background: rgba(200, 60, 80, 0.1);
+  color: #ffb3be;
+}
+
+.chip--victim:hover {
+  background: rgba(200, 60, 80, 0.65);
+  border-color: rgba(200, 60, 80, 0.7);
+  color: #fff;
+}
+
+/* 인물 상세 모달 필드 목록 */
+.person-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.person-field {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.person-field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8899ff;
+  min-width: 60px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.person-field-value {
+  color: #d7dbff;
+  line-height: 1.5;
+}
+
+/* --- Confirm Modal --- */
+.confirm-panel {
+  max-width: 360px;
+  text-align: center;
+  padding: 32px 28px;
+}
+
+.confirm-message {
+  margin: 0 0 24px;
+  color: #eef2ff;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-ok {
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+}
+
+.confirm-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: #c8d0ef;
+}
+
+/* --- Camera popup modal --- */
+.camera-modal {
+  background: #070b14;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  overflow: hidden;
+  width: min(480px, 96vw);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.2s ease;
+}
+
+.camera-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.camera-modal-title {
+  font-size: 0.9rem;
+  color: #a9b0d9;
+}
+
+/* 카메라 영상 + 스캔 오버레이를 감싸는 컨테이너 */
+.camera-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  overflow: hidden;
+}
+
+.camera-viewport video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* QR 스캔 라인 오버레이 */
 .scan-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border-radius: 18px;
-  overflow: hidden;
 }
 
 .scan-line {
@@ -389,7 +632,7 @@ textarea {
   left: 10%;
   right: 10%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(83, 200, 255, 0.8), transparent);
+  background: linear-gradient(90deg, transparent, rgba(83, 200, 255, 0.9), transparent);
   animation: scanMove 2s ease-in-out infinite;
   border-radius: 1px;
 }
@@ -401,7 +644,22 @@ textarea {
   100% { top: 85%; opacity: 0; }
 }
 
+/* 중앙 조준선 — QR 코드를 맞출 위치를 시각적으로 안내 */
+.scan-guide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52%;
+  aspect-ratio: 1;
+  pointer-events: none;
+  border: 2px solid rgba(83, 200, 255, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+}
+
 @media (max-width: 960px) {
+  .grid-2,
   .grid-3 {
     grid-template-columns: 1fr;
   }
