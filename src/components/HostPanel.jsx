@@ -1,3 +1,8 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// HostPanel — 소켓 기반 멀티플레이어 버전에서 사용하던 호스트 대시보드
+// 오프라인 단독 버전에서는 호스트/참가자 역할 구분이 없어지므로 미사용
+// ─────────────────────────────────────────────────────────────────────────────
+/*
 function HostPanel({ roomCode, gameActive, evidenceCount, onCreateRoom, onToggleGame, onResetGame }) {
   return (
     <div className="grid grid-3">
@@ -51,3 +56,4 @@ function HostPanel({ roomCode, gameActive, evidenceCount, onCreateRoom, onToggle
 }
 
 export default HostPanel;
+*/

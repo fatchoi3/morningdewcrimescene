@@ -1,3 +1,9 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// ParticipantPanel — 소켓 기반 멀티플레이어 버전에서 사용하던 참가자 인터페이스
+// 방 입장, 게임 활성화 여부 수신 등 소켓 의존 로직이 포함되어 있음
+// 오프라인 단독 버전에서는 App.jsx가 레이아웃을 직접 렌더링하므로 미사용
+// ─────────────────────────────────────────────────────────────────────────────
+/*
 import { useState } from 'react';
 import CameraScanner from './CameraScanner.jsx';
 import EvidenceList from './EvidenceList.jsx';
@@ -41,7 +47,9 @@ function ParticipantPanel({
               방 입장
             </button>
             <p className="scan-hint">
-              {roomCode ? '호스트가 만든 방 코드가 준비되었습니다. 정확히 입력하세요.' : '호스트가 먼저 방을 만들어야 입장할 수 있습니다.'}
+              {roomCode
+                ? '호스트가 만든 방 코드가 준비되었습니다. 정확히 입력하세요.'
+                : '호스트가 먼저 방을 만들어야 입장할 수 있습니다.'}
             </p>
             {joinMessage && (
               <div className="message-box">
@@ -77,3 +85,4 @@ function ParticipantPanel({
 }
 
 export default ParticipantPanel;
+*/
