@@ -2,7 +2,7 @@ name: S3 + CloudFront Deploy
 
 on:
   push:
-    branches: [ main ] # main 브랜치에 올리면 배포 시작
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -10,10 +10,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install and Build
-        run: |
-          npm install
-          npm run build # 프로젝트 빌드 (dist 폴더 생성)
+      # 1. 노드 환경 세팅 (버전을 명시해주면 더 안정적입니다)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # 2. npm install 대신 npm ci 사용 (권한 및 버전 유지에 유리)
+      - name: Install dependencies
+        run: npm ci
+
+      # 3. Vite 실행 권한 강제 부여 (가장 핵심적인 해결책)
+      - name: Setup Permissions
+        run: chmod +x node_modules/.bin/vite
+
+      # 4. 빌드 실행
+      - name: Build
+        run: npm run build
 
       - name: S3 Deploy
         uses: jakejarvis/s3-sync-action@master
