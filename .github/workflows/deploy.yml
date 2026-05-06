@@ -8,13 +8,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # 1. 노드 환경 세팅 (버전을 명시해주면 더 안정적입니다)
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       # 2. npm install 대신 npm ci 사용 (권한 및 버전 유지에 유리)
       - name: Install dependencies
