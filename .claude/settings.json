@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\ictk_repo\\\\test1\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\ictk_repo\\\\test1\" -Force)",
+      "Bash(Format-Table -Property Name, PSIsContainer)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\ictk_repo\\\\test1\" -Recurse -Force | Select-Object -ExpandProperty FullName | ForEach-Object { $_ } | head -100)",
+      "Bash(timeout 5)",
+      "Bash(Start-Sleep -Seconds 4)",
+      "Bash(Get-Content \"C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--ictk-repo-test1\\\\74ec02a0-bf03-452f-b104-40c6c05c3d6f\\\\tasks\\\\bq8lkkzqa.output\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 20)"
+    ]
+  }
+}
