@@ -440,7 +440,7 @@ function App() {
 
           <div className="tab-content">
             {activeTab === 'evidence' && <EvidenceList evidence={evidenceCollected} />}
-            {activeTab === 'info' && <CommonInfo victim={victim} suspects={suspects} evidenceCollected={evidenceCollected} />}
+            {activeTab === 'info' && <CommonInfo victim={victim} suspects={suspects} />}
           </div>
         </div>
       </div>
