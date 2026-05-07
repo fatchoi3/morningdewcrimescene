@@ -117,50 +117,103 @@ function EvidenceModal({ item, onClose }) {
     : <StandardModal item={item} onClose={onClose} />;
 }
 
-function EvidenceList({ evidence }) {
+function EvidenceList({ evidence, specialUnlockKey = 0 }) {
   const [selected, setSelected] = useState(null);
   const [query, setQuery] = useState('');
+  const [filterType, setFilterType] = useState('normal'); // 'normal' | 'special'
 
   if (evidence.length === 0) {
     return <p>아직 수집한 증거가 없습니다. QR 코드를 스캔해 증거를 찾으세요.</p>;
   }
 
+  // 보통 단서와 특수 단서 분리
+  const normalEvidence = evidence.filter((item) => item.type === '보통');
+  const specialEvidence = evidence.filter((item) => item.type === '특수');
+
+  // 특수 단서 해금 여부 확인 (2개 이상의 관련 보통 단서가 있어야 함)
+  const isSpecialUnlocked = (special) => {
+    if (!special.unlockedBy || special.unlockedBy.length === 0) return true;
+    const unlockedCount = special.unlockedBy.filter((code) =>
+      evidence.some((item) => item.code === code)
+    ).length;
+    return unlockedCount >= 2;
+  };
+
+  // 현재 필터에 따라 표시할 증거 결정
+  const displayEvidence = filterType === 'normal' ? normalEvidence : specialEvidence;
+
   const filtered = (query.trim()
-    ? evidence.filter((item) => {
+    ? displayEvidence.filter((item) => {
         const q = query.trim().toLowerCase();
-        return item.code.toLowerCase().includes(q) || item.title.toLowerCase().includes(q);
+        return (
+          item.code.toLowerCase().includes(q) ||
+          item.title.toLowerCase().includes(q) ||
+          (item.person && item.person.toLowerCase().includes(q))
+        );
       })
-    : evidence
+    : displayEvidence
   ).slice().reverse();
 
   return (
     <>
+      {/* 보통/특수 단서 필터 탭 */}
+      <div className="tab-list evidence-tabs" style={{ marginBottom: '12px' }}>
+        <button
+          type="button"
+          className={`tab-button ${filterType === 'normal' ? 'active' : ''}`}
+          onClick={() => setFilterType('normal')}
+        >
+          보통 단서 ({normalEvidence.length})
+        </button>
+        <button
+          key={specialUnlockKey}
+          type="button"
+          className={`tab-button ${filterType === 'special' ? 'active' : ''}${specialUnlockKey > 0 ? ' tab-button--sparkle' : ''}`}
+          onClick={() => setFilterType('special')}
+        >
+          특수 단서 ({specialEvidence.length})
+        </button>
+      </div>
+
       <div className="form-group" style={{ marginBottom: '4px' }}>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="단서명 또는 코드로 검색"
+          placeholder="단서명, 코드 또는 인물로 검색"
         />
       </div>
 
       <div className="evidence-scroll">
         {filtered.length === 0 && (
-          <p style={{ color: '#9e8860', fontSize: '0.9rem' }}>검색 결과가 없습니다.</p>
+          <p style={{ color: '#666666', fontSize: '0.9rem' }}>
+            {filterType === 'special'
+              ? '아직 해금된 특수 단서가 없습니다. 관련 보통 단서 2개를 모두 수집하면 자동으로 해금됩니다.'
+              : '검색 결과가 없습니다.'}
+          </p>
         )}
-        {filtered.map((item) => (
-          <div
-            key={item.code}
-            className="evidence-item evidence-item--clickable"
-            onClick={() => setSelected(item)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && setSelected(item)}
-          >
-            <div className="evidence-code">[{item.code}] {item.title}</div>
-            <div>{item.description}</div>
-            <div className="evidence-tap-hint">탭하여 자세히 보기 →</div>
-          </div>
-        ))}
+        {filtered.map((item) => {
+          const unlocked = filterType === 'normal' || isSpecialUnlocked(item);
+
+          return (
+            <div
+              key={item.code}
+              className={`evidence-item evidence-item--clickable ${!unlocked ? 'evidence-item--locked' : ''}`}
+              onClick={() => unlocked && setSelected(item)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && unlocked && setSelected(item)}
+              style={{ opacity: unlocked ? 1 : 0.6, cursor: unlocked ? 'pointer' : 'not-allowed' }}
+            >
+              <div className="evidence-code">
+                {unlocked ? `[${item.code}]` : '🔒'} {item.title}
+                {unlocked && item.person && (
+                  <span className="evidence-person">{item.person}</span>
+                )}
+              </div>
+              {unlocked && <div className="evidence-tap-hint">탭하여 자세히 보기 →</div>}
+            </div>
+          );
+        })}
       </div>
 
       {selected && (

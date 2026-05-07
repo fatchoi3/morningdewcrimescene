@@ -1,8 +1,8 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #0a0806;
-  color: #f0e8d8;
+  background: #f5f5f5;
+  color: #333333;
 }
 
 * {
@@ -12,9 +12,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, rgba(160, 100, 20, 0.18), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(180, 40, 40, 0.14), transparent 25%),
-    #0a0806;
+  background: #f5f5f5;
 }
 
 button,
@@ -50,7 +48,7 @@ textarea {
 
 .title-block p {
   margin: 8px 0 0;
-  color: #9e8860;
+  color: #666666;
 }
 
 .role-select {
@@ -63,13 +61,13 @@ textarea {
 .control-button,
 .small-button {
   border: none;
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 12px 18px;
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
-  background: linear-gradient(135deg, #c87820, #e8a020);
+  background: #4a90e2;
   color: white;
-  box-shadow: 0 10px 25px rgba(20, 12, 4, 0.30);
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
 }
 
 .role-select button:hover,
@@ -99,11 +97,11 @@ textarea {
 }
 
 .card {
-  background: rgba(18, 14, 10, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
   border-radius: 22px;
   padding: 22px;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .card h2,
@@ -116,8 +114,8 @@ textarea {
   padding: 8px 12px;
   border-radius: 999px;
   font-size: 0.95rem;
-  background: rgba(200, 140, 30, 0.12);
-  color: #d4a840;
+  background: #fff3cd;
+  color: #856404;
 }
 
 .form-group {
@@ -128,18 +126,18 @@ textarea {
 
 .form-group label {
   font-size: 0.95rem;
-  color: #c4a87a;
+  color: #333333;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f9f9f9;
+  border: 1px solid #cccccc;
   border-radius: 14px;
-  color: #ede0ca;
-  padding: 12px 14px;
+  color: #333333;
+  padding: 8px 12px;
 }
 
 .form-group textarea {
@@ -155,9 +153,9 @@ textarea {
 }
 
 .tab-button {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: #dbc898;
+  border: 1px solid #cccccc;
+  background: #f9f9f9;
+  color: #333333;
   padding: 10px 16px;
   border-radius: 999px;
   cursor: pointer;
@@ -166,7 +164,7 @@ textarea {
 
 .tab-button.active,
 .tab-button:hover {
-  background: rgba(200, 160, 32, 0.92);
+  background: #4a90e2;
   color: white;
 }
 
@@ -176,19 +174,19 @@ textarea {
 
 .hint-box,
 .scan-hint {
-  background: rgba(255, 255, 255, 0.05);
-  border-left: 4px solid rgba(200, 160, 32, 0.85);
+  background: #f0f8ff;
+  border-left: 4px solid #4a90e2;
   padding: 14px 16px;
   border-radius: 12px;
-  color: #d4bc88;
+  color: #333333;
 }
 
 .message-box {
   margin-top: 18px;
   padding: 14px 16px;
   border-radius: 14px;
-  background: rgba(50, 35, 15, 0.95);
-  color: #ede0ca;
+  background: #e8f4fd;
+  color: #333333;
 }
 
 .evidence-scroll {
@@ -208,7 +206,7 @@ textarea {
 }
 
 .evidence-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: #cccccc;
   border-radius: 999px;
 }
 
@@ -218,7 +216,7 @@ textarea {
   gap: 8px;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .evidence-item:last-child {
@@ -227,17 +225,17 @@ textarea {
 
 .evidence-code {
   font-weight: 700;
-  color: #d4a840;
+  color: #333333;
 }
 
 .video-frame {
   width: 100%;
   min-height: 240px;
-  background: #0c0906;
+  background: #ffffff;
   border-radius: 18px;
   overflow: hidden;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #e0e0e0;
 }
 
 .video-frame video {
@@ -251,7 +249,7 @@ textarea {
   min-height: 240px;
   display: grid;
   place-items: center;
-  color: #8a7a5a;
+  color: #666666;
   text-align: center;
   padding: 24px;
 }
@@ -266,13 +264,25 @@ textarea {
 }
 
 .evidence-item--clickable:hover {
-  background: rgba(200, 160, 32, 0.10);
+  background: rgba(74, 144, 226, 0.10);
   transform: translateX(4px);
+}
+
+.evidence-person {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  background: rgba(74, 144, 226, 0.12);
+  color: #4a90e2;
+  vertical-align: middle;
 }
 
 .evidence-tap-hint {
   font-size: 0.78rem;
-  color: rgba(212, 168, 64, 0.45);
+  color: rgb(0, 119, 255);
   margin-top: 2px;
 }
 
@@ -280,7 +290,7 @@ textarea {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 3, 2, 0.82);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
@@ -297,15 +307,15 @@ textarea {
 
 .modal-panel {
   position: relative;
-  background: rgba(12, 9, 6, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
   border-radius: 24px;
   padding: 28px;
   max-width: 580px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.2s ease;
 }
 
@@ -318,13 +328,13 @@ textarea {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(255, 255, 255, 0.07);
-  border: none;
+  background: #f9f9f9;
+  border: 1px solid #cccccc;
   border-radius: 50%;
   width: 36px;
   height: 36px;
   cursor: pointer;
-  color: #9e8860;
+  color: #333333;
   font-size: 1rem;
   display: flex;
   align-items: center;
@@ -333,14 +343,14 @@ textarea {
 }
 
 .modal-close:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(74, 144, 226, 0.45);
   color: #fff;
 }
 
 .modal-code {
   font-family: monospace;
   font-size: 0.8rem;
-  color: rgba(212, 168, 64, 0.6);
+  color: rgba(74, 144, 226, 0.6);
   letter-spacing: 0.06em;
   margin-bottom: 6px;
 }
@@ -348,7 +358,7 @@ textarea {
 .modal-title {
   margin: 0 0 18px;
   font-size: 1.4rem;
-  color: #ede0ca;
+  color: #333333;
 }
 
 .modal-image-wrap {
@@ -356,8 +366,8 @@ textarea {
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 18px;
-  background: #080604;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
 }
 
 .modal-image {
@@ -368,14 +378,14 @@ textarea {
 }
 
 .modal-description {
-  color: #c4a87a;
+  color: #333333;
   line-height: 1.65;
   margin: 0 0 16px;
 }
 
 .modal-detail {
-  background: rgba(200, 160, 32, 0.07);
-  border-left: 3px solid rgba(200, 160, 32, 0.75);
+  background: rgba(74, 144, 226, 0.07);
+  border-left: 3px solid rgba(74, 144, 226, 0.75);
   border-radius: 10px;
   padding: 14px 16px;
 }
@@ -385,14 +395,14 @@ textarea {
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: #c8a020;
+  color: #4a90e2;
   text-transform: uppercase;
   margin-bottom: 6px;
 }
 
 .modal-detail p {
   margin: 0;
-  color: #d4bc88;
+  color: #333333;
   line-height: 1.6;
 }
 
@@ -416,14 +426,14 @@ textarea {
   height: 8px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: #cccccc;
   cursor: pointer;
   padding: 0;
   transition: background 0.15s ease, transform 0.12s ease;
 }
 
 .manual-dot--active {
-  background: #c8a020;
+  background: #4a90e2;
   transform: scale(1.3);
 }
 
@@ -435,11 +445,11 @@ textarea {
 .manual-title {
   margin: 0 0 14px;
   font-size: 1.25rem;
-  color: #ede0ca;
+  color: #333333;
 }
 
 .manual-body p {
-  color: #c4a87a;
+  color: #333333;
   line-height: 1.75;
   margin: 0 0 12px;
 }
@@ -454,14 +464,14 @@ textarea {
   justify-content: space-between;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid #e0e0e0;
 }
 
 .manual-nav-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f9f9f9;
+  border: 1px solid #cccccc;
   border-radius: 10px;
-  color: #c4a87a;
+  color: #333333;
   padding: 8px 16px;
   cursor: pointer;
   font-size: 0.9rem;
@@ -469,7 +479,7 @@ textarea {
 }
 
 .manual-nav-btn:hover:not(:disabled) {
-  background: rgba(200, 160, 32, 0.45);
+  background: rgba(74, 144, 226, 0.45);
   color: #fff;
 }
 
@@ -480,7 +490,7 @@ textarea {
 
 .manual-page-count {
   font-size: 0.85rem;
-  color: #c8a020;
+  color: #4a90e2;
 }
 
 /* --- Special hint lock --- */
@@ -491,20 +501,20 @@ textarea {
 
 .hint-lock--open {
   opacity: 1;
-  border-left-color: rgba(200, 160, 32, 0.75);
+  border-left-color: rgba(74, 144, 226, 0.75);
 }
 
 .hint-lock-badge {
   font-size: 0.72rem;
   font-weight: 400;
-  color: #9e8860;
+  color: #666666;
   margin-left: 6px;
   letter-spacing: 0;
   text-transform: none;
 }
 
 .hint-lock-text {
-  color: #5a4a30;
+  color: #666666;
   font-style: italic;
 }
 
@@ -516,9 +526,9 @@ textarea {
 }
 
 .chip {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.07);
-  color: #dbc898;
+  border: 1px solid #e0e0e0;
+  background: #f5f5f5;
+  color: #666666;
   padding: 6px 14px;
   border-radius: 8px;
   cursor: pointer;
@@ -529,17 +539,17 @@ textarea {
 }
 
 .chip:hover {
-  background: rgba(200, 160, 32, 0.70);
-  border-color: rgba(200, 160, 32, 0.65);
-  color: #fff;
+  background: #e0e0e0;
+  border-color: #cccccc;
+  color: #333333;
   transform: translateY(-1px);
 }
 
 /* 피해자 칩은 붉은 계열로 구분 */
 .chip--victim {
-  border-color: rgba(200, 50, 60, 0.55);
-  background: rgba(200, 50, 60, 0.12);
-  color: #ffb3be;
+  border-color: rgba(217, 83, 79, 0.55);
+  background: rgba(217, 83, 79, 0.12);
+  color: #d9534f;
 }
 
 .chip--victim:hover {
@@ -565,14 +575,14 @@ textarea {
 .person-field-label {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #c8a020;
+  color: #4a90e2;
   min-width: 60px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .person-field-value {
-  color: #d4bc88;
+  color: #333333;
   line-height: 1.5;
 }
 
@@ -585,7 +595,7 @@ textarea {
 
 .confirm-message {
   margin: 0 0 24px;
-  color: #ede0ca;
+  color: #333333;
   line-height: 1.6;
   font-size: 1rem;
 }
@@ -601,18 +611,19 @@ textarea {
 }
 
 .confirm-cancel {
-  background: rgba(255, 255, 255, 0.08);
-  color: #c4a87a;
+  background: #f9f9f9;
+  border: 1px solid #cccccc;
+  color: #333333;
 }
 
 /* --- Camera popup modal --- */
 .camera-modal {
-  background: #0a0806;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
   border-radius: 24px;
   overflow: hidden;
   width: min(480px, 96vw);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.2s ease;
 }
 
@@ -621,12 +632,12 @@ textarea {
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .camera-modal-title {
   font-size: 0.9rem;
-  color: #9e8860;
+  color: #666666;
 }
 
 /* 카메라 영상 + 스캔 오버레이를 감싸는 컨테이너 */
@@ -681,6 +692,121 @@ textarea {
   border: 2px solid rgba(220, 60, 50, 0.50);
   border-radius: 12px;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+}
+
+/* --- Evidence Type Tabs --- */
+.tab-list {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  overflow-x: auto;
+  padding-bottom: 0;
+}
+
+.tab-button {
+  padding: 10px 16px;
+  background: #4a90e2;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+}
+
+.tab-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+}
+
+.tab-button.active {
+  background: #357abd;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.5);
+}
+
+/* EvidenceList 내부의 서브 탭 버튼들 (보통/특수 단서) - 회색 계열 */
+.evidence-tabs .tab-button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: #f5f5f5;
+  color: #666666;
+  border: 1px solid #e0e0e0;
+}
+
+.evidence-tabs .tab-button:hover {
+  background: #e0e0e0;
+  color: #333333;
+}
+
+.evidence-tabs .tab-button.active {
+  background: #e0e0e0;
+  color: #333333;
+  border-color: #cccccc;
+}
+
+/* --- Special unlock sparkle animation --- */
+@keyframes tabSparkle {
+  0%   { box-shadow: none; }
+  15%  { box-shadow: 0 0 0 3px rgba(250, 196, 0, 0.85), 0 0 16px 5px rgba(250, 196, 0, 0.55); }
+  30%  { box-shadow: none; }
+  48%  { box-shadow: 0 0 0 3px rgba(250, 196, 0, 0.65), 0 0 12px 4px rgba(250, 196, 0, 0.4); }
+  63%  { box-shadow: none; }
+  78%  { box-shadow: 0 0 0 2px rgba(250, 196, 0, 0.4), 0 0 8px 2px rgba(250, 196, 0, 0.25); }
+  100% { box-shadow: none; }
+}
+
+.evidence-tabs .tab-button--sparkle {
+  animation: tabSparkle 5s ease-out forwards;
+}
+
+/* --- Evidence Item Locked State --- */
+.evidence-item--locked {
+  cursor: not-allowed;
+}
+
+/* --- Toast notification --- */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1a1a1a;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 999px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+  z-index: 2000;
+  white-space: nowrap;
+  animation: toastIn 0.25s ease, toastOut 0.4s ease 3.6s forwards;
+}
+
+.toast-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(250, 196, 0, 0.9);
+  letter-spacing: 0.04em;
+}
+
+.toast-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(8px); }
 }
 
 @media (max-width: 960px) {

@@ -296,7 +296,7 @@ export default App;
 // 오프라인 단독 버전 — 소켓 없이 로컬에서 동작
 // 증거 수집 결과는 localStorage('crimescene_evidence')에 저장됨
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import CameraScanner from './components/CameraScanner.jsx';
 import EvidenceList from './components/EvidenceList.jsx';
 import CommonInfo from './components/SuspectTabs.jsx';
@@ -356,6 +356,9 @@ function App() {
   const [scanMessage, setScanMessage] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('evidence'); // 'evidence' | 'info'
+  const [specialUnlockKey, setSpecialUnlockKey] = useState(0);
+  const [toast, setToast] = useState(null);
+  const toastTimerRef = useRef(null);
 
   /**
    * handleScan
@@ -374,16 +377,43 @@ function App() {
     }
 
     if (evidenceCollected.some((item) => item.code === normalized)) {
-      const msg = `이미 수집된 증거입니다: ${evidence.title}`;
+      const msg = `이미 수집된 증거입니다. \n\n${evidence.title}`;
       setScanMessage(msg);
       return { success: false, message: msg };
     }
 
     const updated = [...evidenceCollected, { code: normalized, ...evidence }];
-    setEvidenceCollected(updated);
-    saveEvidence(updated);
+    const collectedCodes = new Set(updated.map((item) => item.code));
 
-    const msg = `증거 수집 완료: ${evidence.title}`;
+    // unlockedBy 조건이 모두 충족된 특수 단서를 자동으로 추가
+    const autoUnlocked = [];
+    for (const [specialCode, specialData] of Object.entries(evidenceMap)) {
+      if (
+        specialData.type === '특수' &&
+        Array.isArray(specialData.unlockedBy) &&
+        specialData.unlockedBy.length > 0 &&
+        !collectedCodes.has(specialCode) &&
+        specialData.unlockedBy.every((reqCode) => collectedCodes.has(reqCode))
+      ) {
+        autoUnlocked.push({ code: specialCode, ...specialData });
+        collectedCodes.add(specialCode);
+      }
+    }
+
+    const finalUpdated = [...updated, ...autoUnlocked];
+    setEvidenceCollected(finalUpdated);
+    saveEvidence(finalUpdated);
+    if (autoUnlocked.length > 0) {
+      setSpecialUnlockKey((k) => k + 1);
+      const names = autoUnlocked.map((e) => e.title).join(', ');
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      setToast(names);
+      toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+    }
+
+    const msg = autoUnlocked.length > 0
+      ? `증거 수집 완료: ${evidence.title} · 특수 단서 해금: ${autoUnlocked.map((e) => e.title).join(', ')}`
+      : `증거 수집 완료: ${evidence.title}`;
     setScanMessage(msg);
     return { success: true, message: msg };
   };
@@ -439,11 +469,18 @@ function App() {
           </div>
 
           <div className="tab-content">
-            {activeTab === 'evidence' && <EvidenceList evidence={evidenceCollected} />}
+            {activeTab === 'evidence' && <EvidenceList evidence={evidenceCollected} specialUnlockKey={specialUnlockKey} />}
             {activeTab === 'info' && <CommonInfo victim={victim} suspects={suspects} />}
           </div>
         </div>
       </div>
+      {toast && (
+        <div className="toast">
+          <span className="toast-label">✨ 특수 단서 해금</span>
+          <span className="toast-title">{toast}</span>
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
         <button type="button" className="small-button" onClick={() => setConfirmOpen(true)}>
           초기화
