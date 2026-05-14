@@ -182,8 +182,8 @@ textarea {
 }
 
 .message-box {
-  margin-top: 18px;
-  padding: 14px 16px;
+  margin-top: 0px;
+  padding: 6px 14px;
   border-radius: 14px;
   background: #e8f4fd;
   color: #333333;

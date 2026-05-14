@@ -155,7 +155,7 @@ function CameraScanner({ gameActive, onScan, externalMessage }) {
 
       {/* 수동 코드 입력 영역 */}
       <div className="form-group">
-        <label htmlFor="scan-input">코드 직접 입력</label>
+        <label htmlFor="scan-input">코드 입력</label>
         <input
           id="scan-input"
           value={scanInput}
@@ -169,9 +169,13 @@ function CameraScanner({ gameActive, onScan, externalMessage }) {
       </div>
 
       {/* 스캔 결과 및 안내 메시지 출력 영역 */}
-      <div className="message-box">
-        <p>{message}</p>
+      <div className="form-group">
+        <label htmlFor="scan-input">안내 메세지</label>
+        <div className="message-box">
+          <p>{message}</p>
+        </div>
       </div>
+      
 
       {/* 카메라 팝업 모달 — cameraOpen이 true일 때만 렌더링 */}
       {cameraOpen && (
