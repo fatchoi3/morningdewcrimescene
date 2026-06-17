@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import PhoneModal from './PhoneModal.jsx';
 
 /**
  * ManualModal
@@ -43,6 +44,11 @@ function ManualModal({ item, onClose }) {
 
         {/* 페이지 본문 */}
         <div className="manual-content">
+          {current.image && (
+            <div className="manual-image-wrap">
+              <img src={current.image} alt={current.title} className="manual-image" />
+            </div>
+          )}
           <h2 className="manual-title">{current.title}</h2>
           <div className="manual-body">
             {current.content.split('\n\n').map((para, i) => (
@@ -110,11 +116,11 @@ function StandardModal({ item, onClose }) {
   );
 }
 
-// pages 필드 유무에 따라 ManualModal 또는 StandardModal을 선택해 렌더링
+// phone > pages > 기본 순으로 적절한 모달을 선택해 렌더링
 function EvidenceModal({ item, onClose }) {
-  return item.pages
-    ? <ManualModal item={item} onClose={onClose} />
-    : <StandardModal item={item} onClose={onClose} />;
+  if (item.phone) return <PhoneModal item={item} onClose={onClose} />;
+  if (item.pages) return <ManualModal item={item} onClose={onClose} />;
+  return <StandardModal item={item} onClose={onClose} />;
 }
 
 function EvidenceList({ evidence, specialUnlockKey = 0 }) {
@@ -130,13 +136,16 @@ function EvidenceList({ evidence, specialUnlockKey = 0 }) {
   const normalEvidence = evidence.filter((item) => item.type === '보통');
   const specialEvidence = evidence.filter((item) => item.type === '특수');
 
-  // 특수 단서 해금 여부 확인 (2개 이상의 관련 보통 단서가 있어야 함)
+  // 특수 단서 해금 여부 확인.
+  // unlockedBy에 적힌 선행 단서를 모두 보유하면 해금된다.
+  // (선행 단서가 2개면 2개 모두, 1개면 1개만 — 가이드의 단일 트리거 특수 단서 대응)
   const isSpecialUnlocked = (special) => {
     if (!special.unlockedBy || special.unlockedBy.length === 0) return true;
+    const need = Math.min(2, special.unlockedBy.length);
     const unlockedCount = special.unlockedBy.filter((code) =>
       evidence.some((item) => item.code === code)
     ).length;
-    return unlockedCount >= 2;
+    return unlockedCount >= need;
   };
 
   // 현재 필터에 따라 표시할 증거 결정

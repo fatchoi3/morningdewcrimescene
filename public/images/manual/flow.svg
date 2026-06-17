@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" fill="none">
+  <line x1="40" y1="90" x2="280" y2="90" stroke="#3c4554" stroke-width="3"/>
+  <g font-family="sans-serif" font-size="11" fill="#9aa4b4" text-anchor="middle">
+    <circle cx="48" cy="90" r="15" fill="#222834" stroke="#4a90e2" stroke-width="3"/>
+    <text x="48" y="94" fill="#e6e9ef" font-size="12" font-weight="bold">1</text>
+    <text x="48" y="122">브리핑</text>
+    <circle cx="106" cy="90" r="15" fill="#222834" stroke="#4a90e2" stroke-width="3"/>
+    <text x="106" y="94" fill="#e6e9ef" font-size="12" font-weight="bold">2</text>
+    <text x="106" y="122">1부</text>
+    <circle cx="164" cy="90" r="15" fill="#222834" stroke="#4a90e2" stroke-width="3"/>
+    <text x="164" y="94" fill="#e6e9ef" font-size="12" font-weight="bold">3</text>
+    <text x="164" y="122">중간점검</text>
+    <circle cx="222" cy="90" r="15" fill="#222834" stroke="#4a90e2" stroke-width="3"/>
+    <text x="222" y="94" fill="#e6e9ef" font-size="12" font-weight="bold">4</text>
+    <text x="222" y="122">2부</text>
+    <circle cx="280" cy="90" r="15" fill="#222834" stroke="#5cb85c" stroke-width="3"/>
+    <text x="280" y="94" fill="#e6e9ef" font-size="12" font-weight="bold">5</text>
+    <text x="280" y="122" fill="#5cb85c">발표</text>
+  </g>
+</svg>
