@@ -4,6 +4,7 @@ const FIELD_LABELS = {
   age: '나이',
   gender: '성별',
   occupation: '직업',
+  family: '가족관계',
   notes: '비고'
 };
 

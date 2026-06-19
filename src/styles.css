@@ -406,6 +406,34 @@ textarea {
   line-height: 1.6;
 }
 
+/* 사진 터치 이벤트 발견 박스 */
+.modal-event {
+  margin-top: 12px;
+  background: rgba(230, 160, 60, 0.12);
+  border-left: 3px solid #e0a23c;
+  border-radius: 10px;
+  padding: 14px 16px;
+  animation: event-pop 0.25s ease;
+}
+.modal-event-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #e0a23c;
+  margin-bottom: 6px;
+}
+.modal-event p {
+  margin: 0;
+  color: #ffe7c2;
+  line-height: 1.6;
+  font-weight: 600;
+}
+@keyframes event-pop {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* --- Manual (paginated) modal --- */
 .manual-panel {
   max-width: 520px;
@@ -985,6 +1013,159 @@ textarea {
   white-space: nowrap;
 }
 
+/* --- 톡서랍 잠금 화면 --- */
+.td-lock {
+  min-height: 100%;
+  background: linear-gradient(160deg, #2a1c4a 0%, #1a1230 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 18px;
+  text-align: center;
+}
+
+.td-icon { font-size: 2.6rem; margin-bottom: 8px; }
+
+.td-title {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.td-desc {
+  color: #c9c0e6;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+.td-form {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 240px;
+}
+
+.td-form input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: #fff;
+  padding: 9px 12px;
+  font-size: 1rem;
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+.td-form input:focus { outline: none; border-color: #b39ddb; }
+
+.td-form button {
+  background: #6c5ce7;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  padding: 9px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.td-err { color: #ff9aa0; font-size: 0.8rem; margin: 10px 0 0; }
+.td-hint { color: #8a7fb0; font-size: 0.72rem; margin: 14px 0 0; }
+
+.td-recover-btn {
+  margin-top: 16px;
+  background: #6c5ce7;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  padding: 11px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.td-recover-btn:hover { background: #5a4bd4; }
+
+/* 카카오톡 채팅 목록 상단 '톡서랍' 버튼 */
+.msg-drawer-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef3a0;
+  border: none;
+  border-bottom: 1px solid #e6d97a;
+  color: #5b4b00;
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.msg-drawer-btn:hover { background: #fdeb7a; }
+
+/* 잠긴(삭제된) 대화방 */
+.msg-chat-item--locked { opacity: 0.6; cursor: default; }
+.msg-chat-item--locked:hover { background: inherit; }
+
+/* --- 연락처(주소록) 앱 --- */
+.contacts {
+  min-height: 100%;
+  background: #fff;
+}
+
+.contacts-header {
+  padding: 12px 16px;
+  background: #fff;
+  color: #222;
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+}
+
+.contacts-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.contacts-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e7eefb;
+  color: #5b8def;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.contacts-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.contacts-name {
+  color: #111;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.contacts-who {
+  color: #999;
+  font-size: 0.76rem;
+}
+
 /* --- 사진(갤러리) 앱 --- */
 .photos {
   min-height: 100%;
@@ -1073,6 +1254,493 @@ textarea {
   font-size: 0.85rem;
   line-height: 1.5;
   text-align: center;
+}
+
+/* 휴지통(최근 삭제) 섹션 */
+.photos-section {
+  padding: 12px 12px 6px;
+  color: #9aa4b4;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-top: 1px solid #222834;
+}
+
+.photos-tile--trash {
+  opacity: 0.85;
+  filter: grayscale(0.15);
+}
+
+/* ============================================= */
+/* 지갑(WalletModal) / 일정표(ScheduleModal)       */
+/* ============================================= */
+.wallet-modal,
+.sched-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: #222834;
+  border: 1px solid #333b48;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  animation: slideUp 0.2s ease;
+}
+
+.wallet-titlebar,
+.sched-titlebar {
+  color: #e6e9ef;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.wallet-help,
+.sched-help {
+  margin: 0 0 14px;
+  color: #9aa4b4;
+  font-size: 0.82rem;
+}
+
+.wallet-items,
+.sched-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wallet-item,
+.sched-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: #1b2029;
+  border: 1px solid #333b48;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.1s ease;
+}
+
+.wallet-item:hover,
+.sched-row:hover {
+  background: #2a3340;
+  transform: translateY(-1px);
+}
+
+.wallet-item-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #2b323f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wallet-item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wallet-item-icon { font-size: 1.4rem; }
+
+.wallet-item-label {
+  flex: 1;
+  color: #e6e9ef;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.wallet-item-go,
+.sched-go {
+  color: #5a6675;
+  font-size: 1.3rem;
+}
+
+.wallet-back,
+.sched-back {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 0 12px;
+}
+
+.wallet-detail-img {
+  width: 100%;
+  max-height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1b2029;
+  border: 1px solid #333b48;
+  margin-bottom: 14px;
+}
+
+.wallet-detail-img img {
+  width: 100%;
+  height: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  display: block;
+}
+
+.wallet-detail-title,
+.sched-detail-title {
+  margin: 0 0 8px;
+  color: #e6e9ef;
+  font-size: 1.05rem;
+}
+
+.wallet-detail-text,
+.sched-detail-text {
+  margin: 0;
+  color: #cdd6e2;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* 일정표 행 */
+.sched-time {
+  flex-shrink: 0;
+  width: 78px;
+  color: #9aa4b4;
+  font-size: 0.74rem;
+  font-family: monospace;
+}
+
+.sched-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sched-person {
+  color: #e6e9ef;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.sched-row-title {
+  color: #9aa4b4;
+  font-size: 0.8rem;
+}
+
+.sched-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sched-detail-time {
+  color: #9aa4b4;
+  font-size: 0.78rem;
+  font-family: monospace;
+}
+
+.sched-detail-person {
+  color: #4a90e2;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* ============================================= */
+/* 공용 CCTV 열람대 모달                           */
+/* ============================================= */
+.cctv-modal {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  background: #161a21;
+  border: 1px solid #333b48;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  animation: slideUp 0.2s ease;
+}
+
+.cctv-titlebar {
+  color: #e6e9ef;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+}
+
+.cctv-timebar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.cctv-time {
+  border: 1px solid #333b48;
+  background: #222834;
+  color: #9aa4b4;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-family: monospace;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.cctv-time.active {
+  background: #4a90e2;
+  border-color: #4a90e2;
+  color: #fff;
+}
+
+/* 모니터 화면 */
+.cctv-screen {
+  position: relative;
+  background: radial-gradient(circle at 50% 40%, #1c2733 0%, #0b0f14 100%);
+  border: 1px solid #2a3340;
+  border-radius: 10px;
+  padding: 14px;
+  min-height: 240px;
+  overflow: hidden;
+}
+
+.cctv-osd {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: #7fe0a0;
+  text-shadow: 0 0 6px rgba(127, 224, 160, 0.4);
+  pointer-events: none;
+}
+
+.cctv-osd-top { top: 10px; }
+.cctv-osd-bottom { bottom: 10px; }
+
+.cctv-rec {
+  color: #ff5e57;
+  animation: cctv-blink 1.2s steps(1) infinite;
+}
+
+@keyframes cctv-blink {
+  50% { opacity: 0.2; }
+}
+
+/* 스캔라인 효과 */
+.cctv-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+}
+
+/* 평면도 SVG */
+.cctv-map {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.cctv-room rect,
+.cctv-room {
+  fill: #18202b;
+  stroke: #45566a;
+  stroke-width: 1.5;
+}
+
+.cctv-room--victim {
+  fill: #241d2b;
+  stroke: #6a5570;
+}
+
+.cctv-hall {
+  fill: #10161e;
+  stroke: #3a4858;
+  stroke-width: 1.2;
+}
+
+.cctv-door rect {
+  fill: #2b3543;
+  stroke: #55657a;
+  stroke-width: 1;
+}
+
+.cctv-room-label text {
+  fill: #c3cdda;
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.cctv-map-note {
+  fill: #8a98aa;
+  font-size: 10px;
+  text-anchor: middle;
+}
+
+.cctv-map-cam {
+  fill: #e6e9ef;
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+/* 인물 마커 */
+.cctv-marker { cursor: pointer; }
+.cctv-marker.got { cursor: default; }
+
+.cctv-marker-dot {
+  fill: #4a90e2;
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.cctv-marker.got .cctv-marker-dot {
+  fill: #5cb85c;
+}
+
+.cctv-marker-glyph {
+  fill: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.cctv-marker-label {
+  fill: #e6e9ef;
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #0b0f14;
+  stroke-width: 2.5px;
+}
+
+.cctv-marker-ping {
+  fill: rgba(74, 144, 226, 0.35);
+  transform-origin: center;
+  animation: cctv-ping 1.6s ease-out infinite;
+}
+
+@keyframes cctv-ping {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.cctv-scene-desc {
+  color: #cdd6e2;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  margin: 12px 2px 0;
+}
+
+.cctv-flash {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.cctv-flash.ok {
+  background: rgba(92, 184, 92, 0.15);
+  border: 1px solid rgba(92, 184, 92, 0.5);
+  color: #aee5b0;
+}
+
+.cctv-flash.no {
+  background: rgba(217, 83, 79, 0.15);
+  border: 1px solid rgba(217, 83, 79, 0.5);
+  color: #f0b3b0;
+}
+
+.cctv-help {
+  margin: 12px 0 0;
+  font-size: 0.74rem;
+  color: #9aa4b4;
+  text-align: center;
+}
+
+/* --- 귀속 미상(hidden) 단서 --- */
+.evidence-person--unknown {
+  background: rgba(165, 110, 200, 0.18) !important;
+  color: #c79fe0 !important;
+  border: 1px dashed rgba(165, 110, 200, 0.6);
+}
+
+.attr-box {
+  margin-top: 16px;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.attr-box--locked {
+  background: rgba(165, 110, 200, 0.1);
+  border: 1px solid rgba(165, 110, 200, 0.45);
+}
+
+.attr-title {
+  font-weight: 700;
+  color: #c79fe0;
+  margin-bottom: 6px;
+}
+
+.attr-desc {
+  margin: 0 0 12px;
+  color: #cdd6e2;
+}
+
+.attr-form {
+  display: flex;
+  gap: 8px;
+}
+
+.attr-form input {
+  flex: 1;
+  background: #1b2029;
+  border: 1px solid #3c4554;
+  border-radius: 8px;
+  color: #e6e9ef;
+  padding: 9px 12px;
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+}
+
+.attr-form input:focus {
+  outline: none;
+  border-color: #a56ec8;
+}
+
+.attr-error {
+  margin: 10px 0 0;
+  color: #f0b3b0;
+  font-size: 0.82rem;
+}
+
+.attr-box--revealed {
+  background: rgba(92, 184, 92, 0.12);
+  border: 1px solid rgba(92, 184, 92, 0.5);
+  color: #aee5b0;
 }
 
 /* --- Special hint lock --- */

@@ -23,7 +23,28 @@ const APP_META = {
   kakao: { label: '카카오톡', icon: '💬', color: '#ffe812' },
   sms: { label: '메시지', icon: '✉️', color: '#34c759' },
   photos: { label: '사진', icon: '🖼️', color: '#ff5e57' },
+  contacts: { label: '연락처', icon: '📇', color: '#5b8def' },
 };
+
+/* 연락처(주소록) 앱 — 다른 인물을 어떤 이름으로 저장했는지 */
+function ContactsApp({ app }) {
+  return (
+    <div className="contacts">
+      <div className="contacts-header">연락처</div>
+      <div className="contacts-list">
+        {app.contacts.map((c, i) => (
+          <div key={i} className="contacts-item">
+            <span className="contacts-avatar">{(c.name || '?')[0]}</span>
+            <span className="contacts-info">
+              <span className="contacts-name">{c.name}</span>
+              {c.who && <span className="contacts-who">{c.who}</span>}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /* 인터넷(브라우저) 앱 — 검색 기록 목록 → 검색 결과 페이지 */
 function BrowserApp({ app }) {
@@ -64,22 +85,82 @@ function BrowserApp({ app }) {
   );
 }
 
-/* 메시지(카카오톡 / 문자) 앱 — 대화방 목록 → 대화 내용 */
+/* 메시지(카카오톡 / 문자) 앱 — 대화방 목록 → 대화 내용
+ * 카카오톡: deleted:true 대화방은 잠겨 있고, '톡서랍'으로 복구해야 열린다.
+ *   - app.recoverPassword 있으면 비밀번호 입력, 없으면 확인(예)만으로 복구. */
 function MessagesApp({ app, variant }) {
   const [openIdx, setOpenIdx] = useState(null);
+  const [drawer, setDrawer] = useState(false);   // 톡서랍 패널 열림
+  const [recovered, setRecovered] = useState(false);
+  const [pw, setPw] = useState('');
+  const [err, setErr] = useState('');
 
+  const isKakao = variant === 'kakao';
+  const chats = app.chats || [];
+  const hasDeleted = chats.some((c) => c.deleted);
+  const needPw = !!app.recoverPassword;
+
+  const doRecover = () => {
+    if (needPw && pw.trim() !== String(app.recoverPassword)) {
+      setErr('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    setRecovered(true);
+    setDrawer(false);
+    setErr('');
+    setPw('');
+  };
+
+  // 톡서랍 패널
+  if (drawer) {
+    return (
+      <div className={`msg msg--${variant}`}>
+        <div className="msg-header">
+          <button className="msg-back" onClick={() => { setDrawer(false); setErr(''); }} aria-label="뒤로">←</button>
+          <span className="msg-header-name">🗄️ 톡서랍</span>
+        </div>
+        <div className="td-lock">
+          <div className="td-icon">🗄️</div>
+          <div className="td-title">삭제된 대화 복구</div>
+          <p className="td-desc">
+            삭제된 대화 데이터 전체를 복구하시겠습니까?
+            {needPw && <><br />복구하려면 비밀번호를 입력하세요.</>}
+          </p>
+          {needPw && (
+            <div className="td-form">
+              <input
+                type="password"
+                inputMode="numeric"
+                autoComplete="off"
+                value={pw}
+                placeholder="비밀번호"
+                onChange={(e) => { setPw(e.target.value); setErr(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && doRecover()}
+              />
+            </div>
+          )}
+          <button className="td-recover-btn" type="button" onClick={doRecover}>
+            {needPw ? '복구하기' : '예, 전체 복구합니다'}
+          </button>
+          {err && <p className="td-err">{err}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  // 대화 내용 보기
   if (openIdx !== null) {
-    const chat = app.chats[openIdx];
+    const chat = chats[openIdx];
     return (
       <div className={`msg msg--${variant}`}>
         <div className="msg-header">
           <button className="msg-back" onClick={() => setOpenIdx(null)} aria-label="뒤로">←</button>
-          <span className="msg-header-name">{chat.name}</span>
+          <span className="msg-header-name">{chat.name}{chat.deleted && recovered ? ' (복구됨)' : ''}</span>
         </div>
         <div className="msg-messages">
           {chat.messages.map((m, i) => (
             <div key={i} className={`msg-row ${m.from === 'me' ? 'me' : 'them'}`}>
-              {m.from !== 'me' && variant === 'kakao' && <span className="msg-name">{chat.name}</span>}
+              {m.from !== 'me' && isKakao && <span className="msg-name">{chat.name}</span>}
               <div className="msg-line">
                 <span className={`msg-bubble ${m.deleted ? 'deleted' : ''}`}>
                   {m.deleted ? '삭제된 메시지입니다.' : m.text}
@@ -93,19 +174,34 @@ function MessagesApp({ app, variant }) {
     );
   }
 
+  // 대화방 목록
   return (
     <div className={`msg msg--${variant}`}>
-      <div className="msg-list-header">{variant === 'sms' ? '메시지' : '채팅'}</div>
+      <div className="msg-list-header">{isKakao ? '채팅' : '메시지'}</div>
+      {isKakao && hasDeleted && (
+        <button className="msg-drawer-btn" type="button" onClick={() => setDrawer(true)}>
+          🗄️ 톡서랍 {recovered ? '· 복구 완료' : '· 삭제된 대화 복구'}
+        </button>
+      )}
       <div className="msg-list">
-        {app.chats.map((c, i) => {
+        {chats.map((c, i) => {
+          const locked = c.deleted && !recovered;
           const last = c.messages[c.messages.length - 1];
           return (
-            <button key={i} className="msg-chat-item" onClick={() => setOpenIdx(i)}>
-              <span className="msg-avatar">{c.name?.[0] ?? '?'}</span>
+            <button
+              key={i}
+              className={`msg-chat-item ${locked ? 'msg-chat-item--locked' : ''}`}
+              onClick={() => { if (!locked) setOpenIdx(i); }}
+            >
+              <span className="msg-avatar">{locked ? '🔒' : (c.name?.[0] ?? '?')}</span>
               <span className="msg-chat-info">
-                <span className="msg-chat-name">{c.name}</span>
+                <span className="msg-chat-name">
+                  {c.name}{c.deleted ? (recovered ? ' (복구됨)' : ' (삭제됨)') : ''}
+                </span>
                 <span className="msg-chat-last">
-                  {last?.deleted ? '삭제된 메시지입니다.' : last?.text}
+                  {locked
+                    ? '삭제된 대화입니다. 톡서랍에서 복구하세요.'
+                    : (last?.deleted ? '삭제된 메시지입니다.' : last?.text)}
                 </span>
               </span>
             </button>
@@ -123,12 +219,13 @@ function PhotosApp({ app }) {
 
   if (openIdx !== null) {
     const p = app.photos[openIdx];
-    const showImg = p.image && !p.deleted && !errored[openIdx];
+    // 휴지통의 사진이라도 image가 있으면 '복구된 사진'으로 보여준다.
+    const showImg = p.image && !errored[openIdx];
     return (
       <div className="photos">
         <div className="photos-view-bar">
           <button className="photos-back" onClick={() => setOpenIdx(null)} aria-label="뒤로">←</button>
-          <span>{openIdx + 1} / {app.photos.length}</span>
+          <span>{p.deleted ? '🗑️ 휴지통' : '사진'}</span>
         </div>
         <div className="photos-view">
           {showImg ? (
@@ -137,27 +234,39 @@ function PhotosApp({ app }) {
             <div className="photos-placeholder photos-placeholder--lg">{p.deleted ? '🗑️' : '🖼️'}</div>
           )}
         </div>
-        <p className="photos-caption">{p.deleted ? '삭제된 사진 (복구 불가)' : p.caption}</p>
+        <p className="photos-caption">
+          {p.deleted && p.image ? `[복구된 사진] ${p.caption || ''}` : (p.deleted ? '삭제된 사진 (복구 불가)' : p.caption)}
+        </p>
       </div>
     );
   }
 
+  const tile = (p, i) => {
+    const showImg = p.image && !p.deleted && !errored[i]; // 휴지통 밖은 정상 표시
+    return (
+      <button key={i} className={`photos-tile ${p.deleted ? 'photos-tile--trash' : ''}`} onClick={() => setOpenIdx(i)}>
+        {showImg ? (
+          <img src={p.image} alt={p.caption} onError={() => setErrored((e) => ({ ...e, [i]: true }))} />
+        ) : (
+          <span className="photos-placeholder">{p.deleted ? '🗑️' : '🖼️'}</span>
+        )}
+      </button>
+    );
+  };
+
+  const normal = [];
+  const trash = [];
+  app.photos.forEach((p, i) => { (p.deleted ? trash : normal).push(tile(p, i)); });
+
   return (
     <div className="photos">
-      <div className="photos-grid">
-        {app.photos.map((p, i) => {
-          const showImg = p.image && !p.deleted && !errored[i];
-          return (
-            <button key={i} className="photos-tile" onClick={() => setOpenIdx(i)}>
-              {showImg ? (
-                <img src={p.image} alt={p.caption} onError={() => setErrored((e) => ({ ...e, [i]: true }))} />
-              ) : (
-                <span className="photos-placeholder">{p.deleted ? '🗑️' : '🖼️'}</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      <div className="photos-grid">{normal}</div>
+      {trash.length > 0 && (
+        <>
+          <div className="photos-section">🗑️ 휴지통 (최근 삭제)</div>
+          <div className="photos-grid">{trash}</div>
+        </>
+      )}
     </div>
   );
 }
@@ -223,6 +332,7 @@ function PhoneModal({ item, onClose }) {
                   {current.type === 'kakao' && <MessagesApp app={current} variant="kakao" />}
                   {current.type === 'sms' && <MessagesApp app={current} variant="sms" />}
                   {current.type === 'photos' && <PhotosApp app={current} />}
+                  {current.type === 'contacts' && <ContactsApp app={current} />}
                 </div>
               </div>
             )}

@@ -1,0 +1,17 @@
+[핸드폰 사진 단서 폴더]
+
+아래 파일명으로 실제 사진을 넣으면 해당 핸드폰의 '사진' 앱에 표시됩니다.
+파일이 없으면 자동으로 회색 placeholder(🖼️) + 설명이 대신 표시됩니다.
+
+  bankbook.jpg          - (목사님 폰) 청년부 통장 사진
+  isarang_travel.jpg    - (이사랑 폰) 해외여행 사진
+  isarang_cosmetics.jpg - (이사랑 폰) 고가 화장품/파우치
+  choi_hiking.jpg       - (최종현 폰) 목사님과 등산 사진(배경화면)
+  sisters.jpg           - (이현지 폰) 이사랑과 자매 사진(잠금화면)
+
+권장: 정사각형 또는 4:3 사진. jpg/png 가능.
+파일명을 바꾸려면 src/data/gameData.js 의 각 사진 image 경로도 함께 수정하세요.
+'최근 삭제된 항목'(deleted:true)은 일부러 사진을 넣지 않습니다.
+
+  certificate.jpg       - (목사님 폰) 박희원 수료증 — 교단 DB 불일치
+  daughter.jpg          - (목사님/이가현 폰 휴지통, 가현 지갑) 가현의 딸 사진

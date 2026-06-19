@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import PhoneModal from './PhoneModal.jsx';
+import CctvModal from './CctvModal.jsx';
+import WalletModal from './WalletModal.jsx';
+import ScheduleModal from './ScheduleModal.jsx';
 
 /**
  * ManualModal
@@ -27,7 +30,7 @@ function ManualModal({ item, onClose }) {
       <div className="modal-panel manual-panel" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
 
-        <div className="modal-code">[{item.code}] 사용 설명서</div>
+        <div className="modal-code">[{item.code}] {item.title || '사용 설명서'}</div>
 
         {/* 페이지 인디케이터 */}
         <div className="manual-pagination-dots">
@@ -82,16 +85,46 @@ function ManualModal({ item, onClose }) {
   );
 }
 
+// 사진 N회 터치 이벤트의 영구 저장소 (localStorage)
+const TAP_STORE = 'crimescene_tapReveal';
+function readTapDone() {
+  try { return JSON.parse(localStorage.getItem(TAP_STORE) || '{}'); }
+  catch { return {}; }
+}
+
 /**
  * StandardModal
  * 일반 증거 아이템의 이미지·설명 팝업.
+ * item.tapReveal = { taps, text } 가 있으면 사진을 taps회 터치 시 숨은 이벤트가
+ * 표시되고, 그 상태가 localStorage에 영구 저장된다.
  */
 function StandardModal({ item, onClose }) {
+  const reveal = item.tapReveal;
+  const [taps, setTaps] = useState(0);
+  const [revealed, setRevealed] = useState(() => (reveal ? !!readTapDone()[item.code] : false));
+
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
+
+  const need = reveal?.taps || 5;
+  const handleImgTap = () => {
+    if (!reveal || revealed) return;
+    const n = taps + 1;
+    setTaps(n);
+    if (n >= need) {
+      setRevealed(true);
+      try {
+        const d = readTapDone();
+        d[item.code] = true;
+        localStorage.setItem(TAP_STORE, JSON.stringify(d));
+      } catch { /* 저장 실패는 무시 */ }
+    }
+  };
+
+  const tappable = reveal && !revealed;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -101,8 +134,17 @@ function StandardModal({ item, onClose }) {
         <h2 className="modal-title">{item.title}</h2>
 
         {item.image && (
-          <div className="modal-image-wrap">
-            <img src={item.image} alt={item.title} className="modal-image" />
+          <div
+            className="modal-image-wrap"
+            onClick={handleImgTap}
+            style={tappable ? { cursor: 'pointer' } : undefined}
+            title={tappable ? '사진을 살펴보세요' : undefined}
+          >
+            <img
+              src={revealed && reveal?.image ? reveal.image : item.image}
+              alt={item.title}
+              className="modal-image"
+            />
           </div>
         )}
 
@@ -111,19 +153,29 @@ function StandardModal({ item, onClose }) {
           <span className="modal-detail-label">추가 정보</span>
           <p>{item.detail}</p>
         </div>
+
+        {revealed && (
+          <div className="modal-event">
+            <span className="modal-event-label">⚠️ 발견</span>
+            <p>{reveal.text}</p>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// phone > pages > 기본 순으로 적절한 모달을 선택해 렌더링
-function EvidenceModal({ item, onClose }) {
+// cctv > wallet > schedule > phone > pages > 기본 순으로 적절한 모달을 선택해 렌더링
+function EvidenceModal({ item, evidence, onCollect, onClose }) {
+  if (item.cctv) return <CctvModal item={item} evidence={evidence} onCollect={onCollect} onClose={onClose} />;
+  if (item.wallet) return <WalletModal item={item} onClose={onClose} />;
+  if (item.schedule) return <ScheduleModal item={item} onClose={onClose} />;
   if (item.phone) return <PhoneModal item={item} onClose={onClose} />;
   if (item.pages) return <ManualModal item={item} onClose={onClose} />;
   return <StandardModal item={item} onClose={onClose} />;
 }
 
-function EvidenceList({ evidence, specialUnlockKey = 0 }) {
+function EvidenceList({ evidence, specialUnlockKey = 0, onCollect }) {
   const [selected, setSelected] = useState(null);
   const [query, setQuery] = useState('');
   const [filterType, setFilterType] = useState('normal'); // 'normal' | 'special'
@@ -226,7 +278,12 @@ function EvidenceList({ evidence, specialUnlockKey = 0 }) {
       </div>
 
       {selected && (
-        <EvidenceModal item={selected} onClose={() => setSelected(null)} />
+        <EvidenceModal
+          item={selected}
+          evidence={evidence}
+          onCollect={onCollect}
+          onClose={() => setSelected(null)}
+        />
       )}
     </>
   );

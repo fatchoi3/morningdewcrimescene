@@ -56,6 +56,7 @@ function saveEvidence(evidence) {
   } catch { }
 }
 
+
 function App() {
   // 앱 시작 시 localStorage에서 이전에 수집한 증거를 복원
   const [evidenceCollected, setEvidenceCollected] = useState(loadEvidence);
@@ -187,8 +188,8 @@ function App() {
           </div>
 
           <div className="tab-content">
-            {activeTab === 'evidence' && <EvidenceList evidence={mainEvidence} specialUnlockKey={specialUnlockKey} />}
-            {activeTab === 'pastor' && <EvidenceList evidence={pastorEvidence} specialUnlockKey={specialUnlockKey} />}
+            {activeTab === 'evidence' && <EvidenceList evidence={mainEvidence} specialUnlockKey={specialUnlockKey} onCollect={handleScan} />}
+            {activeTab === 'pastor' && <EvidenceList evidence={pastorEvidence} specialUnlockKey={specialUnlockKey} onCollect={handleScan} />}
             {activeTab === 'info' && <CommonInfo victim={victim} suspects={suspects} />}
           </div>
         </div>
