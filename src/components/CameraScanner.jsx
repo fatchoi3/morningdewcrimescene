@@ -138,7 +138,7 @@ function CameraScanner({ gameActive, onScan, externalMessage }) {
    */
   const handleManualScan = () => {
     if (!scanInput) {
-      setMessage('QR 코드 텍스트를 입력하세요. 예: CLUE-01');
+      setMessage('QR 코드 텍스트를 입력하세요. 예: LSUX-91');
       return;
     }
     const result = onScan(scanInput);
@@ -161,7 +161,7 @@ function CameraScanner({ gameActive, onScan, externalMessage }) {
           value={scanInput}
           onChange={(e) => setScanInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && gameActive && handleManualScan()}
-          placeholder="예: CLUE-01"
+          placeholder="예: LSUX-91"
         />
         <button type="button" className="control-button" onClick={handleManualScan} disabled={!gameActive}>
           확인

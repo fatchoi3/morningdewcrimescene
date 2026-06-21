@@ -1,5 +1,5 @@
 ﻿export const evidenceMap = {
-  'CLUE-01': {
+  'LSUX-91': {
     title: '게임 설명서',
     description: '게임의 기본 규칙과 플레이 방법이 담긴 설명서입니다.',
     detail: '',
@@ -73,7 +73,7 @@
   // =============================================
   // 공용 CCTV 열람대 — 시간대별 영상. 인물 클릭 시 해당 용의자 CCTV 단서 확보
   // =============================================
-  'CCTV-01': {
+  'SIAH-72': {
     title: 'CCTV 열람대',
     description: '수련회 당일 복도·예배당 등에 설치된 CCTV를 시간대별로 열람할 수 있다.',
     detail: '화면 속 인물을 누르면, 그 시간·위치와 일치하는 용의자의 CCTV 단서를 확보할 수 있다. (목사님 방 내부에는 CCTV가 없다.)',
@@ -87,7 +87,7 @@
           location: '',
           scene: '한 인물이 남자 숙소(최종현 방) 방향으로 들어갔다가, 약 1분 20초 뒤 손에 무언가를 들고 나온다.',
           people: [
-            { look: '여성 — 손에 무언가 들고 이동', who: '이사랑', unlocks: 'YUQO-48', x: 95, y: 150 }
+            { look: '여성 — 손에 무언가 들고 이동', who: '이사랑', unlocks: 'NQBT-91', x: 95, y: 150 }
           ]
         },
         {
@@ -95,7 +95,7 @@
           location: '목사님 방 앞 복도',
           scene: '한 인물이 목사님 방 쪽에서 나와, 복도에서 손을 옷에 닦으며 빠르게 지나간다.',
           people: [
-            { look: '여성 — 손을 닦으며 황급히 이동', who: '이현지', unlocks: 'WRST-55', x: 305, y: 138 }
+            { look: '여성 — 손을 닦으며 황급히 이동', who: '이현지', unlocks: 'NKCD-95', x: 305, y: 138 }
           ]
         },
         {
@@ -103,8 +103,8 @@
           location: '식당·숙소 주변',
           scene: '두 인물이 따로따로 식당과 숙소 주변을 서성인다.',
           people: [
-            { look: '여성 A — 핸드폰을 자주 확인하며 배회', who: '이사랑', unlocks: 'VHBT-17', x: 180, y: 140 },
-            { look: '여성 B — 예배당 입구를 초조하게 서성임', who: '이현지', unlocks: 'BGYS-92', x: 322, y: 152 }
+            { look: '여성 A — 핸드폰을 자주 확인하며 배회', who: '이사랑', unlocks: 'TTNA-35', x: 180, y: 140 },
+            { look: '여성 B — 예배당 입구를 초조하게 서성임', who: '이현지', unlocks: 'TQMW-03', x: 322, y: 152 }
           ]
         },
         {
@@ -112,7 +112,7 @@
           location: '목사님 방 앞 복도',
           scene: '한 인물이 목사님 방 복도를 수 차례 오가며, 방 문 앞에서 잠시 멈춰 선다.',
           people: [
-            { look: '여성 — 방 문 앞에서 멈칫거림', who: '박희원', unlocks: 'WCFG-46', x: 290, y: 132 }
+            { look: '여성 — 방 문 앞에서 멈칫거림', who: '박희원', unlocks: 'LGYR-78', x: 290, y: 132 }
           ]
         },
         {
@@ -120,7 +120,7 @@
           location: '목사님 방 근처',
           scene: '한 인물이 목사님 방으로 들어간다. 한참 뒤에야 다시 나온다. (방 내부는 CCTV에 잡히지 않음)',
           people: [
-            { look: '여성 — 방으로 진입 후 한참 머무름', who: '이가현', unlocks: 'QWRO-64', x: 325, y: 134 }
+            { look: '여성 — 방으로 진입 후 한참 머무름', who: '이가현', unlocks: 'DVCS-80', x: 325, y: 134 }
           ]
         }
       ]
@@ -131,7 +131,7 @@
   // 공용 / 피해자(목사) 단서 — 부검·현장·목사 유품
   // ※ 화면에서 '목사(피해자)' 전용 탭에 표시
   // =============================================
-  'BGSU-22': { // 부검 1차 소견 (처음 공개)
+  'COMB-55': { // 부검 1차 소견 (처음 공개)
     title: '부검 1차 소견',
     description: '',
     detail: '심정지 정황. 혈중 요힘빈 고농도 검출. 동시에 정품 니트로글리세린(설하정) 성분도 검출됨 — 목사가 어디선가 진짜 약을 복용한 정황. 협심증 발작 흔적 확인. 단, 코·입 주변에 미세 압박흔이 있어 정밀 감식 중.',
@@ -140,7 +140,7 @@
     person: '목사',
     unlockedBy: []
   },
-  'KBDD-44': { // 현장(목사 방) — 텀블러
+  'SAJL-88': { // 현장(목사 방) — 텀블러
     title: '개인 텀블러',
     description: '책상 위에서 개인 텀블러를 발견했다.',
     detail: '방은 항상 열려있다. 안에 내용물이 담겨있다. 하얀 가루가 보인다.',
@@ -148,7 +148,7 @@
     type: '보통',
     person: '목사'
   },
-  'JSIK-99': { // 부검 확정 — 질식사 (2부 중반 투하)
+  'LONS-62': { // 부검 확정 — 질식사 (2부 중반 투하)
     title: '부검 확정 — 질식사',
     description: '',
     detail: '정밀 감식 결과: 사인은 질식. 코·입 주변 압박흔과 안면 점출혈 확인. 심장 발작은 사망의 직접 원인이 아님.',
@@ -157,7 +157,7 @@
     person: '목사',
     unlockedBy: []
   },
-  'SHOE-67': { //
+  'TQPA-93': { //
     title: '쉐이크 통',
     description: '',
     detail: '종현의 것으로 보이는 쉐이크 통이 목사님 책상 위에서 발견되었다. 내용물이 있다.',
@@ -165,7 +165,7 @@
     type: '보통',
     person: '목사'
   },
-  'PKTK-01': { // 목사 핸드폰 — 지문 인식으로 풀림. 카톡에 삭제된 대화(김멋짐·이가현) → 톡서랍 복구
+  'LWUY-33': { // 목사 핸드폰 — 지문 인식으로 풀림. 카톡에 삭제된 대화(김멋짐·이가현) → 톡서랍 복구
     title: '목사님 핸드폰',
     description: '잠금이 풀린 채 발견된 목사님의 핸드폰.',
     detail: '카톡과 사진을 확인할 수 있다. 카카오톡에 삭제된 대화가 있는 듯하다.',
@@ -193,6 +193,7 @@
           id: 'kakao',
           type: 'kakao',
           name: '카카오톡',
+          recoverPassword: '0419',   // 결혼기념일 4월 19일 — 목사님 일기장(PRBO-03)에서 유도
           chats: [
             {
               name: '박 목사 (지인)',
@@ -239,7 +240,7 @@
       ]
     }
   },
-  'PDIA-04': {
+  'PRBO-03': {
     title: '목사님 일기장',
     description: '목사님이 며칠에 걸쳐 적어 온 일기. 화살표로 페이지를 넘겨 읽어보세요.',
     detail: '',
@@ -269,7 +270,7 @@
       }
     ]
   },
-  'DOOR-05': { // 목사님 방 위치·구조
+  'TARB-53': { // 목사님 방 위치·구조
     title: '목사님 방 위치·구조',
     description: '',
     detail: '방 문에 작은 유리창. 방 내부엔 CCTV 없음. 단, 방 바깥 복도는 CCTV가 있다.',
@@ -277,7 +278,7 @@
     type: '보통',
     person: '목사'
   },
-  'SCHD-01': { // 목사님 일정표 — 면담 일정. 항목 클릭 시 면담 내용 확인
+  'HQIR-26': { // 목사님 일정표 — 면담 일정. 항목 클릭 시 면담 내용 확인
     title: '목사님 일정표',
     description: '',
     detail: '면담 일정을 눌러 각 면담 내용을 확인할 수 있다.',
@@ -293,7 +294,7 @@
       ]
     }
   },
-  'NTRO-77': { 
+  'IWND-38': { 
     title: '설하정 처방전',
     description: '책상 위에서 처방전을 발견했다.',
     detail: '협심증 응급약 설하정 처방전이다. 정품 알약은 "GTN" 각인이 있다고 적혀 있다. 발작 시 혀 밑에 넣어 복용한다.',
@@ -301,7 +302,7 @@
     type: '보통',
     person: '목사'
   },
-  'PMMO-09': {
+  'LTXB-98': {
     title: '',
     description: '',
     detail: '',
@@ -309,7 +310,7 @@
     type: '보통',
     person: '목사'
   },
-  'WUQZ-78': {
+  'MEXF-73': {
     title: '설하정 약통',
     description: '책상 위에서 설하정 약통을 발견했다.',
     detail: '협심증 응급약 설하정 통이다. 겉에는 딸기향 함유라고 적혀 있고 노란 알약이 5알밖에 남아있지 않다. 옅은 딸기향이 난다.',
@@ -317,7 +318,7 @@
     type: '보통',
     person: '목사'
   },
-  'TPIL-02': {
+  'HODM-06': {
     title: '작은 약통',
     description: '침대 근처 바닥에서 발견한 작은 약통이다.',
     detail: '알약이 2알 밖에 남아있지 않다. 하얀 알약에 "GTN" 각인이 새겨져있다. 통을 열었을 때 특유의 딸기향이 진하게 났다.',
@@ -325,7 +326,7 @@
     type: '보통',
     person: '목사',
   },
-  'DSHM-31': { //목사 협심증 진단서
+  'GZYJ-12': { //목사 협심증 진단서
     title: '목사님 협심증 진단서',
     description: '목사님 책상 위에 놓여져 있다. 누구든 볼 수 있는 듯 하다.',
     detail: 'OO병원 진단서: 협심증. 발작 시 니트로글리세린 설하정을 혀 밑에 즉시 복용하라는 지시가 적혀 있다.',
@@ -333,7 +334,7 @@
     type: '보통',
     person: '목사'
   },
-  'PLWX-33': { // 현장(목사 방, 2부) — 베개 위치 이상 (핵심)
+  'IHKX-61': { // 현장(목사 방, 2부) — 베개 위치 이상 (핵심)
     title: '베개 위치',
     description: '',
     detail: '침대에서 목사님이 배게를 제대로 배고 있지 않았다. 심정지로 고통스러워서 그런 듯하다.',
@@ -342,16 +343,16 @@
     person: '목사',
     unlockedBy: []
   },
-  'WNDW-91': { // 문 유리창
+  'CKKT-40': { // 문 유리창
     title: '문 유리창 ',
     description: '',
     detail: '목사님 방 문에는 작은 직사각형 유리창이 있다. 복도에서 방 안이 보인다.',
     image: '/images/clue-03.svg',
     type: '일반',
     person: '목사',
-    unlockedBy: ['WCFG-46']
+    unlockedBy: ['LGYR-78']
   },
-  'SLFB-07': { 
+  'PMUZ-94': { 
     title: '의문의 섬유',
     description: '',
     detail: '목사님 베개 커버에서 섬유가 발견되었다.',
@@ -360,7 +361,7 @@
     person: '목사',
     unlockedBy: []
   },
-  'COLR-77': { //
+  'EUMM-81': { //
     title: '목사 옷깃 구겨짐',
     description: '',
     detail: '목사님 셔츠 옷깃이 한쪽만 구겨지고 늘어났다. 누군가 손으로 잡아당긴 흔적이 있다.',
@@ -368,7 +369,7 @@
     type: '보통',
     person: '목사'
   },
-  'HARI-19': { // 현장(목사 방) — 바닥의 단추 (❓→윤은재)
+  'AVLP-75': { // 현장(목사 방) — 바닥의 단추 (❓→윤은재)
     title: '바닥의 단추',
     description: '',
     detail: '목사님 셔츠에서 떨어진 단추 1개가 방 바닥에 떨어져 있음.',
@@ -380,7 +381,7 @@
   // =============================================
   // 이사랑 (공범 — 요힘빈 라벨 교체) — 보통 단서
   // =============================================
-  'YUQO-48': { // 복도 CCTV
+  'NQBT-91': { // 복도 CCTV
     title: 'CCTV 화면 캡처',
     description: '',
     detail: '12:20경 이사랑이 최종현 방 방향으로 이동. 손에 무언가 들고 있다.',
@@ -388,7 +389,7 @@
     type: '보통',
     person: '이사랑'
   },
-  'SESE-63': {
+  'ILPN-45': {
     title: '',
     description: '',
     detail: '',
@@ -396,7 +397,7 @@
     type: '보통',
     person: '이사랑'
   },
-  'MPAH-32': { // 이사랑 가방 — 핵심 물증
+  'NYBB-98': { // 이사랑 가방 — 핵심 물증
     title: '파우치',
     description: '화장품 파우치. 안에 금속 스패출러, 속눈썹 풀, 스킨, 앰플, 쿠션 등이 있다.',
     detail: '스패출러와 파우치 안쪽에 흰 가루가 묻어있음 (요힘빈 파우더와 동일 성분 — 감식 연계).',
@@ -404,7 +405,7 @@
     type: '보통',
     person: '이사랑'
   },
-  'BLAD-12': { //
+  'OLUX-30': { //
     title: '옷가지',
     description: '',
     detail: '여벌 옷과 양말. 특이사항 없음. ',
@@ -412,7 +413,7 @@
     type: '보통',
     person: '이사랑'
   },
-  'YBBU-45': {
+  'QNGX-77': {
     title: '',
     description: '',
     detail: '',
@@ -420,7 +421,7 @@
     type: '보통',
     person: '이사랑'
   },
-  'PECG-06': {
+  'LPQL-80': {
     title: '',
     description: '',
     detail: '',
@@ -428,7 +429,7 @@
     type: '보통',
     person: '이사랑'
   },
-  'PQSH-34': { // 이사랑 열린 핸드폰 (PECG-06 해금 후). 톡서랍 비번 = 현지 생일 0302
+  'QIVS-92': { // 이사랑 열린 핸드폰 (PECG-06 해금 후). 톡서랍 비번 = 현지 생일 0302
     title: '열린 핸드폰',
     description: '',
     detail: '인터넷 검색 내역, 카카오톡 대화, 메시지, 사진 등을 확인할 수 있다. 카카오톡에 삭제된 대화가 있다.',
@@ -540,7 +541,7 @@
       ]
     }
   },
-  'PGSD-57': { // 이사랑 방
+  'SUIX-89': { // 이사랑 방
     title: '빚 독촉장',
     description: '이사랑 가방 안쪽에서 나온 봉투.',
     detail: '본인(이사랑) 명의로 집중된 채무 독촉장. 부모에게서 넘어온 빚으로, 금액은 1억 4천만원이다.',
@@ -548,7 +549,7 @@
     type: '보통',
     person: '이사랑'
   },
-  'CASI-77': { 
+  'HKVQ-36': { 
     title: '종현 방 접근 이유',
     description: '점심에 종현 방에 들어간 이유를 진술했다.',
     detail: '점심에 밥 대신 단백질 먹으려고 들어갔다.',
@@ -556,7 +557,7 @@
     type: '보통',
     person: '이사랑'
   },
-  'VHBT-17': { // 복도 CCTV
+  'TTNA-35': { // 복도 CCTV
     title: '배회하는 이사랑',
     description: '',
     detail: '오후 1시~1시 40분, 식당·숙소 배회. 핸드폰 자주 확인.',
@@ -564,7 +565,7 @@
     type: '보통',
     person: '이사랑'
   },
-  'ZTHB-21': { // 이사랑 다이어리 — 생일 8월 15일(0815) 노출 → 현지 폰 톡서랍 비번
+  'BCZN-89': { // 이사랑 다이어리 — 생일 8월 15일(0815) 노출 → 현지 폰 톡서랍 비번
     title: '이사랑의 다이어리',
     description: '이사랑이 며칠에 걸쳐 적어 온 다이어리. 화살표로 페이지를 넘겨 읽어보세요.',
     detail: '',
@@ -586,7 +587,7 @@
       }
     ]
   },
-  'DEBT-61': { 
+  'UJVD-65': { 
     title: '성경책',
     description: '',
     detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
@@ -598,7 +599,7 @@
   // =============================================
   // 이사랑 (공범) — 특수 단서
   // =============================================
-  'EKQZ-25': {
+  'RPHG-17': {
     title: '아침 섭취 진술',
     description: '',
     detail: '"아침에 마시겠다고 해서 알아서 타 마시라고 한 적 있다." — 이사랑이 보충제 통에 접근한 선례.',
@@ -607,7 +608,7 @@
     person: '이사랑',
     unlockedBy: []
   },
-  'MFRQ-48': { // 파우더 성분 감식
+  'DQAY-71': { // 파우더 성분 감식
     title: '파우더 성분 감식',
     description: '',
     detail: '이사랑 파우치의 흰 가루 = 요힘빈. 라벨 교체 시 접촉한 것으로 해석.',
@@ -616,37 +617,37 @@
     person: '이사랑',
     unlockedBy: []
   },
-  'LOVN-56': {
+  'CGRT-19': {
     title: '',
     description: '',
     detail: '',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '이사랑',
-    unlockedBy: ['GFFZ-13', 'CLFL-13']
+    unlockedBy: ['IJRP-82', 'SAQU-86']
   },
-  'WJIE-77': {
+  'KKEG-81': {
     title: '',
     description: '',
     detail: '',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '이사랑',
-    unlockedBy: ['ZTHB-21', 'YBBU-45']
+    unlockedBy: ['BCZN-89', 'QNGX-77']
   },
-  'IRPH-46': { //
+  'MMBH-53': { //
     title: '',
     description: '',
-    detail: '약 2000만원 어치 영수증 뭉치. 장부 "기타" 항목 금액과 일치 — 횡령 정황.',
+    detail: '',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '이사랑',
-    unlockedBy: ['YUQO-48', 'SESE-63']
+    unlockedBy: ['NQBT-91', 'ILPN-45']
   },
-  'JDNI-38': {
-    title: '면담 후 모습',
+  'OAUS-95': {
+    title: '',
     description: '',
-    detail: '전날 재정 면담 직후, 이사랑이 불안한 표정으로 방을 나오는 것을 봤다는 목격담.',
+    detail: '',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '이사랑',
@@ -656,7 +657,7 @@
   // =============================================
   // 최종현 (핵심 용의자 · 무고 · 도구로 이용됨) — 보통 단서
   // =============================================
-  'DBVZ-30': { // 가방
+  'VNTD-61': { // 가방
     title: '등산코스 지도',
     description: '숙소 근처에 있는 산의 등산코스 지도.',
     detail: '목사님 선호 코스 표시.',
@@ -664,7 +665,7 @@
     type: '보통',
     person: '최종현'
   },
-  'WZOI-51': { // 가방
+  'NDVA-68': { // 가방
     title: '등산 장갑',
     description: '최종현의 가방에 있는 등산용 장갑.',
     detail: '흰 가루·흙먼지 묻음.',
@@ -672,7 +673,7 @@
     type: '보통',
     person: '최종현'
   },
-  'TPNJ-25': { // 가방 — 쉐이크 통
+  'HPKM-53': { // 가방 — 쉐이크 통
     title: '쉐이크 통',
     description: '',
     detail: '평소 두 개 (목사님 것까지) 가지고 다니는데 지금은 하나만 있다.',
@@ -680,7 +681,7 @@
     type: '보통',
     person: '최종현'
   },
-  'QZXY-18': { // 가방 — 요힘빈 통 (핵심, 라벨 교체됨)
+  'TYQD-94': { // 가방 — 요힘빈 통 (핵심, 라벨 교체됨)
     title: '플라스틱 통 [단백질]',
     description: '종현의 가방 안에서 발견되었다.".',
     detail: '라벨에 "단백질"이라고 적혀있다. 안에 플라스틱 스쿱이 들어있다.',
@@ -689,7 +690,7 @@
     person: '최종현',
     tapReveal: { taps: 5, text: '라벨지가 통에서 너무 쉽게 떨어져버렸다.', image: '/images/protein_peeled.jpg' }
   },
-  'JZLM-98': { // 가방 — 단백질 통 (핵심, 라벨 교체됨)
+  'OYJW-26': { // 가방 — 단백질 통 (핵심, 라벨 교체됨)
     title: '플라스틱 통 [요힘빈]',
     description: '종현의 가방 안에서 발견되었다.',
     detail: '라벨에 "요힘빈"이라고 적혀있다. 안에 플라스틱 스쿱이 들어있다.',
@@ -698,7 +699,7 @@
     person: '최종현',
     tapReveal: { taps: 5, text: '라벨지가 통에서 너무 쉽게 떨어져버렸다.', image: '/images/yohimbine_peeled.jpg' }
   },
-  'VGIG-44': {
+  'EDEZ-28': {
     title: '',
     description: '',
     detail: '',
@@ -706,7 +707,7 @@
     type: '보통',
     person: '최종현'
   },
-  'KBUT-19': {
+  'WSIE-85': {
     title: '최종현 핸드폰',
     description: '최종현 핸드폰이다.',
     detail: '카카오톡, 인터넷 검색내용, 사진 등을 확인할 수 있다.',
@@ -768,7 +769,7 @@
       ]
     }
   },
-  'AOYY-73': { 
+  'TEOX-99': { 
     title: '',
     description: '',
     detail: '',
@@ -776,7 +777,7 @@
     type: '보통',
     person: '최종현'
   },
-  'WNEP-79': { //
+  'DBHK-86': { //
     title: '',
     description: '',
     detail: '',
@@ -784,7 +785,7 @@
     type: '보통',
     person: '최종현'
   },
-  'LQKZ-03': {
+  'ASPQ-07': {
     title: '',
     description: '',
     detail: '',
@@ -792,7 +793,7 @@
     type: '보통',
     person: '최종현'
   },
-  'CUPR-40': {
+  'XVNT-80': {
     title: '',
     description: '',
     detail: '',
@@ -800,7 +801,7 @@
     type: '보통',
     person: '최종현'
   },
-  'FNGP-52': {
+  'EPMQ-78': {
     title: '',
     description: '',
     detail: '',
@@ -808,7 +809,7 @@
     type: '보통',
     person: '최종현'
   },
-  'SCUP-63': { 
+  'NMFM-21': { 
     title: '옷가지',
     description: '',
     detail: '여벌 옷과 양말. 특이사항 없음. ',
@@ -820,7 +821,7 @@
   // =============================================
   // 최종현 — 특수 단서
   // =============================================
-  'SHFK-09': {
+  'OICI-93': {
     title: '',
     description: '',
     detail: '',
@@ -829,34 +830,34 @@
     person: '최종현',
     unlockedBy: []
   },
-  'TWSI-17': { //
+  'OIMO-99': { //
     title: '성경책',
     description: '',
     detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
     image: '/images/clue-03.svg',
     type: '보통',
     person: '최종현',
-    unlockedBy: ['SHFK-09']
+    unlockedBy: ['OICI-93']
   },
-  'OXTC-68': { //
+  'YPYZ-13': { //
     title: '파우치',
     description: '',
     detail: '세면 파우치. 칫솔·면도기·선크림 등. ',
     image: '/images/clue-03.svg',
     type: '보통',
     person: '최종현',
-    unlockedBy: ['MMSY-80']
+    unlockedBy: ['ODDM-57']
   },
-  'TMYO-78': { 
+  'RMKW-05': { 
     title: '라벨 재부착 흔적 [초히든]',
     description: '목사님께 드린 건 단백질이 아니였다.',
     detail: '두 통 라벨 모서리에 이중 접착 흔적이 보인다. 누군가 교체한 것 같다.',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '최종현',
-    unlockedBy: ['SHFK-09', 'QZXY-18', 'MMSY-80']
+    unlockedBy: ['OICI-93', 'TYQD-94', 'ODDM-57']
   },
-  'MMSY-80': { 
+  'ODDM-57': { 
     title: '보충제 성분 분석 [중간공개]',
     description: '',
     detail: '목사님께 드린 통의 성분: 요힘빈 고함량 검출, ',
@@ -869,7 +870,7 @@
   // =============================================
   // 이현지 (독립 범행 시도 · 이사랑 언니 · 직접 사인 무관) — 보통 단서
   // =============================================
-  'ELML-43': { // 가방 — 졸피뎀 약통
+  'BXNP-29': { // 가방 — 졸피뎀 약통
     title: '졸피뎀 약통',
     description: '강력한 수면제로 알려진 졸피뎀(Zolpidem) 약통. 이현지의 가방에서 발견되었다.',
     detail: '강력 수면제. 처방전 없음. 주변: "수면 장애 처음 듣는다."',
@@ -877,7 +878,7 @@
     type: '보통',
     person: '이현지'
   },
-  'VXDA-53': { // 이현지 다이어리 — 생일 3월 2일(0302) 노출 → 사랑 폰 톡서랍 비번
+  'BUFL-52': { // 이현지 다이어리 — 생일 3월 2일(0302) 노출 → 사랑 폰 톡서랍 비번
     title: '이현지의 다이어리',
     description: '이현지가 며칠에 걸쳐 적어 온 다이어리. 화살표로 페이지를 넘겨 읽어보세요.',
     detail: '',
@@ -899,7 +900,7 @@
       }
     ]
   },
-  'HJFI-23': { // 이현지 핸드폰. 톡서랍 비번 = 사랑 생일 0815
+  'HUOX-80': { // 이현지 핸드폰. 톡서랍 비번 = 사랑 생일 0815
     title: '이현지 핸드폰',
     description: '이현지 핸드폰이다.',
     detail: '인터넷 검색, 카카오톡 대화, 사진 등을 확인할 수 있다. 카카오톡에 삭제된 대화가 있다.',
@@ -983,7 +984,7 @@
       ]
     }
   },
-  'HTBE-10': {
+  'ESQN-14': {
     title: '성경책',
     description: '',
     detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
@@ -991,7 +992,7 @@
     type: '보통',
     person: '이현지'
   },
-  'GFFZ-13': { // 가방 — 회계 장부
+  'IJRP-82': { // 가방 — 회계 장부
     title: '회계 장부',
     description: '뭔가 허술해 보이는 회계 장부.',
     detail: '수기로 기록된 회계 장부이다.',
@@ -1000,7 +1001,7 @@
     person: '이현지'
   },
   
-  'OJMG-85': {
+  'LKUJ-60': {
     title: '옷가지',
     description: '',
     detail: '여벌 옷과 양말. 특이사항 없음. ',
@@ -1008,7 +1009,7 @@
     type: '보통',
     person: '이현지'
   },
-  'CLFL-13': {
+  'SAQU-86': {
     title: '',
     description: '',
     detail: '',
@@ -1016,7 +1017,7 @@
     type: '보통',
     person: '이현지'
   },
-  'BGYS-92': { // 예배당 CCTV
+  'TQMW-03': { // 예배당 CCTV
     title: '배회하는 이현지',
     description: '',
     detail: '오후 예배당 입구·식당 배회. 초조해 보인다.',
@@ -1024,7 +1025,7 @@
     type: '보통',
     person: '이현지'
   },
-  'FCPL-08': {
+  'BBMD-95': {
     title: '',
     description: '',
     detail: '',
@@ -1032,7 +1033,7 @@
     type: '보통',
     person: '이현지'
   },
-  'WRST-55': { // 복도 CCTV (2부) — 손 닦는 이현지 (핵심)
+  'NKCD-95': { // 복도 CCTV (2부) — 손 닦는 이현지 (핵심)
     title: '손 닦는 이현지 (CCTV)',
     description: '',
     detail: '12:35경 이현지가 목사님 방 근처 복도에서 손을 옷에 닦으며 빠르게 이동하는 장면.',
@@ -1040,7 +1041,7 @@
     type: '보통',
     person: '이현지'
   },
-  'DCUP-22': { 
+  'KPVH-32': { 
     title: '파우치',
     description: '',
     detail: '화장품 파우치. 스킨·로션·쿠션 등 일상 화장품. ',
@@ -1048,7 +1049,7 @@
     type: '보통',
     person: '이현지'
   },
-  'FREG-71': {
+  'KZPG-76': {
     title: '',
     description: '',
     detail: '',
@@ -1060,7 +1061,7 @@
   // =============================================
   // 이현지 — 특수 단서
   // =============================================
-  'GIQA-02': { 
+  'CFBP-50': { 
     title: '',
     description: '',
     detail: '',
@@ -1069,16 +1070,16 @@
     person: '이현지',
     unlockedBy: []
   },
-  'PPSO-17': {
+  'NVYN-22': {
     title: '목사님 텀블러 성분 감식',
     description: '',
     detail: '졸피뎀 검출.',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '이현지',
-    unlockedBy: ['KBDD-44', 'FCPL-08']
+    unlockedBy: ['SAJL-88', 'BBMD-95']
   },
-  'XXUL-79': {
+  'EVDJ-35': {
     title: '',
     description: '',
     detail: '',
@@ -1087,7 +1088,7 @@
     person: '이현지',
     unlockedBy: []
   },
-  'MYDH-62': {
+  'AKNZ-48': {
     title: '',
     description: '',
     detail: '',
@@ -1100,7 +1101,7 @@
   // =============================================
   // 박희원 (주범 — 응급약 교체 + 베개 질식) — 보통 단서
   // =============================================
-  'PILL-30': { // 방 — 요일별 약통 (핵심)
+  'UTUW-73': { // 방 — 요일별 약통 (핵심)
     title: '요일별 약통',
     description: '희원의 방에서 발견된 약통이다. 요일별로 나누어져 있다.',
     detail: '월·화·수·목·금·토 칸으로 나뉜 약통. 칸을 열면 비타민C·루테인·오메가3 같은 영양제와 어디서 본적이 있는 알약이 섞여 있다.',
@@ -1108,7 +1109,7 @@
     type: '보통',
     person: '박희원'
   },
-  'BIBL-22': { //
+  'JAJZ-77': { //
     title: '성경책',
     description: '희원의 방에서 발견된 성경책이다.',
     detail: '밑줄과 메모가 빼곡한 성경책.',
@@ -1116,7 +1117,7 @@
     type: '보통',
     person: '박희원'
   },
-  'POU2-18': { //
+  'VJMU-45': { //
     title: '화장품 파우치',
     description: '희원의 방에서 발견된 화장품 파우치이다.',
     detail: '스킨·로션·선크림 등 여성 화장품. 평범한 세면 용품.',
@@ -1124,7 +1125,7 @@
     type: '보통',
     person: '박희원'
   },
-  'CLOT-37': { // 방 
+  'HTXI-85': { // 방 
     title: '옷가지',
     description: '희원의 가방에서 발견된 옷가지이다.',
     detail: '여벌 셔츠와 양말.',
@@ -1132,7 +1133,7 @@
     type: '보통',
     person: '박희원'
   },
-  'LVRY-41': {
+  'LUDP-77': {
     title: '',
     description: '',
     detail: '',
@@ -1140,10 +1141,10 @@
     type: '보통',
     person: '박희원'
   },
-  'KDGY-11': { //핸드폰
+  'YJWR-74': { //핸드폰
     title: '박희원 핸드폰',
     description: '박희원의 핸드폰이다.',
-    detail: '인터넷 검색을 확인할 수 있다.',
+    detail: '인터넷 검색과 카카오톡을 확인할 수 있다. 카카오톡에 삭제된 대화가 있는 듯하다.',
     image: '/images/clue-03.svg',
     type: '보통',
     person: '박희원',
@@ -1184,11 +1185,43 @@
               snippet: '흰색 원형 정제가 일반적이며, 표면에 별도의 각인이 없는 제품이 많습니다.'
             }
           ]
+        },
+        {
+          id: 'kakao',
+          type: 'kakao',
+          name: '카카오톡',
+          chats: [
+            {
+              // 사건 전날 자격 면담 직후 — 압박과 어색해진 관계가 드러난다
+              name: '담임목사님',
+              messages: [
+                { from: 'them', text: '박 전도사, 오늘 면담은 사적인 감정으로 한 게 아니에요.', time: '전날 14:30' },
+                { from: 'them', text: '수료증 발급 번호가 교단 DB와 맞지 않더군요. 수련회 끝나면 교단에 직접 확인 절차를 밟겠습니다.', time: '전날 14:31' },
+                { from: 'me', text: '목사님, 제가 그동안 얼마나 충성스럽게 사역했는지 아시잖아요.', time: '전날 14:40' },
+                { from: 'me', text: '한 번만 눈감아 주실 수는 없으신가요...', time: '전날 14:41' },
+                { from: 'them', text: '자격은 자격입니다. 원칙대로 처리하는 게 모두를 위한 길이에요.', time: '전날 15:02' },
+                { from: 'them', text: '수련회 잘 마칩시다.', time: '전날 15:02' }
+              ]
+            },
+            {
+              // 톡서랍 복구로 드러나는 핵심 단서 — 위조 정황(동기) + 사건 당일 행적
+              name: '○○ (자격 안내)',
+              deleted: true,
+              messages: [
+                { from: 'me', text: '저번에 그 수료증 건요... 교단에서 발급번호 조회하면 바로 드러나나요?', time: '3일 전' },
+                { from: 'them', text: '번호 안 맞으면 조회하는 즉시 걸립니다. 갑자기 왜요?', time: '3일 전' },
+                { from: 'me', text: '아니에요. 그냥 확인차요.', time: '3일 전' },
+                { from: 'me', text: '...만약 조회 전에 일이 정리되면, 굳이 들출 사람은 없겠죠?', time: '3일 전' },
+                { from: 'them', text: '그게 무슨 말이에요?', time: '3일 전' },
+                { from: 'me', text: '아무것도요. 신경 쓰지 마세요.', time: '이틀 전', deleted: true }
+              ]
+            }
+          ]
         }
       ]
     }
   },
-  'WCFG-46': { // 복도 CCTV
+  'LGYR-78': { // 복도 CCTV
     title: '복도 배회 목격',
     description: '',
     detail: '오후에 목사님 방 복도에 배회하고 있다.',
@@ -1196,7 +1229,7 @@
     type: '보통',
     person: '박희원'
   },
-  'LHSC-06': {
+  'MZKW-75': {
     title: '',
     description: '',
     detail: '',
@@ -1204,7 +1237,7 @@
     type: '보통',
     person: '박희원'
   },
-  'AZPL-94': {
+  'NPEP-67': {
     title: '',
     description: '',
     detail: '',
@@ -1212,7 +1245,7 @@
     type: '보통',
     person: '박희원'
   },
-  'BRZD-12': {
+  'XPYZ-94': {
     title: '',
     description: '',
     detail: '',
@@ -1220,7 +1253,7 @@
     type: '보통',
     person: '박희원'
   },
-  'LZWX-93': {
+  'QBPB-43': {
     title: '',
     description: '',
     detail: '',
@@ -1232,34 +1265,25 @@
   // =============================================
   // 박희원 — 특수 단서
   // =============================================
-  'SWAP-41': { //
+  'JXCA-09': { //
     title: '알약 대조',
     description: '',
     detail: '박희원 요일별 약통의 약과 목사님 설화정 통에 있는 약의 모양이 일치한다.',
     image: '',
     type: '특수',
     person: '박희원',
-    unlockedBy: ['PILL-30', 'WUQZ-78', 'NTRO-77']
+    unlockedBy: ['UTUW-73', 'MEXF-73', 'IWND-38']
   },
-  'MCMM-13': {
+  'UWIB-79': {
     title: '',
     description: '',
     detail: '',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '박희원',
-    unlockedBy: ['KDGY-11']
+    unlockedBy: ['YJWR-74']
   },
-  'QAWG-10': {
-    title: '',
-    description: '',
-    detail: '',
-    image: '/images/clue-03.svg',
-    type: '특수',
-    person: '박희원',
-    unlockedBy: []
-  },
-  'PGZT-09': {
+  'DHJX-82': {
     title: '',
     description: '',
     detail: '',
@@ -1268,7 +1292,7 @@
     person: '박희원',
     unlockedBy: []
   },
-  'ACNJ-83': {
+  'IAXK-55': {
     title: '',
     description: '',
     detail: '',
@@ -1277,7 +1301,16 @@
     person: '박희원',
     unlockedBy: []
   },
-  'JQOO-57': {
+  'JYYL-62': {
+    title: '',
+    description: '',
+    detail: '',
+    image: '/images/clue-03.svg',
+    type: '특수',
+    person: '박희원',
+    unlockedBy: []
+  },
+  'QXVW-79': {
     title: '',
     description: '',
     detail: '',
@@ -1290,7 +1323,7 @@
   // =============================================
   // 윤은재 (감정 동기 의혹 · 무고 · 발작 촉진 가능성만) — 보통 단서
   // =============================================
-  'LCSX-35': { // 다른 용의자가 말해줌
+  'BXCI-79': { // 다른 용의자가 말해줌
     title: '언쟁 목격 진술',
     description: '',
     detail: '목사 방에서 큰 소리, 문 쾅 닫힘. 윤은재가 나오는 것 목격.',
@@ -1298,7 +1331,7 @@
     type: '보통',
     person: '윤은재'
   },
-  'FBYE-30': { //
+  'IOVT-95': { //
     title: '은재의 손목 든 멍',
     description: '',
     detail: '은재의 손목에 푸르게 멍이 들었다. 얼핏 보면 손 모양인 것 같다.',
@@ -1306,7 +1339,7 @@
     type: '보통',
     person: '윤은재'
   },
-  'UCGX-01': { // 방
+  'VUDC-50': { // 방
     title: '거부 도장이 찍힌 제안서',
     description: '',
     detail: '고가의 마이크와 음향 장비를 구입하자는 제안서. 목사님이 거부 도장을 찍었다.',
@@ -1314,7 +1347,7 @@
     type: '보통',
     person: '윤은재'
   },
-  'XZIU-65': {
+  'UHRU-61': {
     title: '',
     description: '',
     detail: '',
@@ -1322,7 +1355,7 @@
     type: '보통',
     person: '윤은재'
   },
-  'KLLF-63': {// ( 2부 해금 )
+  'GRVG-56': {// ( 2부 해금 )
     title: '윤은재 핸드폰',
     description: '',
     detail: '검색기록과 카톡을 확인할 수 있다.',
@@ -1384,7 +1417,7 @@
       ]
     }
   },
-  'JOHG-57': { // 수중 — 운동화 흙
+  'GYPV-39': { // 수중 — 운동화 흙
     title: '운동화 흙',
     description: '',
     detail: '당일 산 입구까지 간 황토 흙.',
@@ -1392,7 +1425,7 @@
     type: '보통',
     person: '윤은재'
   },
-  'AZVU-48': { // 방 — 라벨 없는 약봉투
+  'LWFJ-99': { // 방 — 라벨 없는 약봉투
     title: '약봉투',
     description: '약국에서 처방받은 약 봉투이다. 약만 보고 어떤 약인지 모르겠다.',
     detail: '텔미사르탄 (Telmisartan), 발사르탄 (Valsartan) ,트윈스타, 엑스포지, 카르베디롤 등이 적혀 있다.',
@@ -1400,7 +1433,7 @@
     type: '보통',
     person: '윤은재'
   },
-  'EISF-00': { 
+  'MZVN-14': { 
     title: '성경책',
     description: '',
     detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
@@ -1408,7 +1441,7 @@
     type: '보통',
     person: '윤은재'
   },
-  'LUVX-47': {
+  'HWGJ-12': {
     title: '',
     description: '',
     detail: '',
@@ -1416,7 +1449,7 @@
     type: '보통',
     person: '윤은재'
   },
-  'MAKA-55': {
+  'JSYT-91': {
     title: '',
     description: '',
     detail: '',
@@ -1428,16 +1461,16 @@
   // =============================================
   // 윤은재 — 특수 단서
   // =============================================
-  'UUSQ-85': { // 약봉투 처방전 확인 (AZVU-48 추궁)
+  'AQFE-59': { // 약봉투 처방전 확인 (AZVU-48 추궁)
     title: '약봉투 처방전 확인',
     description: '',
     detail: '부모님 고혈압약 처방전.',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '윤은재',
-    unlockedBy: ['AZVU-48']
+    unlockedBy: ['LWFJ-99']
   },
-  'SXAH-88': { 
+  'PMIK-13': { 
     title: '파우치',
     description: '',
     detail: '세면 파우치. 칫솔·면도기·선크림 등. ',
@@ -1446,7 +1479,7 @@
     person: '윤은재',
     unlockedBy: []
   },
-  'CTGS-92': {
+  'YKBP-76': {
     title: '',
     description: '',
     detail: '',
@@ -1455,16 +1488,16 @@
     person: '윤은재',
     unlockedBy: []
   },
-  'OLCG-88': {
+  'ALLZ-85': {
     title: '옷가지',
     description: '',
     detail: '여벌 옷과 양말. 특이사항 없음. ',
     image: '/images/clue-03.svg',
     type: '보통',
     person: '윤은재',
-    unlockedBy: ['UCGX-01', 'LCSX-35']
+    unlockedBy: ['VUDC-50', 'BXCI-79']
   },
-  'DBEL-94': {
+  'NZLL-84': {
     title: '',
     description: '',
     detail: '',
@@ -1473,7 +1506,7 @@
     person: '윤은재',
     unlockedBy: []
   },
-  'DRNK-21': {
+  'ITIE-02': {
     title: '',
     description: '',
     detail: '',
@@ -1486,7 +1519,7 @@
   // =============================================
   // 이가현 (증거 인멸 · 신고 10분 지연) — 보통 단서
   // =============================================
-  'IIKU-90': { // 지갑 — 클릭해서 내용물 확인 (딸 사진 포함)
+  'NBZL-83': { // 지갑 — 클릭해서 내용물 확인 (딸 사진 포함)
     title: '가현의 지갑',
     description: '',
     detail: '지갑 속 항목을 눌러 내용물을 확인할 수 있다.',
@@ -1503,7 +1536,7 @@
       ]
     }
   },
-  'PFWK-90': {
+  'WORR-03': {
     title: '',
     description: '',
     detail: '',
@@ -1511,7 +1544,7 @@
     type: '보통',
     person: '이가현'
   },
-  'ACGT-90': { //
+  'LWNR-86': { //
     title: '아이가 그린 그림 편지',
     description: '',
     detail: '가현의 소지품에서 나온 5살 아이의 그림 편지. 삐뚤빼뚤한 글씨로 "엄마 사랑해"라고 적혀 있다. "조카"라기엔 호칭이 이상하다.',
@@ -1519,7 +1552,7 @@
     type: '보통',
     person: '이가현'
   },
-  'VGLV-69': {
+  'AYMX-96': {
     title: '',
     description: '',
     detail: '',
@@ -1527,7 +1560,7 @@
     type: '보통',
     person: '이가현'
   },
-  'MJTJ-51': {
+  'TCGA-87': {
     title: '이가현 핸드폰',
     description: '',
     detail: '인터넷 검색, 카카오톡 대화, 사진 등을 확인할 수 있다.',
@@ -1606,7 +1639,7 @@
       ]
     }
   },
-  'JKVN-96': { // 
+  'ZNUS-26': { // 
     title: '옷가지',
     description: '',
     detail: '여벌 옷과 양말. 특이사항 없음. ',
@@ -1614,7 +1647,7 @@
     type: '보통',
     person: '이가현'
   },
-  'CXGY-03': { // 공용 게시 — 시신 발견 경위
+  'YZET-89': { // 공용 게시 — 시신 발견 경위
     title: '시신 발견 경위',
     description: '',
     detail: '"예배당 쪽에 볼 일이 있어서 갔다가 소리가 이상해 들어갔어요. 이미 쓰러져 계셨어요." ',
@@ -1622,7 +1655,7 @@
     type: '보통',
     person: '이가현'
   },
-  'QWRO-64': { // CCTV — 신고 지연
+  'DVCS-80': { // CCTV — 신고 지연
     title: '신고 지연 — 시간 공백',
     description: '',
     detail: '목사 방 내부는 안 보이지만 근처를 찍는 CCTV에 가현이 방에 들어간 시각이 찍혔다. 그 시각과 신고 시각의 차이가 너무 커서 의심을 받는다.',
@@ -1630,7 +1663,7 @@
     type: '보통',
     person: '이가현'
   },
-  'VILR-41': { // 다른 용의자가 진술
+  'TNNK-17': { // 다른 용의자가 진술
     title: '목사와 냉각된 관계',
     description: '',
     detail: '수련회날부터 목사님과 눈도 안 마주 친다고 한다.',
@@ -1638,7 +1671,7 @@
     type: '보통',
     person: '이가현'
   },
-  'DSQO-10': {
+  'LCPE-70': {
     title: '아이 예방접종 수첩',
     description: '',
     detail: '가현의 가방에서 나온 5세 아이의 예방접종 수첩. 보호자 란에 "이가현"이 적혀 있다.',
@@ -1650,16 +1683,16 @@
   // =============================================
   // 이가현 — 특수 단서
   // =============================================
-  'GMTK-02': { //
+  'WVBG-31': { //
     title: '어린이집 비상연락망',
     description: '',
     detail: '아이가 다니는 어린이집의 비상연락망 사본. "주 보호자 — 이가현(엄마)"로 기재되어 있다. 조카가 아니라 친자임을 가리킨다.',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '이가현',
-    unlockedBy: ['IIKU-90', 'DSQO-10']
+    unlockedBy: ['NBZL-83', 'LCPE-70']
   },
-  'KVRU-70': { 
+  'KMRV-41': { 
     title: '',
     description: '',
     detail: '',
@@ -1668,41 +1701,41 @@
     person: '이가현',
     unlockedBy: []
   },
-  'XWTW-80': { 
+  'QMCH-44': { 
     title: '',
     description: '',
     detail: '',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '이가현',
-    unlockedBy: ['QWRO-64', 'MJTJ-51']
+    unlockedBy: ['DVCS-80', 'TCGA-87']
   },
-  'WEPC-44': {
+  'DZPL-78': {
     title: '성경책',
     description: '',
     detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
     image: '/images/clue-03.svg',
     type: '보통',
     person: '이가현',
-    unlockedBy: ['MJTJ-51', 'QWRO-64']
+    unlockedBy: ['TCGA-87', 'DVCS-80']
   },
-  'BEHF-48': { 
+  'KTGF-02': { 
     title: '파우치',
     description: '',
     detail: '화장품 파우치. 스킨·로션·쿠션 등 일상 화장품. ',
     image: '/images/clue-03.svg',
     type: '보통',
     person: '이가현',
-    unlockedBy: ['DSQO-10', 'ACGT-90']
+    unlockedBy: ['LCPE-70', 'LWNR-86']
   },
-  'USEU-87': {
+  'RSMR-72': {
     title: '',
     description: '',
     detail: '',
     image: '/images/clue-03.svg',
     type: '특수',
     person: '이가현',
-    unlockedBy: ['IIKU-90', 'DSQO-10']
+    unlockedBy: ['NBZL-83', 'LCPE-70']
   }
 };
 
