@@ -21,7 +21,7 @@ const GAHYUN_BIBLE_PAGES = [
   {
     title: '책장 사이에 끼워진 그림 편지',
     image: '/images/bible/child-letter.svg',
-    content: '성경책 갈피 사이에서 작은 종이 한 장이 떨어진다. 아이가 크레용으로 그린 그림 편지다.\n\n손을 맞잡은 큰 사람과 작은 사람, 집과 해가 그려져 있고 삐뚤빼뚤한 글씨로 "엄마 사랑해"라고 적혀 있다.'
+    content: '성경책 갈피 사이에서 작은 종이 한 장이 떨어진다. 아이가 크레용으로 그린 그림 편지다.\n\n손을 맞잡은 큰 사람과 작은 사람, 집과 해가 그려져 있다. 글씨는 거의 없다. 조카가 그려줬다기엔 묘하게 살갑다.'
   }
 ];
 
@@ -434,8 +434,7 @@ export const evidenceMap = {
           name: '사진',
           photos: [
             { caption: '청년부 통장 사진 — 찬조금 입금 내역이 없음.', image: '/images/phone/bankbook.jpg' },
-            { caption: '박희원 전도사 수료증 — 발급 번호가 교단 DB와 불일치.', image: '/images/phone/certificate.jpg' },
-            { caption: '아이가 가현을 "엄마"라 부르는 사진 — 가현 약혼 파혼의 빌미.', image: '/images/phone/daughter.jpg', deleted: true }
+            { caption: '박희원 전도사 수료증 — 발급 번호가 교단 DB와 불일치.', image: '/images/phone/certificate.jpg' }
           ]
         }
       ]
@@ -1722,10 +1721,10 @@ export const evidenceMap = {
     wallet: {
       owner: '가현의 지갑',
       items: [
-        { label: '아이 사진', icon: '🧒', image: '/images/phone/daughter.jpg', detail: '귀여운 5살 여자아이 사진. 가현은 "조카"라고 한다. 청년들: "너무 닮았다."' },
+        { label: '아이 사진', icon: '🧒', image: '/images/phone/daughter.jpg', detail: '귀여운 아이 사진. 가현은 "조카"라고 한다.' },
         { label: '신분증', icon: '🪪', detail: '이가현. 주민등록증.' },
         { label: '체크카드', icon: '💳', detail: '○○은행 체크카드 1장.' },
-        { label: '약혼반지 영수증', icon: '🧾', detail: '약혼반지 결제 영수증. 약혼자 "김멋짐". 최근 날짜.' }
+        { label: '약혼반지', icon: '💍', detail: '약혼반지. 끼지 않고 지갑에 넣어 두었다.' }
       ]
     }
   },
@@ -1740,7 +1739,7 @@ export const evidenceMap = {
   'LWNR-86': { //
     title: '아이가 그린 그림 편지',
     description: '',
-    detail: '가현의 소지품에서 나온 5살 아이의 그림 편지. 삐뚤빼뚤한 글씨로 "엄마 사랑해"라고 적혀 있다. "조카"라기엔 호칭이 이상하다.',
+    detail: '아이가 그린 그림. 삐뚤빼뚤한 가족 그림으로 글씨는 거의 없다. 조카가 그렸다기엔 묘하게 살갑다.',
     image: '/images/clue-03.svg',
     type: '보통',
     person: '이가현'
@@ -1774,7 +1773,8 @@ export const evidenceMap = {
             { name: '현지 회계', who: '이현지' },
             { name: '종현이', who: '최종현' },
             { name: '은재', who: '윤은재' },
-            { name: '희원 전도사', who: '박희원' }
+            { name: '희원 전도사', who: '박희원' },
+            { name: '햇살어린이집 담임선생님', who: '' }
           ]
         },
         {
@@ -1824,9 +1824,7 @@ export const evidenceMap = {
           type: 'photos',
           name: '사진',
           photos: [
-            { caption: '딸과 함께 찍은 사진.', image: '/images/phone/daughter.jpg', deleted: true },
-            { caption: '최근 삭제된 항목', deleted: true },
-            { caption: '최근 삭제된 항목', deleted: true }
+            { caption: '잠금화면 — 어린 딸과 볼을 맞대고 찍은 사진.', image: '/images/phone/daughter.jpg' }
           ]
         }
       ]
@@ -1843,7 +1841,7 @@ export const evidenceMap = {
   'YZET-89': { // 공용 게시 — 시신 발견 경위
     title: '시신 발견 경위',
     description: '',
-    detail: '"예배당 쪽에 볼 일이 있어서 갔다가 소리가 이상해 들어갔어요. 이미 쓰러져 계셨어요." ',
+    detail: '"목사님과 할 얘기가 있어서 들렀는데, 이미 쓰러져 계셨어요." (딸·파혼이 드러나기 전에는 자세히 말하지 않는다.)',
     image: '/images/clue-03.svg',
     type: '보통',
     person: '이가현'
@@ -1876,25 +1874,17 @@ export const evidenceMap = {
   // =============================================
   // 이가현 
   // =============================================
-  'WVBG-31': { //
-    title: '어린이집 비상연락망',
+  // 'WVBG-31'(어린이집 비상연락망) — 종이 비상연락망은 부자연스러워 폐기. 어린이집 정황은 가현 폰 연락처(TCGA-87)로 이동.
+  'KMRV-41': { // 진행자 수동 부여 — 종현 구두 진술 시 이 코드를 직접 입력시켜 해금 (자동 해금 아님: unlockedBy 비움)
+    title: '가현에게 딸이?',
     description: '',
-    detail: '아이가 다니는 어린이집의 비상연락망 사본. "주 보호자 — 이가현(엄마)"로 기재되어 있다. 조카가 아니라 친자임을 가리킨다.',
-    image: '/images/clue-03.svg',
-    type: '특수',
-    person: '이가현',
-    unlockedBy: ['NBZL-83', 'LCPE-70']
-  },
-  'KMRV-41': { 
-    title: '',
-    description: '',
-    detail: '',
+    detail: "막내 종현의 진술 — 가현에게 딸이 있는 것 같다. 다른 사람들에겐 '조카'라고 해왔다고 한다. 2부에서 가현에게 직접 물어보자.",
     image: '/images/clue-03.svg',
     type: '특수',
     person: '이가현',
     unlockedBy: []
   },
-  'QMCH-44': { 
+  'QMCH-44': {
     title: '',
     description: '',
     detail: '',
@@ -1906,7 +1896,7 @@ export const evidenceMap = {
   'DZPL-78': {
     title: '성경책',
     description: '',
-    detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
+    detail: '밑줄과 포스트잇이 붙은 성경책. 페이지를 넘기다 보면 사이에 아이가 그린 그림 한 장이 끼워져 있다. 삐뚤빼뚤 그린 가족 그림으로, 글씨는 거의 없다.',
     image: '/images/clue-03.svg',
     type: '보통',
     person: '이가현',
