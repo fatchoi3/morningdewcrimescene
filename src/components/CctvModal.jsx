@@ -13,13 +13,21 @@ import { useEffect, useState } from 'react';
 function FloorPlan({ people, collected, onPick }) {
   return (
     <svg className="cctv-map" viewBox="0 0 400 280" role="img" aria-label="2층 평면도">
-      {/* CCTV 시야 콘 */}
-      <polygon points="47,141 342,122 342,160" fill="rgba(165,110,200,0.16)" stroke="rgba(180,130,210,0.55)" strokeWidth="1" />
+      <defs>
+        {/* 벽 빗금 패턴 */}
+        <pattern id="cctvWall" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="7" height="7" fill="#161b24" />
+          <line x1="0" y1="0" x2="0" y2="7" stroke="#3a4656" strokeWidth="2.5" />
+        </pattern>
+      </defs>
 
-      {/* 예배당 가는 길 (오른쪽 통로) */}
-      <line x1="342" y1="92" x2="342" y2="258" stroke="#55657a" strokeWidth="2" />
-      <path d="M352 232 l8 0 m-4 -5 l4 5 l-4 5" stroke="#8a98aa" strokeWidth="1.5" fill="none" />
-      <text x="356" y="210" className="cctv-map-note" transform="rotate(90 356 210)">예배당 가는 길</text>
+      {/*
+        전체 구조는 'T'(가로 복도 + 오른쪽에서 위 목사님방·아래 예배당으로 이어지는 세로축).
+        가로 복도는 CCTV(왼쪽)에서 오른쪽 분기점까지, 거기서 위는 목사님방·아래는 예배당.
+      */}
+
+      {/* CCTV 시야 콘 (왼쪽 → 오른쪽 분기점까지) */}
+      <polygon points="47,141 334,124 334,158" fill="rgba(165,110,200,0.16)" stroke="rgba(180,130,210,0.55)" strokeWidth="1" />
 
       {/* 윗줄 방 */}
       <g className="cctv-room">
@@ -27,9 +35,9 @@ function FloorPlan({ people, collected, onPick }) {
         <rect x="150" y="45" width="95" height="70" rx="3" />
         <rect x="245" y="45" width="90" height="70" rx="3" />
       </g>
-      {/* 목사님 방 (우상단) */}
-      <rect className="cctv-room cctv-room--victim" x="335" y="12" width="63" height="80" rx="3" />
-      <rect x="340" y="84" width="34" height="10" rx="2" fill="#3aa0e6" />
+      {/* 목사님 방 (우상단 = T의 위쪽 끝) */}
+      <rect className="cctv-room cctv-room--victim" x="334" y="12" width="52" height="80" rx="3" />
+      <rect x="343" y="86" width="30" height="9" rx="2" fill="#3aa0e6" />
 
       {/* 아랫줄 방 */}
       <g className="cctv-room">
@@ -38,8 +46,21 @@ function FloorPlan({ people, collected, onPick }) {
         <rect x="245" y="172" width="90" height="73" rx="3" />
       </g>
 
-      {/* 복도 (가운데) */}
-      <rect className="cctv-hall" x="55" y="122" width="287" height="38" />
+      {/* 복도 (가로) */}
+      <rect className="cctv-hall" x="55" y="122" width="279" height="38" />
+      {/* 예배당 가는 길 (세로 통로 = T의 아래쪽으로 내려감) */}
+      <rect className="cctv-hall" x="334" y="92" width="52" height="166" />
+      <text x="360" y="196" className="cctv-map-note">예배당 가는 길</text>
+      <path d="M360 204 l0 30 m-7 -9 l7 9 l7 -9" stroke="#8a98aa" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* 벽: CCTV 뒤(왼쪽 막다른 곳) */}
+      <rect className="cctv-wall" x="18" y="119" width="13" height="44" rx="1" />
+      <text x="24" y="112" className="cctv-wall-label">벽</text>
+
+      {/* 벽: 목사님방·예배당 통로의 오른쪽 (T의 오른쪽 끝은 막힘) */}
+      <rect className="cctv-wall" x="386" y="12" width="12" height="246" rx="1" />
+      <text x="392" y="58" className="cctv-wall-label" transform="rotate(90 392 58)">벽</text>
+      <text x="392" y="180" className="cctv-wall-label" transform="rotate(90 392 180)">벽</text>
 
       {/* 방문 */}
       <g className="cctv-door">
@@ -56,7 +77,7 @@ function FloorPlan({ people, collected, onPick }) {
         <text x="102" y="84">이사랑</text>
         <text x="197" y="84">이현지</text>
         <text x="290" y="84">박희원</text>
-        <text x="366" y="55">목사님</text>
+        <text x="360" y="55">목사님</text>
         <text x="102" y="212">최종현</text>
         <text x="197" y="212">이가현</text>
         <text x="290" y="212">윤은재</text>

@@ -1596,6 +1596,19 @@ textarea {
   text-anchor: middle;
 }
 
+.cctv-wall {
+  fill: url(#cctvWall);
+  stroke: #4a5a6e;
+  stroke-width: 1;
+}
+
+.cctv-wall-label {
+  fill: #7d8a9c;
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
 .cctv-map-cam {
   fill: #e6e9ef;
   font-size: 9px;
