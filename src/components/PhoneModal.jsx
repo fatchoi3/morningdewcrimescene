@@ -116,7 +116,7 @@ function MessagesApp({ app, variant }) {
     return (
       <div className={`msg msg--${variant}`}>
         <div className="msg-header">
-          <button className="msg-back" onClick={() => { setDrawer(false); setErr(''); }} aria-label="뒤로">←</button>
+          <button className="msg-back" onClick={() => { setDrawer(false); setErr(''); setPw(''); }} aria-label="뒤로">←</button>
           <span className="msg-header-name">🗄️ 톡서랍</span>
         </div>
         <div className="td-lock">
@@ -131,7 +131,14 @@ function MessagesApp({ app, variant }) {
               <input
                 type="password"
                 inputMode="numeric"
-                autoComplete="off"
+                name="td-pw"
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                data-lpignore="true"
+                data-form-type="other"
+                data-1p-ignore
                 value={pw}
                 placeholder="비밀번호"
                 onChange={(e) => { setPw(e.target.value); setErr(''); }}

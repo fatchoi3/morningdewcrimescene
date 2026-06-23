@@ -507,6 +507,19 @@ textarea {
   margin-bottom: 0;
 }
 
+.manual-unlock-notice {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(60, 160, 110, 0.18);
+  border: 1px solid rgba(90, 200, 140, 0.5);
+  color: #bdf0d3;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
 .manual-nav {
   display: flex;
   align-items: center;
@@ -2208,3 +2221,29 @@ textarea {
 .gamsik-lock-form { display: flex; gap: 8px; justify-content: center; }
 .gamsik-lock-form input { max-width: 160px; text-align: center; letter-spacing: 0.2em; }
 .gamsik-lock-err { color: #c0392b; font-size: 0.8rem; margin-top: 8px; }
+
+/* ── 단서 인물별 필터 칩 (한 줄, 가로 스크롤) ───────── */
+.person-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+.person-chips::-webkit-scrollbar { height: 4px; }
+.person-chips::-webkit-scrollbar-thumb { background: #3c4554; border-radius: 999px; }
+.person-chip {
+  flex: 0 0 auto;
+  border: 1px solid #3c4554;
+  background: #222834;
+  color: #c3cdda;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.person-chip.active,
+.person-chip:hover { background: #4a90e2; color: #fff; }

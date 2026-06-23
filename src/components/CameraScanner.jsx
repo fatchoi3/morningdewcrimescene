@@ -162,6 +162,13 @@ function CameraScanner({ gameActive, onScan, externalMessage }) {
           onChange={(e) => setScanInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && gameActive && handleManualScan()}
           placeholder="예: LSUX-91"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          data-lpignore="true"
+          data-form-type="other"
+          data-1p-ignore
         />
         <button type="button" className="control-button" onClick={handleManualScan} disabled={!gameActive}>
           확인

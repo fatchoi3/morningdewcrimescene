@@ -77,7 +77,9 @@ function saveAdmin(on) {
 // 운영자 모드 인물별 일괄획득 버튼 순서
 const PERSON_BUTTONS = ['박희원', '이사랑', '이현지', '최종현', '윤은재', '이가현', '목사', '공용'];
 
-// 주어진 코드 집합 기준, unlockedBy가 모두 충족된 미수집 특수/감식 단서를 (연쇄적으로) 반환.
+// 주어진 코드 집합 기준, 해금 조건이 충족된 미수집 특수/감식 단서를 (연쇄적으로) 반환.
+//   unlockedBy    : 모두(AND) 충족 시 해금
+//   unlockedByAny : 하나라도(OR) 충족 시 해금
 // codeSet은 호출 측에서 누적되도록 직접 변형된다.
 function computeAutoUnlocked(codeSet) {
   const out = [];
@@ -85,12 +87,13 @@ function computeAutoUnlocked(codeSet) {
   while (changed) {
     changed = false;
     for (const [code, data] of Object.entries(evidenceMap)) {
-      if (
-        (data.type === '특수' || data.type === '감식') &&
-        Array.isArray(data.unlockedBy) && data.unlockedBy.length > 0 &&
-        !codeSet.has(code) &&
-        data.unlockedBy.every((req) => codeSet.has(req))
-      ) {
+      if (data.type !== '특수' && data.type !== '감식') continue;
+      if (codeSet.has(code)) continue;
+      const byAll = Array.isArray(data.unlockedBy) && data.unlockedBy.length > 0
+        && data.unlockedBy.every((req) => codeSet.has(req));
+      const byAny = Array.isArray(data.unlockedByAny) && data.unlockedByAny.length > 0
+        && data.unlockedByAny.some((req) => codeSet.has(req));
+      if (byAll || byAny) {
         out.push({ code, ...data });
         codeSet.add(code);
         changed = true;
@@ -123,15 +126,17 @@ function App() {
    * addCodes
    * 주어진 코드들을 수집 목록에 추가하고, 연계 특수/감식 단서를 자동 해금한다.
    * (handleScan 단건 수집과 운영자 모드 일괄 수집이 공유)
+   * cascade=false면 자동 해금을 건너뛰고 전달된 코드만 추가한다.
+   * (운영자 인물별 일괄획득은 해당 person 단서만 정확히 넣기 위해 사용)
    */
-  const addCodes = (codes) => {
+  const addCodes = (codes, { cascade = true } = {}) => {
     const have = new Set(evidenceCollected.map((i) => i.code));
     const toAdd = codes.filter((c) => evidenceMap[c] && !have.has(c));
     if (!toAdd.length) return { added: [], autoUnlocked: [] };
 
     let merged = [...evidenceCollected, ...toAdd.map((c) => ({ code: c, ...evidenceMap[c] }))];
     const codeSet = new Set(merged.map((i) => i.code));
-    const autoUnlocked = computeAutoUnlocked(codeSet);
+    const autoUnlocked = cascade ? computeAutoUnlocked(codeSet) : [];
     if (autoUnlocked.length) merged = [...merged, ...autoUnlocked];
 
     setEvidenceCollected(merged);
@@ -189,7 +194,7 @@ function App() {
     const codes = Object.entries(evidenceMap)
       .filter(([, v]) => v.person === person)
       .map(([code]) => code);
-    const { added } = addCodes(codes);
+    const { added } = addCodes(codes, { cascade: false });
     setScanMessage(`[운영자] ${person} 단서 ${added.length}개 일괄 획득.`);
   };
 

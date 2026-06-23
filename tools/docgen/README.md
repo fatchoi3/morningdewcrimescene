@@ -22,7 +22,7 @@ npm run docs:html   # HTML만 (브라우저 인쇄로 직접 PDF 뽑을 때)
 | 배우레퍼런스_{6인}.pdf | 서사=`bible.mjs`(손관리) + 단서·핸드폰·다이어리·지갑=gameData.js |
 | 단서배치_귀속가이드.pdf | **전부 gameData.js 자동 파생** (인물별표·특수조합·CCTV·일정표·방배치도) |
 | 진상해설서.pdf | `genTruth.mjs` 서사(피해자명은 `victim.name`) |
-| 이미지생성프롬프트.pdf | `genPrompts.mjs` (구코드→신코드는 `clue-code-map.txt`로 자동 매핑) |
+| 이미지생성프롬프트.pdf | `genPrompts.mjs` — **gameData에서 이미지 필요한 물질/문서 단서 자동 선별** (현재 제목·내용으로 프롬프트 합성, 드리프트 없음) |
 
 ## 파일 구성
 

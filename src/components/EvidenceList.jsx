@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PhoneModal from './PhoneModal.jsx';
 import CctvModal from './CctvModal.jsx';
 import WalletModal from './WalletModal.jsx';
@@ -9,11 +9,13 @@ import ScheduleModal from './ScheduleModal.jsx';
  * pages 배열이 있는 증거 아이템에 표시되는 페이지네이션 설명서 팝업.
  * 이전/다음 버튼으로 페이지를 이동하며, ESC 또는 오버레이 클릭으로 닫는다.
  */
-function ManualModal({ item, onClose }) {
+function ManualModal({ item, onClose, onCollect }) {
   const [page, setPage] = useState(0);
   const pages = item.pages;
   const total = pages.length;
   const current = pages[page];
+  const firedRef = useRef(new Set()); // 이번 열람에서 이미 확보 처리한 unlocks 코드
+  const [unlockNotice, setUnlockNotice] = useState('');
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -24,6 +26,17 @@ function ManualModal({ item, onClose }) {
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose, total]);
+
+  // 특정 페이지(예: 성경책 속 그림 편지)를 펼치면 연결된 단서를 자동으로 확보한다.
+  useEffect(() => {
+    const code = current?.unlocks;
+    if (!code) { setUnlockNotice(''); return; }
+    if (onCollect && !firedRef.current.has(code)) {
+      firedRef.current.add(code);
+      const res = onCollect(code);
+      setUnlockNotice(res?.message || '');
+    }
+  }, [page, current, onCollect]);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -58,6 +71,9 @@ function ManualModal({ item, onClose }) {
               <p key={i}>{para}</p>
             ))}
           </div>
+          {current.unlocks && unlockNotice && (
+            <div className="manual-unlock-notice">🔍 {unlockNotice}</div>
+          )}
         </div>
 
         {/* 이전 / 다음 버튼 */}
@@ -278,7 +294,9 @@ function GamsikModal({ item, onClose, adminMode = false }) {
             )}
             <div className="gamsik-lock-form">
               <input
-                type="password" inputMode="numeric" autoComplete="off"
+                type="password" inputMode="numeric" name="gamsik-pw"
+                autoComplete="new-password" autoCorrect="off" autoCapitalize="off"
+                spellCheck={false} data-lpignore="true" data-form-type="other" data-1p-ignore
                 value={pw} placeholder="비밀번호"
                 onChange={(e) => { setPw(e.target.value); setErr(''); }}
                 onKeyDown={(e) => e.key === 'Enter' && submit()}
@@ -301,7 +319,7 @@ function EvidenceModal({ item, evidence, onCollect, onClose, tapDone, onTapCompl
   if (item.handwriting) return <HandwritingModal item={item} evidence={evidence} onClose={onClose} />;
   if (item.type === '감식') return <GamsikModal item={item} onClose={onClose} adminMode={adminMode} />;
   if (item.phone) return <PhoneModal item={item} onClose={onClose} />;
-  if (item.pages) return <ManualModal item={item} onClose={onClose} />;
+  if (item.pages) return <ManualModal item={item} onClose={onClose} onCollect={onCollect} />;
   return <StandardModal item={item} onClose={onClose} tapDone={tapDone} onTapComplete={onTapComplete} />;
 }
 
@@ -309,6 +327,7 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
   const [selected, setSelected] = useState(null);
   const [query, setQuery] = useState('');
   const [filterType, setFilterType] = useState('normal'); // 'normal' | 'cctv' | 'special' | 'gamsik'
+  const [personFilter, setPersonFilter] = useState('전체'); // 인물별 필터 칩
 
   if (evidence.length === 0) {
     return <p>아직 수집한 증거가 없습니다. QR 코드를 스캔해 증거를 찾으세요.</p>;
@@ -326,6 +345,10 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
   // unlockedBy에 적힌 선행 단서를 모두 보유하면 해금된다.
   // (선행 단서가 2개면 2개 모두, 1개면 1개만 — 가이드의 단일 트리거 특수 단서 대응)
   const isSpecialUnlocked = (special) => {
+    // unlockedByAny: 하나라도 보유하면 해금 (OR)
+    if (Array.isArray(special.unlockedByAny) && special.unlockedByAny.length > 0) {
+      return special.unlockedByAny.some((code) => evidence.some((it) => it.code === code));
+    }
     if (!special.unlockedBy || special.unlockedBy.length === 0) return true;
     const need = Math.min(2, special.unlockedBy.length);
     const unlockedCount = special.unlockedBy.filter((code) =>
@@ -340,8 +363,16 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
     : filterType === 'special' ? specialEvidence
     : gamsikEvidence;
 
+  // 인물 필터 칩 — 현재 탭에 존재하는 person만 노출(고정 순서)
+  const PERSON_ORDER = ['공용', '목사', '최종현', '윤은재', '이현지', '박희원', '이사랑', '이가현'];
+  const presentPersons = PERSON_ORDER.filter((p) => displayEvidence.some((i) => i.person === p));
+
+  const byPerson = personFilter === '전체'
+    ? displayEvidence
+    : displayEvidence.filter((i) => i.person === personFilter);
+
   const filtered = (query.trim()
-    ? displayEvidence.filter((item) => {
+    ? byPerson.filter((item) => {
         const q = query.trim().toLowerCase();
         return (
           item.code.toLowerCase().includes(q) ||
@@ -349,7 +380,7 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
           (item.person && item.person.toLowerCase().includes(q))
         );
       })
-    : displayEvidence
+    : byPerson
   ).slice().reverse();
 
   return (
@@ -388,11 +419,39 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
         </button>
       </div>
 
+      {/* 인물별 필터 칩 (한 줄, 가로 스크롤) */}
+      <div className="person-chips">
+        <button
+          type="button"
+          className={`person-chip ${personFilter === '전체' ? 'active' : ''}`}
+          onClick={() => setPersonFilter('전체')}
+        >
+          전체
+        </button>
+        {presentPersons.map((p) => (
+          <button
+            key={p}
+            type="button"
+            className={`person-chip ${personFilter === p ? 'active' : ''}`}
+            onClick={() => setPersonFilter(p)}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+
       <div className="form-group" style={{ marginBottom: '4px' }}>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="단서명, 코드 또는 인물로 검색"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          data-lpignore="true"
+          data-form-type="other"
+          data-1p-ignore
         />
       </div>
 
@@ -409,7 +468,8 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
           </p>
         )}
         {filtered.map((item) => {
-          const unlocked = filterType === 'normal' || filterType === 'cctv' || isSpecialUnlocked(item);
+          // 운영자 모드에선 이미 수집한 단서는 선행조건과 무관하게 항상 열람 가능
+          const unlocked = adminMode || filterType === 'normal' || filterType === 'cctv' || isSpecialUnlocked(item);
 
           return (
             <div

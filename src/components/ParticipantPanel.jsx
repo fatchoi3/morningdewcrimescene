@@ -37,6 +37,13 @@ function ParticipantPanel({
               value={joinInput}
               onChange={(event) => setJoinInput(event.target.value)}
               placeholder="예: ROOM-AB12"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-lpignore="true"
+              data-form-type="other"
+              data-1p-ignore
             />
             <button
               type="button"
