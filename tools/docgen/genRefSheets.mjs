@@ -120,6 +120,11 @@ ${emptyCount ? `<div class="tnote">※ 이 외 미작성(빈) 슬롯 ${emptyCoun
 
 ${details.join('\n')}
 
+${(b.script && b.script.length) ? `<div class="sec">추궁 대응 대본 (길잡이 특수가 나를 가리킬 때)</div>
+<table class="avoid"><tr><th style="width:38%">상황</th><th>대응</th></tr>
+${b.script.map(([sit, line]) => `<tr><td><b>${esc(sit)}</b></td><td>${line}</td></tr>`).join('')}
+</table>` : ''}
+
 <div class="forbid"><div class="fl">⛔ 절대 금지 — 게임이 무너집니다</div><ul>
 ${b.forbidden.map((f) => `<li>${f}</li>`).join('')}
 </ul></div>

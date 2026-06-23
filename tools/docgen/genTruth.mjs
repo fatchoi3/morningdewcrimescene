@@ -130,9 +130,10 @@ export function genTruth() {
   <div class="cht">윤은재<span class="tag" style="background:#F0EFEC;color:#444440">무고 · 발작 촉진 의혹</span></div>
   <div class="role" style="color:#444440">24세 · 찬양팀장</div>
   <p><strong>하필 최악의 순간에 화를 낸 사람.</strong> 윤은재는 찬양팀장이다. 찬양곡 선정 문제로 목사와 오래 갈등해왔다. 그의 기획안은 두 번이나 반려됐고, 감정이 쌓여 있었다.</p>
-  <p>수련회 당일 오후 14시 3분경, 그는 복도에서 목사가 방으로 들어가는 걸 보고 따라 들어가 따졌다. 언쟁이 격해지면서 분을 못 이겨 <strong>목사의 옷깃을 한 손으로 잡았다.</strong> 그 순간 셔츠 단추 하나가 떨어졌다. 하지만 곧 손을 놓고 문을 쾅 닫고 나왔다. 그가 나올 때까지 <strong>목사는 멀쩡했고, 아직 요힘빈 음료를 마시기 전이었다.</strong></p>
+  <p>그는 어제 못 끝낸 갈등을 마저 따지려고, 목사·종현이 등산을 떠난 직후 <strong>10시 5분경 산으로 따라 올라갔다.</strong> 그러나 산 중턱에서 종현과 함께 있는 목사를 먼발치에 보고는 말 붙이길 포기하고 10시 35분경 되돌아 내려왔다. (종현은 은재를 보지 못했다.)</p>
+  <p>오후 14시 8분경, 그는 복도에서 목사가 방으로 들어가는 걸 보고 따라 들어가 따졌다. 언쟁이 격해지자 <strong>목사의 멱살을 잡았고</strong>, 목사가 "이거 놓으라"며 <strong>은재의 손목을 잡고 가볍게 뿌리치는</strong> 과정에서 은재 손목에 멍이 들고 셔츠 단추 하나가 떨어졌다. 큰 몸싸움은 아니었다. 14시 12분경 그는 문을 쾅 닫고 나왔고, 그가 나올 때까지 <strong>목사는 멀쩡했고 아직 요힘빈 음료를 마시기 전이었다.</strong></p>
   <div class="box knew"><div class="bl">진실 — 그는 무고하다</div>
-    <p>그는 옷깃을 잡은 것 때문에 가장 강하게 의심받는다. 현장에 그의 흔적(구겨진 옷깃, 떨어진 단추)이 남았으니까. 하지만 옷깃을 잡은 행위는 목사의 죽음과 무관하다 — 의학적으로 사인이 될 수 없다. 오히려 그가 <strong>"내가 나올 때 목사님은 멀쩡했다"</strong>고 증언하는 것이 요힘빈 복용 시각을 특정하는 단서가 된다.</p></div>
+    <p>그는 멱살·옷깃·손목 멍 때문에 의심받지만, 이는 쌍방의 <strong>가벼운 실랑이</strong>일 뿐 질식(목 압박)과는 무관하다 — 의학적으로 사인이 될 수 없다. 산행도 접촉 없이 먼발치에 보고 돌아선 것뿐이다. 오히려 그가 <strong>"내가 나올 때 목사님은 멀쩡했다"</strong>고 증언하는 것이 요힘빈 복용 시각을 특정하는 단서가 된다.</p></div>
 </div>
 
 <div class="ch">
@@ -155,6 +156,8 @@ export function genTruth() {
     <div class="tl-row"><div class="tl-t">전날 밤</div><div class="tl-x"><strong>이사랑</strong> 통장 정리 중 언니 송금 내역 발견 → 카톡으로 화해 → 언니에게 횡령 위기 고백. <strong>이현지</strong> "내가 알아서 할게."</div></div>
     <div class="tl-row"><div class="tl-t">당일 아침</div><div class="tl-x"><strong>목사</strong> 우연히 청년부 통장 확인 → 찬조금 미입금 발견 → 이사랑 면담, 재정 점검 예고. <strong>이현지</strong> 동생을 끝까지 지키기로 결심.</div></div>
     <div class="tl-row"><div class="tl-t">10:00</div><div class="tl-x"><strong>최종현·목사</strong> 등산 출발. (방이 비워짐)</div></div>
+    <div class="tl-row"><div class="tl-t">10:05</div><div class="tl-x"><strong>윤은재</strong> 뒤따라 산으로 출발 — 어제 못 끝낸 찬양곡 갈등을 마저 따지려.</div></div>
+    <div class="tl-row"><div class="tl-t">10:35</div><div class="tl-x"><strong>윤은재</strong> 복귀 — 산 중턱에서 종현을 먼발치에 보고 말 못 붙이고 되돌아옴(종현은 은재를 못 봄).</div></div>
     <div class="tl-row"><div class="tl-t">12:10</div><div class="tl-x"><strong>박희원</strong> 빈 방에 들어가 설하정 6알 ↔ 비타민C 6알 바꿔치기. 진짜 설하정은 요일별 약통에 숨김.</div></div>
     <div class="tl-row"><div class="tl-t">12:20</div><div class="tl-x"><strong>이사랑</strong> 최종현 방에서 요힘빈↔단백질 라벨지 교체.</div></div>
     <div class="tl-row"><div class="tl-t">12:30~33</div><div class="tl-x"><strong>최종현·목사</strong> 등산 복귀. 최종현 자기 방에서 가방 챙김.</div></div>
@@ -163,7 +166,7 @@ export function genTruth() {
     <div class="tl-row"><div class="tl-t">13:20</div><div class="tl-x"><strong>목사</strong> 점심 후 방 복귀.</div></div>
     <div class="tl-row"><div class="tl-t">13:50</div><div class="tl-x"><strong>이가현</strong> 1차 확인 방문 — 방에 목사가 있어 그냥 돌아 나감.</div></div>
     <div class="tl-row"><div class="tl-t">14:00</div><div class="tl-x"><strong>최종현</strong> "단백질"(실제 요힘빈) 음료를 모르고 목사에게 전달.</div></div>
-    <div class="tl-row"><div class="tl-t">14:08~12</div><div class="tl-x"><strong>윤은재</strong> 언쟁 중 옷깃 잡음 → 퇴장. 이때 목사는 아직 음료 미복용 · 멀쩡함.</div></div>
+    <div class="tl-row"><div class="tl-t">14:08~12</div><div class="tl-x"><strong>윤은재</strong> 목사 방 언쟁 — 멱살 잡음 → 목사가 "놓으라"며 은재 손목 잡고 뿌리침(손목 멍) → 퇴장. 이때 목사는 아직 음료 미복용 · 멀쩡함. (가벼운 실랑이, 질식과 무관)</div></div>
     <div class="tl-row"><div class="tl-t">14:15</div><div class="tl-x"><strong>목사</strong> 요힘빈 음료 복용 → 발작 시작.</div></div>
     <div class="tl-row"><div class="tl-t">14:30</div><div class="tl-x"><strong>이가현</strong> 2차 확인 방문 — 그냥 돌아 나감.</div></div>
     <div class="tl-row"><div class="tl-t">14:35</div><div class="tl-x"><strong>목사</strong> 책상 설하정(가짜 비타민) 복용 → 딸기맛 안 남 → 이상 감지 → <strong>품속 진짜 설하정</strong> 복용 후 침대에서 안정.</div></div>
@@ -174,7 +177,7 @@ export function genTruth() {
     <div class="tl-row"><div class="tl-t">사건 후</div><div class="tl-x"><strong>이사랑·이현지</strong> 각자 자기 폰에서 전날 자매·범행 정황 카톡 삭제 (서로 모른 채 상대를 감쌈) — 상대 폰엔 남아 교차 복원됨.</div></div>
   </div>
   <div class="box key" style="margin-top:18px"><div class="bl">동선 분리 — 박희원 퇴장과 가현 진입은 마주치지 않는다</div>
-    <p>박희원 퇴장(14:44, 숙소 방향)과 가현 진입(14:47, 예배당 방향)은 방향이 반대이고 3분 시차라 복도에서 마주치지 않는다. 질식(≈14:43)~가현 진입(14:47)이 약 4분이라 시신은 "막 사망" 상태. 둘 다 CCTV는 방향만 포착이라, 가현이 "희원이 나오는 걸 봤다"고 증언할 근거는 없다.</p></div>
+    <p>박희원 퇴장(14:44, 숙소 방향)과 가현 진입(14:47, 자기 방 쪽)은 출발 위치가 다르고 3분 시차라 복도에서 마주치지 않는다. 질식(≈14:43)~가현 진입(14:47)이 약 4분이라 시신은 "막 사망" 상태. 둘 다 CCTV는 방향만 포착이라, 가현이 "희원이 나오는 걸 봤다"고 증언할 근거는 없다.</p></div>
   <div class="final"><div class="fl">사건의 본질</div>
     <p>여섯 사람이 각자 다른 이유로, 서로 모르게, 같은 날 같은 사람을 노렸다. 이사랑은 <strong>빚</strong> 때문에, 이현지는 <strong>동생</strong> 때문에, 박희원은 <strong>자격</strong> 때문에, 이가현은 <strong>파혼</strong> 때문에. 최종현과 윤은재는 무고하지만 하필 최악의 타이밍에 얽혔다.<br><br>목사를 실제로 죽인 건 <strong>박희원의 베개</strong>다. 하지만 그 죽음을 만든 건 목사 자신이 무심코 건드린 <strong>여섯 사람의 얽힌 원한 전부</strong>였다.</p></div>
 </div>

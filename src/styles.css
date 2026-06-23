@@ -1665,6 +1665,56 @@ textarea {
   margin: 12px 2px 0;
 }
 
+/* 분단위 ❓ 칩 바 (시간대 하위) */
+.cctv-minutebar {
+  margin-top: 10px;
+  margin-bottom: 4px;
+  padding-top: 10px;
+  border-top: 1px dashed #333b48;
+}
+
+/* CCTV 창 내 단서 인라인 상세 패널 */
+.cctv-clue-panel {
+  margin-top: 12px;
+  background: #1a2330;
+  border: 1px solid #33506e;
+  border-left: 3px solid #3aa0e6;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.cctv-clue-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-weight: 700;
+  color: #e6edf6;
+  font-size: 0.92rem;
+}
+.cctv-clue-code { font-family: monospace; color: #3aa0e6; }
+.cctv-clue-person {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #2a3340;
+  color: #9fc7e6;
+  border-radius: 9px;
+  padding: 1px 8px;
+}
+.cctv-clue-x {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #8a98aa;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.cctv-clue-detail {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #c8d2de;
+}
+
 .cctv-flash {
   margin-top: 12px;
   padding: 10px 12px;
@@ -2135,3 +2185,26 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── 운영자(테스트) 모드 바 ───────────────────────── */
+.admin-bar {
+  margin-top: 1.5rem;
+  padding: 14px 16px;
+  border: 1px dashed #c0392b;
+  border-radius: 10px;
+  background: rgba(192, 57, 43, 0.06);
+}
+.admin-bar-title { font-weight: 800; color: #c0392b; font-size: 0.9rem; margin-bottom: 10px; }
+.admin-bar-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-bar-note { margin-top: 10px; font-size: 0.78rem; color: #8a857c; }
+.admin-bar-note code { background: #f1f0ec; border: 1px solid #e0ddd6; border-radius: 3px; padding: 1px 5px; font-family: monospace; }
+
+/* ── 감식 단서 비밀번호 잠금 ──────────────────────── */
+.gamsik-lock { text-align: center; padding: 18px 10px 6px; }
+.gamsik-lock-icon { font-size: 2rem; }
+.gamsik-lock-desc { font-size: 0.85rem; color: #6b6760; margin: 8px 0 14px; line-height: 1.6; }
+.gamsik-lock-admin { font-size: 0.85rem; color: #1b5fae; background: #e6f0ff; border: 1px dashed #1b5fae; border-radius: 8px; padding: 8px 12px; margin: 0 0 14px; }
+.gamsik-lock-admin strong { font-size: 1.05rem; letter-spacing: 0.15em; }
+.gamsik-lock-form { display: flex; gap: 8px; justify-content: center; }
+.gamsik-lock-form input { max-width: 160px; text-align: center; letter-spacing: 0.2em; }
+.gamsik-lock-err { color: #c0392b; font-size: 0.8rem; margin-top: 8px; }

@@ -54,7 +54,7 @@ export function personMovementSVG(person, color, points) {
   <defs><marker id="ah-${person}" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="${color}"/></marker></defs>
   <rect class="hall" x="55" y="122" width="287" height="38" fill="#eef1f5" stroke="#cfd6df"/>
   <line x1="342" y1="92" x2="342" y2="262" stroke="#c2cad6" stroke-width="2"/>
-  <text x="356" y="205" transform="rotate(90 356 205)" font-size="9" fill="#9aa4b2">예배당 가는 길</text>
+  <text x="356" y="205" transform="rotate(90 356 205)" font-size="9" fill="#9aa4b2">1층 가는 길</text>
   ${rooms}
   <circle cx="47" cy="141" r="8" fill="#11151c" stroke="#888" stroke-width="2"/>
   <text x="47" y="162" text-anchor="middle" font-size="8.5" fill="#a06ec8">CCTV</text>

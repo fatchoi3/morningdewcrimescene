@@ -24,8 +24,6 @@ const RAW = [
   ['LVRY-41', '핸드폰 (박희원)', '박희원', 'obj', 'forensic evidence photograph, smartphone face-down on black surface, slight scuff marks, evidence bag nearby, side rim lighting, deep shadow', '핸드폰'],
   ['KDGY-11', '열린 핸드폰 — 검색 기록', '박희원', 'phone', 'forensic evidence photograph, smartphone screen lit up showing browser search history with suspicious medical search terms about asphyxiation detection, dark room, screen glow only light source', '검색 기록'],
   ['WCFG-46', '복도 배회 CCTV', '박희원', 'cctv', 'forensic evidence photograph, grainy CCTV still frame printed on paper, corridor scene with figure pausing near a door, low resolution monochrome security camera footage, pinned to investigation board with red circle', '복도 배회 CCTV'],
-  ['PLWX-33', '베개 위치 이상', '박희원', 'obj', 'forensic evidence photograph, white pillow lying on dark wooden floor beside a bed, circular red forensic marker highlighting fabric pressure marks, single overhead light, haunting stillness', '베개 위치'],
-  ['WNDW-91', '문 유리창', '박희원', 'obj', 'forensic evidence photograph, small rectangular glass window inset in a door, dark hallway visible through glass, fingerprint smudge on glass, dramatic side light, deep shadow', '문 유리창'],
   ['LHSC-06', '협심증 처방전', '박희원', 'doc', 'forensic evidence photograph, medical prescription paper for angina medication on black surface, pill packaging beside it, clinical cold lighting', '협심증 처방전'],
   ['PGZT-09', '카톡 부탁 메시지', '박희원', 'phone', 'forensic evidence photograph, smartphone showing KakaoTalk messaging app with a conversation requesting to purchase medication, dark background, screen glow the only light', '카톡 메시지'],
   ['ACNJ-83', '수료증 위조 확정', '박희원', 'doc', 'forensic evidence photograph, two certificates side by side on black surface, authentication seal clearly different between the two, document fraud investigation style', '수료증 위조 확정'],
@@ -70,7 +68,6 @@ const RAW = [
 
   ['BGSU-22', '부검 1차 소견', '공용', 'doc', 'forensic evidence photograph, official autopsy preliminary report document on dark surface, medical terminology visible, one section marked with red question mark, clinical document forensic style, cold overhead lighting', '부검 1차 소견'],
   ['JSIK-99', '질식사 확정', '공용', 'doc', 'forensic evidence photograph, final autopsy report document with large red confirmation stamp on dark surface, dramatic overhead light, official medical document aesthetic', '질식사 확정'],
-  ['MFRQ-48', '파우더 성분 감식 결과', '공용', 'doc', 'forensic evidence photograph, laboratory forensic analysis report confirming yohimbine compound in powder sample, chemical notation visible, small sample photo attached, clinical bright lab lighting', '파우더 성분 감식'],
 ];
 
 export function genPrompts() {

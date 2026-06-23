@@ -85,23 +85,16 @@ function ManualModal({ item, onClose }) {
   );
 }
 
-// 사진 N회 터치 이벤트의 영구 저장소 (localStorage)
-const TAP_STORE = 'crimescene_tapReveal';
-function readTapDone() {
-  try { return JSON.parse(localStorage.getItem(TAP_STORE) || '{}'); }
-  catch { return {}; }
-}
-
 /**
  * StandardModal
  * 일반 증거 아이템의 이미지·설명 팝업.
- * item.tapReveal = { taps, text } 가 있으면 사진을 taps회 터치 시 숨은 이벤트가
- * 표시되고, 그 상태가 localStorage에 영구 저장된다.
+ * item.tapReveal = { taps, text } 가 있으면 사진을 taps회 터치 시 숨은 이벤트가 표시된다.
+ * 완료 상태(tapDone)와 영구 저장·해금 판정은 App이 소유하며, 완료 시 onTapComplete(code)로 알린다.
  */
-function StandardModal({ item, onClose }) {
+function StandardModal({ item, onClose, tapDone = {}, onTapComplete }) {
   const reveal = item.tapReveal;
   const [taps, setTaps] = useState(0);
-  const [revealed, setRevealed] = useState(() => (reveal ? !!readTapDone()[item.code] : false));
+  const [revealed, setRevealed] = useState(() => (reveal ? !!tapDone[item.code] : false));
 
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -116,11 +109,8 @@ function StandardModal({ item, onClose }) {
     setTaps(n);
     if (n >= need) {
       setRevealed(true);
-      try {
-        const d = readTapDone();
-        d[item.code] = true;
-        localStorage.setItem(TAP_STORE, JSON.stringify(d));
-      } catch { /* 저장 실패는 무시 */ }
+      // 완료 플래그 저장 + tapReveal 기반 특수 단서 해금 판정은 App에 위임
+      onTapComplete?.(item.code);
     }
   };
 
@@ -165,28 +155,172 @@ function StandardModal({ item, onClose }) {
   );
 }
 
-// cctv > wallet > schedule > phone > pages > 기본 순으로 적절한 모달을 선택해 렌더링
-function EvidenceModal({ item, evidence, onCollect, onClose }) {
+/**
+ * HandwritingModal
+ * 필적 대조 미니게임. item.handwriting.options 의 다이어리 중,
+ * 참가자가 "수집한(보유한)" 다이어리만 활성 선택지로 노출된다(미보유는 잠김).
+ * 선택 시 매핑된 대조 결과 텍스트를 즉시 표시한다.
+ *
+ * item.handwriting = {
+ *   prompt: '누구의 글씨와 비교해볼까요?',
+ *   options: [{ who, requires(다이어리 코드), correct?, result }]
+ * }
+ */
+function HandwritingModal({ item, evidence = [], onClose }) {
+  const hw = item.handwriting || {};
+  const options = hw.options || [];
+  const collected = new Set(evidence.map((e) => e.code));
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
+        <div className="modal-code">[{item.code}] {item.title}</div>
+        <p className="modal-description">{item.detail}</p>
+
+        <div style={{ fontWeight: 700, margin: '10px 0 8px' }}>🔍 {hw.prompt || '누구의 글씨와 비교해볼까요?'}</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {options.map((o) => {
+            const has = collected.has(o.requires);
+            const picked = result && result.who === o.who;
+            return (
+              <button
+                key={o.who}
+                type="button"
+                disabled={!has}
+                onClick={() => has && setResult(o)}
+                title={has ? '' : '해당 다이어리를 먼저 수집해야 비교할 수 있습니다'}
+                style={{
+                  padding: '7px 12px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 700,
+                  cursor: has ? 'pointer' : 'not-allowed',
+                  border: picked ? '2px solid #1b5fae' : '1px solid #d0ccc4',
+                  background: !has ? '#efeee9' : picked ? '#e6f0ff' : '#fff',
+                  color: !has ? '#a8a39a' : '#333',
+                }}
+              >
+                {has ? '' : '🔒 '}{o.who}의 다이어리
+              </button>
+            );
+          })}
+        </div>
+
+        {result && (
+          <div
+            style={{
+              marginTop: 14, padding: '12px 14px', borderRadius: 8, lineHeight: 1.6,
+              background: result.correct ? '#eafaf0' : '#f7f6f3',
+              borderLeft: `3px solid ${result.correct ? '#1a7a3a' : '#b9b3a8'}`,
+            }}
+          >
+            <span style={{ fontWeight: 800, color: result.correct ? '#1a7a3a' : '#8a857c' }}>
+              {result.correct ? '✔ 필적 일치' : '✗ 불일치'} · {result.who}
+            </span>
+            <p style={{ marginTop: 6 }}>{result.result}</p>
+          </div>
+        )}
+
+        <p style={{ marginTop: 12, fontSize: '0.8rem', color: '#8a857c' }}>
+          수집한 다이어리만 비교할 수 있습니다. 더 많은 다이어리를 모으면 선택지가 늘어납니다.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * GamsikModal
+ * 감식 단서. 결과(detail)가 가려져 있고, 단서별 운영자 비밀번호(item.password) 입력 시 공개된다.
+ * 운영자도 비밀번호를 입력해야 결과가 공개되며, 운영자 모드(adminMode)에서는
+ * 입력을 돕도록 비밀번호가 화면에 표시된다. (비번이 없는 단서는 기본 공개)
+ */
+function GamsikModal({ item, onClose, adminMode = false }) {
+  const [revealed, setRevealed] = useState(!item.password);
+  const [pw, setPw] = useState('');
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  const submit = () => {
+    if (!item.password || pw.trim() === String(item.password)) { setRevealed(true); setErr(''); }
+    else setErr('비밀번호가 일치하지 않습니다.');
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
+        <div className="modal-code">[{item.code}] 🔬 감식 단서</div>
+        <h2 className="modal-title">{item.title}</h2>
+        {item.description && <p className="modal-description">{item.description}</p>}
+
+        {revealed ? (
+          <div className="modal-detail">
+            <span className="modal-detail-label">감식 결과</span>
+            <p>{item.detail}</p>
+          </div>
+        ) : (
+          <div className="gamsik-lock">
+            <div className="gamsik-lock-icon">🔒</div>
+            <p className="gamsik-lock-desc">운영자 전용 감식 결과입니다. 진행자에게 받은 비밀번호를 입력하세요.</p>
+            {adminMode && item.password && (
+              <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{item.password}</strong></p>
+            )}
+            <div className="gamsik-lock-form">
+              <input
+                type="password" inputMode="numeric" autoComplete="off"
+                value={pw} placeholder="비밀번호"
+                onChange={(e) => { setPw(e.target.value); setErr(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && submit()}
+              />
+              <button type="button" className="control-button" onClick={submit}>결과 공개</button>
+            </div>
+            {err && <p className="gamsik-lock-err">{err}</p>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// cctv > wallet > schedule > handwriting > 감식 > phone > pages > 기본 순으로 적절한 모달을 선택해 렌더링
+function EvidenceModal({ item, evidence, onCollect, onClose, tapDone, onTapComplete, adminMode }) {
   if (item.cctv) return <CctvModal item={item} evidence={evidence} onCollect={onCollect} onClose={onClose} />;
   if (item.wallet) return <WalletModal item={item} onClose={onClose} />;
   if (item.schedule) return <ScheduleModal item={item} onClose={onClose} />;
+  if (item.handwriting) return <HandwritingModal item={item} evidence={evidence} onClose={onClose} />;
+  if (item.type === '감식') return <GamsikModal item={item} onClose={onClose} adminMode={adminMode} />;
   if (item.phone) return <PhoneModal item={item} onClose={onClose} />;
   if (item.pages) return <ManualModal item={item} onClose={onClose} />;
-  return <StandardModal item={item} onClose={onClose} />;
+  return <StandardModal item={item} onClose={onClose} tapDone={tapDone} onTapComplete={onTapComplete} />;
 }
 
-function EvidenceList({ evidence, specialUnlockKey = 0, onCollect }) {
+function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {}, onTapComplete, cctvCodes = [], adminMode = false }) {
   const [selected, setSelected] = useState(null);
   const [query, setQuery] = useState('');
-  const [filterType, setFilterType] = useState('normal'); // 'normal' | 'special'
+  const [filterType, setFilterType] = useState('normal'); // 'normal' | 'cctv' | 'special' | 'gamsik'
 
   if (evidence.length === 0) {
     return <p>아직 수집한 증거가 없습니다. QR 코드를 스캔해 증거를 찾으세요.</p>;
   }
 
-  // 보통 단서와 특수 단서 분리
-  const normalEvidence = evidence.filter((item) => item.type === '보통');
+  // CCTV에서 획득되는 단서 코드 집합 (별도 'CCTV' 탭으로 분리)
+  const cctvSet = new Set(cctvCodes);
+  // 보통(=일반 소지품) / CCTV / 특수(길잡이형) / 감식(분석 결과) 분리
+  const normalEvidence = evidence.filter((item) => item.type === '보통' && !cctvSet.has(item.code));
+  const cctvEvidence = evidence.filter((item) => cctvSet.has(item.code));
   const specialEvidence = evidence.filter((item) => item.type === '특수');
+  const gamsikEvidence = evidence.filter((item) => item.type === '감식');
 
   // 특수 단서 해금 여부 확인.
   // unlockedBy에 적힌 선행 단서를 모두 보유하면 해금된다.
@@ -201,7 +335,10 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect }) {
   };
 
   // 현재 필터에 따라 표시할 증거 결정
-  const displayEvidence = filterType === 'normal' ? normalEvidence : specialEvidence;
+  const displayEvidence = filterType === 'normal' ? normalEvidence
+    : filterType === 'cctv' ? cctvEvidence
+    : filterType === 'special' ? specialEvidence
+    : gamsikEvidence;
 
   const filtered = (query.trim()
     ? displayEvidence.filter((item) => {
@@ -217,7 +354,7 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect }) {
 
   return (
     <>
-      {/* 보통/특수 단서 필터 탭 */}
+      {/* 보통 / CCTV / 특수 / 감식 단서 필터 탭 */}
       <div className="tab-list evidence-tabs" style={{ marginBottom: '12px' }}>
         <button
           type="button"
@@ -227,12 +364,27 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect }) {
           보통 단서 ({normalEvidence.length})
         </button>
         <button
+          type="button"
+          className={`tab-button ${filterType === 'cctv' ? 'active' : ''}`}
+          onClick={() => setFilterType('cctv')}
+        >
+          📹 CCTV ({cctvEvidence.length})
+        </button>
+        <button
           key={specialUnlockKey}
           type="button"
           className={`tab-button ${filterType === 'special' ? 'active' : ''}${specialUnlockKey > 0 ? ' tab-button--sparkle' : ''}`}
           onClick={() => setFilterType('special')}
         >
           특수 단서 ({specialEvidence.length})
+        </button>
+        <button
+          key={`g-${specialUnlockKey}`}
+          type="button"
+          className={`tab-button ${filterType === 'gamsik' ? 'active' : ''}${specialUnlockKey > 0 ? ' tab-button--sparkle' : ''}`}
+          onClick={() => setFilterType('gamsik')}
+        >
+          🔬 감식 단서 ({gamsikEvidence.length})
         </button>
       </div>
 
@@ -248,12 +400,16 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect }) {
         {filtered.length === 0 && (
           <p style={{ color: '#666666', fontSize: '0.9rem' }}>
             {filterType === 'special'
-              ? '아직 해금된 특수 단서가 없습니다. 관련 보통 단서 2개를 모두 수집하면 자동으로 해금됩니다.'
+              ? '아직 해금된 특수 단서가 없습니다. 관련 단서를 모으면 자동으로 해금됩니다. (일부는 진행자가 부여)'
+              : filterType === 'gamsik'
+              ? '아직 감식 단서가 없습니다. 성분·처방 분석은 관련 단서를 모으거나 진행자가 공개하면 확인됩니다.'
+              : filterType === 'cctv'
+              ? '아직 CCTV 단서가 없습니다. CCTV 열람대에서 인물을 확인해 확보하세요.'
               : '검색 결과가 없습니다.'}
           </p>
         )}
         {filtered.map((item) => {
-          const unlocked = filterType === 'normal' || isSpecialUnlocked(item);
+          const unlocked = filterType === 'normal' || filterType === 'cctv' || isSpecialUnlocked(item);
 
           return (
             <div
@@ -270,6 +426,12 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect }) {
                 {unlocked && item.person && (
                   <span className="evidence-person">{item.person}</span>
                 )}
+                {unlocked && item.type === '감식' && (
+                  <span style={{ marginLeft: 6, fontSize: '0.68rem', fontWeight: 700, padding: '1px 7px', borderRadius: 9, background: '#e6f0ff', color: '#1b5fae' }}>🔬 감식</span>
+                )}
+                {unlocked && item.type === '특수' && (
+                  <span style={{ marginLeft: 6, fontSize: '0.68rem', fontWeight: 700, padding: '1px 7px', borderRadius: 9, background: '#fef3e2', color: '#9a5b00' }}>특수</span>
+                )}
               </div>
               {unlocked && <div className="evidence-tap-hint">탭하여 자세히 보기 →</div>}
             </div>
@@ -283,6 +445,9 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect }) {
           evidence={evidence}
           onCollect={onCollect}
           onClose={() => setSelected(null)}
+          tapDone={tapDone}
+          onTapComplete={onTapComplete}
+          adminMode={adminMode}
         />
       )}
     </>

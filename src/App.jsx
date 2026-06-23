@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import CameraScanner from './components/CameraScanner.jsx';
 import EvidenceList from './components/EvidenceList.jsx';
 import CommonInfo from './components/SuspectTabs.jsx';
-import { evidenceMap, victim, suspects } from './data/gameData.js';
+import { evidenceMap, victim, suspects, cctvClueCodes, ADMIN_OPEN_CODE, ADMIN_CLOSE_CODE } from './data/gameData.js';
 
 /**
  * ConfirmModal
@@ -38,6 +38,7 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
 }
 
 const EVIDENCE_KEY = 'crimescene_evidence';
+const TAP_KEY = 'crimescene_tapReveal'; // tapReveal(라벨 떼기 등) 완료 플래그 저장소
 
 // localStorage에서 수집된 증거 배열을 불러옴. 파싱 실패 시 빈 배열 반환
 function loadEvidence() {
@@ -56,10 +57,55 @@ function saveEvidence(evidence) {
   } catch { }
 }
 
+// tapReveal 완료 플래그 맵 { [code]: true } 로드/저장
+function loadTapDone() {
+  try { return JSON.parse(localStorage.getItem(TAP_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveTapDone(done) {
+  try { localStorage.setItem(TAP_KEY, JSON.stringify(done)); } catch { }
+}
+
+const ADMIN_KEY = 'crimescene_admin'; // 운영자(테스트) 모드 on/off
+function loadAdmin() {
+  try { return localStorage.getItem(ADMIN_KEY) === '1'; } catch { return false; }
+}
+function saveAdmin(on) {
+  try { localStorage.setItem(ADMIN_KEY, on ? '1' : '0'); } catch { }
+}
+
+// 운영자 모드 인물별 일괄획득 버튼 순서
+const PERSON_BUTTONS = ['박희원', '이사랑', '이현지', '최종현', '윤은재', '이가현', '목사', '공용'];
+
+// 주어진 코드 집합 기준, unlockedBy가 모두 충족된 미수집 특수/감식 단서를 (연쇄적으로) 반환.
+// codeSet은 호출 측에서 누적되도록 직접 변형된다.
+function computeAutoUnlocked(codeSet) {
+  const out = [];
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [code, data] of Object.entries(evidenceMap)) {
+      if (
+        (data.type === '특수' || data.type === '감식') &&
+        Array.isArray(data.unlockedBy) && data.unlockedBy.length > 0 &&
+        !codeSet.has(code) &&
+        data.unlockedBy.every((req) => codeSet.has(req))
+      ) {
+        out.push({ code, ...data });
+        codeSet.add(code);
+        changed = true;
+      }
+    }
+  }
+  return out;
+}
+
 
 function App() {
   // 앱 시작 시 localStorage에서 이전에 수집한 증거를 복원
   const [evidenceCollected, setEvidenceCollected] = useState(loadEvidence);
+  const [tapDone, setTapDone] = useState(loadTapDone); // tapReveal 완료 플래그
+  const [adminMode, setAdminMode] = useState(loadAdmin); // 운영자(테스트) 모드
   const [scanMessage, setScanMessage] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('evidence'); // 'evidence' | 'pastor' | 'info'
@@ -73,51 +119,62 @@ function App() {
    * evidenceMap에서 코드를 조회해 증거를 추가하고 localStorage에 저장한다.
    * CameraScanner의 onScan 콜백 형식에 맞게 { success, message } 객체를 반환한다.
    */
+  /**
+   * addCodes
+   * 주어진 코드들을 수집 목록에 추가하고, 연계 특수/감식 단서를 자동 해금한다.
+   * (handleScan 단건 수집과 운영자 모드 일괄 수집이 공유)
+   */
+  const addCodes = (codes) => {
+    const have = new Set(evidenceCollected.map((i) => i.code));
+    const toAdd = codes.filter((c) => evidenceMap[c] && !have.has(c));
+    if (!toAdd.length) return { added: [], autoUnlocked: [] };
+
+    let merged = [...evidenceCollected, ...toAdd.map((c) => ({ code: c, ...evidenceMap[c] }))];
+    const codeSet = new Set(merged.map((i) => i.code));
+    const autoUnlocked = computeAutoUnlocked(codeSet);
+    if (autoUnlocked.length) merged = [...merged, ...autoUnlocked];
+
+    setEvidenceCollected(merged);
+    saveEvidence(merged);
+    if (autoUnlocked.length > 0) {
+      setSpecialUnlockKey((k) => k + 1);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      setToast(autoUnlocked.map((e) => e.title).join(', '));
+      toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+    }
+    return { added: toAdd, autoUnlocked };
+  };
+
   const handleScan = (code) => {
     const normalized = code.trim().toUpperCase();
-    const evidence = evidenceMap[normalized];
 
+    // 운영자(테스트) 모드 마스터 코드 처리 (evidenceMap 조회 전에 가로챔)
+    if (normalized === ADMIN_OPEN_CODE) {
+      setAdminMode(true); saveAdmin(true);
+      const msg = '운영자 모드 ON — 하단의 인물별 버튼으로 단서를 일괄 획득할 수 있고, 감식 비번이 자동 해제됩니다.';
+      setScanMessage(msg);
+      return { success: true, message: msg };
+    }
+    if (normalized === ADMIN_CLOSE_CODE) {
+      setAdminMode(false); saveAdmin(false);
+      const msg = '운영자 모드 OFF — 사용자 모드로 전환되었습니다.';
+      setScanMessage(msg);
+      return { success: true, message: msg };
+    }
+
+    const evidence = evidenceMap[normalized];
     if (!evidence) {
       const msg = `알 수 없는 코드입니다: ${normalized}`;
       setScanMessage(msg);
       return { success: false, message: msg };
     }
-
     if (evidenceCollected.some((item) => item.code === normalized)) {
       const msg = `이미 수집된 증거입니다. \n\n${evidence.title}`;
       setScanMessage(msg);
       return { success: false, message: msg };
     }
 
-    const updated = [...evidenceCollected, { code: normalized, ...evidence }];
-    const collectedCodes = new Set(updated.map((item) => item.code));
-
-    // unlockedBy 조건이 모두 충족된 특수 단서를 자동으로 추가
-    const autoUnlocked = [];
-    for (const [specialCode, specialData] of Object.entries(evidenceMap)) {
-      if (
-        specialData.type === '특수' &&
-        Array.isArray(specialData.unlockedBy) &&
-        specialData.unlockedBy.length > 0 &&
-        !collectedCodes.has(specialCode) &&
-        specialData.unlockedBy.every((reqCode) => collectedCodes.has(reqCode))
-      ) {
-        autoUnlocked.push({ code: specialCode, ...specialData });
-        collectedCodes.add(specialCode);
-      }
-    }
-
-    const finalUpdated = [...updated, ...autoUnlocked];
-    setEvidenceCollected(finalUpdated);
-    saveEvidence(finalUpdated);
-    if (autoUnlocked.length > 0) {
-      setSpecialUnlockKey((k) => k + 1);
-      const names = autoUnlocked.map((e) => e.title).join(', ');
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-      setToast(names);
-      toastTimerRef.current = setTimeout(() => setToast(null), 4000);
-    }
-
+    const { autoUnlocked } = addCodes([normalized]);
     const msg = autoUnlocked.length > 0
       ? `증거 수집 완료: ${evidence.title} · 특수 단서 해금: ${autoUnlocked.map((e) => e.title).join(', ')}`
       : `증거 수집 완료: ${evidence.title}`;
@@ -125,11 +182,39 @@ function App() {
     return { success: true, message: msg };
   };
 
-  // 초기화 확인 후 실제 데이터를 비움
+  /**
+   * collectAllOf — 운영자 모드: 해당 인물의 모든 단서를 일괄 획득(테스트용).
+   */
+  const collectAllOf = (person) => {
+    const codes = Object.entries(evidenceMap)
+      .filter(([, v]) => v.person === person)
+      .map(([code]) => code);
+    const { added } = addCodes(codes);
+    setScanMessage(`[운영자] ${person} 단서 ${added.length}개 일괄 획득.`);
+  };
+
+  /**
+   * handleTapComplete
+   * 사진/소품의 tapReveal(예: 통 라벨 떼기)이 완료되면 호출된다.
+   * 완료 상태를 영구 저장해 재방문 시에도 공개 상태가 유지되게 한다.
+   * (라벨 떨어짐 기반 자동 해금 갈래는 필적 대조 라인으로 대체되어 폐기됨)
+   */
+  const handleTapComplete = (code) => {
+    if (tapDone[code]) return;
+    const nextDone = { ...tapDone, [code]: true };
+    setTapDone(nextDone);
+    saveTapDone(nextDone);
+  };
+
+  // 초기화 확인 후 실제 데이터를 비움 (tapReveal 완료 플래그도 함께 삭제)
   const handleReset = () => {
     setEvidenceCollected([]);
     saveEvidence([]);
-    setScanMessage('증거 목록이 초기화되었습니다.');
+    setTapDone({});
+    saveTapDone({});
+    setAdminMode(false); // 초기화 시 사용자 모드로 복귀
+    saveAdmin(false);
+    setScanMessage('증거 목록이 초기화되었습니다. (사용자 모드)');
     setConfirmOpen(false);
   };
 
@@ -188,8 +273,8 @@ function App() {
           </div>
 
           <div className="tab-content">
-            {activeTab === 'evidence' && <EvidenceList evidence={mainEvidence} specialUnlockKey={specialUnlockKey} onCollect={handleScan} />}
-            {activeTab === 'pastor' && <EvidenceList evidence={pastorEvidence} specialUnlockKey={specialUnlockKey} onCollect={handleScan} />}
+            {activeTab === 'evidence' && <EvidenceList evidence={mainEvidence} specialUnlockKey={specialUnlockKey} onCollect={handleScan} tapDone={tapDone} onTapComplete={handleTapComplete} cctvCodes={cctvClueCodes} adminMode={adminMode} />}
+            {activeTab === 'pastor' && <EvidenceList evidence={pastorEvidence} specialUnlockKey={specialUnlockKey} onCollect={handleScan} tapDone={tapDone} onTapComplete={handleTapComplete} cctvCodes={cctvClueCodes} adminMode={adminMode} />}
             {activeTab === 'info' && <CommonInfo victim={victim} suspects={suspects} />}
           </div>
         </div>
@@ -198,6 +283,21 @@ function App() {
         <div className="toast">
           <span className="toast-label">✨ 특수 단서 해금</span>
           <span className="toast-title">{toast}</span>
+        </div>
+      )}
+
+      {/* 운영자(테스트) 모드 — 인물별 단서 일괄 획득 */}
+      {adminMode && (
+        <div className="admin-bar">
+          <div className="admin-bar-title">🛠️ 운영자 모드 · 인물별 일괄 획득 (테스트용)</div>
+          <div className="admin-bar-buttons">
+            {PERSON_BUTTONS.map((p) => (
+              <button key={p} type="button" className="small-button" onClick={() => collectAllOf(p)}>
+                {p} 전체
+              </button>
+            ))}
+          </div>
+          <div className="admin-bar-note">사용자 모드로 복귀: 코드 입력에 <code>{ADMIN_CLOSE_CODE}</code> 입력 또는 [초기화] 버튼</div>
         </div>
       )}
 

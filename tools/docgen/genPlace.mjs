@@ -75,7 +75,7 @@ function floorPlan() {
   return `<svg class="floor" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
   <polygon points="47,141 342,122 342,160" fill="rgba(165,110,200,0.16)" stroke="rgba(180,130,210,0.55)" stroke-width="1"/>
   <line x1="342" y1="92" x2="342" y2="258" stroke="#a9b3c0" stroke-width="2"/>
-  <text x="356" y="200" class="cam" transform="rotate(90 356 200)">예배당 가는 길</text>
+  <text x="356" y="200" class="cam" transform="rotate(90 356 200)">1층 가는 길</text>
   <rect class="room" x="55" y="45" width="95" height="70" rx="3"/>
   <rect class="room" x="150" y="45" width="95" height="70" rx="3"/>
   <rect class="room" x="245" y="45" width="90" height="70" rx="3"/>
@@ -175,6 +175,16 @@ ${movementTable()}
 ☐ 톡서랍 비번: 목사 0419 · 이사랑 0302(언니 생일) · 이현지 0815(동생 생일)
 </div>
 <div class="warn"><b>운영 주의</b> — 자매(이사랑·이현지) 폰 톡서랍은 상대 생일로 교차 잠겨 있어, 한쪽 폰을 열려면 상대의 다이어리(생일)를 먼저 읽어야 합니다. 이 교차 구조가 자매 관계를 드러내는 장치입니다.</div>
+
+<div class="ch pb">8. 운영자 전용 코드 & 감식 비번</div>
+<div class="warn"><b>⚠ 운영자 전용 — 참가자에게 노출 금지.</b></div>
+<table><tr><th style="width:180px">용도</th><th>코드 / 비밀번호</th></tr>
+<tr><td><b>운영자(테스트) 모드 진입</b></td><td>코드 입력란에 <code>ADMIN-OPEN</code> → 인물별 단서 일괄 획득 버튼 표시 + 감식 비번 자동 해제</td></tr>
+<tr><td><b>운영자 모드 복귀</b></td><td>코드 입력란에 <code>ADMIN-CLOSE</code> 입력 또는 [초기화] 버튼</td></tr>
+${allClues.filter((c) => c.type === '감식' && c.password).map((c) =>
+  `<tr><td>감식 비번 — <code>${esc(c.code)}</code> ${esc(c.title)}</td><td><code>${esc(c.password)}</code></td></tr>`).join('')}
+</table>
+<div class="tip">감식 단서는 앱에서 열어도 결과가 가려져 있고, 위 비밀번호를 입력해야 결과가 공개됩니다(운영자 모드 ON이면 자동 공개). 진행자만 비번을 알고, 적절한 시점에 참가자에게 알려주세요.</div>
 `;
 
   const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>단서배치 & 귀속 가이드</title><style>${BASE_CSS}${PLACE_CSS}</style></head><body>${body}</body></html>`;
