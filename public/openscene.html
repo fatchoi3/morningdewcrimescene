@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>크라임씬 — 오프닝</title>
+<style>
+  :root{--ink:#0a0d14;--paper:#e8e3d6;--warm:#caa15e;--cold:#5e83b6;--blood:#b14438;--muted:#8c93a3;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{background:#000;color:var(--paper);font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100%;-webkit-font-smoothing:antialiased;}
+  .serif{font-family:"Nanum Myeongjo","Apple SD Gothic Neo",Georgia,serif;}
+  .wrap{width:min(96vw,860px);}
+  .title-line{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;}
+  .title-line h1{font-size:15px;font-weight:600;letter-spacing:.02em;margin:0;color:#cfd4df;}
+  .title-line span{font-size:11px;color:var(--muted);letter-spacing:.14em;}
+
+  .frame{position:relative;width:100%;aspect-ratio:16/9;background:var(--ink);border-radius:6px;overflow:hidden;
+    box-shadow:0 24px 70px rgba(0,0,0,.6);border:1px solid #000;}
+  .stage{position:absolute;inset:0;} .stage svg{width:100%;height:100%;display:block;}
+  .tint{position:absolute;inset:0;pointer-events:none;mix-blend-mode:soft-light;opacity:0;transition:opacity 1.2s ease;}
+  .phase-warm .tint{background:radial-gradient(120% 95% at 60% 30%,#f0c074 0%,#7a4a16 85%);opacity:.5;}
+  .phase-cold .tint{background:radial-gradient(120% 100% at 50% 45%,#6c93c8 0%,#10243f 85%);opacity:.58;}
+  .phase-gray .tint{background:#1d1d20;opacity:.4;}
+  .stage-grade{position:absolute;inset:0;transition:filter 1.2s ease;}
+  .phase-gray .stage-grade{filter:grayscale(.9) contrast(1.05) brightness(.9);}
+
+  .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 120% at 50% 45%,transparent 56%,rgba(0,0,0,.72) 100%);}
+  .grain{position:absolute;inset:-50%;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:grain 1.2s steps(3) infinite;}
+  @keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-4%,3%)}66%{transform:translate(3%,-2%)}100%{transform:translate(0,0)}}
+  .bars::before,.bars::after{content:"";position:absolute;left:0;right:0;height:7.5%;background:#000;z-index:6;pointer-events:none;}
+  .bars::before{top:0;} .bars::after{bottom:0;}
+
+  .dim{position:absolute;inset:0;z-index:3;pointer-events:none;background:#02030a;opacity:0;transition:opacity 1.1s ease;}
+  .flashov{position:absolute;inset:0;z-index:6;pointer-events:none;background:#fff;opacity:0;}
+  .frame.impact .flashov{animation:flash .6s ease both;}
+  @keyframes flash{0%{opacity:0}12%{opacity:.88}45%{opacity:0}100%{opacity:0}}
+
+  .siren-r,.siren-b{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;mix-blend-mode:screen;}
+  .siren-r{background:radial-gradient(85% 130% at 0% 50%,#ff2230 0%,transparent 68%);}
+  .siren-b{background:radial-gradient(85% 130% at 100% 50%,#2a6bff 0%,transparent 68%);}
+  .siren-on .siren-r{animation:sirenR 1.15s steps(1,end) infinite;}
+  .siren-on .siren-b{animation:sirenB 1.15s steps(1,end) infinite;}
+  @keyframes sirenR{0%{opacity:.6}9%{opacity:0}18%{opacity:.6}27%{opacity:0}50%,100%{opacity:0}}
+  @keyframes sirenB{0%,50%{opacity:0}55%{opacity:.6}64%{opacity:0}73%{opacity:.6}82%{opacity:0}100%{opacity:0}}
+
+  .tc{position:absolute;top:calc(7.5% + 12px);left:16px;z-index:7;font-family:"SF Mono",ui-monospace,Menlo,monospace;
+    font-size:12px;letter-spacing:.12em;color:#cdd3df;opacity:.66;}
+  .sub{position:absolute;left:6%;right:6%;bottom:calc(7.5% + 18px);z-index:7;text-align:center;}
+  .sub p{margin:0;display:inline-block;font-size:clamp(15px,2.5vw,23px);line-height:1.5;color:#f3efe4;
+    text-shadow:0 2px 14px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.8);animation:subin 1s ease both;}
+  @keyframes subin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .fade-in{animation:fin 1.2s ease both;} .fade-in-2{animation:fin 1.2s ease .55s both;}
+  @keyframes fin{from{opacity:0}to{opacity:1}}
+  .walk{animation:walk 5s linear both;} @keyframes walk{from{transform:translateX(-120px)}to{transform:translateX(150px)}}
+  .sway{animation:sway 3.4s ease-in-out infinite;transform-origin:bottom center;} @keyframes sway{0%,100%{transform:rotate(-.8deg)}50%{transform:rotate(.8deg)}}
+  .drift{animation:drift 20s linear infinite;} @keyframes drift{from{transform:translateX(-40px)}to{transform:translateX(60px)}}
+  .breathe{animation:breathe 9s ease-in-out infinite;transform-origin:center;} @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .recoil{animation:recoil 1.4s ease both;} @keyframes recoil{0%{transform:translateX(0)}30%{transform:translateX(-12px)}100%{transform:translateX(-7px)}}
+
+  .cine-ov{position:absolute;inset:0;z-index:4;}
+  .portrait{position:absolute;inset:0;display:grid;place-items:center;}
+  .pframe{width:min(42%,235px);aspect-ratio:3/4;border:2px solid rgba(202,161,94,.55);box-shadow:0 14px 50px rgba(0,0,0,.75);
+    overflow:hidden;position:relative;background:#0c1019;animation:portpunch .55s cubic-bezier(.2,.8,.2,1.3) both;}
+  .pframe img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;animation:drain 5s ease .55s both;}
+  .pframe .blk{position:absolute;inset:0;background:#000;opacity:0;animation:blk 5s ease .55s both;}
+  .fb{position:absolute;inset:0;display:grid;place-items:center;color:#3a4458;font-weight:700;font-size:2.2em;letter-spacing:.05em;}
+  @keyframes portpunch{0%{opacity:0;transform:scale(.6)}55%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+  @keyframes drain{0%{filter:saturate(1) brightness(1)}65%{filter:saturate(.25) brightness(.6)}100%{filter:saturate(0) brightness(.22)}}
+  @keyframes blk{0%,52%{opacity:0}100%{opacity:.55}}
+
+  .lineup{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:2%;padding:0 4%;}
+  .sus{width:14%;text-align:center;opacity:0;animation:pop .5s cubic-bezier(.2,.8,.2,1.35) both;}
+  .sus .sframe{width:100%;aspect-ratio:3/4;border:2px solid rgba(202,161,94,.55);overflow:hidden;background:#0c1019;
+    box-shadow:0 6px 22px rgba(0,0,0,.6);position:relative;}
+  .sus .sframe img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+  .sus .fl{position:absolute;inset:0;background:#fff;opacity:0;mix-blend-mode:screen;animation:fl .5s ease both;}
+  .sus .nm{margin-top:7px;font-size:clamp(9px,1.5vw,13px);color:#e3ddcf;letter-spacing:.04em;}
+  @keyframes pop{0%{opacity:0;transform:scale(.45)}65%{opacity:1;transform:scale(1.13)}100%{opacity:1;transform:scale(1)}}
+  @keyframes fl{0%{opacity:0}12%{opacity:.55}34%{opacity:0}100%{opacity:0}}
+
+  .ctext{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:0 8%;}
+  .ctext .t1{font-size:clamp(22px,4.4vw,40px);letter-spacing:.03em;animation:fin 1.6s ease both;}
+  .ctext .t1 b{color:var(--blood);font-weight:700;}
+  .ctext .t2{font-size:clamp(13px,2vw,17px);color:#d8d2c4;letter-spacing:.06em;animation:fin 1.6s ease .8s both;}
+  .ctext .kick{font-size:clamp(11px,1.6vw,13px);color:var(--muted);letter-spacing:.3em;animation:fin 1.4s ease both;}
+  .rise{animation:rise 1.1s ease both;} @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .hud{margin-top:14px;display:flex;flex-direction:column;gap:10px;}
+  .dots{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;}
+  .dot-b{width:22px;height:3px;border-radius:2px;background:#2a3142;border:0;padding:0;cursor:pointer;transition:background .25s;}
+  .dot-b.on{background:var(--warm);} .dot-b.done{background:#586079;}
+  .bar{height:2px;background:#1c2230;border-radius:2px;overflow:hidden;}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--warm),var(--blood));}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .btns{display:flex;gap:6px;align-items:center;}
+  button.ctrl{background:#141a26;color:#dfe3ec;border:1px solid #232b3c;border-radius:8px;height:38px;min-width:42px;padding:0 12px;font-size:15px;cursor:pointer;display:grid;place-items:center;transition:background .18s,border-color .18s;}
+  button.ctrl:hover{background:#1d2536;border-color:#33405a;}
+  button.ctrl:focus-visible{outline:2px solid var(--warm);outline-offset:2px;}
+  .play{min-width:96px;font-weight:600;}
+  .meta{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted);letter-spacing:.08em;}
+  @media (prefers-reduced-motion: reduce){
+    .walk,.drift,.breathe,.recoil,.sway{animation:none !important;}
+    .grain{animation:none;}
+    .siren-on .siren-r,.siren-on .siren-b{animation:none !important;opacity:.1;}
+    .sus{animation:fin .8s ease both !important;} .sus .fl{display:none;}
+    .dim{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title-line"><h1>크라임씬 — 오프닝</h1><span>샛별이슬 수련회 · OPENING</span></div>
+  <div class="frame phase-warm" id="frame">
+    <div class="stage-grade"><div class="stage" id="stage"></div><div class="tint"></div></div>
+    <div class="dim" id="dim"></div>
+    <div class="siren-r"></div><div class="siren-b"></div>
+    <div class="flashov"></div>
+    <div class="grain"></div><div class="vignette"></div><div class="bars"></div>
+    <div class="tc" id="tc"></div><div class="sub" id="sub"></div>
+  </div>
+  <div class="hud">
+    <div class="dots" id="dots"></div>
+    <div class="bar"><i id="barfill"></i></div>
+    <div class="row">
+      <div class="meta" id="counter">CUT 1 / 11</div>
+      <div class="btns">
+        <button class="ctrl" id="restart" aria-label="처음부터">↺</button>
+        <button class="ctrl" id="prev" aria-label="이전 컷">⏮</button>
+        <button class="ctrl play" id="play" aria-label="재생/일시정지">▶ 재생</button>
+        <button class="ctrl" id="next" aria-label="다음 컷">⏭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const VICTIM_IMG=`./images/people/victim.jpg`;
+const SUS=[[`./images/people/s1.png`,'최종현'],['./images/people/s2.png','윤은재'],['./images/people/s3.png','이현지'],
+  ['./images/people/s4.png','박희원'],['./images/people/s5.png','이사랑'],['./images/people/s6.png','이가현']];
+
+const DEFS = `
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#acc6d8"/><stop offset=".5" stop-color="#d6d2c0"/><stop offset="1" stop-color="#eed7a4"/></linearGradient>
+  <linearGradient id="roomW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2c1c"/><stop offset="1" stop-color="#1d140b"/></linearGradient>
+  <linearGradient id="roomC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2231"/><stop offset="1" stop-color="#080b12"/></linearGradient>
+  <linearGradient id="hall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2230"/><stop offset="1" stop-color="#0c1019"/></linearGradient>
+  <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3c22"/><stop offset="1" stop-color="#3a2616"/></linearGradient>
+  <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#90b0c6" stop-opacity=".55"/><stop offset="1" stop-color="#4a6256" stop-opacity=".25"/></linearGradient>
+  <radialGradient id="lamp" cx="50%" cy="40%" r="55%"><stop offset="0" stop-color="#ffe6b0" stop-opacity="0.6"/><stop offset="1" stop-color="#ffe6b0" stop-opacity="0"/></radialGradient>
+  <radialGradient id="beamG" cx="50%" cy="0%" r="95%"><stop offset="0" stop-color="#ffe6b0" stop-opacity=".55"/><stop offset="1" stop-color="#ffe6b0" stop-opacity="0"/></radialGradient>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3.2"/></filter>
+</defs>`;
+function svg(inner){ return `<svg viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice">${DEFS}${inner}</svg>`; }
+
+/* ---------- 인물 ---------- */
+const D='#06070c';
+function person(o={}){
+  o=Object.assign({f:D,hair:'short',pose:'stand',face:1,rim:true},o);
+  const f=o.f;
+  let legs, arms, shadow=`<ellipse cx="0" cy="3" rx="26" ry="6" fill="#000" opacity=".32"/>`;
+  if(o.pose==='walk'){
+    legs=`<path d="M-26,-2 L-15,-60 L-5,-58 L-13,-2 Z" fill="${f}"/><path d="M16,-2 L12,-60 L3,-58 L7,-2 Z" fill="${f}"/>
+          <ellipse cx="-21" cy="-2" rx="13" ry="5" fill="${f}"/><ellipse cx="11" cy="-2" rx="12" ry="5" fill="${f}"/>`;
+    shadow=`<ellipse cx="-4" cy="3" rx="30" ry="6" fill="#000" opacity=".3"/>`;
+  } else {
+    legs=`<rect x="-13" y="-60" width="11" height="60" rx="4.5" fill="${f}"/><rect x="2" y="-60" width="11" height="60" rx="4.5" fill="${f}"/>
+          <ellipse cx="-8" cy="-1" rx="12" ry="5" fill="${f}"/><ellipse cx="8" cy="-1" rx="12" ry="5" fill="${f}"/>`;
+  }
+  const torso=`<path d="M-17,-58 Q-21,-96 -26,-118 Q0,-133 26,-118 Q21,-96 17,-58 Q0,-64 -17,-58 Z" fill="${f}"/>`;
+  if(o.pose==='talk')      arms=`<path d="M-24,-116 Q-30,-88 -25,-62 L-17,-62 Q-21,-88 -17,-114 Z" fill="${f}"/><path d="M24,-116 Q41,-110 45,-90 L37,-86 Q31,-103 17,-110 Z" fill="${f}"/>`;
+  else if(o.pose==='recoil')arms=`<path d="M-24,-116 Q-32,-92 -27,-66 L-19,-66 Q-23,-90 -18,-114 Z" fill="${f}"/><path d="M24,-116 Q35,-140 27,-156 L18,-151 Q23,-130 17,-113 Z" fill="${f}"/>`;
+  else                      arms=`<path d="M-24,-116 Q-30,-88 -25,-62 L-17,-62 Q-21,-88 -17,-114 Z" fill="${f}"/><path d="M24,-116 Q30,-88 25,-62 L17,-62 Q21,-88 17,-114 Z" fill="${f}"/>`;
+  const neck=`<rect x="-6" y="-128" width="12" height="15" rx="3" fill="${f}"/>`;
+  const head=`<ellipse cx="0" cy="-143" rx="15" ry="17" fill="${f}"/>`;
+  const hair = o.hair==='long'
+    ? `<path d="M-16,-142 Q-19,-112 -9,-106 L-14,-110 Q-18,-130 -16,-147 Q0,-167 16,-147 Q18,-130 14,-110 L9,-106 Q19,-112 16,-142 Q16,-160 0,-163 Q-16,-160 -16,-142 Z" fill="${f}"/>`
+    : o.hair==='none' ? ''
+    : `<path d="M-15,-145 Q0,-166 15,-145 Q14,-160 0,-163 Q-14,-160 -15,-145 Z" fill="${f}"/>`;
+  const rim = o.rim?`<path d="M10,-158 Q16,-150 12,-138" stroke="#caa15e" stroke-width="2" fill="none" opacity=".4"/><path d="M13,-118 Q22,-110 24,-94" stroke="#caa15e" stroke-width="2" fill="none" opacity=".28"/>`:'';
+  const flip=o.face<0?` transform="scale(-1,1)"`:'';
+  return `<g${flip}>${shadow}${legs}${torso}${arms}${neck}${head}${hair}${rim}</g>`;
+}
+function personSit(o={}){
+  o=Object.assign({f:D,hair:'short',face:1},o);
+  const f=o.f;
+  const lap=`<path d="M-30,-2 Q0,-30 30,-2 Q14,-15 0,-15 Q-14,-15 -30,-2 Z" fill="${f}"/>`;
+  const shadow=`<ellipse cx="6" cy="2" rx="34" ry="6" fill="#000" opacity=".3"/>`;
+  const torso=`<path d="M-14,-16 Q-19,-58 -22,-78 Q0,-90 22,-78 Q19,-58 14,-16 Q0,-22 -14,-16 Z" fill="${f}"/>`;
+  const arm=`<path d="M-20,-74 Q-30,-52 -24,-26 L-17,-28 Q-21,-50 -14,-72 Z" fill="${f}"/>`;
+  const neck=`<rect x="-5" y="-86" width="10" height="12" rx="3" fill="${f}"/>`;
+  const head=`<ellipse cx="0" cy="-99" rx="14" ry="16" fill="${f}"/>`;
+  const hair = o.hair==='long'
+    ? `<path d="M-15,-99 Q-18,-72 -8,-66 L-13,-70 Q-17,-88 -15,-103 Q0,-121 15,-103 Q17,-88 13,-70 L8,-66 Q18,-72 15,-99 Z" fill="${f}"/>`
+    : `<path d="M-14,-101 Q0,-120 14,-101 Q13,-115 0,-118 Q-13,-115 -14,-101 Z" fill="${f}"/>`;
+  const rim=`<path d="M9,-112 Q15,-104 11,-94" stroke="#caa15e" stroke-width="2" fill="none" opacity=".38"/>`;
+  const flip=o.face<0?` transform="scale(-1,1)"`:'';
+  return `<g${flip}>${shadow}${lap}${torso}${arm}${neck}${head}${hair}${rim}</g>`;
+}
+function fallen(){
+  return `<g><ellipse cx="0" cy="0" rx="78" ry="13" fill="#000" opacity=".4"/>
+    <path d="M-72,-4 Q-40,-20 30,-16 Q60,-14 64,-22 Q40,-30 -10,-28 Q-50,-26 -72,-12 Z" fill="${D}"/>
+    <ellipse cx="58" cy="-26" rx="15" ry="13" fill="${D}"/>
+    <path d="M44,-30 Q58,-44 70,-34 Q60,-30 50,-28 Z" fill="${D}"/></g>`;
+}
+function place(x,y,scale,inner,o={}){
+  const rot=o.rot?` rotate(${o.rot})`:'';
+  const cls=o.cls?` class="${o.cls}"`:'';
+  const st=o.style?` style="${o.style}"`:'';
+  return `<g${cls}${st}><g transform="translate(${x},${y}) scale(${scale})${rot}">${inner}</g></g>`;
+}
+
+/* ---------- 자연/건물 ---------- */
+const sky=`<rect width="960" height="540" fill="url(#sky)"/>`;
+const sun=`<circle cx="735" cy="150" r="140" fill="url(#lamp)"/><circle cx="735" cy="150" r="30" fill="#fff3d4" opacity=".9" class="breathe"/>
+  <g opacity=".18"><path d="M735,150 L735,20" stroke="#fff" stroke-width="3"/><path d="M735,150 L860,60" stroke="#fff" stroke-width="3"/><path d="M735,150 L610,60" stroke="#fff" stroke-width="3"/><path d="M735,150 L890,170" stroke="#fff" stroke-width="3"/></g>`;
+function clouds(){return `<g class="drift" opacity=".7"><ellipse cx="250" cy="110" rx="64" ry="17" fill="#fff" opacity=".55"/><ellipse cx="310" cy="120" rx="40" ry="13" fill="#fff" opacity=".5"/><ellipse cx="470" cy="92" rx="46" ry="13" fill="#fff" opacity=".42"/></g>`;}
+const farRange=`<g filter="url(#soft)"><path d="M0,300 L180,205 L360,295 L560,193 L760,288 L960,232 L960,360 L0,360Z" fill="#6f86a0"/></g>`;
+const midRange=`<path d="M0,338 L230,250 L470,338 L700,255 L960,330 L960,406 L0,406Z" fill="#46604f"/>`;
+function fir(x,y,s,c){return `<g transform="translate(${x},${y}) scale(${s})"><rect x="-3" y="-8" width="6" height="16" fill="#1c1408"/><path d="M0,-62 L17,-24 L8,-24 L21,2 L-21,2 L-8,-24 L-17,-24 Z" fill="${c}"/></g>`;}
+function firRidge(y){let o='';for(let k=0;k<15;k++){const x=k*68+18;const s=0.45+((k*37)%5)*0.06;o+=fir(x,y,s,'#22372a');}return `<g opacity=".92">${o}</g>`;}
+const lakeBand=`<rect x="0" y="384" width="960" height="26" fill="url(#water)"/><rect x="0" y="386" width="960" height="2" fill="#cfe0e6" opacity=".4"/>`;
+const meadow=`<path d="M0,408 Q480,392 960,408 L960,540 L0,540 Z" fill="#2c3a22"/><path d="M0,408 Q480,392 960,408" fill="none" stroke="#3e5028" stroke-width="5" opacity=".7"/>`;
+function lodge(x,y,s){return `<g transform="translate(${x},${y}) scale(${s})">
+  <rect x="0" y="0" width="190" height="96" fill="url(#wood)"/>
+  <line x1="0" y1="30" x2="190" y2="30" stroke="#1c1208" stroke-width="2" opacity=".5"/><line x1="0" y1="60" x2="190" y2="60" stroke="#1c1208" stroke-width="2" opacity=".5"/>
+  <path d="M-18,4 L95,-48 L208,4 Z" fill="#241813"/><path d="M-18,4 L95,-48 L208,4" fill="none" stroke="#3a2a1e" stroke-width="3"/>
+  <rect x="150" y="-32" width="16" height="36" fill="#2a1d14"/>
+  <path d="M158,-36 q-9,-14 2,-26 q9,-10 0,-22" stroke="#d6dade" stroke-width="4" fill="none" opacity=".22" class="drift"/>
+  <rect x="80" y="48" width="30" height="48" rx="2" fill="#160e07"/><circle cx="104" cy="74" r="2" fill="#caa15e"/>
+  <rect x="24" y="40" width="32" height="26" fill="url(#lamp)" opacity=".9"/><rect x="24" y="40" width="32" height="26" fill="none" stroke="#2a1d14" stroke-width="3"/><line x1="40" y1="40" x2="40" y2="66" stroke="#2a1d14" stroke-width="2"/>
+  <rect x="134" y="40" width="32" height="26" fill="url(#lamp)" opacity=".9"/><rect x="134" y="40" width="32" height="26" fill="none" stroke="#2a1d14" stroke-width="3"/><line x1="150" y1="40" x2="150" y2="66" stroke="#2a1d14" stroke-width="2"/></g>`;}
+
+/* ---------- 실내 ---------- */
+function roomWarm(){return `<rect width="960" height="540" fill="url(#roomW)"/>
+  <rect x="0" y="392" width="960" height="148" fill="#241a10"/>
+  <rect x="0" y="386" width="960" height="8" fill="#3a2a18"/>
+  <g stroke="#160f07" stroke-width="2" opacity=".4"><line x1="180" y1="392" x2="120" y2="540"/><line x1="380" y1="392" x2="360" y2="540"/><line x1="580" y1="392" x2="600" y2="540"/><line x1="780" y1="392" x2="840" y2="540"/></g>
+  <g transform="translate(815,150)" opacity=".45"><rect x="-5" y="-34" width="10" height="80" fill="#160f07"/><rect x="-26" y="-12" width="62" height="10" fill="#160f07"/></g>`;}
+function win(x,y,w,h,op){op=op==null?.95:op;return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="url(#lamp)" opacity="${op}"/>
+  <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="#fff" opacity=".12"/>
+  <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="none" stroke="#241a10" stroke-width="9"/>
+  <line x1="${x+w/2}" y1="${y}" x2="${x+w/2}" y2="${y+h}" stroke="#241a10" stroke-width="5"/>
+  <line x1="${x}" y1="${y+h/2}" x2="${x+w}" y2="${y+h/2}" stroke="#241a10" stroke-width="5"/>
+  <path d="M${x-12},${y-8} q9,${h/2} 0,${h+14} l-13,0 q6,-${h/2} -2,-${h+8} Z" fill="#1f160d"/>
+  <path d="M${x+w+12},${y-8} q-9,${h/2} 0,${h+14} l13,0 q-6,-${h/2} 2,-${h+8} Z" fill="#1f160d"/>`;}
+function beam(x,y,w,h){return `<polygon points="${x+10},${y+h} ${x+w-10},${y+h} ${x+w+110},540 ${x-110},540" fill="url(#beamG)"/>`;}
+function hallway(warm){
+  const wall=warm?'roomW':'hall', floorC=warm?'#1f160c':'#0b0e16', doorC=warm?'#1c130b':'#0a0d14',
+        lightOp=warm?.5:.22, rug=warm?'#3a2414':'#16202f', sconce=warm?.7:.18;
+  return `<rect width="960" height="540" fill="url(#${wall})"/>
+    <rect x="0" y="400" width="960" height="140" fill="${floorC}"/>
+    <polygon points="430,400 530,400 700,540 260,540" fill="${rug}" opacity=".7"/>
+    <line x1="0" y1="116" x2="430" y2="178" stroke="#000" stroke-width="3" opacity=".4"/>
+    <line x1="960" y1="116" x2="530" y2="178" stroke="#000" stroke-width="3" opacity=".4"/>
+    <rect x="58" y="178" width="92" height="222" fill="${doorC}"/><rect x="58" y="178" width="92" height="222" fill="none" stroke="#000" stroke-width="2" opacity=".5"/>
+    <rect x="810" y="178" width="92" height="222" fill="${doorC}"/><rect x="810" y="178" width="92" height="222" fill="none" stroke="#000" stroke-width="2" opacity=".5"/>
+    <rect x="430" y="170" width="100" height="230" fill="#0a0d14"/>
+    <rect x="444" y="184" width="72" height="206" fill="url(#lamp)" opacity="${lightOp}"/>
+    <circle cx="245" cy="220" r="11" fill="url(#lamp)" opacity="${sconce}"/><circle cx="715" cy="220" r="11" fill="url(#lamp)" opacity="${sconce}"/>`;}
+
+/* ---------- 오버레이 ---------- */
+function lineupHTML(){return `<div class="lineup">`+SUS.map((s,k)=>{const d=(k*0.35).toFixed(2);
+  return `<div class="sus" style="animation-delay:${d}s"><div class="sframe"><div class="fb">${s[1].slice(0,1)}</div><img src="${s[0]}" alt="" onerror="this.remove()"><div class="fl" style="animation-delay:${d}s"></div></div><div class="nm">${s[1]}</div></div>`;}).join('')+`</div>`;}
+function victimHTML(){return `<div class="portrait"><div class="pframe"><div class="fb">목사</div><img src="${VICTIM_IMG}" alt="" onerror="this.remove()"><div class="blk"></div></div></div>`;}
+
+/* ---------- 컷 ---------- */
+const CUTS = [
+ { tc:"여름", phase:"warm", dim:0.0, dur:6000, sub:"여름, 샛별이슬 교회 청년부 수련회.",
+   scene: svg(sky+sun+clouds()+farRange+midRange+firRidge(338)+lakeBand+meadow+
+     lodge(120,300,1)+fir(70,540,2.3,'#16240f')+fir(905,540,2.6,'#16240f')+fir(845,520,1.6,'#1c2e14')+
+     `<g class="drift" opacity=".6"><path d="M560,118 q10,-8 20,0 q10,-8 20,0" stroke="#3a4350" stroke-width="2.5" fill="none"/><path d="M612,136 q8,-6 16,0 q8,-6 16,0" stroke="#3a4350" stroke-width="2.5" fill="none"/></g>`+
+     place(238,478,.72,person({hair:'short'}))+place(300,486,.76,person({hair:'long',face:-1}))) },
+
+ { tc:"", phase:"warm", dim:0.05, dur:5000, sub:"산과 계곡, 웃음소리로 가득한 사흘.",
+   scene: svg(sky+sun+clouds()+farRange+midRange+firRidge(338)+lakeBand+meadow+
+     `<ellipse cx="480" cy="486" rx="200" ry="34" fill="#3a4a26" opacity=".6"/>`+
+     place(330,476,.92,personSit({hair:'short'}))+
+     place(430,478,.96,personSit({hair:'long',face:-1}))+
+     place(575,476,.92,personSit({hair:'short',face:-1}))+
+     place(660,452,1.05,person({hair:'short'}))+
+     `<g transform="translate(500,470) scale(1.0)"><ellipse cx="0" cy="0" rx="24" ry="32" fill="#1a110a"/><circle cx="0" cy="2" r="9" fill="#06070c"/><rect x="-3" y="-64" width="6" height="40" fill="#1a110a"/></g>`+
+     `<g class="fade-in-2"><circle cx="470" cy="372" r="4.5" fill="#cdbfa0"/><circle cx="486" cy="372" r="4.5" fill="#cdbfa0"/><circle cx="502" cy="372" r="4.5" fill="#cdbfa0"/></g>`) },
+
+ { tc:"마지막 날 오전", phase:"warm", dim:0.10, dur:5000, sub:"누군가는 산에 올랐고,",
+   scene: svg(sky+sun+clouds()+farRange+midRange+firRidge(338)+lakeBand+meadow+
+     `<path d="M470,540 Q500,470 462,424 Q430,388 486,348 Q520,322 506,286" fill="none" stroke="#c8b48a" stroke-width="12" opacity=".45" stroke-linecap="round"/>`+
+     fir(120,520,1.8,'#16240f')+fir(860,540,2.2,'#16240f')+
+     place(450,476,1.0,person({pose:'walk',hair:'short'}),{cls:'walk'})+
+     place(520,486,.94,person({pose:'walk',hair:'long'}),{cls:'walk',style:'animation-delay:.4s'})) },
+
+ { tc:"", phase:"warm", dim:0.08, dur:5000, sub:"누군가는 남아, 함께 웃고 떠들었다.",
+   scene: svg(roomWarm()+`<rect width="960" height="360" fill="url(#lamp)" opacity=".5"/>`+
+     win(96,96,150,150,.9)+beam(96,96,150,150)+
+     `<ellipse cx="480" cy="404" rx="135" ry="26" fill="#150d06"/><ellipse cx="480" cy="398" rx="135" ry="24" fill="#241608"/>`+
+     `<rect x="452" y="378" width="14" height="20" rx="2" fill="#0d0905"/><rect x="500" y="380" width="12" height="18" rx="2" fill="#0d0905"/>`+
+     place(352,460,.98,personSit({hair:'short'}))+
+     place(452,460,.98,personSit({hair:'long',face:-1}))+
+     place(575,460,1.0,personSit({hair:'short',face:-1}))+
+     place(672,460,.96,personSit({hair:'long'}))+
+     `<g class="fade-in-2"><circle cx="476" cy="300" r="4.5" fill="#cdbfa0"/><circle cx="492" cy="300" r="4.5" fill="#cdbfa0"/><circle cx="508" cy="300" r="4.5" fill="#cdbfa0"/></g>`) },
+
+ { tc:"오후", phase:"warm", dim:0.10, dur:5000, sub:"오후의 햇살이, 나른하게 기울었다.",
+   scene: svg(roomWarm()+`<rect width="960" height="320" fill="url(#lamp)" opacity=".4"/>`+
+     win(110,82,210,200,.98)+beam(110,82,210,200)+
+     place(700,400,1.35,personSit({hair:'short',face:-1}))+
+     `<g transform="translate(636,360)"><rect x="-7" y="-44" width="14" height="44" fill="#1a110a"/><path d="M-22,-44 Q0,-78 22,-44 Z" fill="#22361f"/><path d="M-14,-58 Q0,-84 14,-58 Z" fill="#2a4226"/></g>`+
+     `<circle cx="420" cy="150" r="3" fill="#ffe6b0" opacity=".55" class="breathe"/><circle cx="470" cy="220" r="2.5" fill="#ffe6b0" opacity=".45" class="breathe"/><circle cx="380" cy="250" r="2" fill="#ffe6b0" opacity=".4" class="breathe"/>`) },
+
+ { tc:"", phase:"warm", dim:0.10, dimTo:0.66, dur:6000, sub:"복도는 점점, 조용해졌다.",
+   scene: svg(hallway(true)+`<rect width="960" height="320" fill="url(#lamp)" opacity=".35"/>`+
+     place(360,460,1.15,person({pose:'walk',hair:'short'}),{cls:'walk',style:'animation-duration:6s'})) },
+
+ { tc:"", phase:"warm", dim:0.10, dur:5000, sub:"한 사람이, 문을 열었다.",
+   scene: svg(`<rect width="960" height="540" fill="url(#roomC)"/>`+`<rect x="0" y="400" width="960" height="140" fill="#0b0e16"/>`+
+     `<rect x="360" y="120" width="250" height="320" fill="#080b12"/>`+
+     `<g transform="translate(360,120)"><rect x="6" y="6" width="186" height="308" fill="#0c0f17"/><rect x="206" y="2" width="44" height="316" fill="#11151f" transform="skewY(-6)"/></g>`+
+     `<rect x="372" y="150" width="120" height="270" fill="url(#lamp)" opacity=".65" class="fade-in"/>`+
+     `<polygon points="372,150 492,150 600,440 300,440" fill="url(#beamG)" opacity=".5" class="fade-in"/>`+
+     `<rect width="960" height="540" fill="url(#lamp)" opacity=".4" class="fade-in-2"/>`+
+     place(680,452,1.5,person({pose:'recoil',hair:'long'}),{cls:'recoil'})) },
+
+ { tc:"", phase:"gray", dim:0.42, dur:6000, impact:true, sub:"그리고, 깨어나지 못한 사람이 있었다.",
+   scene: svg(`<rect width="960" height="540" fill="url(#roomC)"/>`+`<rect x="0" y="392" width="960" height="148" fill="#0b0e16"/>`),
+   overlay: victimHTML() },
+
+ { tc:"", phase:"gray", dim:0.50, dur:6000, siren:true, sub:"평화로운 수련회는, 사건 현장이 되었다.",
+   scene: svg(hallway(false)+
+     place(315,460,1.18,person({hair:'short'}),{cls:'sway'})+
+     place(420,466,1.22,person({hair:'long'}),{cls:'sway',style:'animation-delay:.3s'})+
+     place(560,460,1.18,person({hair:'short',face:-1}),{cls:'sway',style:'animation-delay:.6s'})+
+     place(665,466,1.18,person({hair:'long',face:-1}),{cls:'sway',style:'animation-delay:.9s'})) },
+
+ { tc:"", phase:"gray", dim:0.34, dur:6000, sub:"그날, 그 자리엔 여섯 사람이 있었다.",
+   scene: svg(`<rect width="960" height="540" fill="#0a0d12"/>`+`<rect x="0" y="430" width="960" height="110" fill="#06080d"/>`),
+   overlay: lineupHTML() },
+
+ { tc:"", phase:"gray", dim:0.62, dur:8000, sub:"",
+   text:{ kick:"C R I M E   S C E N E", t1:"샛별이슬 <b>수련회</b>", t2:"이제, 당신이 진실을 찾을 차례." },
+   scene: svg(`<rect width="960" height="540" fill="#06080d"/>`) },
+];
+
+/* ---------- 엔진 ---------- */
+const stage=document.getElementById('stage'),frame=document.getElementById('frame'),
+  subEl=document.getElementById('sub'),tcEl=document.getElementById('tc'),dotsEl=document.getElementById('dots'),
+  bar=document.getElementById('barfill'),counter=document.getElementById('counter'),playBtn=document.getElementById('play'),dimEl=document.getElementById('dim');
+const sirenR=frame.querySelector('.siren-r');
+let i=0,playing=false,timer=null,t0=0,raf=null;
+CUTS.forEach((_,n)=>{const b=document.createElement('button');b.className='dot-b';b.setAttribute('aria-label',`컷 ${n+1}`);b.onclick=()=>{go(n);pause();};dotsEl.appendChild(b);});
+const dotEls=[...dotsEl.children];
+function applyDim(c){
+  if(c.dimTo!=null){
+    dimEl.style.transitionDuration='0ms'; dimEl.style.opacity=c.dim; void dimEl.offsetWidth;
+    dimEl.style.transitionDuration=Math.round(c.dur*0.72)+'ms';
+    requestAnimationFrame(()=>{ dimEl.style.opacity=c.dimTo; });
+  } else { dimEl.style.transitionDuration='1.1s'; dimEl.style.opacity=(c.dim!=null?c.dim:0); }
+}
+function render(n){
+  const c=CUTS[n];
+  frame.className='frame phase-'+c.phase+(c.siren?' siren-on':'')+(c.impact?' impact':'');
+  applyDim(c); stage.innerHTML=c.scene;
+  [...frame.querySelectorAll('.ctext,.cine-ov')].forEach(e=>e.remove());
+  if(c.text){const t=document.createElement('div');t.className='ctext';
+    t.innerHTML=`<div class="kick">${c.text.kick||''}</div><div class="t1 serif">${c.text.t1}</div><div class="t2 serif rise" style="animation-delay:1.2s">${c.text.t2}</div>`;
+    frame.insertBefore(t, sirenR);}
+  if(c.overlay){const o=document.createElement('div');o.className='cine-ov';o.innerHTML=c.overlay;frame.insertBefore(o, sirenR);}
+  tcEl.textContent=c.tc||''; subEl.innerHTML=c.sub?`<p class="serif" key="${n}">${c.sub}</p>`:'';
+  counter.textContent=`CUT ${n+1} / ${CUTS.length}`;
+  dotEls.forEach((d,k)=>{d.classList.toggle('on',k===n);d.classList.toggle('done',k<n);});
+}
+function go(n){i=Math.max(0,Math.min(CUTS.length-1,n));render(i);if(playing)schedule();else bar.style.width='0%';}
+function schedule(){clearTimeout(timer);cancelAnimationFrame(raf);const dur=CUTS[i].dur;t0=performance.now();
+  const tick=()=>{const p=Math.min(1,(performance.now()-t0)/dur);bar.style.width=(p*100)+'%';if(p<1&&playing)raf=requestAnimationFrame(tick);};
+  raf=requestAnimationFrame(tick);
+  timer=setTimeout(()=>{if(i<CUTS.length-1){i++;render(i);schedule();}else{pause();}},dur);}
+function play(){playing=true;playBtn.innerHTML='❚❚ 일시정지';if(i>=CUTS.length-1){i=0;}render(i);schedule();}
+function pause(){playing=false;playBtn.innerHTML='▶ 재생';clearTimeout(timer);cancelAnimationFrame(raf);}
+playBtn.onclick=()=>playing?pause():play();
+document.getElementById('next').onclick=()=>{go(i+1);pause();};
+document.getElementById('prev').onclick=()=>{go(i-1);pause();};
+document.getElementById('restart').onclick=()=>{i=0;render(0);pause();bar.style.width='0%';};
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();playing?pause():play();}
+  if(e.code==='ArrowRight'){go(i+1);pause();}
+  if(e.code==='ArrowLeft'){go(i-1);pause();}
+});
+render(0);
+</script>
+</body>
+</html>

@@ -38,7 +38,7 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
 }
 
 const EVIDENCE_KEY = 'crimescene_evidence';
-const TAP_KEY = 'crimescene_tapReveal'; // tapReveal(라벨 떼기 등) 완료 플래그 저장소
+const TAP_KEY = 'crimescene_tapReveal'; // tapReveal(라벨 떼기 등)·감식 비번 공개 완료 플래그 저장소
 
 // localStorage에서 수집된 증거 배열을 불러옴. 파싱 실패 시 빈 배열 반환
 function loadEvidence() {
@@ -200,8 +200,9 @@ function App() {
 
   /**
    * handleTapComplete
-   * 사진/소품의 tapReveal(예: 통 라벨 떼기)이 완료되면 호출된다.
-   * 완료 상태를 영구 저장해 재방문 시에도 공개 상태가 유지되게 한다.
+   * 사진/소품의 tapReveal(예: 통 라벨 떼기) 또는 감식 단서 비번 공개가 완료되면 호출된다.
+   * 완료 상태를 영구 저장해 재방문(모달 재오픈)·새로고침 시에도 공개 상태가 유지되게 한다.
+   * (초기화 버튼을 누르면 handleReset에서 함께 비워진다.)
    * (라벨 떨어짐 기반 자동 해금 갈래는 필적 대조 라인으로 대체되어 폐기됨)
    */
   const handleTapComplete = (code) => {

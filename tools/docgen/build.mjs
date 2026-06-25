@@ -9,7 +9,8 @@ import { lint } from './loadData.mjs';
 import { genAllRefSheets } from './genRefSheets.mjs';
 import { genPlaceGuide } from './genPlace.mjs';
 import { genTruth } from './genTruth.mjs';
-import { genPrompts } from './genPrompts.mjs';
+import { genQRDocs } from './genQR.mjs';
+import { genSlidesPptx } from './genSlides.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = join(__dirname, 'output');
@@ -23,6 +24,8 @@ function marginFor(name) {
   if (name.startsWith('단서배치')) return M(16, 15, 18, 15);
   if (name.startsWith('진상해설서')) return M(20, 18, 22, 18);
   if (name.startsWith('이미지생성')) return M(12, 12, 12, 12);
+  if (name.startsWith('QR_인쇄시트')) return M(8, 8, 8, 8);
+  if (name.startsWith('QR_')) return M(14, 14, 16, 14);
   return M(14, 14, 14, 14);
 }
 
@@ -31,7 +34,7 @@ const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 async function main() {
   const htmlOnly = process.argv.includes('--html');
 
-  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth(), genPrompts()];
+  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth(), ...(await genQRDocs())];
 
   mkdirSync(HTML_DIR, { recursive: true });
   for (const d of docs) writeFileSync(join(HTML_DIR, d.filename), d.html, 'utf8');
@@ -40,6 +43,16 @@ async function main() {
   // 정합성 경고
   const warns = lint();
   if (warns.length) console.log('⚠ evidenceMap 정합성 경고:\n  ' + warns.join('\n  '));
+
+  // 게임 진행 PPT (.pptx) — puppeteer/Chrome 불필요
+  try {
+    mkdirSync(OUT, { recursive: true });
+    const pptPath = join(OUT, '게임진행_슬라이드.pptx');
+    await genSlidesPptx(pptPath);
+    console.log('✔ PPT 생성 →', pptPath);
+  } catch (e) {
+    console.log('⚠ PPT 생성 실패:', e.message);
+  }
 
   if (htmlOnly) { console.log('--html 모드: PDF 생략'); return; }
 

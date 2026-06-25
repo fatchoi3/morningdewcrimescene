@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="추궁 유도 길잡이 단서">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF6E0"/>
+      <stop offset="1" stop-color="#FFE9B8"/>
+    </linearGradient>
+    <linearGradient id="bub" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFB020"/>
+      <stop offset="1" stop-color="#F38B00"/>
+    </linearGradient>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#A85B00" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <!-- 배경 라운드 사각 (길잡이=노란/주황 톤으로 물증과 구분) -->
+  <rect x="10" y="10" width="220" height="220" rx="40" fill="url(#bg)" stroke="#F3A52A" stroke-width="4"/>
+
+  <!-- 말풍선 -->
+  <g filter="url(#sh)">
+    <path d="M70 58
+             h100
+             a34 34 0 0 1 34 34
+             v44
+             a34 34 0 0 1 -34 34
+             h-58
+             l-26 28
+             v-28
+             h-16
+             a34 34 0 0 1 -34 -34
+             v-44
+             a34 34 0 0 1 34 -34 z"
+          fill="url(#bub)" stroke="#D97A00" stroke-width="3"/>
+  </g>
+
+  <!-- 물음표 -->
+  <text x="120" y="142" font-family="'Apple SD Gothic Neo','Helvetica Neue',Arial,sans-serif"
+        font-size="92" font-weight="800" fill="#FFFFFF" text-anchor="middle">?</text>
+</svg>

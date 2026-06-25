@@ -12,7 +12,7 @@ const cctvSet = new Set(cctvClueCodes);
 const isStruct = (c) => c.cctv || c.phone || c.pages || c.wallet || c.schedule || c.handwriting;
 const NOISE = /옷가지|성경책|파우치/;                 // 일상 소지품 노이즈(이미지 불필요)
 const DOCRE = /진단서|처방전|장부|기록|진술|편지|수첩|연락망|제안서|독촉장|소견|성분|분석|감식|타임라인|확인|예방접종|영수증/;
-const ALLOW_SPECIAL = new Set(['COMB-55', 'LONS-62']); // 부검 소견(특수)도 문서 이미지로 포함
+const ALLOW_SPECIAL = new Set(['LONS-62']); // 2차 부검 소견(특수)도 문서 이미지로 포함 (1차는 BRIF-00 묶음)
 
 // 이미지 프롬프트를 만들 단서인가?
 function included(c) {

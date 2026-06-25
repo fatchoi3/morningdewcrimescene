@@ -70,6 +70,24 @@ function comboTable() {
   return `<table><tr><th style="width:70px">해금 특수단서</th><th style="width:30%">제목</th><th>필요 선행 단서 (모두 수집 시 자동 해금)</th></tr>${rows}</table>`;
 }
 
+// 운영자 수동 부여(조건부) 특수단서 — 자동 해금 아님(unlockedBy 비움) + award(부여 조건) 보유
+function manualTable() {
+  const manual = allClues.filter((c) => c.type === '특수' && !(c.unlockedBy?.length) && !(c.unlockedByAny?.length) && c.award);
+  if (!manual.length) return '';
+  const rows = manual.map((c) =>
+    `<tr><td class="co">${esc(c.code)}</td><td><b>${esc(c.title) || '(미작성)'}</b></td><td>${esc(c.award)}</td></tr>`).join('');
+  return `<table><tr><th style="width:70px">코드</th><th style="width:26%">제목</th><th>부여 조건 (운영자 판단 · 자동 해금 아님)</th></tr>${rows}</table>`;
+}
+
+// 시작 공개 세트 — reveal:'시작브리핑' 단서를 한 묶음으로
+function startSetTable() {
+  const set = allClues.filter((c) => c.reveal === '시작브리핑');
+  if (!set.length) return '';
+  const rows = set.map((c) =>
+    `<tr><td class="co">${esc(c.code)}</td><td><b>${esc(c.title) || '(미작성)'}</b></td><td>${esc(c.person)}</td></tr>`).join('');
+  return `<table><tr><th style="width:70px">코드</th><th style="width:34%">제목</th><th>귀속</th></tr>${rows}</table>`;
+}
+
 // 방 배치도 (CctvModal FloorPlan 기준)
 function floorPlan() {
   return `<svg class="floor" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
@@ -144,12 +162,20 @@ export function genPlaceGuide() {
 <div class="ch">1. 방 배치도</div>
 ${floorPlan()}
 
+<div class="ch pb">1-2. 시작 공개 세트 (브리핑 동시 공개)</div>
+<div class="tip">게임 시작 브리핑에서 아래 단서를 <b>한 묶음으로 공개</b>합니다(코드 일괄 배포 또는 QR 게시). 인쇄용 QR 시트의 "시작·상시" 단계에 함께 모여 있습니다.</div>
+${startSetTable()}
+
 <div class="ch pb">2. 인물별 단서 배치표</div>
 ${PERSON_ORDER.map(personTable).join('')}
 
-<div class="ch pb">3. 특수단서 조합표</div>
+<div class="ch pb">3. 특수단서 조합표 (자동 해금)</div>
 <div class="tip">아래 특수단서는 <b>필요 선행 단서를 모두 수집하면 앱에서 자동 해금</b>됩니다(App.jsx). 선행 단서를 손에 넣게 배치하는 것이 운영의 핵심입니다.</div>
 ${comboTable()}
+
+<div class="ch pb">3-2. 운영자 수동 부여 특수단서 (조건부)</div>
+<div class="warn"><b>자동 해금이 아닙니다.</b> 아래 단서는 참가자가 조건을 충족했을 때 <b>운영자가 코드를 직접 부여</b>합니다. 조건이 맞기 전엔 주지 마세요. (QR 인쇄 불필요)</div>
+${manualTable()}
 
 <div class="ch pb">4. CCTV 귀속 매핑 <code>SIAH-72</code></div>
 <div class="tip">CCTV 열람대에서 화면 속 인물을 누르면 해당 용의자의 CCTV 단서가 확보됩니다. 목사님 방 내부는 잡히지 않습니다.</div>
@@ -165,9 +191,10 @@ ${movementTable()}
 
 <div class="ch pb">7. 설치 체크리스트</div>
 <div class="chk">
-☐ <b>시작 브리핑 때 코드 배포</b> — <code>COMB-55</code>(1차 부검 소견·심정지)·<code>YZET-89</code>(시신 발견 경위) 코드를 참가자에게 나눠 주어 게임 시작과 동시에 직접 입력·공개하게 한다. (둘 다 즉시 수집 가능)<br>
+☐ <b>시작 브리핑 때 시작 공개 세트 일괄 공개</b> — ${allClues.filter((c) => c.reveal === '시작브리핑').map((c) => `<code>${esc(c.code)}</code>`).join(' · ')} (1-2 표 참조). 코드 배포 또는 QR 게시로 게임 시작과 동시에 공개한다.<br>
 ☐ <b>QR 인쇄·부착</b> — 전체 ${total}개 단서 중 빈 슬롯(제목·내용 미작성) 제외분<br>
-☐ <b>특수단서 ${byType('특수')}개</b>는 QR 부착 불필요 — 선행 단서 수집 시 앱이 자동 해금<br>
+☐ <b>특수단서 ${byType('특수')}개</b>는 QR 부착 불필요 — 대부분 선행 단서 수집 시 앱이 자동 해금<br>
+☐ <b>조건부 수동부여 특수단서</b>(3-2 표)는 자동 해금 아님 — 조건 충족 시 운영자가 코드 직접 부여<br>
 ☐ <b>핸드폰 단서 ${phones.length}개</b>는 2부 해금 (1부 핸드폰 금지)<br>
 ☐ 실물 소품: 보충제 통 2개(라벨 인쇄) · 베개 · 텀블러(액체·흰가루) · 쉐이크 통 · 약통류(설하정·작은약통·요일별약통) · 회계장부 · 잠긴 다이어리 2권 · 지갑(딸 사진)<br>
 ☐ 목사님 방(D) 통제선 + "2부 개방" 안내문<br>

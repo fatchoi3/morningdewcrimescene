@@ -377,6 +377,16 @@ textarea {
   max-height: 320px;
 }
 
+/* 길잡이(특수 단서) svg — 일러스트라 꽉 채우지 않고 가운데 작게 표시 */
+.modal-image--guide {
+  width: auto;
+  max-width: 55%;
+  max-height: 180px;
+  object-fit: contain;
+  margin: 0 auto;
+  padding: 14px 0;
+}
+
 .modal-description {
   color: #e6e9ef;
   line-height: 1.65;
@@ -1177,6 +1187,75 @@ textarea {
 .contacts-who {
   color: #999;
   font-size: 0.76rem;
+}
+
+/* --- 전화(통화 기록) 앱 --- */
+.calls {
+  min-height: 100%;
+  background: #fff;
+}
+
+.calls-header {
+  padding: 12px 16px;
+  background: #fff;
+  color: #222;
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+}
+
+.calls-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.calls-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e7f8ec;
+  color: #2aa84a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.calls-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.calls-name {
+  color: #111;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.calls-meta {
+  color: #999;
+  font-size: 0.76rem;
+}
+
+/* 부재중은 빨강으로 강조 */
+.calls-item--missed .calls-name,
+.calls-item--missed .calls-meta {
+  color: #e0463e;
+}
+
+.calls-time {
+  color: #aaa;
+  font-size: 0.76rem;
+  flex-shrink: 0;
 }
 
 /* --- 사진(갤러리) 앱 --- */

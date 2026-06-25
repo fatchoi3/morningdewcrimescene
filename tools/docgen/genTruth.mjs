@@ -77,7 +77,7 @@ export function genTruth() {
   <div class="sec">계획 — 자연사로 위장</div>
   <p>박희원은 목사가 협심증을 앓는 걸 알고 있었다. 그는 자연사처럼 보이는 죽음을 계획했다. 수련회 당일 아침, 목사 방에 들어가 <strong>협심증 응급약 설하정 통의 6알을, 자신이 가져온 비타민C 6알과 바꿔치기</strong>했다. 발작이 와도 응급약이 듣지 않게 만든 것이다. (목사가 등산을 떠나 방이 빈 낮 12시 무렵의 일이다.) 빼낸 진짜 설하정은 버리지 않고 자신의 <strong>요일별 약통(월~토)</strong>에 비타민C·루테인·오메가3 같은 영양제와 섞어 숨겼다. (목사 책상의 설하정 통에는 노란 알약이 5알만 남게 되었다.)</p>
   <div class="sec">관찰 — 계획이 실패했다고 판단하다</div>
-  <p>오후, 박희원은 계획이 작동하는지 확인하려 목사 방 근처 복도를 여러 번 오갔다. 14시 42분 직전, 방 문의 <strong>작은 유리창</strong>으로 안을 들여다봤다. 그런데 목사는 죽기는커녕 <strong>침대에 누워 안정을 취하고 있었다.</strong> 박희원은 <strong>"가짜 약을 먹고도 버티는구나, 계획이 실패했다"</strong>고 판단했다. (사실 목사는 가짜 약을 알아채고 품속 진짜 설하정을 먹은 뒤였다.)</p>
+  <p>점심 직후, 박희원은 계획이 작동하는지 확인하려 목사 방 근처 복도를 여러 번 오갔다. 13시 15분경, 방 문의 <strong>작은 유리창</strong>으로 안을 들여다봤다. 그런데 목사는 죽기는커녕 <strong>침대에 누워 안정을 취하고 있었다.</strong> 박희원은 <strong>"가짜 약을 먹고도 버티는구나, 계획이 실패했다"</strong>고 판단했다. (사실 목사는 가짜 약을 알아채고 품속 진짜 설하정을 먹은 뒤였다.)</p>
   <div class="sec">실행 — 직접 살해</div>
   <p>박희원은 방 안에 CCTV가 없다는 걸 알고 있었다. 문을 열고 들어가 <strong>베개로 목사의 얼굴을 눌러 질식시켰다.</strong> 목사는 이미 발작으로 몸이 약해진 상태라 거의 저항하지 못했다. 박희원은 베개를 대충 내려놓고 급히 방을 빠져나와 자기 방으로 돌아갔다. 오후 일정에는 태연히, 심지어 애도하는 표정으로 참여했다.</p>
   <div class="box key"><div class="bl">직접 사인의 흔적 — 정황 추리형 (시스템이 확정해 주지 않음)</div>
@@ -131,7 +131,7 @@ export function genTruth() {
   <div class="role" style="color:#444440">24세 · 찬양팀장</div>
   <p><strong>하필 최악의 순간에 화를 낸 사람.</strong> 윤은재는 찬양팀장이다. 찬양곡 선정 문제로 목사와 오래 갈등해왔다. 그의 기획안은 두 번이나 반려됐고, 감정이 쌓여 있었다.</p>
   <p>그는 어제 못 끝낸 갈등을 마저 따지려고, 목사·종현이 등산을 떠난 직후 <strong>10시 5분경 산으로 따라 올라갔다.</strong> 그러나 산 중턱에서 종현과 함께 있는 목사를 먼발치에 보고는 말 붙이길 포기하고 10시 35분경 되돌아 내려왔다. (종현은 은재를 보지 못했다.)</p>
-  <p>오후 14시 8분경, 그는 복도에서 목사가 방으로 들어가는 걸 보고 따라 들어가 따졌다. 언쟁이 격해지자 <strong>목사의 멱살을 잡았고</strong>, 목사가 "이거 놓으라"며 <strong>은재의 손목을 잡고 가볍게 뿌리치는</strong> 과정에서 은재 손목에 멍이 들고 셔츠 단추 하나가 떨어졌다. 큰 몸싸움은 아니었다. 14시 12분경 그는 문을 쾅 닫고 나왔고, 그가 나올 때까지 <strong>목사는 멀쩡했고 아직 요힘빈 음료를 마시기 전이었다.</strong></p>
+  <p>점심 직후 12시 41분경, 그는 복도에서 목사가 방으로 들어가는 걸 보고 따라 들어가 따졌다. 언쟁이 격해지자 <strong>목사의 멱살을 잡았고</strong>, 목사가 "이거 놓으라"며 <strong>은재의 손목을 잡고 가볍게 뿌리치는</strong> 과정에서 은재 손목에 멍이 들고 셔츠 단추 하나가 떨어졌다. 큰 몸싸움은 아니었다. 12시 45분경 그는 문을 쾅 닫고 나왔고, 그가 나올 때까지 <strong>목사는 멀쩡했고 아직 요힘빈 음료를 마시기 전이었다.</strong></p>
   <div class="box knew"><div class="bl">진실 — 그는 무고하다</div>
     <p>그는 멱살·옷깃·손목 멍 때문에 의심받지만, 이는 쌍방의 <strong>가벼운 실랑이</strong>일 뿐 질식(목 압박)과는 무관하다 — 의학적으로 사인이 될 수 없다. 산행도 접촉 없이 먼발치에 보고 돌아선 것뿐이다. 오히려 그가 <strong>"내가 나올 때 목사님은 멀쩡했다"</strong>고 증언하는 것이 요힘빈 복용 시각을 특정하는 단서가 된다.</p></div>
 </div>
@@ -143,7 +143,7 @@ export function genTruth() {
   <p><strong>죽은 사람을 발견하고, 신고 대신 비밀을 지운 사람.</strong> 이가현에겐 숨겨온 비밀이 있었다 — 이혼 경력과 다섯 살 딸. 그녀는 딸을 "조카"라 속이며 살아왔다. 그녀의 약혼자는 같은 교회 청년 '김멋짐'이었다.</p>
   <p>그런데 목사가 김멋짐에게 (상대가 가현의 약혼자인 줄 모르고) "가현이는 애도 있고 곧 결혼한다더라"고 흘렸다. 충격받은 김멋짐은 가현에게 파혼을 통보했다. 분노한 가현은 목사에게 <strong>"당신 때문에 이렇게 됐잖아요!"</strong>라는 카톡을 보냈다.</p>
   <div class="sec">당일 — 이미 죽어 있던 목사</div>
-  <p>수련회 당일 14시 47분경, 가현은 목사를 따지러 방에 들어갔다. 그런데 <strong>목사는 이미 죽어 있었다.</strong> (박희원이 떠난 지 3분 뒤였다.) 충격 속에서 그녀는 냉정하게 판단했다 — 이대로면 자신의 비밀과 항의 카톡이 다 드러난다. <strong>목사 폰 자체는 사망 직후라 지문으로 열렸고</strong>, 카카오톡 <strong>숨김 폴더(톡서랍)만 비밀번호로 잠겨</strong> 있었다. 그 비번이 목사의 <strong>결혼기념일 0419</strong>(일기장 <code>PRBO-03</code>에서 유도)임을 알던 그녀는 톡서랍을 열어 <strong>김멋짐과의 험담 대화와 자신의 항의 카톡을 삭제</strong>한 뒤, 14시 58분에야 119에 신고했다. (0419는 폰 잠금이 아니라 톡서랍 비번이다.) 진입 시각과 신고 시각의 큰 공백이 그녀를 의심받게 만들었다.</p>
+  <p>수련회 당일 13시 20분경, 가현은 목사를 따지러 방에 들어갔다. 그런데 <strong>목사는 이미 죽어 있었다.</strong> (박희원이 떠난 지 3분 뒤였다.) 충격 속에서 그녀는 냉정하게 판단했다 — 이대로면 자신의 비밀과 항의 카톡이 다 드러난다. <strong>목사 폰 자체는 사망 직후라 지문으로 열렸고</strong>, 카카오톡 <strong>숨김 폴더(톡서랍)만 비밀번호로 잠겨</strong> 있었다. 그 비번이 목사의 <strong>결혼기념일 0419</strong>(일기장 <code>PRBO-03</code>에서 유도)임을 알던 그녀는 톡서랍을 열어 <strong>김멋짐과의 험담 대화와 자신의 항의 카톡을 삭제</strong>한 뒤, 13시 31분에야 119에 신고했다. (0419는 폰 잠금이 아니라 톡서랍 비번이다.) 진입 시각과 신고 시각의 큰 공백이 그녀를 의심받게 만들었다.</p>
   <div class="box key"><div class="bl">역설 — 그녀만 아는 결정적 진실</div>
     <p>그녀는 <strong>누가 목사를 죽였는지 모른다.</strong> 들어갔을 때 이미 죽어 있었으니까. 하지만 역설적으로 그녀는 결정적 단서를 쥐고 있다 — <strong>"내가 들어갔을 때 방엔 아무도 없었고, 목사는 이미 죽어 있었다."</strong> 그녀의 진입 시각을 역산하면, 그 직전에 누군가(박희원)가 다녀갔다는 게 드러난다. 그녀의 증거 인멸은 자기 비밀을 지키기 위한 것이었지, 살인과는 무관하다. (목사 일기장의 "결혼기념일 4월 19일" 기록이 톡서랍 비번 0419를 푸는 열쇠가 된다.)</p></div>
 </div>
@@ -155,29 +155,28 @@ export function genTruth() {
   <div class="tl">
     <div class="tl-row"><div class="tl-t">전날 밤</div><div class="tl-x"><strong>이사랑</strong> 통장 정리 중 언니 송금 내역 발견 → 카톡으로 화해 → 언니에게 횡령 위기 고백. <strong>이현지</strong> "내가 알아서 할게."</div></div>
     <div class="tl-row"><div class="tl-t">당일 아침</div><div class="tl-x"><strong>목사</strong> 우연히 청년부 통장 확인 → 찬조금 미입금 발견 → 이사랑 면담, 재정 점검 예고. <strong>이현지</strong> 동생을 끝까지 지키기로 결심.</div></div>
-    <div class="tl-row"><div class="tl-t">10:00</div><div class="tl-x"><strong>최종현·목사</strong> 등산 출발. (방이 비워짐)</div></div>
+    <div class="tl-row"><div class="tl-t">10:00</div><div class="tl-x"><strong>최종현·목사</strong> 등산 출발. (목사 방·복도가 ~12:30까지 비워짐)</div></div>
     <div class="tl-row"><div class="tl-t">10:05</div><div class="tl-x"><strong>윤은재</strong> 뒤따라 산으로 출발 — 어제 못 끝낸 찬양곡 갈등을 마저 따지려.</div></div>
+    <div class="tl-row"><div class="tl-t">10:10~12</div><div class="tl-x"><strong>박희원</strong> 빈 방에 들어가 설하정 6알 ↔ 비타민C 6알 바꿔치기. 진짜 설하정은 요일별 약통에 숨김.</div></div>
+    <div class="tl-row"><div class="tl-t">10:20</div><div class="tl-x"><strong>이현지</strong> 빈 방에 들어가 목사 책상 위 텀블러에 졸피뎀 투입 → 퇴장.</div></div>
+    <div class="tl-row"><div class="tl-t">10:25~27</div><div class="tl-x"><strong>이사랑</strong> 최종현 방에서 요힘빈↔단백질 라벨지 교체.</div></div>
     <div class="tl-row"><div class="tl-t">10:35</div><div class="tl-x"><strong>윤은재</strong> 복귀 — 산 중턱에서 종현을 먼발치에 보고 말 못 붙이고 되돌아옴(종현은 은재를 못 봄).</div></div>
-    <div class="tl-row"><div class="tl-t">12:10</div><div class="tl-x"><strong>박희원</strong> 빈 방에 들어가 설하정 6알 ↔ 비타민C 6알 바꿔치기. 진짜 설하정은 요일별 약통에 숨김.</div></div>
-    <div class="tl-row"><div class="tl-t">12:20</div><div class="tl-x"><strong>이사랑</strong> 최종현 방에서 요힘빈↔단백질 라벨지 교체.</div></div>
-    <div class="tl-row"><div class="tl-t">12:30~33</div><div class="tl-x"><strong>최종현·목사</strong> 등산 복귀. 최종현 자기 방에서 가방 챙김.</div></div>
-    <div class="tl-row"><div class="tl-t">12:35~40</div><div class="tl-x"><strong>목사</strong> 방에 잠깐 복귀했다가 점심하러 방을 비움.</div></div>
-    <div class="tl-row"><div class="tl-t">12:43~46</div><div class="tl-x"><strong>이현지</strong> 빈 방에 들어가 목사 책상 위 텀블러에 졸피뎀 투입 → 손 닦으며 퇴장.</div></div>
-    <div class="tl-row"><div class="tl-t">13:20</div><div class="tl-x"><strong>목사</strong> 점심 후 방 복귀.</div></div>
-    <div class="tl-row"><div class="tl-t">13:50</div><div class="tl-x"><strong>이가현</strong> 1차 확인 방문 — 방에 목사가 있어 그냥 돌아 나감.</div></div>
-    <div class="tl-row"><div class="tl-t">14:00</div><div class="tl-x"><strong>최종현</strong> "단백질"(실제 요힘빈) 음료를 모르고 목사에게 전달.</div></div>
-    <div class="tl-row"><div class="tl-t">14:08~12</div><div class="tl-x"><strong>윤은재</strong> 목사 방 언쟁 — 멱살 잡음 → 목사가 "놓으라"며 은재 손목 잡고 뿌리침(손목 멍) → 퇴장. 이때 목사는 아직 음료 미복용 · 멀쩡함. (가벼운 실랑이, 질식과 무관)</div></div>
-    <div class="tl-row"><div class="tl-t">14:15</div><div class="tl-x"><strong>목사</strong> 요힘빈 음료 복용 → 발작 시작.</div></div>
-    <div class="tl-row"><div class="tl-t">14:30</div><div class="tl-x"><strong>이가현</strong> 2차 확인 방문 — 그냥 돌아 나감.</div></div>
-    <div class="tl-row"><div class="tl-t">14:35</div><div class="tl-x"><strong>목사</strong> 책상 설하정(가짜 비타민) 복용 → 딸기맛 안 남 → 이상 감지 → <strong>품속 진짜 설하정</strong> 복용 후 침대에서 안정.</div></div>
-    <div class="tl-row"><div class="tl-t">14:42</div><div class="tl-x"><strong>박희원</strong> "실패" 판단 → 진입 → 베개 질식 살해 (직접 사인).</div></div>
-    <div class="tl-row"><div class="tl-t">14:44</div><div class="tl-x"><strong>박희원</strong> 숙소 방향으로 퇴장.</div></div>
-    <div class="tl-row"><div class="tl-t">14:47</div><div class="tl-x"><strong>이가현</strong> 발견 진입 → 이미 사망 → 목사 폰(0419) 기록 삭제.</div></div>
-    <div class="tl-row"><div class="tl-t">14:58</div><div class="tl-x"><strong>이가현</strong> 119 신고. (진입~신고 공백이 의심을 부름)</div></div>
+    <div class="tl-row"><div class="tl-t">10:50~52</div><div class="tl-x"><strong>이가현</strong> 1차 확인 방문 — 목사가 등산 중이라 방이 비어 있어 그냥 돌아 나감.</div></div>
+    <div class="tl-row"><div class="tl-t">12:00~12:25</div><div class="tl-x"><strong>이사랑·이현지</strong> 등산 복귀 전 빈 시간, 식당·숙소·1층 로비를 따로따로 배회.</div></div>
+    <div class="tl-row"><div class="tl-t">12:30</div><div class="tl-x"><strong>최종현·목사</strong> 등산 복귀. 종현은 자기 방으로, 목사는 목사 방으로.</div></div>
+    <div class="tl-row"><div class="tl-t">12:40</div><div class="tl-x"><strong>최종현</strong> "단백질"(실제 요힘빈) 음료를 모르고 목사에게 전달.</div></div>
+    <div class="tl-row"><div class="tl-t">12:41~45</div><div class="tl-x"><strong>윤은재</strong> 목사 방 언쟁 — 멱살 잡음 → 목사가 "놓으라"며 은재 손목 잡고 뿌리침(손목 멍) → 퇴장. 이때 목사는 아직 음료 미복용 · 멀쩡함. (가벼운 실랑이, 질식과 무관)</div></div>
+    <div class="tl-row"><div class="tl-t">12:42</div><div class="tl-x"><strong>이가현</strong> 목사 방 쪽에 갔다가 문 창문으로 은재·목사의 언쟁을 목격하고 되돌아 나감.</div></div>
+    <div class="tl-row"><div class="tl-t">~12:50</div><div class="tl-x"><strong>목사</strong> 요힘빈 음료 복용 → 컨디션 악화 시작.</div></div>
+    <div class="tl-row"><div class="tl-t">13:10</div><div class="tl-x"><strong>목사</strong> 협심증 발작. 책상 설하정(가짜 비타민) 복용 → 딸기맛 안 남 → 이상 감지 → <strong>품속 진짜 설하정</strong> 복용 후 침대에서 잠시 안정.</div></div>
+    <div class="tl-row"><div class="tl-t">13:15</div><div class="tl-x"><strong>박희원</strong> 유리창으로 안을 봄 → "안정 취함 = 실패" 판단 → 진입 → 베개 질식 살해 (직접 사인).</div></div>
+    <div class="tl-row"><div class="tl-t">13:17</div><div class="tl-x"><strong>박희원</strong> 숙소 방향으로 퇴장.</div></div>
+    <div class="tl-row"><div class="tl-t">13:20</div><div class="tl-x"><strong>이가현</strong> 발견 진입 → 이미 사망 → 목사 폰(0419) 기록 삭제.</div></div>
+    <div class="tl-row"><div class="tl-t">13:31</div><div class="tl-x"><strong>이가현</strong> 119 신고. (진입~신고 공백이 의심을 부름)</div></div>
     <div class="tl-row"><div class="tl-t">사건 후</div><div class="tl-x"><strong>이사랑·이현지</strong> 각자 자기 폰에서 전날 자매·범행 정황 카톡 삭제 (서로 모른 채 상대를 감쌈) — 상대 폰엔 남아 교차 복원됨.</div></div>
   </div>
   <div class="box key" style="margin-top:18px"><div class="bl">동선 분리 — 박희원 퇴장과 가현 진입은 마주치지 않는다</div>
-    <p>박희원 퇴장(14:44, 숙소 방향)과 가현 진입(14:47, 자기 방 쪽)은 출발 위치가 다르고 3분 시차라 복도에서 마주치지 않는다. 질식(≈14:43)~가현 진입(14:47)이 약 4분이라 시신은 "막 사망" 상태. 둘 다 CCTV는 방향만 포착이라, 가현이 "희원이 나오는 걸 봤다"고 증언할 근거는 없다.</p></div>
+    <p>박희원 퇴장(13:17, 숙소 방향)과 가현 진입(13:20, 자기 방 쪽)은 출발 위치가 다르고 3분 시차라 복도에서 마주치지 않는다. 질식(≈13:16)~가현 진입(13:20)이 약 4분이라 시신은 "막 사망" 상태. 둘 다 CCTV는 방향만 포착이라, 가현이 "희원이 나오는 걸 봤다"고 증언할 근거는 없다.</p></div>
   <div class="final"><div class="fl">사건의 본질</div>
     <p>여섯 사람이 각자 다른 이유로, 서로 모르게, 같은 날 같은 사람을 노렸다. 이사랑은 <strong>빚</strong> 때문에, 이현지는 <strong>동생</strong> 때문에, 박희원은 <strong>자격</strong> 때문에, 이가현은 <strong>파혼</strong> 때문에. 최종현과 윤은재는 무고하지만 하필 최악의 타이밍에 얽혔다.<br><br>목사를 실제로 죽인 건 <strong>박희원의 베개</strong>다. 하지만 그 죽음을 만든 건 목사 자신이 무심코 건드린 <strong>여섯 사람의 얽힌 원한 전부</strong>였다.</p></div>
 </div>

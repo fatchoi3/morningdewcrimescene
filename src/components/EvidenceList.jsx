@@ -149,7 +149,7 @@ function StandardModal({ item, onClose, tapDone = {}, onTapComplete }) {
             <img
               src={revealed && reveal?.image ? reveal.image : item.image}
               alt={item.title}
-              className="modal-image"
+              className={`modal-image${item.image.includes('길잡이') ? ' modal-image--guide' : ''}`}
             />
           </div>
         )}
@@ -255,9 +255,11 @@ function HandwritingModal({ item, evidence = [], onClose }) {
  * 감식 단서. 결과(detail)가 가려져 있고, 단서별 운영자 비밀번호(item.password) 입력 시 공개된다.
  * 운영자도 비밀번호를 입력해야 결과가 공개되며, 운영자 모드(adminMode)에서는
  * 입력을 돕도록 비밀번호가 화면에 표시된다. (비번이 없는 단서는 기본 공개)
+ * 한 번 공개되면 tapDone(영구 저장)에 기록되어, 모달을 닫았다 다시 열어도
+ * 초기화 버튼을 누르기 전까지 계속 공개 상태로 유지된다.
  */
-function GamsikModal({ item, onClose, adminMode = false }) {
-  const [revealed, setRevealed] = useState(!item.password);
+function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComplete }) {
+  const [revealed, setRevealed] = useState(!item.password || !!tapDone[item.code]);
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
 
@@ -268,7 +270,11 @@ function GamsikModal({ item, onClose, adminMode = false }) {
   }, [onClose]);
 
   const submit = () => {
-    if (!item.password || pw.trim() === String(item.password)) { setRevealed(true); setErr(''); }
+    if (!item.password || pw.trim() === String(item.password)) {
+      setRevealed(true);
+      setErr('');
+      onTapComplete?.(item.code); // 공개 상태를 영구 저장 (초기화 전까지 유지)
+    }
     else setErr('비밀번호가 일치하지 않습니다.');
   };
 
@@ -317,7 +323,7 @@ function EvidenceModal({ item, evidence, onCollect, onClose, tapDone, onTapCompl
   if (item.wallet) return <WalletModal item={item} onClose={onClose} />;
   if (item.schedule) return <ScheduleModal item={item} onClose={onClose} />;
   if (item.handwriting) return <HandwritingModal item={item} evidence={evidence} onClose={onClose} />;
-  if (item.type === '감식') return <GamsikModal item={item} onClose={onClose} adminMode={adminMode} />;
+  if (item.type === '감식') return <GamsikModal item={item} onClose={onClose} adminMode={adminMode} tapDone={tapDone} onTapComplete={onTapComplete} />;
   if (item.phone) return <PhoneModal item={item} onClose={onClose} />;
   if (item.pages) return <ManualModal item={item} onClose={onClose} onCollect={onCollect} />;
   return <StandardModal item={item} onClose={onClose} tapDone={tapDone} onTapComplete={onTapComplete} />;
@@ -357,6 +363,12 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
     return unlockedCount >= need;
   };
 
+  // 탭 전환 — 인물 칩 선택은 제일 앞 칩(전체)으로 초기화
+  const changeTab = (type) => {
+    setFilterType(type);
+    setPersonFilter('전체');
+  };
+
   // 현재 필터에 따라 표시할 증거 결정
   const displayEvidence = filterType === 'normal' ? normalEvidence
     : filterType === 'cctv' ? cctvEvidence
@@ -390,22 +402,22 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
         <button
           type="button"
           className={`tab-button ${filterType === 'normal' ? 'active' : ''}`}
-          onClick={() => setFilterType('normal')}
+          onClick={() => changeTab('normal')}
         >
           보통 단서 ({normalEvidence.length})
         </button>
         <button
           type="button"
           className={`tab-button ${filterType === 'cctv' ? 'active' : ''}`}
-          onClick={() => setFilterType('cctv')}
+          onClick={() => changeTab('cctv')}
         >
-          📹 CCTV ({cctvEvidence.length})
+          CCTV ({cctvEvidence.length})
         </button>
         <button
           key={specialUnlockKey}
           type="button"
           className={`tab-button ${filterType === 'special' ? 'active' : ''}${specialUnlockKey > 0 ? ' tab-button--sparkle' : ''}`}
-          onClick={() => setFilterType('special')}
+          onClick={() => changeTab('special')}
         >
           특수 단서 ({specialEvidence.length})
         </button>
@@ -413,9 +425,9 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
           key={`g-${specialUnlockKey}`}
           type="button"
           className={`tab-button ${filterType === 'gamsik' ? 'active' : ''}${specialUnlockKey > 0 ? ' tab-button--sparkle' : ''}`}
-          onClick={() => setFilterType('gamsik')}
+          onClick={() => changeTab('gamsik')}
         >
-          🔬 감식 단서 ({gamsikEvidence.length})
+          감식 단서 ({gamsikEvidence.length})
         </button>
       </div>
 

@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
  *       { id, type:'kakao',   name, chats:    [{ name, messages: [{ from:'me'|'them', text, time?, deleted? }] }] },
  *       { id, type:'sms',     name, chats:    [{ name, messages: [{ from:'me'|'them', text, time?, deleted? }] }] },
  *       { id, type:'photos',  name, photos:   [{ image?, caption, deleted? }] },
+ *       { id, type:'calls',   name, calls:    [{ name, direction:'out'|'in'|'missed', time?, duration? }] },
  *     ]
  *   }
  */
@@ -24,6 +25,7 @@ const APP_META = {
   sms: { label: '메시지', icon: '✉️', color: '#34c759' },
   photos: { label: '사진', icon: '🖼️', color: '#ff5e57' },
   contacts: { label: '연락처', icon: '📇', color: '#5b8def' },
+  calls: { label: '전화', icon: '📞', color: '#4cd964' },
 };
 
 /* 연락처(주소록) 앱 — 다른 인물을 어떤 이름으로 저장했는지 */
@@ -41,6 +43,35 @@ function ContactsApp({ app }) {
             </span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* 전화 앱 — 통화 기록(발신/수신/부재중) 목록 */
+function CallsApp({ app }) {
+  const calls = app.calls || [];
+  const ICON = { out: '↗', in: '↙', missed: '✖' };
+  const LABEL = { out: '발신', in: '수신', missed: '부재중' };
+  return (
+    <div className="calls">
+      <div className="calls-header">통화 기록</div>
+      <div className="calls-list">
+        {calls.map((c, i) => {
+          const dir = c.direction || 'out';
+          return (
+            <div key={i} className={`calls-item calls-item--${dir}`}>
+              <span className="calls-avatar">{(c.name || '?')[0]}</span>
+              <span className="calls-info">
+                <span className="calls-name">{c.name}</span>
+                <span className="calls-meta">
+                  {ICON[dir]} {LABEL[dir]}{c.duration ? ` · ${c.duration}` : ''}
+                </span>
+              </span>
+              {c.time && <span className="calls-time">{c.time}</span>}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -340,6 +371,7 @@ function PhoneModal({ item, onClose }) {
                   {current.type === 'sms' && <MessagesApp app={current} variant="sms" />}
                   {current.type === 'photos' && <PhotosApp app={current} />}
                   {current.type === 'contacts' && <ContactsApp app={current} />}
+                  {current.type === 'calls' && <CallsApp app={current} />}
                 </div>
               </div>
             )}

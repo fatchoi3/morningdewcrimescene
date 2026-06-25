@@ -5,6 +5,9 @@ import { evidenceMap, victim, suspects } from '../../src/data/gameData.js';
 
 export { evidenceMap, victim, suspects };
 
+// 게임 접속 사이트 (참가자용 QR · PPT 표지에서 사용)
+export const SITE_URL = 'https://morningdewcrimescene.site';
+
 // 용의자 표시 순서 + 색상 (앱/문서 공통 팔레트)
 export const PERSON_ORDER = ['박희원', '이사랑', '이현지', '최종현', '윤은재', '이가현', '목사', '공용'];
 

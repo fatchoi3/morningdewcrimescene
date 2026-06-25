@@ -129,71 +129,65 @@ export const evidenceMap = {
       // arrow.from→to: 평면도(viewBox 0 0 400 280) 위 이동 벡터. 목사방≈{355,60} · 1층/산≈{360,240} · 복도중앙≈{200,150}
       timeline: [
         {
+          time: '10:00',
+          location: '남자 숙소 복도',
+          scene: '두 인물이 함께 1층(바깥) 방향으로 나간다. (목사·종현 등산 출발)',
+          meet: { x: 200, y: 141 },   // 복도 중앙에서 만나 함께 1층으로 — 마커 동시 출발·동시 통과
+          people: [
+            { look: '남성 — 1층 방향으로 나감 (등산 출발)', who: '최종현', unlocks: 'CRTN-30', x: 120, y: 210, arrow: { from: { x: 102, y: 208 }, to: { x: 360, y: 240 } } },
+            { look: '목사 — 종현과 함께 1층 방향으로 나감', who: '김호치 목사', x: 348, y: 92, arrow: { from: { x: 355, y: 60 }, to: { x: 360, y: 240 } } }
+          ]
+        },
+        {
           time: '10:05',
           location: '남자 숙소 복도',
-          scene: '한 인물이 숙소 복도에 나타나 산(바깥) 방향으로 사라진다. (목사·종현 등산 출발 직후)',
+          scene: '한 인물이 숙소 복도에 나타나 산(바깥) 방향으로 사라진다.',
           people: [
-            { look: '남성 — 산(바깥) 방향으로 나감', who: '윤은재', unlocks: 'HWGJ-12', x: 300, y: 150, arrow: { from: { x: 200, y: 150 }, to: { x: 360, y: 240 } } }
+            { look: '남성 — 산(바깥) 방향으로 나감', who: '윤은재', unlocks: 'HWGJ-12', x: 300, y: 150, arrow: { from: { x: 290, y: 208 }, to: { x: 360, y: 240 } } }
+          ]
+        },
+        {
+          time: '10:10~12',
+          location: '목사님 방 앞 복도',
+          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 갔다가, 잠시 뒤 다시 나타나 자기 방 쪽으로 돌아간다. (목사 등산 중 — 방은 비어 있음)',
+          people: [
+            { look: '여성 — 자기 방에서 목사 방으로 갔다가 돌아옴', who: '박희원', unlocks: 'LGYR-78', x: 295, y: 132, arrow: { from: { x: 290, y: 80 }, to: { x: 355, y: 60 }, round: true } }
+          ]
+        },
+        {
+          time: '10:20',
+          location: '목사님 방 앞 복도',
+          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 갔다가, 잠시 뒤 다시 나타나 자기 방 쪽으로 돌아간다. (목사 등산 중 — 방은 비어 있음)',
+          people: [
+            { look: '여성 — 방 방향으로 갔다가 자기 방으로 돌아옴', who: '이현지', unlocks: 'HJIN-43', x: 280, y: 130, arrow: { from: { x: 197, y: 80 }, to: { x: 355, y: 60 }, round: true } }
+          ]
+        },
+        {
+          time: '10:25~27',
+          location: '남자 숙소 복도',
+          scene: '한 인물이 남자 숙소(종현 방) 방향으로 갔다가, 잠시 뒤 손에 무언가를 들고 다시 나타난다.',
+          people: [
+            { look: '여성 — 종현 방 방향으로 갔다가 손에 무언가 들고 나옴', who: '이사랑', unlocks: 'NQBT-91', x: 108, y: 145, arrow: { from: { x: 102, y: 80 }, to: { x: 102, y: 208 }, round: true } }
           ]
         },
         {
           time: '10:35',
           location: '남자 숙소 복도',
-          scene: '한 인물이 산(바깥) 방향에서 다시 나타나 숙소 쪽으로 사라진다.',
+          scene: '한 인물이 산(바깥) 방향에서 다시 나타나 자기 방 쪽으로 사라진다.',
           people: [
-            { look: '남성 — 산 방향에서 복귀', who: '윤은재', unlocks: 'JSYT-91', x: 295, y: 152, arrow: { from: { x: 360, y: 240 }, to: { x: 200, y: 150 } } }
+            { look: '남성 — 산 방향에서 복귀', who: '윤은재', unlocks: 'JSYT-91', x: 300, y: 152, arrow: { from: { x: 360, y: 240 }, to: { x: 290, y: 208 } } }
           ]
         },
         {
-          time: '12:10',
+          time: '10:50~52',
           location: '목사님 방 앞 복도',
-          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 사라졌다가, 잠시 뒤 다시 나타나 복도를 빠져나간다. (목사 등산 중 — 방은 비어 있음)',
+          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 갔다가, 1~2분 뒤 발길을 돌려 자기 방 쪽으로 되돌아간다.',
           people: [
-            { look: '여성 — 방 방향으로 사라졌다 다시 나타나 빠져나감', who: '박희원', unlocks: 'LGYR-78', x: 295, y: 132, arrow: { from: { x: 150, y: 140 }, to: { x: 355, y: 60 } } }
+            { look: '여성 — 방 방향으로 갔다가 되돌아옴 (목사 부재 확인)', who: '이가현', unlocks: 'GACH-50', x: 280, y: 135, arrow: { from: { x: 197, y: 208 }, to: { x: 355, y: 60 }, round: true } }
           ]
         },
         {
-          time: '12:20',
-          location: '남자 숙소 복도',
-          scene: '한 인물이 남자 숙소 방향으로 사라졌다가, 잠시 뒤 같은 방향에서 손에 무언가를 들고 다시 나타난다.',
-          people: [
-            { look: '여성 — 숙소 방향으로 갔다가 손에 무언가 들고 나옴', who: '이사랑', unlocks: 'NQBT-91', x: 110, y: 150, arrow: { from: { x: 160, y: 145 }, to: { x: 102, y: 200 } } }
-          ]
-        },
-        {
-          time: '12:30',
-          location: '남자 숙소 복도',
-          scene: '한 인물이 숙소 복도에 나타난다. 등산에서 막 돌아온 모습이다.',
-          people: [
-            { look: '남성 — 복도에 나타남 (등산 복귀)', who: '최종현', unlocks: 'CRTN-30', x: 105, y: 150, arrow: { from: { x: 360, y: 240 }, to: { x: 180, y: 150 } } }
-          ]
-        },
-        {
-          time: '12:33',
-          location: '남자 숙소 복도',
-          scene: '한 인물이 자기 방 방향으로 사라졌다가, 가방을 들고 다시 나타난다.',
-          people: [
-            { look: '남성 — 방 방향으로 갔다 가방 들고 나옴', who: '최종현', unlocks: 'CBAG-33', x: 120, y: 152, arrow: { from: { x: 102, y: 200 }, to: { x: 160, y: 150 } } }
-          ]
-        },
-        {
-          time: '12:43',
-          location: '목사님 방 앞 복도',
-          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 사라진다.',
-          people: [
-            { look: '여성 — 방 방향으로 사라짐', who: '이현지', unlocks: 'HJIN-43', x: 300, y: 136, arrow: { from: { x: 150, y: 140 }, to: { x: 355, y: 60 } } }
-          ]
-        },
-        {
-          time: '12:46',
-          location: '목사님 방 앞 복도',
-          scene: '한 인물이 방 방향에서 다시 나타나, 손을 옷에 닦으며 빠르게 복도를 빠져나간다.',
-          people: [
-            { look: '여성 — 방 방향에서 나와 손 닦으며 빠르게 이동', who: '이현지', unlocks: 'NKCD-95', x: 305, y: 140, arrow: { from: { x: 355, y: 60 }, to: { x: 120, y: 140 } } }
-          ]
-        },
-        {
-          time: '13:10~13:40',
+          time: '12:00~12:25',
           location: '식당·숙소·1층 로비 주변',
           scene: '두 인물이 따로따로 식당·숙소와 1층 로비 주변을 서성인다.',
           people: [
@@ -202,63 +196,57 @@ export const evidenceMap = {
           ]
         },
         {
-          time: '13:50',
-          location: '목사님 방 앞 복도',
-          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 갔다가, 1~2분 뒤 발길을 돌려 같은 방향으로 되돌아간다.',
+          time: '12:30',
+          location: '남자 숙소 복도',
+          scene: '두 인물이 1층 방향에서 함께 돌아온다. 한쪽은 목사 방, 다른 쪽은 자기 방으로 향한다. (등산 복귀)',
+          meet: { x: 200, y: 141 },   // 1층에서 복도 중앙까지 함께 온 뒤 각자 방으로 갈라짐
           people: [
-            { look: '여성 — 방 방향으로 갔다가 곧 되돌아감', who: '이가현', unlocks: 'GACH-50', x: 320, y: 148, arrow: { from: { x: 150, y: 150 }, to: { x: 355, y: 60 } } }
+            { look: '남성 — 자기 방 방향으로 향함 (등산 복귀)', who: '최종현', unlocks: 'CBAG-33', x: 120, y: 210, arrow: { from: { x: 360, y: 240 }, to: { x: 102, y: 208 } } },
+            { look: '목사 — 종현과 함께 돌아와 목사 방으로 향함', who: '김호치 목사', x: 348, y: 92, arrow: { from: { x: 360, y: 240 }, to: { x: 355, y: 60 } } }
           ]
         },
         {
-          time: '14:00',
+          time: '12:40',
           location: '목사님 방 앞 복도',
-          scene: '한 인물이 음료를 들고 목사님 방 방향으로 사라진다.',
+          scene: '한 인물이 음료를 들고 목사님 방 방향으로 갔다가, 잠시 뒤 빈손으로 다시 나타나 자기 방 쪽으로 돌아간다.',
           people: [
-            { look: '남성 — 음료 들고 방 방향으로 사라짐', who: '최종현', unlocks: 'CDRK-00', x: 300, y: 150, arrow: { from: { x: 150, y: 150 }, to: { x: 355, y: 60 } } }
+            { look: '남성 — 음료 들고 갔다가 빈손으로 돌아옴', who: '최종현', unlocks: 'CDRK-00', x: 300, y: 150, arrow: { from: { x: 102, y: 208 }, to: { x: 355, y: 60 }, round: true } }
           ]
         },
         {
-          time: '14:08',
+          time: '12:41',
           location: '목사님 방 앞 복도',
           scene: '한 인물이 목사님 방 방향으로 사라진다.',
           people: [
-            { look: '남성 — 방 방향으로 사라짐', who: '윤은재', unlocks: 'EJIN-08', x: 300, y: 150, arrow: { from: { x: 150, y: 150 }, to: { x: 355, y: 60 } } }
+            { look: '남성 — 방 방향으로 사라짐', who: '윤은재', unlocks: 'EJIN-08', x: 300, y: 150, arrow: { from: { x: 290, y: 208 }, to: { x: 355, y: 60 } } }
           ]
         },
         {
-          time: '14:12',
+          time: '12:42',
+          location: '목사님 방 앞 복도',
+          scene: '한 인물이 목사님 방 쪽으로 갔다가, 잠시 뒤 발길을 돌려 자기 방 쪽으로 되돌아간다.',
+          people: [
+            { look: '여성 — 방 쪽에 갔다가 되돌아옴 (문 너머 언쟁 목격)', who: '이가현', unlocks: 'GACH-30', x: 285, y: 138, arrow: { from: { x: 197, y: 208 }, to: { x: 355, y: 60 }, round: true } }
+          ]
+        },
+        {
+          time: '12:45',
           location: '목사님 방 앞 복도',
           scene: '한 인물이 방 방향에서 다시 나타나 빠르게 복도를 빠져나간다.',
           people: [
-            { look: '남성 — 방 방향에서 나와 빠르게 빠져나감', who: '윤은재', unlocks: 'BXCI-79', x: 300, y: 152, arrow: { from: { x: 355, y: 60 }, to: { x: 120, y: 150 } } }
+            { look: '남성 — 방 방향에서 나와 빠르게 빠져나감', who: '윤은재', unlocks: 'BXCI-79', x: 300, y: 152, arrow: { from: { x: 355, y: 60 }, to: { x: 290, y: 208 } } }
           ]
         },
         {
-          time: '14:30',
+          time: '13:15~17',
           location: '목사님 방 앞 복도',
-          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 갔다가, 1~2분 뒤 발길을 돌려 같은 방향으로 되돌아간다.',
+          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 사라졌다가, 2분 뒤 다시 나타나 숙소 쪽으로 빠르게 빠져나간다.',
           people: [
-            { look: '여성 — 방 방향으로 갔다가 곧 되돌아감', who: '이가현', unlocks: 'GACH-30', x: 320, y: 148, arrow: { from: { x: 150, y: 150 }, to: { x: 355, y: 60 } } }
+            { look: '여성 — 방으로 갔다가 2분 뒤 숙소 쪽으로 빠르게 나옴', who: '박희원', unlocks: 'PKIN-42', x: 298, y: 132, arrow: { from: { x: 290, y: 80 }, to: { x: 355, y: 60 }, round: true } }
           ]
         },
         {
-          time: '14:42',
-          location: '목사님 방 앞 복도',
-          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 사라진다.',
-          people: [
-            { look: '여성 — 방 방향으로 사라짐', who: '박희원', unlocks: 'PKIN-42', x: 298, y: 132, arrow: { from: { x: 150, y: 150 }, to: { x: 355, y: 60 } } }
-          ]
-        },
-        {
-          time: '14:44',
-          location: '목사님 방 앞 복도',
-          scene: '한 인물이 방 방향에서 다시 나타나 숙소 쪽으로 빠르게 사라진다.',
-          people: [
-            { look: '여성 — 방 방향에서 나와 숙소 쪽으로 사라짐', who: '박희원', unlocks: 'PKUT-44', x: 270, y: 134, arrow: { from: { x: 355, y: 60 }, to: { x: 200, y: 140 } } }
-          ]
-        },
-        {
-          time: '14:47',
+          time: '13:20',
           location: '목사님 방 앞 복도',
           scene: '한 인물이 자기 방 쪽에서 나타나 목사님 방 방향으로 사라진다.',
           people: [
@@ -273,74 +261,66 @@ export const evidenceMap = {
   // CCTV 동선 신규 단서 — SIAH-72 timeline의 unlocks와 1:1 대응
   // (코드 끝 2자리 = 해당 컷의 분(分). 전부 '보임/사라짐' 원칙)
   // =============================================
-  'CRTN-30': {
-    title: 'CCTV — 종현 등산 복귀',
+  'CRTN-30': { // 코드 끝2자리(30)≠시각(10:00) — unlocks 연결 보존 위해 코드 유지
+    title: '[CCTV 장면] 10:00 최종현',
     description: '',
-    detail: '12:30경 최종현이 등산에서 돌아와 숙소 복도에 나타남.',
+    detail: '10:00경 목사님과 함께 1층 방향으로 등산하러 나감.',
     image: '',
     type: '보통',
     person: '최종현'
   },
-  'CBAG-33': {
-    title: 'CCTV — 종현 가방 챙김',
+  'CBAG-33': { // 코드 끝2자리(33)≠시각(12:30) — 코드 유지
+    title: '[CCTV 장면] 12:30 최종현',
     description: '',
-    detail: '12:33경 자기 방 방향으로 사라졌다 가방을 들고 다시 나타남.',
+    detail: '12:30경 등산에서 함께 돌아와 자기 방으로 향함.',
     image: '',
     type: '보통',
     person: '최종현'
   },
-  'HJIN-43': {
-    title: 'CCTV — 현지 방 쪽 이동',
+  'HJIN-43': { // 코드 끝2자리(43)≠시각(10:20) — 코드 유지
+    title: '[CCTV 장면] 10:20 이현지',
     description: '',
-    detail: '12:43경 목사 방 쪽 복도에 나타나 방 방향으로 사라짐.',
+    detail: '10:20경 목사 방 방향으로 사라짐.',
     image: '',
     type: '보통',
     person: '이현지'
   },
-  'GACH-50': {
-    title: 'CCTV — 가현 1차 확인',
+  'GACH-50': { // 코드 끝2자리(50)=시각(10:50)
+    title: '[CCTV 장면] 10:50~52 이가현',
     description: '',
-    detail: '13:50경 목사 방 쪽으로 갔다가 1~2분 뒤 그대로 돌아 나옴. 방이 비었는지 확인하듯.',
+    detail: '10:50경 목사 방 쪽에 갔다가, 목사가 없어 되돌아 나옴.',
     image: '',
     type: '보통',
     person: '이가현'
   },
-  'CDRK-00': {
-    title: 'CCTV — 종현 음료 전달',
+  'CDRK-00': { // 코드 끝2자리(00)≠시각(12:40) — 코드 유지
+    title: '[CCTV 장면] 12:40 최종현',
     description: '',
-    detail: '14:00경 음료를 들고 목사 방 방향으로 사라짐.',
+    detail: '12:40경 음료를 들고 목사 방 방향으로 사라짐.',
     image: '',
     type: '보통',
     person: '최종현'
   },
-  'EJIN-08': {
-    title: 'CCTV — 은재 방 쪽 이동',
+  'EJIN-08': { // 코드 끝2자리(08)≠시각(12:41) — 코드 유지
+    title: '[CCTV 장면] 12:41 윤은재',
     description: '',
-    detail: '14:08경 목사 방 방향으로 사라짐.',
+    detail: '12:41경 목사 방 방향으로 사라짐.',
     image: '',
     type: '보통',
     person: '윤은재'
   },
-  'GACH-30': {
-    title: 'CCTV — 가현 2차 확인',
+  'GACH-30': { // 코드 끝2자리(30)≠시각(12:42) — 코드 유지
+    title: '[CCTV 장면] 12:42 이가현',
     description: '',
-    detail: '14:30경 목사 방 쪽으로 갔다가 1~2분 뒤 그대로 돌아 나옴.',
+    detail: '12:42경 목사 방 쪽에 갔다가, 문 창문으로 은재와 목사가 언쟁하는 것을 보고 되돌아 나옴.',
     image: '',
     type: '보통',
     person: '이가현'
   },
-  'PKIN-42': {
-    title: 'CCTV — 희원 방 쪽 이동',
+  'PKIN-42': { // 13:15~17 진입+퇴장 통합 컷 (코드 끝2자리≠시각, 코드 유지). 옛 PKUT-44는 이 컷에 흡수
+    title: '[CCTV 장면] 13:15~17 박희원',
     description: '',
-    detail: '14:42경 목사 방 쪽 복도에 나타나 방 방향으로 사라짐.',
-    image: '',
-    type: '보통',
-    person: '박희원'
-  },
-  'PKUT-44': {
-    title: 'CCTV — 희원 퇴장',
-    description: '',
-    detail: '14:44경 방 방향에서 다시 나타나 숙소 쪽으로 빠르게 사라짐. (진입~신고 시간 역산의 핵심)',
+    detail: '13:15경 목사 방 방향으로 사라졌다 13:17경 다시 나타나 숙소 쪽으로 빠르게 빠져나감. (진입~신고 시간 역산의 핵심)',
     image: '',
     type: '보통',
     person: '박희원'
@@ -350,14 +330,23 @@ export const evidenceMap = {
   // 공용 / 피해자(목사) 단서 — 부검·현장·목사 유품
   // ※ 화면에서 '목사(피해자)' 전용 탭에 표시
   // =============================================
-  'COMB-55': { // 1차 부검 — 시작 단계에서 공개
-    title: '1차 부검 소견 (심정지)',
-    description: '',
-    detail: '사망 원인은 심정지로 추정된다. 혈중에서 요힘빈이 고농도로 검출되어, 협심증이 있던 목사가 발작을 일으킨 정황이 있다. 동시에 정품 니트로글리세린(설하정) 성분도 검출되어, 발작 중 응급약을 복용한 것으로 보인다. 다만 외력이 작용했을 가능성을 완전히 배제하기는 어려워, 정밀 감식을 진행 중이다.',
+  // 시작 브리핑 자료 — 게임 설명서처럼 한 코드(BRIF-00)에 페이지로 묶어 열람.
+  // (구 CASE-13·COMB-55·TARB-53·WHY6-06·YZET-89를 페이지로 통합)
+  'BRIF-00': {
+    title: '사건 브리핑',
+    description: '게임 시작 시 공개되는 사건 브리핑 자료. 화살표로 페이지를 넘겨 읽어보세요.',
+    detail: '',
     image: '',
-    type: '특수',
-    person: '목사',
-    unlockedBy: []
+    type: '보통',
+    person: '공용',
+    reveal: '시작브리핑',
+    pages: [
+      { title: '사건 현황 — 초동 정보', content: '사망 장소: 김호치 목사님 개인 방.\n사망 추정 시각: 수련회 마지막 날 오후 1시대(13시경).\n최초 신고자: 이가현 회장 — 13:31에 112로 신고.\n\n협심증 병력이 있었으나, 부검상 단순 발작사로 보기 어려운 정황이 있어 수사가 진행 중이다.' },
+      { title: '1차 부검 소견', content: '사망 원인은 정확히 추측하긴 어렵지만, 협심증이 있던 목사가 발작을 일으킨 정황으로 보아 심정지로 추정된다.\n\n안구에 출혈이 발견되었고 손에 과하게 힘이 들어간 채 굳어 있다. 입가에서 약간의 딸기향이 느껴진다.' },
+      { title: '목사님 방 위치·구조', image: '/images/방구조.jpg', content: '방 문에 작은 유리창이 있다.\n\n방 내부엔 CCTV가 없다. 단, 방 바깥 복도에는 CCTV가 있다. — 복도에서 누가·언제 움직였는지가 추리의 열쇠다.' },
+      { title: '용의자가 6명인 이유', content: '수련회 숙소 2층(목사님 방이 있는 층)은 청년부 임원 6명만 사용했다. 일반 청년부원과 외부 참가자는 1층·별관에 묵었고, 사건 시간대(오후 1시 전후) 2층으로 올라온 외부인은 복도 CCTV에 단 한 명도 없다.\n\n또한 사건 전날부터 당일까지 목사님과 단독 접점이 있었던 인원도 정확히 이 여섯 명뿐이다 — 전날 개인 면담을 가진 다섯 명(이사랑·이현지·박희원·윤은재·이가현)과, 평소 음료·등산을 전담해 목사님 방을 자주 드나든 최종현.\n\n따라서 수사 대상은 이 여섯 명으로 한정된다.' },
+      { title: '시신 발견 경위', content: '최초 발견자(이가현)의 진술:\n\n"목사님과 할 얘기가 있어서 들렀는데, 이미 쓰러져 계셨어요."' },
+    ]
   },
   'SAJL-88': { // 현장(목사 방) — 텀블러
     title: '개인 텀블러',
@@ -368,9 +357,9 @@ export const evidenceMap = {
     person: '목사'
   },
   'LONS-62': { // 2차 부검 — 중간 점검 단계에서 공개 (질식 확정)
-    title: '2차 부검 — 질식 확정',
+    title: '2차 부검',
     description: '',
-    detail: '정밀 감식 결과: 사인은 질식. 코·입 주변 압박흔과 안면 점출혈 확인. 심장 발작은 사망의 직접 원인이 아님.',
+    detail: '정밀 감식 결과: 코·입 주변 압박흔과 안면 점출혈 확인이 되었고 협심증 약인 설화정 성분이 발견된 것으로 보아 심장 발작은 사망의 직접 원인이 아닌 것 같음. 타인에 의한 질식사로 보입니다.',
     image: '',
     type: '특수',
     person: '목사',
@@ -380,7 +369,7 @@ export const evidenceMap = {
     title: '쉐이크 통',
     description: '목사님 책상 위에서 발견되었다.',
     detail: '종현의 것으로 보이는 쉐이크 통이다.  내용물이 있다.',
-    image: '/images/쉐이크통.png',
+    image: '/images/쉐이크통.jpg',
     type: '보통',
     person: '목사'
   },
@@ -388,7 +377,6 @@ export const evidenceMap = {
     title: '쉐이크 통 내용물 감식',
     description: '',
     detail: '목사님 책상의 쉐이크 통 내용물 감식 결과: 요힘빈 고함량 검출. 종현이 타 드린 보충제 음료에 요힘빈이 섞여 있었다. (협심증이 있던 목사에게 치명적인 성분)',
-    image: '/images/clue-03.svg',
     type: '감식',
     person: '목사',
     unlockedBy: ['TQPA-93'],
@@ -449,9 +437,12 @@ export const evidenceMap = {
               name: '이가현 회장',
               deleted: true,
               messages: [
-                { from: 'them', text: '당신 때문에 이렇게 됐잖아요!', time: '이틀 전' },
-                { from: 'them', text: '대체 무슨 권리로 민석이한테 그런 얘길 해요?', time: '이틀 전' },
-                { from: 'them', text: '책임지세요. 제 인생 다 망가졌어요.', time: '이틀 전' }
+                { from: 'them', text: '당신 때문에 이렇게 됐잖아요! 대체 무슨 권리로 민석이한테 그런 얘길 해요?', time: '이틀 전' },
+                { from: 'me', text: '가현아, 나도 이렇게까지 될 줄은 몰랐다. 진정하자.', time: '이틀 전' },
+                { from: 'me', text: '이미 엎질러진 일이야. 파혼은… 받아들이고 정리하는 게 좋겠다.', time: '이틀 전' },
+                { from: 'them', text: '정리요? 제 인생 다 망가뜨려놓고 그 말이 나와요?', time: '이틀 전' },
+                { from: 'me', text: '수련회 끝나고 차분히 다시 얘기하자. 지금은 때가 아니야.', time: '이틀 전' },
+                { from: 'them', text: '…책임지세요. 더 할 말 없어요.', time: '이틀 전' }
               ]
             }
           ]
@@ -472,39 +463,30 @@ export const evidenceMap = {
     title: '목사님 일기장',
     description: '목사님이 며칠에 걸쳐 적어 온 일기. 화살표로 페이지를 넘겨 읽어보세요.',
     detail: '',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '목사',
     pages: [
       {
-        title: '3월 28일 (금)',
-        content: '아침마다 약을 챙기는 일이 이제 습관이 됐다. 협심증 약은 늘 가까이 둬야 마음이 놓인다.\n\n아내가 싸준 도시락을 들고 뒷산을 한 바퀴 돌았다. 봄볕이 참 좋다. 건강이 허락하는 한 이 아침 산책만은 거르지 말아야지.'
+        title: '6월 26일 (목)',
+        content: '아침마다 약을 챙기는 일이 이제 습관이 됐다. 협심증 약은 늘 가까이 둬야 마음이 놓인다.\n\n아내가 싸준 도시락을 들고 뒷산을 한 바퀴 돌았다. 여름볕이 참 좋다. 건강이 허락하는 한 이 아침 산책만은 거르지 말아야지.'
       },
       {
-        title: '4월 2일 (수)',
-        content: '큰딸에게서 전화가 왔다. 분가한 지도 벌써 몇 해인데 목소리는 여전히 어리게 들린다.\n\n올해 7월 7일이면 그 애도 서른이다. 생일엔 온 가족이 모이기로 했다. 아내가 벌써부터 메뉴를 고민한다.'
+        title: '6월 28일 (토)',
+        content: '큰딸에게서 전화가 왔다. 분가한 지도 벌써 몇 해인데 목소리는 여전히 어리게 들린다.\n\n다음 주 7월 7일이면 그 애도 서른이다. 생일엔 온 가족이 모이기로 했다. 아내가 벌써부터 메뉴를 고민한다.'
       },
       {
-        title: '4월 9일 (목)',
+        title: '6월 30일 (월)',
         content: '막내 아들 녀석이 새 직장에 적응하느라 고생인 모양이다. 11월 23일 생일엔 좋아하는 책이라도 한 권 부쳐줘야겠다.\n\n저녁엔 아내와 오랜만에 동네 한 바퀴를 걸었다. 별일 없이 흘러가는 하루가 가장 큰 복이다.'
       },
       {
-        title: '4월 15일 (화)',
+        title: '7월 1일 (화)',
         content: '요즘 성경을 처음부터 다시 필사하고 있다. 손이 더뎌도 마음이 차분해진다.\n\n아내가 "올해 기념일엔 어디 갈까" 하고 묻는다. 매년 같은 질문인데도 매년 같은 설렘이다.'
       },
       {
-        title: '4월 18일 (금)',
-        content: '내일은 아내와 결혼한 지 28년 되는 날. 4월 19일이다.\n\n나는 무슨 일이 있어도 이 날짜만큼은 잊은 적이 없다. 지갑이며 사물함이며, 잠가 둬야 할 것은 늘 이 날짜 네 자리에 맞춰 둔다. 내일은 아내와 조용히 둘이서 시간을 보내야지.'
+        title: '7월 2일 (수)',
+        content: '이틀 뒤면 수련회다. 짐을 꾸리며 사물함도 다시 잠갔다. 잠가 둘 것은 늘 결혼기념일 4월 19일 — 그 네 자리(0419)에 맞춰 둔다. 무슨 일이 있어도 이 날짜만큼은 잊은 적이 없다.'
       }
     ]
-  },
-  'TARB-53': { // 목사님 방 위치·구조
-    title: '목사님 방 위치·구조',
-    description: '',
-    detail: '방 문에 작은 유리창. 방 내부엔 CCTV 없음. 단, 방 바깥 복도는 CCTV가 있다.',
-    image: '/images/방구조.png',
-    type: '보통',
-    person: '목사'
   },
   'HQIR-26': { // 목사님 일정표 — 면담 일정. 항목 클릭 시 면담 내용 확인
     title: '목사님 일정표',
@@ -527,7 +509,7 @@ export const evidenceMap = {
     title: '설하정 처방전',
     description: '책상 위에서 처방전을 발견했다.',
     detail: '협심증 응급약 설하정 처방전이다. 정품 알약은 "GTN" 각인이 있다고 적혀 있다. 발작 시 혀 밑에 넣어 복용한다.',
-    image: '/images/clue-03.svg',
+    image: '/images/설하정_처방전.png',
     type: '보통',
     person: '목사'
   },
@@ -535,48 +517,84 @@ export const evidenceMap = {
     title: '손톱 밑 이물질',
     description: '목사 손톱 밑에 이물질이 조금 끼어 있다.',
     detail: '양이 적고 뭉개져 있어, 어떤 물질인지·사람에게서 온 것인지조차 특정하기 어렵다. 다만 방 안 물건이나 목사 소지품에서 나온 것과는 달라 보인다.',
-    image: '/images/clue-03.svg',
+    image: '/images/손톱밑이물질.jpg',
     type: '보통',
     person: '목사'
+  },
+  'FIBR-98': { // 손톱 밑 이물질(LTXB-98) 발견 시 성분 감식이 이어서 해금
+    title: '손톱 밑 이물질 감식',
+    description: '',
+    detail: '감식 결과: 손톱 밑 이물질에서 베개 솜·섬유 성분이 검출되었다. 다만 정체를 알 수 없는 미량의 물질도 함께 섞여 있어, 그 출처는 단정하기 어렵다.',
+    type: '감식',
+    person: '목사',
+    unlockedBy: ['LTXB-98'],
+    password: '9460'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
   'MEXF-73': {
     title: '설하정 약통',
     description: '책상 위에서 설하정 약통을 발견했다.',
     detail: '협심증 응급약 설하정 통이다. 겉에는 딸기향 함유라고 적혀 있고 노란 알약이 5알밖에 남아있지 않다. 옅은 딸기향이 난다.',
-    image: '/images/clue-03.svg',
+    image: '/images/설화정약통.jpg',
     type: '보통',
     person: '목사'
   },
+  'NTGB-51': { // 설하정 약통(MEXF-73) 발견 시 성분 감식이 이어서 해금
+    title: '설하정 약통 성분 감식',
+    description: '',
+    detail: '감식 결과: 책상 위 설하정 약통의 노란 알약에서 협심증 응급약 성분(니트로글리세린)이 검출되지 않았다. 비타민C 정제로 확인된다.',
+    type: '감식',
+    person: '목사',
+    unlockedBy: ['MEXF-73'],
+    password: '5170'  // 운영자 전용 — 입력 시 감식 결과 공개
+  },
   'HODM-06': {
     title: '작은 약통',
-    description: '침대 근처 바닥에서 발견한 작은 약통이다.',
+    description: '침대 머리 맡에서 발견한 작은 약통이다.',
     detail: '알약이 1알 밖에 남아있지 않다. 하얀 알약에 "GTN" 각인이 새겨져있다. 통을 열었을 때 특유의 딸기향이 진하게 났다.',
-    image: '/images/clue-03.svg',
+    image: '/images/작은약통.jpg',
     type: '보통',
     person: '목사',
+  },
+  'GTNV-09': { // 작은 약통(HODM-06) 발견 시 성분 감식이 이어서 해금
+    title: '작은 약통 성분 감식',
+    description: '',
+    detail: '감식 결과: 남은 알약에서 협심증 응급약 성분(니트로글리세린, GTN)이 검출되었다. 진짜 설하정이 맞다. ( 품에 지니고 있는 약으로 보인다.)',
+    type: '감식',
+    person: '목사',
+    unlockedBy: ['HODM-06'],
+    password: '2061'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
   'GZYJ-12': { //목사 협심증 진단서
     title: '목사님 협심증 진단서',
     description: '목사님 책상 위에 놓여져 있다. 누구든 볼 수 있는 듯 하다.',
     detail: 'OO병원 진단서: 협심증. 발작 시 니트로글리세린 설하정을 혀 밑에 즉시 복용하라는 지시가 적혀 있다.',
-    image: '/images/clue-03.svg',
+    image: '/images/협심증진단서.jpg',
     type: '보통',
     person: '목사'
   },
   // 'PMUZ-94'(베개 커버 섬유) — 손목시계 라인으로 대체되어 폐기됨 (참조처 없음 확인)
   'EUMM-81': { //
     title: '목사 옷깃 구겨짐',
-    description: '',
+    description: '피해자 목사님의 옷깃이다',
     detail: '목사님 셔츠 옷깃이 한쪽만 구겨지고 늘어났다. 누군가 손으로 잡아당긴 흔적이 있다.',
-    image: '/images/clue-03.svg',
+    image: '/images/구겨진옷.jpg',
     type: '보통',
     person: '목사'
   },
-  'AVLP-75': { // 현장(목사 방) — 바닥의 단추 (❓→윤은재)
-    title: '바닥의 단추',
+  'TUCH-83': { // 목사 옷깃 구겨짐(EUMM-81) 발견 시 접촉흔 감식이 이어서 해금
+    title: '옷깃 접촉흔 감식',
     description: '',
+    detail: '감식 결과: 늘어난 옷깃에서 윤은재의 피부 세포(접촉 DNA)가 검출되었다.',
+    type: '감식',
+    person: '목사',
+    unlockedBy: ['EUMM-81'],
+    password: '7715'  // 운영자 전용 — 입력 시 감식 결과 공개
+  },
+  'AVLP-75': { // 현장(목사 방)
+    title: '바닥의 단추',
+    description: '목사님 방 바닥에서 발견되었다.',
     detail: '목사님 셔츠에서 떨어진 단추 1개가 방 바닥에 떨어져 있음.',
-    image: '/images/clue-03.svg',
+    image: '/images/바닥의단추.jpg',
     type: '보통',
     person: '목사'
   },
@@ -585,34 +603,42 @@ export const evidenceMap = {
   // 이사랑 (공범 — 요힘빈 라벨 교체) — 보통 단서
   // =============================================
   'NQBT-91': { // 복도 CCTV
-    title: '사랑의 12:20경 CCTV 화면',
+    title: '[CCTV 장면] 10:25~27 이사랑',
     description: '',
-    detail: '12:20경 남자 숙소 방향으로 사라졌다 잠시 뒤 같은 방향에서 다시 나타남. 손에 무언가 들고 있음.',
+    detail: '10:25경 남자 숙소(종현 방) 방향으로 갔다 손에 무언가 들고 나옴.',
     image: '',
     type: '보통',
     person: '이사랑'
   },
-  'NYBB-98': { // 이사랑 가방 — 평범한 세면 파우치 (라벨 도구는 LBPG-31로 분리)
+  'NYBB-98': { // 이사랑 가방
     title: '사랑의 파우치',
     description: '이사랑의 가방에서 발견되었다.',
-    detail: '세면 파우치. 스킨·로션·쿠션 등 일상 화장품. 특이사항은 없다.',
-    image: '/images/이사랑_파우치.jpg',
+    detail: '세면 파우치. 스킨·로션·쿠션 등 일상 화장품이 있다.',
+    image: '/images/파우치_여.jpg',
     type: '보통',
     person: '이사랑'
   },
-  'LBPG-31': { // 이사랑 가방 — 라벨 제거·재부착 도구 (핵심 물증)
-    title: '라벨지와 풀',
+  'LBPG-31': { // 이사랑 가방 — 라벨 제작 도구 (핵심 물증, '풀'은 GLUE-77로 분리)
+    title: '라벨지와 볼펜',
     description: '이사랑의 가방에서 발견되었다.',
-    detail: '새 라벨지 묶음과 작은 풀(접착제). 라벨을 떼고 새로 붙이는 데 쓰는 도구다. 화장품 파우치에 있을 법한 물건은 아니다.',
-    image: '/images/clue-03.svg',
+    detail: '새 라벨지 묶음과 볼펜. 기존 라벨과 같은 글씨로 새 라벨을 만들어 붙이는 데 쓸 수 있다. 화장품 파우치에 있을 법한 물건은 아니다.',
+    image: '/images/라벨지.jpg',
+    type: '보통',
+    person: '이사랑'
+  },
+  'GLUE-77': { // 이사랑 가방 — 라벨 재부착 도구 (핵심 물증, LBPG-31에서 '풀' 분리)
+    title: '풀',
+    description: '이사랑의 가방에서 발견되었다.',
+    detail: '작은 풀(접착제). 떼어낸 라벨 자리에 새 라벨을 붙이는 데 쓴다. 화장품 파우치에 있을 법한 물건은 아니다.',
+    image: '/images/풀.jpg',
     type: '보통',
     person: '이사랑'
   },
   'OLUX-30': { //
     title: '사랑의 옷가지',
-    description: '',
-    detail: '여벌 옷과 양말. 특이사항 없음. ',
-    image: '/images/clue-03.svg',
+    description: '사랑의 가방에서 발견했다.',
+    detail: '여벌 옷과 양말.',
+    image: '/images/옷가지.jpg',
     type: '보통',
     person: '이사랑'
   },
@@ -671,19 +697,19 @@ export const evidenceMap = {
             {
               name: '김호치 목사님',
               messages: [
-                { from: 'them', text: '이사랑 총무님, 내일 재정 관련해서 잠깐 면담 가능할까요?', time: '오후 2:14' },
-                { from: 'me', text: '네 목사님, 시간 괜찮습니다.', time: '오후 2:20' },
-                { from: 'them', text: '기타 항목 지출이 2000만원인데 영수증이 없어서요. 챙겨와 주세요.', time: '오후 2:21' },
-                { from: 'me', text: '...네, 알겠습니다.', time: '오후 2:45' }
+                { from: 'them', text: '이사랑 총무님, 내일 재정 관련해서 잠깐 면담 가능할까요?', time: '이틀 전 오후 2:14' },
+                { from: 'me', text: '네 목사님, 시간 괜찮습니다.', time: '이틀 전 오후 2:20' },
+                { from: 'them', text: '기타 항목 지출이 2000만원인데 영수증이 없어서요. 챙겨와 주세요.', time: '이틀 전 오후 2:21' },
+                { from: 'me', text: '...네, 알겠습니다.', time: '이틀 전 오후 2:45' }
               ]
             },
             {
               // 종현 폰(WSIE-85)과 동일 대화 — 종현 등산 중(오전) 단백질 양해 요청(알리바이 빌드업)
               name: '종현이',
               messages: [
-                { from: 'me', text: '종현아, 나 네 방에서 단백질 좀 타 마셔도 돼? 아침을 걸러서 ㅠ', time: '오전 11:40' },
-                { from: 'them', text: '넵 누나! 통 책상에 있어요. 편하게 드세요 ㅎㅎ', time: '오전 11:41' },
-                { from: 'me', text: 'ㄱㅅㄱㅅ 등산 잘 다녀와~', time: '오전 11:41' }
+                { from: 'me', text: '종현아, 나 네 방에서 단백질 좀 타 마셔도 돼? 아침을 걸러서 ㅠ', time: '오늘 오전 10:23' },
+                { from: 'them', text: '넵 누나! 통 책상에 있어요. 편하게 드세요 ㅎㅎ', time: '오늘 오전 10:24' },
+                { from: 'me', text: 'ㄱㅅㄱㅅ 등산 잘 다녀와~', time: '오늘 오전 10:24' }
               ]
             },
             {
@@ -724,15 +750,6 @@ export const evidenceMap = {
               ]
             }
           ]
-        },
-        {
-          id: 'photos',
-          type: 'photos',
-          name: '사진',
-          photos: [
-            { caption: '수련회 한 달 전, 해외여행에서.', image: '/images/phone/isarang_travel.jpg' },
-            { caption: '새로 산 고가 화장품과 파우치.', image: '/images/phone/isarang_cosmetics.jpg' }
-          ]
         }
       ]
     }
@@ -740,16 +757,16 @@ export const evidenceMap = {
   'SUIX-89': { // 이사랑 방
     title: '빚 독촉장',
     description: '이사랑 가방 안쪽에서 나온 봉투.',
-    detail: '본인(이사랑) 명의로 집중된 채무 독촉장. 부모에게서 넘어온 빚으로, 금액은 1억 4천만원이다.',
-    image: '/images/clue-03.svg',
+    detail: '본인(이사랑) 명의로 집중된 채무 독촉장. 부모에게서 넘어온 빚으로, 금액은 1억 4천만원이다. (발행일 6월 27일 — 수련회 직전)',
+    image: '/images/빚독촉장.jpg',
     type: '보통',
     person: '이사랑'
   },
-  'HKVQ-36': { // 길잡이형 — 12:20 CCTV(NQBT-91) 확보 시 해금 → 이사랑 추궁 유도
+  'HKVQ-36': { // 길잡이형 — 10:25 CCTV(NQBT-91) 확보 시 해금 → 이사랑 추궁 유도
     title: '종현 방엔 왜?',
     description: '',
-    detail: '12:20경 이사랑이 종현의 방에 들어갔다 나오는 모습이 CCTV에 찍혔다. 왜 들어갔는지 이사랑에게 물어봐야겠다.',
-    image: '/images/clue-03.svg',
+    detail: '10:25경 이사랑이 종현의 방에 들어갔다 나오는 모습이 CCTV에 찍혔다. 왜 들어갔는지 이사랑에게 물어봐야겠다.',
+    image: '/images/길잡이.svg',
     type: '특수',
     person: '이사랑',
     unlockedBy: ['NQBT-91']
@@ -758,47 +775,45 @@ export const evidenceMap = {
     title: '둘은 무슨 사이?',
     description: '',
     detail: '이사랑과 이현지가 주고받은 대화에는 예사롭지 않은 무게가 있다. 두 사람이 어떤 사이인지 직접 물어봐야겠다.',
-    image: '/images/clue-03.svg',
+    image: '/images/길잡이.svg',
     type: '특수',
     person: '이사랑',
     unlockedBy: [],
     unlockedByAny: ['QIVS-92', 'HUOX-80']  // ★ 둘 중 하나만 확보해도 해금 (OR)
   },
-  'TTNA-35': { // 복도 CCTV
-    title: '배회하는 이사랑',
+  'TTNA-35': { // 복도 CCTV — 등산 복귀 전 정오 배회로 재배치
+    title: '[CCTV 장면] 12:00~12:25 이사랑',
     description: '',
-    detail: '오후 1시~1시 40분, 숙소를 배회하고 있다. 핸드폰을 자주 확인한다.',
+    detail: '정오 무렵, 숙소를 배회하고 있다. 핸드폰을 자주 확인한다.',
     image: '',
     type: '보통',
     person: '이사랑'
   },
   'BCZN-89': { // 이사랑 다이어리 — 생일 8월 15일(0815) 노출 → 현지 폰 톡서랍 비번
     title: '이사랑의 다이어리',
-    description: '이사랑이 며칠에 걸쳐 적어 온 다이어리. 화살표로 페이지를 넘겨 읽어보세요.',
+    description: '이사랑의 책상 위에서 발견되었다. 며칠에 걸쳐 적어 온 다이어리. 화살표로 페이지를 넘겨 읽어보세요.',
     detail: '',
-    image: '/images/이사랑_다이어리.jpg',
     type: '보통',
     person: '이사랑',
     pages: [
       {
-        title: '4월 5일',
-        content: '또 카드값 알림이 왔다. 이번 달도 빠듯하다.\n\n그래도 예쁜 건 못 참겠다. 새로 나온 쿠션이랑 앰플을 샀다. 언니가 알면 또 한소리 하겠지.'
+        title: '6월 28일',
+        content: '또 빚독촉 알림이 왔다. 이번 달도 빠듯하다.'
       },
       {
-        title: '4월 12일',
-        content: '요즘 통장을 보면 가슴이 답답하다. 메우긴 메워야 하는데 방법이 없다.\n\n언니가 "내가 알아서 할게" 하고 다독여줬다. 세상에 언니랑 나, 둘뿐이니까. 우린 서로밖에 없다.'
+        title: '7월 1일',
+        content: '요즘 통장을 보면 가슴이 답답하다. 방법이 없다.'
       },
       {
-        title: '4월 16일',
-        content: '오늘 애들이랑 생일 얘기가 나왔다. 내 생일은 8월 15일, 광복절이라 아무도 안 까먹는다 ㅋㅋ\n\n매년 그날엔 언니가 케이크를 사 온다. 올해도 그래주겠지.'
+        title: '7월 2일',
+        content: '오늘 애들이랑 생일 얘기가 나왔다. 다음 달이 내 생일 — 8월 15일, 광복절이라 아무도 안 까먹는다 ㅋㅋ'
       }
     ]
   },
   'UJVD-65': {
     title: '사랑의 성경책',
-    description: '',
+    description: '이사랑의 가방에서 발견되었다.',
     detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '이사랑',
     pages: BIBLE_PAGES
@@ -815,7 +830,7 @@ export const evidenceMap = {
     title: '등산코스 지도',
     description: '종현의 가방에서 발견되었다.',
     detail: '숙소 근처에 있는 산의 등산코스 지도. 목사님 선호 코스 표시.',
-    image: '/images/clue-03.svg',
+    image: '/images/등산지도.jpg',
     type: '보통',
     person: '최종현'
   },
@@ -823,7 +838,7 @@ export const evidenceMap = {
     title: '등산 장갑',
     description: '최종현의 가방에 있는 등산용 장갑.',
     detail: '최종현의 가방에 있는 등산용 장갑. 흙먼지가 묻어 있다. 특이사항은 없다.',
-    image: '/images/clue-03.svg',
+    image: '/images/등산장갑.jpg',
     type: '보통',
     person: '최종현'
   },
@@ -831,46 +846,42 @@ export const evidenceMap = {
     title: '쉐이크 통',
     description: '종현의 가방 안에서 발견되었다.',
     detail: '평소 두 개 (목사님 것까지) 가지고 다니는데 지금은 하나만 있다.',
-    image: '/images/깨끗_쉐이크통.png',
+    image: '/images/깨끗_쉐이크통.jpg',
     type: '보통',
     person: '최종현'
   },
-  'TYQD-94': { // 가방 — 요힘빈 통 (핵심, 라벨 교체됨)
+  'TYQD-94': { // 가방 
     title: '플라스틱 통 [단백질]',
     description: '종현의 가방 안에서 발견되었다.',
     detail: '라벨에 "단백질"이라고 적혀있다. 안에 플라스틱 스쿱이 들어있다.',
-    image: '/images/protein.jpg',
+    image: '/images/단백질.jpg',
     type: '보통',
-    person: '최종현',
-    tapReveal: { taps: 5, text: '라벨지가 통에서 너무 쉽게 떨어져버렸다.', image: '/images/protein_peeled.jpg' }
+    person: '최종현'
   },
-  'OYJW-26': { // 가방 — 단백질 통 (핵심, 라벨 교체됨)
+  'OYJW-26': { // 가방 
     title: '플라스틱 통 [요힘빈]',
     description: '종현의 가방 안에서 발견되었다.',
     detail: '라벨에 "요힘빈"이라고 적혀있다. 안에 플라스틱 스쿱이 들어있다.',
-    image: '/images/yohimbine.jpg',
+    image: '/images/요힘빈.jpg',
     type: '보통',
-    person: '최종현',
-    tapReveal: { taps: 5, text: '라벨지가 통에서 너무 쉽게 떨어져버렸다.', image: '/images/yohimbine_peeled.jpg' }
+    person: '최종현'
   },
   'EDEZ-28': { // 최종현 다이어리 — 필적 대조용
     title: '최종현의 다이어리',
-    description: '종현의 가방 안에서 발견되었다.',
-    detail: '최종현이 적어 온 다이어리. 필적을 살펴볼 수 있다.',
-    image: '/images/clue-03.svg',
+    description: '종현의 책상 위에서 발견되었다.',
+    detail: '최종현이 적어 온 다이어리이다.',
     type: '보통',
     person: '최종현',
     pages: [
-      { title: '4월 10일', content: '목사님이 내가 타 드린 보충제 음료를 마음에 들어 하신다. "종현이 게 제일 맛있다"고 ㅎㅎ\n\n단백질이랑 부스터(요힘빈) 통을 늘 같이 들고 다니는데, 헷갈리지 않게 라벨은 내 글씨로 직접 붙여 놨다.' },
-      { title: '4월 16일', content: '수련회 짐을 쌌다. 쉐이크 통은 두 개 — 내 거랑 목사님 드릴 거.\n\n근데 단백질 통을 열어 보니 가루 색이 평소랑 미묘하게 다른 것 같기도 하고. 에이, 기분 탓이겠지.' },
-      { title: '4월 17일', content: '오늘 목사님이랑 등산 갔다. 정상에서 김밥 먹음 ㅎㅎ\n\n다음 수련회 때도 보충제 음료 챙겨가야지.' }
+      { title: '6월 27일', content: '목사님이 내가 타 드린 보충제 음료를 마음에 들어 하신다. "종현이 게 제일 맛있다"고 ㅎㅎ\n\n단백질이랑 부스터 통을 늘 같이 들고 다니는데, 헷갈리지 않게 라벨은 내 글씨로 직접 붙여 놨다.' },
+      { title: '7월 1일', content: '수련회 짐을 쌌다. 쉐이크 통은 두 개 — 내 거랑 목사님 드릴 거.\n\n근데 단백질 통을 열어 보니 가루 색이 평소랑 미묘하게 다른 것 같기도 하고. 에이, 기분 탓이겠지.' },
+      { title: '7월 2일', content: '내일 수련회 가면 또 목사님이랑 등산하기로 했다. 보충제 음료 챙겨야지.' }
     ]
   },
   'WSIE-85': {
     title: '최종현 핸드폰',
     description: '최종현 핸드폰이다.',
     detail: '카카오톡, 인터넷 검색내용, 사진 등을 확인할 수 있다.',
-    image: '',
     type: '보통',
     person: '최종현',
     phone: {
@@ -909,19 +920,19 @@ export const evidenceMap = {
             {
               name: '김호치 목사님',
               messages: [
-                { from: 'them', text: '종현아, 이번 청년부 재정 공지 좀 단톡에 올려줄래?', time: '오전 10:12' },
-                { from: 'me', text: '네 목사님! 바로 올릴게요', time: '오전 10:15' },
-                { from: 'them', text: '항상 고맙다 ㅎㅎ 다음에 또 같이 등산 가자', time: '오전 10:16' },
-                { from: 'me', text: '좋아요! 제가 보충제 음료 챙겨갈게요 ㅋㅋ', time: '오전 10:18' }
+                { from: 'them', text: '종현아, 이번 청년부 재정 공지 좀 단톡에 올려줄래?', time: '오늘 오전 10:12' },
+                { from: 'me', text: '네 목사님! 바로 올릴게요', time: '오늘 오전 10:15' },
+                { from: 'them', text: '항상 고맙다 ㅎㅎ 다음에 또 같이 등산 가자', time: '오늘 오전 10:16' },
+                { from: 'me', text: '좋아요! 제가 보충제 음료 챙겨갈게요 ㅋㅋ', time: '오늘 오전 10:18' }
               ]
             },
             {
               // 이사랑 알리바이 빌드업 — 종현 등산 중(오전) 단백질 양해 요청
               name: '사랑이 누나',
               messages: [
-                { from: 'them', text: '종현아, 나 네 방에서 단백질 좀 타 마셔도 돼? 아침을 걸러서 ㅠ', time: '오전 11:40' },
-                { from: 'me', text: '넵 누나! 통 책상에 있어요. 편하게 드세요 ㅎㅎ', time: '오전 11:41' },
-                { from: 'them', text: 'ㄱㅅㄱㅅ 등산 잘 다녀와~', time: '오전 11:41' }
+                { from: 'them', text: '종현아, 나 네 방에서 단백질 좀 타 마셔도 돼? 아침을 걸러서 ㅠ', time: '오늘 오전 10:23' },
+                { from: 'me', text: '넵 누나! 통 책상에 있어요. 편하게 드세요 ㅎㅎ', time: '오늘 오전 10:24' },
+                { from: 'them', text: 'ㄱㅅㄱㅅ 등산 잘 다녀와~', time: '오늘 오전 10:24' }
               ]
             }
           ]
@@ -940,8 +951,8 @@ export const evidenceMap = {
   'NMFM-21': {
     title: '종현의 옷가지',
     description: '종현의 가방 안에서 발견되었다.',
-    detail: '여벌 옷과 양말. 특이사항 없음. ',
-    image: '/images/clue-03.svg',
+    detail: '여벌 옷과 양말이다.',
+    image: '/images/옷가지.jpg',
     type: '보통',
     person: '최종현'
   },
@@ -953,7 +964,6 @@ export const evidenceMap = {
     title: '종현의 성경책',
     description: '종현의 가방 안에서 발견되었다.',
     detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '최종현',
     pages: BIBLE_PAGES
@@ -962,7 +972,7 @@ export const evidenceMap = {
     title: '종현의 파우치',
     description: '종현의 가방 안에서 발견되었다.',
     detail: '세면 파우치. 칫솔·면도기·선크림 등. ',
-    image: '/images/clue-03.svg',
+    image: '/images/파우치_남.jpg',
     type: '보통',
     person: '최종현',
     unlockedBy: []
@@ -970,8 +980,7 @@ export const evidenceMap = {
   'ODDM-57': {
     title: '단백질 통에 담긴 하얀 가루',
     description: '',
-    detail: '목사님께 드린 통의 성분: 요힘빈 고함량 검출, ',
-    image: '/images/clue-03.svg',
+    detail: '감식 결과: 요힘빈 고함량 검출되었다.',
     type: '감식',
     person: '최종현',
     unlockedBy: ['TYQD-94'],  // 단백질 통(TYQD-94) 발견 시 성분 감식이 이어서 해금
@@ -981,7 +990,7 @@ export const evidenceMap = {
     title: '라벨이 이상하다',
     description: '',
     detail: '통 두 개의 라벨이 어딘가 어색하다. 라벨을 직접 붙였다는 종현에게 물어보자.',
-    image: '/images/clue-03.svg',
+    image: '/images/길잡이.svg',
     type: '특수',
     person: '최종현',
     unlockedBy: ['TYQD-94', 'OYJW-26']
@@ -990,7 +999,6 @@ export const evidenceMap = {
     title: '이 글씨, 누구 것일까?',
     description: '',
     detail: '통 라벨의 글씨는 종현의 것이 아니다. 누군가 새로 써 붙인 것이다. 다른 사람들의 필적과 비교해 보자.',
-    image: '/images/clue-03.svg',
     type: '특수',
     person: '최종현',
     unlockedBy: [],  // 진행자 수동 코드 부여로 해금 (자동 해금 아님)
@@ -1015,29 +1023,28 @@ export const evidenceMap = {
     title: '졸피뎀 약통',
     description: '이현지의 가방에서 발견되었다.',
     detail: '강력한 수면제로 알려진 졸피뎀(Zolpidem) 약통이다.',
-    image: '/images/clue-03.svg',
+    image: '/images/졸피뎀.png',
     type: '보통',
     person: '이현지'
   },
   'BUFL-52': { // 이현지 다이어리 — 생일 3월 2일(0302) 노출 → 사랑 폰 톡서랍 비번
     title: '이현지의 다이어리',
-    description: '이현지의 가방에서 발견되었다.',
+    description: '이현지의 책상 위에서 발견되었다.',
     detail: '이현지가 며칠에 걸쳐 적어 온 다이어리. 화살표로 페이지를 넘겨 읽어보세요.',
-    image: '/images/이현지_다이어리.jpg',
     type: '보통',
     person: '이현지',
     pages: [
       {
-        title: '3월 2일',
-        content: '오늘은 내 생일, 3월 2일.\n\n딱히 챙기는 걸 좋아하진 않지만 사랑이가 미역국을 끓여줬다. 그거면 됐다. 조용한 하루가 제일 편하다.'
+        title: '6월 27일',
+        content: '딱히 챙기는 걸 좋아하진 않는다. 내 생일(3월 2일)에도 그냥 조용한 하루가 제일 편하다.'
       },
       {
-        title: '3월 20일',
-        content: '회계 장부를 정리하다 한숨이 나왔다. 사랑이는 왜 이렇게 무모할까.\n\n그래도 하나뿐인 내 동생이다. 내가 막아줄 수 있는 데까진 막아야지.'
+        title: '6월 30일',
+        content: '회계 장부를 정리하다 한숨이 나왔다. 사랑이는 왜 이렇게 무모할까.\n\n그래도 하나뿐인 내 동생이다.'
       },
       {
-        title: '4월 14일',
-        content: '요즘 마음이 무겁다. 들키면 안 되는 일이 자꾸 늘어난다.\n\n조용히, 티 나지 않게. 늘 그래왔듯이 처리하면 된다.'
+        title: '7월 2일',
+        content: '요즘 마음이 무겁다.'
       }
     ]
   },
@@ -1045,7 +1052,6 @@ export const evidenceMap = {
     title: '이현지 핸드폰',
     description: '이현지 핸드폰이다.',
     detail: '인터넷 검색, 카카오톡 대화, 사진 등을 확인할 수 있다. 카카오톡에 삭제된 대화가 있다.',
-    image: '',
     type: '보통',
     person: '이현지',
     phone: {
@@ -1118,8 +1124,8 @@ export const evidenceMap = {
           name: '사진',
           photos: [
             { caption: '잠금화면 — 이사랑과 함께 찍은 자매 사진.', image: '/images/phone/sisters.jpg' },
-            { caption: '동생 빚 송금 내역서 — 수년치 계좌이체 내역. 발신 "이현지", 동생(이사랑) 명의 대출 상환으로 매달 끊김 없이 송금. 언니가 동생 빚을 몰래 갚아온 증거.', image: '/images/송금내역.jpg' },
-            { caption: '법원 상속포기 심판문 사본 — 신청인 "이현지", 부모 사망 직후 날짜. 표면적으로는 "언니가 빚 무서워 발 뺐다"로 읽히지만, 실제는 동생을 지키려는 선택이었다.', image: '/images/상속포기심판문.jpg' }
+            { caption: '동생 빚 송금 내역서 — 수년치 계좌이체 내역(최근 이체 6월 25일). 발신 "이현지", 동생(이사랑) 명의 대출 상환으로 매달 끊김 없이 송금. 언니가 동생 빚을 몰래 갚아온 증거.', image: '/images/송금내역.jpg' },
+            { caption: '법원 상속포기 심판문 사본 — 신청인 "이현지", 부모 사망 직후(수년 전) 날짜. 표면적으로는 "언니가 빚 무서워 발 뺐다"로 읽히지만, 실제는 동생을 지키려는 선택이었다.', image: '/images/상속포기심판문.jpg' }
           ]
         }
       ]
@@ -1127,16 +1133,15 @@ export const evidenceMap = {
   },
   'ESQN-14': {
     title: '현지의 성경책',
-    description: '',
+    description: '이현지의 가방에서 발견되었다.',
     detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '이현지',
     pages: BIBLE_PAGES
   },
   'IJRP-82': { // 가방 — 회계 장부
     title: '회계 장부',
-    description: '이현지의 가방에서 발견되었다.',
+    description: '이현지의 책상 위에서 발견되었다.',
     detail: '뭔가 허술해 보이는, 수기로 기록된 회계 장부이다.',
     image: '/images/회계장부.jpg',
     type: '보통',
@@ -1145,33 +1150,26 @@ export const evidenceMap = {
   
   'LKUJ-60': {
     title: '현지의 옷가지',
-    description: '',
-    detail: '여벌 옷과 양말. 특이사항 없음. ',
-    image: '/images/clue-03.svg',
+    description: '현지의 가방 안에서 발견했다.',
+    detail: '여벌 옷과 양말이다. ',
+    image: '/images/옷가지.jpg',
     type: '보통',
     person: '이현지'
   },
-  'TQMW-03': { // 1층 CCTV
-    title: '배회하는 이현지',
+  'TQMW-03': { // 1층 CCTV — 등산 복귀 전 정오 배회로 재배치
+    title: '[CCTV 장면] 12:00~12:25 이현지',
     description: '',
-    detail: '오후 1층 로비·식당 배회. 초조해 보인다.',
+    detail: '정오 무렵, 1층 로비·식당을 배회. 초조해 보인다.',
     image: '',
     type: '보통',
     person: '이현지'
   },
-  'NKCD-95': { // 복도 CCTV (2부) — 손 닦는 이현지 (핵심)
-    title: '손 닦는 이현지 (CCTV)',
-    description: '',
-    detail: '12:46경 목사 방 방향에서 나타나 손을 옷에 닦으며 빠르게 복도를 빠져나감.',
-    image: '',
-    type: '보통',
-    person: '이현지'
-  },
+  // NKCD-95(현지 '손 닦는' 컷)는 타임라인 재정립으로 제거됨 — 참조 0건 확인 후 삭제
   'KPVH-32': {
     title: '현지의 파우치',
-    description: '',
-    detail: '화장품 파우치. 스킨·로션·쿠션 등 일상 화장품. ',
-    image: '/images/clue-03.svg',
+    description: '현지 가방에서 발견했다.',
+    detail: '스킨·로션·쿠션 등 일상 화장품이다.',
+    image: '/images/파우치_여.jpg',
     type: '보통',
     person: '이현지'
   },
@@ -1182,8 +1180,7 @@ export const evidenceMap = {
   'NVYN-22': {
     title: '목사님 텀블러 성분 감식',
     description: '',
-    detail: '졸피뎀 검출.',
-    image: '/images/clue-03.svg',
+    detail: '감식 결과 : 졸피뎀 검출.',
     type: '감식',
     person: '목사',
     unlockedBy: ['SAJL-88'],
@@ -1195,42 +1192,50 @@ export const evidenceMap = {
   // =============================================
   'UTUW-73': { // 방 — 요일별 약통 (핵심)
     title: '요일별 약통',
-    description: '희원의 방에서 발견되었다.',
+    description: '희원의 책상 위에서 발견되었다.',
     detail: '요일별(월·화·수·목·금·토)로 나뉜 약통. 칸을 열면 비타민C·루테인·오메가3 같은 영양제와 어디서 본적이 있는 알약이 섞여 있다.',
-    image: '/images/clue-03.svg',
+    image: '/images/약통.jpg',
     type: '보통',
     person: '박희원'
   },
+  'HIDN-37': { // 요일별 약통(UTUW-73) 발견 시 성분 감식이 이어서 해금
+    title: '요일별 약통 성분 감식',
+    description: '',
+    detail: '감식 결과: 영양제 사이에 섞여 있던 흰 알약에서 협심증 응급약 성분(니트로글리세린, GTN)이 검출되었다. 목사님 책상에서 사라진 진짜 설하정이 이 약통에 숨겨져 있었다.',
+    type: '감식',
+    person: '박희원',
+    unlockedBy: ['UTUW-73'],
+    password: '3948'  // 운영자 전용 — 입력 시 감식 결과 공개
+  },
   'JAJZ-77': { //
     title: '희원의 성경책',
-    description: '희원의 방에서 발견된 성경책이다.',
+    description: '희원의 가방에서 발견된 성경책이다.',
     detail: '밑줄과 메모가 빼곡한 성경책.',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '박희원',
     pages: BIBLE_PAGES
   },
   'VJMU-45': { //
     title: '희원의 화장품 파우치',
-    description: '희원의 방에서 발견된 화장품 파우치이다.',
+    description: '희원의 가방에서 발견된 화장품 파우치이다.',
     detail: '스킨·로션·선크림 등 여성 화장품. 평범한 세면 용품.',
-    image: '/images/clue-03.svg',
+    image: '/images/파우치_여.jpg',
     type: '보통',
     person: '박희원'
   },
   'HTXI-85': { // 방
     title: '희원의 옷가지',
-    description: '희원의 가방에서 발견된 옷가지이다.',
-    detail: '여벌 셔츠와 양말.',
-    image: '/images/clue-03.svg',
+    description: '희원의 가방에서 발견했다.',
+    detail: '여벌 셔츠와 양말이다.',
+    image: '/images/옷가지.jpg',
     type: '보통',
     person: '박희원'
   },
   'LUDP-77': { // C. 손목시계 — 심문 중 관찰로 노출(자연 노출형, 별도 해금조건 없음)
     title: '손목시계',
-    description: '심문 중 박희원이 차고 있는 손목시계를 살펴봤다.',
-    detail: '오래 착용한 인조가죽 줄 손목시계. 줄에는 세월에 따른 잔자국이 여러 개 나 있는데, 그중 하나는 비교적 최근에 생긴 듯 결이 다르다. 박희원은 자국을 의식하지 못한 채 계속 차고 있다.',
-    image: '/images/clue-03.svg',
+    description: '박희원이 차고 있는 손목시계이다.',
+    detail: '오래 착용한 인조가죽 줄 손목시계이다. 줄에는 세월에 따른 잔자국이 여러 개 나 있는데, 그중 하나는 비교적 최근에 생긴 것 같다.',
+    image: '/images/손목시계.jpg',
     type: '보통',
     person: '박희원'
   },
@@ -1238,7 +1243,6 @@ export const evidenceMap = {
     title: '박희원 핸드폰',
     description: '박희원의 핸드폰이다.',
     detail: '인터넷 검색과 카카오톡을 확인할 수 있다. 카카오톡에 삭제된 대화가 있는 듯하다.',
-    image: '',
     type: '보통',
     person: '박희원',
     phone: {
@@ -1309,25 +1313,23 @@ export const evidenceMap = {
       ]
     }
   },
-  'LGYR-78': { // 복도 CCTV — 점심 직전(12:10) 약 교체 동선 (목사 등산 중 방 비어 있음)
-    title: 'CCTV — 희원 방 쪽 이동 (12:10)',
+  'LGYR-78': { // 복도 CCTV — 오전(10:10) 약 교체 동선 (목사 등산 중 방 비어 있음)
+    title: '[CCTV 장면] 10:10~12 박희원',
     description: '',
-    detail: '12:10경 목사 방 쪽 복도에 나타나 방 방향으로 사라졌다 잠시 뒤 다시 나타나 빠져나감. (목사 등산 중이라 방은 비어 있었음)',
-    image: '',
+    detail: '10:10경 목사 방 방향으로 갔다 나옴. (목사 등산 중, 방 비어 있음)',
     type: '보통',
     person: '박희원'
   },
   'MZKW-75': { // 박희원 다이어리 — 필적 대조용
     title: '박희원의 다이어리',
-    description: '박희원이 적어 온 다이어리. 필적을 살펴볼 수 있다.',
+    description: '희원의 책상 위에서 발견되었다. 적어 온 다이어리로, 필적을 살펴볼 수 있다.',
     detail: '',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '박희원',
     pages: [
-      { title: '4월 8일', content: '교단에 제출할 서류를 다시 들여다봤다. 괜히 마음이 무겁다.\n\n지난 일은 지난 일이다. 여기까지 오는 데 얼마나 애를 썼는데. 흔들리지 말자.' },
-      { title: '4월 13일', content: '목사님이 요즘 내 이력을 자꾸 물으신다. 그저 관심이시겠지… 그렇게 믿고 싶다.\n\n약통 정리를 도와드렸다. 매일 챙기셔야 할 약이 참 많으시다. 칸마다 똑같이 생긴 알약들. 가만 보면 내 것과도 닮았다.' },
-      { title: '4월 16일', content: '새벽 기도. 마음을 다잡는다.\n\n맡은 일에 부끄럽지 않게. 손목시계 줄이 또 쓸렸다 — 언제 이런 자국이 났을까. 별것도 아닌데 자꾸 눈이 간다.' }
+      { title: '6월 28일', content: '교단에 제출할 서류를 다시 들여다봤다. 괜히 마음이 무겁다.\n\n지난 일은 지난 일이다. 여기까지 오는 데 얼마나 애를 썼는데. 흔들리지 말자.' },
+      { title: '7월 1일', content: '목사님이 요즘 내 이력을 자꾸 물으신다. 그저 관심이시겠지… 그렇게 믿고 싶다.' },
+      { title: '7월 2일', content: '새벽 기도. 마음을 다잡는다.\n\n맡은 일에 부끄럽지 않게..' }
     ]
   },
 
@@ -1347,10 +1349,10 @@ export const evidenceMap = {
   // =============================================
   // 윤은재 (감정 동기 의혹 · 무고 · 발작 촉진 가능성만) — 보통 단서
   // =============================================
-  'BXCI-79': { // 14:08~14:12 CCTV 컷 + 별도 목격 진술 병행
-    title: '은재의 CCTV 단서',
+  'BXCI-79': { // 12:41~12:45 CCTV 컷 + 별도 목격 진술 병행 (코드 끝2자리≠시각, 코드 유지)
+    title: '[CCTV 장면] 12:45 윤은재',
     description: '',
-    detail: 'CCTV: 14:08경 목사 방 방향으로 사라졌다 14:12경 다시 나타나 빠르게 빠져나감. 목격자 진술로 방에서 큰 소리와 문이 세게 닫히는 소리가 났다고 한다.)',
+    detail: 'CCTV: 12:41경 목사 방으로 갔다 12:45경 다시 나타나 빠르게 빠져나감. 목격자 진술로 방에서 큰 소리와 언쟁이 있었다고 한다.',
     image: '',
     type: '보통',
     person: '윤은재'
@@ -1359,36 +1361,34 @@ export const evidenceMap = {
     title: '은재의 손목 멍',
     description: '은재의 손목.',
     detail: '은재의 손목에 푸른 멍이 있다. 손목을 잡힌 듯한 손자국이다.',
-    image: '/images/clue-03.svg',
+    image: '/images/손목멍.jpg',
     type: '보통',
     person: '윤은재'
   },
   'VUDC-50': { // 방
     title: '거부 도장이 찍힌 제안서',
-    description: '은재의 가방에서 발견되었다.',
+    description: '은재의 책상 위에서 발견되었다.',
     detail: '고가의 마이크와 음향 장비를 구입하자는 제안서. 목사님이 거부 도장을 찍었다.',
-    image: '/images/clue-03.svg',
+    image: '/images/제안서.jpg',
     type: '보통',
     person: '윤은재'
   },
   'UHRU-61': { // 윤은재 다이어리 — 필적 대조용
     title: '윤은재의 다이어리',
-    description: '은재의 가방에서 발견되었다.',
+    description: '은재의 책상 위에서 발견되었다.',
     detail: '윤은재가 적어 온 다이어리. 필적을 살펴볼 수 있다.',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '윤은재',
     pages: [
-      { title: '4월 11일', content: '음향 장비 제안서를 또 반려당했다. "지금 있는 걸로 충분하다"는 한마디.\n\n내가 얼마나 고민해서 올린 건데. 목사님은 찬양을 그냥 소리로만 들으시는 것 같다. 답답하다.' },
-      { title: '4월 14일', content: '본가에 들렀다. 부모님 약 떨어졌다고 해서 처방약을 받아 왔다. 고혈압약은 거르면 안 되니까.\n\n약봉투를 가방에 잘 챙겨 뒀다. 수련회 끝나고 부쳐 드려야지.' },
-      { title: '4월 15일', content: '찬양 연습. 또 의견 충돌.\n\n이번엔 진짜 못 참겠다. 말끝에 목사님이 내 손목을 붙잡으시길래 나도 모르게 뿌리쳤다. 단추 하나가 떨어졌다. 죄송하다는 말도 못 했다.' }
+      { title: '6월 28일', content: '음향 장비 제안서를 또 반려당했다. "지금 있는 걸로 충분하다"는 한마디.\n\n내가 얼마나 고민해서 올린 건데. 목사님은 찬양을 그냥 소리로만 들으시는 것 같다. 답답하다.' },
+      { title: '7월 1일', content: '본가에 들렀다. 부모님 약 떨어졌다고 해서 처방약을 받아 왔다. 고혈압약은 거르면 안 되니까.\n\n약봉투를 가방에 잘 챙겨 뒀다. 수련회 끝나고 부쳐 드려야지.' },
+      { title: '7월 2일', content: '찬양 연습. 또 의견 충돌.\n\n이번엔 진짜 못 참겠다.' }
     ]
   },
   'GRVG-56': {// ( 2부 해금 )
     title: '윤은재 핸드폰',
     description: '',
     detail: '검색기록과 카톡을 확인할 수 있다.',
-    image: '',
     type: '보통',
     person: '윤은재',
     phone: {
@@ -1427,10 +1427,10 @@ export const evidenceMap = {
             {
               name: '막내 종현',
               messages: [
-                { from: 'me', text: '종현아 요즘 요힘빈 보충제 먹으려는데 어때?', time: '오후 1:30' },
-                { from: 'them', text: '심장 안 좋으면 위험하대여, 형 심장 관련 병 없어요?', time: '오후 1:31' },
-                { from: 'me', text: '나는 괜찮지. 넌 괜찮아?', time: '오후 1:34' },
-                { from: 'them', text: '아 저는 멀쩡해요 ㅋㅋㅋ 감사합니다~!', time: '오후 1:35' }
+                { from: 'me', text: '종현아 요즘 요힘빈 보충제 먹으려는데 어때?', time: '전날 오후 1:30' },
+                { from: 'them', text: '심장 안 좋으면 위험하대여, 형 심장 관련 병 없어요?', time: '전날 오후 1:31' },
+                { from: 'me', text: '나는 괜찮지. 넌 괜찮아?', time: '전날 오후 1:34' },
+                { from: 'them', text: '아 저는 멀쩡해요 ㅋㅋㅋ 감사합니다~!', time: '전날 오후 1:35' }
               ]
             },
             {
@@ -1448,9 +1448,9 @@ export const evidenceMap = {
   },
   'GYPV-39': { // 수중 — 운동화 흙
     title: '운동화 흙',
-    description: '',
+    description: '은재 방에서 발견했다.',
     detail: '운동화에 흙이 많이 묻어 있다.',
-    image: '/images/clue-03.svg',
+    image: '/images/은재운동화.jpg',
     type: '보통',
     person: '윤은재'
   },
@@ -1458,21 +1458,20 @@ export const evidenceMap = {
     title: '약봉투',
     description: '은재의 가방에서 발견되었다.',
     detail: '텔미사르탄 (Telmisartan), 발사르탄 (Valsartan) ,트윈스타, 엑스포지, 카르베디롤 등이 적혀 있다. 약국에서 처방받은 약 봉투이다. 약만 보고 어떤 약인지 모르겠다.',
-    image: '/images/처방약.png',
+    image: '/images/처방약.jpg',
     type: '보통',
     person: '윤은재'
   },
   'MZVN-14': {
     title: '은재의 성경책',
-    description: '',
+    description: '윤은재의 가방에서 발견되었다.',
     detail: '밑줄과 포스트잇이 붙은 성경책. 청년부원이면 누구나 가진 평범한 소지품. ',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '윤은재',
     pages: BIBLE_PAGES
   },
   'HWGJ-12': { // CCTV — 은재 산행 출발 (10:05)
-    title: 'CCTV — 은재 산 방향 이동 (10:05)',
+    title: '[CCTV 장면] 10:05 윤은재',
     description: '',
     detail: '10:05경 윤은재가 숙소에서 산(바깥) 방향으로 나갔다.',
     image: '',
@@ -1480,7 +1479,7 @@ export const evidenceMap = {
     person: '윤은재'
   },
   'JSYT-91': { // CCTV — 은재 산행 복귀 (10:35)
-    title: 'CCTV — 은재 산 방향에서 복귀 (10:35)',
+    title: '[CCTV 장면] 10:35 윤은재',
     description: '',
     detail: '10:35경 윤은재가 산 방향에서 돌아와 숙소로 들어갔다.',
     image: '',
@@ -1494,8 +1493,7 @@ export const evidenceMap = {
   'AQFE-59': {
     title: '약봉투 처방전 확인',
     description: '',
-    detail: '은재 부모님의 고혈압약 처방전이다.',
-    image: '/images/clue-03.svg',
+    detail: '감식 결과: 진짜 은재 부모님의 고혈압약 처방전이다.',
     type: '감식',
     person: '윤은재',
     unlockedBy: ['LWFJ-99'],
@@ -1505,7 +1503,7 @@ export const evidenceMap = {
     title: '은재의 파우치',
     description: '은재 가방에서 발견 되었다.',
     detail: '세면 파우치. 칫솔·면도기·선크림 등. ',
-    image: '/images/clue-03.svg',
+    image: '/images/파우치_남.jpg',
     type: '보통',
     person: '윤은재',
     unlockedBy: []
@@ -1514,35 +1512,33 @@ export const evidenceMap = {
     title: '목사와 무슨 일이?',
     description: '',
     detail: '은재 손목의 멍과, 목사님 옷에서 떨어진 단추·구겨진 옷깃. 둘 사이에 가벼운 실랑이가 있었던 것 같다. 은재에게 직접 물어봐야겠다.',
-    image: '/images/clue-03.svg',
+    image: '/images/길잡이.svg',
     type: '특수',
     person: '윤은재',
     unlockedBy: ['IOVT-95', 'EUMM-81']
   },
   'ALLZ-85': {
     title: '은재의 옷가지',
-    description: '은재 가방에서 발견되었다.',
+    description: '은재 가방에서 발견했다.',
     detail: '여벌 옷과 양말이다. ',
-    image: '/images/clue-03.svg',
+    image: '/images/옷가지.jpg',
     type: '보통',
     person: '윤은재',
-    unlockedBy: ['VUDC-50', 'BXCI-79']
   },
 
   // =============================================
-  // 이가현 (증거 인멸 · 신고 10분 지연) — 보통 단서
+  // 이가현 (증거 인멸)— 보통 단서
   // =============================================
   'NBZL-83': { // 지갑 — 클릭해서 내용물 확인 (딸 사진 포함)
     title: '가현의 지갑',
-    description: '',
+    description: '가현의 가방에서 발견되었다.',
     detail: '지갑 속 항목을 눌러 내용물을 확인할 수 있다.',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '이가현',
     wallet: {
       owner: '가현의 지갑',
       items: [
-        { label: '아이 사진', icon: '🧒', image: '/images/phone/daughter.jpg', detail: '귀여운 아이 사진. 가현은 "조카"라고 한다.' },
+        { label: '아이 사진', icon: '🧒', image: '/images/딸.jpg', detail: '귀여운 아이 사진. 가현은 "조카"라고 한다.' },
         { label: '신분증', icon: '🪪', detail: '이가현. 주민등록증.' },
         { label: '체크카드', icon: '💳', detail: '○○은행 체크카드 1장.' },
         { label: '약혼반지', icon: '💍', detail: '약혼반지. 끼지 않고 지갑에 넣어 두었다.' }
@@ -1553,7 +1549,7 @@ export const evidenceMap = {
     title: '손등 긁힌 자국',
     description: '',
     detail: "가현의 손등에 긁힌 자국이 있다.",
-    image: '/images/clue-03.svg',
+    image: '/images/손등긁은자국.jpg',
     type: '보통',
     person: '이가현'
   },
@@ -1561,22 +1557,21 @@ export const evidenceMap = {
     title: '아이가 그린 그림 편지',
     description: '',
     detail: '아이가 그린 그림. 삐뚤빼뚤한 가족 그림으로 글씨는 거의 없다. 조카가 그렸다기엔 묘하게 살갑다.',
-    image: '/images/clue-03.svg',
+    image: '/images/bible/child-letter.svg',
     type: '보통',
     person: '이가현',
     unlockedBy: [],
   },
   'AYMX-96': { // 이가현 다이어리 — 필적 대조용
     title: '이가현의 다이어리',
-    description: '이가현이 적어 온 다이어리. 필적을 살펴볼 수 있다.',
+    description: '가현의 책상 위에서 발견되었다. 적어 온 다이어리로, 필적을 살펴볼 수 있다.',
     detail: '',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '이가현',
     pages: [
-      { title: '4월 6일', content: '민석 씨가 청첩장 시안을 보내왔다. 가을쯤이면 좋겠다고.\n\n우리 아이한테도 이제 곧 아빠가 생긴다. 다섯 살, 말은 어쩜 그리 예쁘게 하는지. 다들 "조카"인 줄 알지만… 언젠간 떳떳하게 말할 날이 오겠지.' },
-      { title: '4월 12일', content: '목사님이 따로 보자고 하셨다. 표정이 무거우셨다.\n\n무슨 말씀을 하시려는 걸까. 가슴이 자꾸 내려앉는다.' },
-      { title: '4월 14일', content: '오늘도 정신없이 바빴다.\n\n그래도 해야 할 일은 또박또박 해두자. …민석 씨 연락이 뜸하다. 전화도 받지 않는다. 누가 무슨 말을 한 걸까. 애써 쌓아 온 것들이 무너지는 것 같다.' }
+      { title: '6월 27일', content: '민석 씨가 청첩장 시안을 보내왔다. 가을쯤이면 좋겠다고.\n\n우리 아이한테도 이제 곧 아빠가 생긴다. 다섯 살, 말은 어쩜 그리 예쁘게 하는지. 다들 "조카"인 줄 알지만… 언젠간 떳떳하게 말할 날이 오겠지.' },
+      { title: '6월 29일', content: '목사님이 따로 보자고 하셨다. 표정이 무거우셨다.\n\n무슨 말씀을 하시려는 걸까. 가슴이 자꾸 내려앉는다.' },
+      { title: '6월 30일', content: '오늘도 정신없이 바빴다.\n\n그래도 해야 할 일은 또박또박 해두자. …민석 씨 연락이 뜸하다. 전화도 받지 않는다. 누가 무슨 말을 한 걸까. 애써 쌓아 온 것들이 무너지는 것 같다.' }
     ]
   },
   'TCGA-87': {
@@ -1595,7 +1590,7 @@ export const evidenceMap = {
           name: '연락처',
           contacts: [
             { name: '김호치 목사', who: '김호치 목사' },
-            { name: '민석❤', who: '약혼자 김민석' },
+            { name: '민석', who: '약혼자 김민석' },
             { name: '사랑 총무', who: '이사랑' },
             { name: '현지 회계', who: '이현지' },
             { name: '종현이', who: '최종현' },
@@ -1625,6 +1620,8 @@ export const evidenceMap = {
           id: 'kakao',
           type: 'kakao',
           name: '카카오톡',
+          // 비대칭 인멸: 「김호치 목사님」 대화방만 통째로 삭제됨(목사 폰엔 0419 복구로 남아 있음).
+          // 톡서랍/복구 비번을 만들지 않는다 — 본체 목록에서 '목사 방 부재'가 단서가 된다.
           chats: [
             {
               name: '김민석',
@@ -1637,13 +1634,29 @@ export const evidenceMap = {
               ]
             },
             {
-              name: '김호치 목사님',
+              name: '엄마',
               messages: [
-                { from: 'me', text: '당신 때문에 이렇게 됐잖아요!', time: '이틀 전' },
-                { from: 'me', text: '대체 무슨 권리로 민석이한테 그런 얘길 해요?', time: '이틀 전' },
-                { from: 'me', text: '책임지세요. 제 인생 다 망가졌어요.', time: '이틀 전' }
+                { from: 'them', text: '가현아, 이번 주말에 집에 와서 밥 먹고 가.', time: '3일 전' },
+                { from: 'me', text: '응 엄마, 수련회 끝나고 갈게.', time: '3일 전' }
+              ]
+            },
+            {
+              name: '청년부 회비',
+              messages: [
+                { from: 'them', text: '회장님, 이번 달 회비 정산표 메일로 보냈어요.', time: '4일 전' },
+                { from: 'me', text: '확인했어요. 감사합니다!', time: '4일 전' }
               ]
             }
+          ]
+        },
+        {
+          id: 'calls',
+          type: 'calls',
+          name: '전화',
+          calls: [
+            { name: '112 (긴급신고)', direction: 'out', time: '13:31', duration: '2분 41초' },
+            { name: '민석', direction: 'out', time: '11:48', duration: '연결 안 됨' },
+            { name: '민석', direction: 'missed', time: '이틀 전' }
           ]
         },
         {
@@ -1661,39 +1674,24 @@ export const evidenceMap = {
     title: '가현의 옷가지',
     description: '가현의 가방에서 발견했다.',
     detail: '여벌 옷과 양말이 있다.',
-    image: '/images/clue-03.svg',
+    image: '/images/옷가지.jpg',
     type: '보통',
     person: '이가현'
   },
-  'YZET-89': { // 공용 게시 — 시신 발견 경위
-    title: '시신 발견 경위',
+  'DVCS-80': { // CCTV — 신고 지연 (코드 끝2자리≠시각, 코드 유지)
+    title: '[CCTV 장면] 13:20 이가현',
     description: '',
-    detail: '"목사님과 할 얘기가 있어서 들렀는데, 이미 쓰러져 계셨어요."',
-    image: '/images/clue-03.svg',
-    type: '보통',
-    person: '이가현'
-  },
-  'DVCS-80': { // CCTV — 신고 지연
-    title: '신고 지연 — 시간 공백',
-    description: '',
-    detail: '목사 방 내부는 안 보이지만, 복도 CCTV에 14:47경 가현이 방 쪽으로 향한 모습이 찍힘. (방 안으로 들어갔는지는 잡히지 않음) 신고(14:58) 시각과의 공백이 커서 의심을 받는다.',
+    detail: '목사 방 내부는 안 보이지만, 복도 CCTV에 13:20경 가현이 방 쪽으로 향한 모습이 찍힘.',
     image: '',
     type: '보통',
     person: '이가현'
   },
-  'TNNK-17': { // 다른 용의자가 진술
-    title: '목사와 냉각된 관계',
+  // LCPE-70(아이 예방접종 수첩) 제거 → 자연스러운 딸 정황(소아과 영수증, 6/28 발행)으로 교체
+  'PEDR-58': {
+    title: '소아과 진료 영수증',
     description: '',
-    detail: '수련회날부터 목사님과 눈도 안 마주 친다고 한다.',
-    image: '/images/clue-03.svg',
-    type: '보통',
-    person: '이가현'
-  },
-  'LCPE-70': {
-    title: '아이 예방접종 수첩',
-    description: '',
-    detail: '가현의 가방에서 나온 5세 아이의 예방접종 수첩. 보호자 란에 "이가현"이 적혀 있다.',
-    image: '/images/clue-03.svg',
+    detail: '가현의 지갑에서 나온 소아과 진료 영수증. "○○소아과의원 · 6월 28일" 발행. 환아 이름 칸은 접혀서 흐릿하고, 보호자 란에 "이가현"이 적혀 있다.',
+    image: '/images/소아과영수증.jpg',
     type: '보통',
     person: '이가현'
   },
@@ -1705,17 +1703,31 @@ export const evidenceMap = {
   'KMRV-41': { // 진행자 수동 부여 — 종현 구두 진술 시 이 코드를 직접 입력시켜 해금 (자동 해금 아님: unlockedBy 비움)
     title: '가현에게 딸이?',
     description: '',
-    detail: "막내 종현의 진술 — 가현에게 딸이 있는 것 같다. 다른 사람들에겐 '조카'라고 해왔다고 한다. 가현에게 직접 물어보자.",
-    image: '/images/clue-03.svg',
+    detail: "종현의 진술 — 가현에게 딸이 있는 것 같다. 다른 사람들에겐 '조카'라고 해왔다고 한다. 가현에게 직접 물어보자.",
+    image: '/images/길잡이.svg',
     type: '특수',
     person: '이가현',
-    unlockedBy: []
+    unlockedBy: [],
+    award: '막내 종현이 가현의 딸 정황(폰 배경사진·지갑 속 아이 사진·소아과 영수증 등)을 보고 진술하면 부여'
+  },
+  // 2-B 수동 부여(unlockedBy 비움) — 비대칭 인멸 입증용 특수 단서.
+  // 부여 조건(운영자 판단): ① 목사 폰(LWUY-33) 톡서랍 0419 복구로 '이가현' 대화 확인 +
+  //   ② 가현 폰(TCGA-87) 카톡 목록에 '목사' 대화방이 없음을 확인 → 둘 다 제시하면 코드 공개.
+  //   한쪽만으로는 부여하지 않는다. (포렌식/삭제로그 직접단서는 채택 안 함)
+  'DISC-11': {
+    title: '사라진 대화방',
+    description: '',
+    detail: '목사님 폰엔 가현과 나눈 대화가 그대로 남아 있는데, 가현 폰엔 그 대화방만 통째로 사라졌다. 한쪽만 지워진 것이다 — 13:20 진입과 13:31 신고 사이 11분 공백과 맞물린다. 가현에게 직접 물어보자.',
+    image: '/images/길잡이.svg',
+    type: '특수',
+    person: '이가현',
+    unlockedBy: [],
+    award: '① 목사 폰(0419 복구) 가현 대화 + ② 가현 폰 목사 대화방 부재 — 둘 다 제시하면 부여(한쪽만으론 안 됨)'
   },
   'DZPL-78': {
     title: '가현의 성경책',
-    description: '',
+    description: '가현의 가방에서 발견되었다.',
     detail: '밑줄과 포스트잇이 붙은 성경책. 페이지를 넘기다 보면 사이에 아이가 그린 그림 한 장이 끼워져 있다. 삐뚤빼뚤 그린 가족 그림으로, 글씨는 거의 없다.',
-    image: '/images/clue-03.svg',
     type: '보통',
     person: '이가현',
     unlockedBy: [],
@@ -1723,9 +1735,9 @@ export const evidenceMap = {
   },
   'KTGF-02': {
     title: '가현의 파우치',
-    description: '',
+    description: '가현의 가방에서 발견되었다.',
     detail: '화장품 파우치. 스킨·로션·쿠션 등 일상 화장품. ',
-    image: '/images/clue-03.svg',
+    image: '/images/파우치_여.jpg',
     type: '보통',
     person: '이가현',
     
@@ -1811,7 +1823,7 @@ export const suspects = [
 
 // CCTV(SIAH-72) 타임라인에서 획득되는 단서 코드 목록 — 'CCTV' 전용 탭 필터용
 export const cctvClueCodes = Array.from(new Set(
-  (evidenceMap['SIAH-72']?.cctv?.timeline || []).flatMap((t) => (t.people || []).map((p) => p.unlocks))
+  (evidenceMap['SIAH-72']?.cctv?.timeline || []).flatMap((t) => (t.people || []).map((p) => p.unlocks).filter(Boolean))
 ));
 
 // 운영자(테스트) 모드 마스터 코드
