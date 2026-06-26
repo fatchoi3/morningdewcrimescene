@@ -210,6 +210,15 @@ function App() {
     const nextDone = { ...tapDone, [code]: true };
     setTapDone(nextDone);
     saveTapDone(nextDone);
+    // 비대칭 인멸 자동 해금(DISC-11): 목사 폰 톡서랍(0419) 복구 열람 + 가현 폰 카톡 열람 두 흔적이 모이면 해금
+    if (nextDone['LWUY-33:톡서랍'] && nextDone['TCGA-87:kakao']) {
+      const { added } = addCodes(['DISC-11']);
+      if (added.length) {
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        setToast(`특수 단서 해금: ${evidenceMap['DISC-11']?.title || '사라진 대화방'}`);
+        toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+      }
+    }
   };
 
   // 초기화 확인 후 실제 데이터를 비움 (tapReveal 완료 플래그도 함께 삭제)

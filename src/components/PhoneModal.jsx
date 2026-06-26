@@ -119,7 +119,7 @@ function BrowserApp({ app }) {
 /* 메시지(카카오톡 / 문자) 앱 — 대화방 목록 → 대화 내용
  * 카카오톡: deleted:true 대화방은 잠겨 있고, '톡서랍'으로 복구해야 열린다.
  *   - app.recoverPassword 있으면 비밀번호 입력, 없으면 확인(예)만으로 복구. */
-function MessagesApp({ app, variant }) {
+function MessagesApp({ app, variant, onView, ownerCode }) {
   const [openIdx, setOpenIdx] = useState(null);
   const [drawer, setDrawer] = useState(false);   // 톡서랍 패널 열림
   const [recovered, setRecovered] = useState(false);
@@ -140,6 +140,8 @@ function MessagesApp({ app, variant }) {
     setDrawer(false);
     setErr('');
     setPw('');
+    // 톡서랍 복구(0419 등) 열람 흔적 기록 — 목사 폰 가현 대화 확인 → DISC-11 자동 해금 조건
+    if (onView && ownerCode) onView(`${ownerCode}:톡서랍`);
   };
 
   // 톡서랍 패널
@@ -309,7 +311,7 @@ function PhotosApp({ app }) {
   );
 }
 
-function PhoneModal({ item, onClose }) {
+function PhoneModal({ item, onClose, onView }) {
   const [appId, setAppId] = useState(null);
 
   useEffect(() => {
@@ -325,6 +327,11 @@ function PhoneModal({ item, onClose }) {
 
   const apps = item.phone.apps || [];
   const current = apps.find((a) => a.id === appId) || null;
+
+  // 카카오톡 앱 열람 흔적 기록 (예: 가현 폰 목사 대화방 부재 확인 → DISC-11 자동 해금 조건)
+  useEffect(() => {
+    if (current && current.type === 'kakao' && onView) onView(`${item.code}:kakao`);
+  }, [appId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -367,7 +374,7 @@ function PhoneModal({ item, onClose }) {
                 </div>
                 <div className="phone-app-body">
                   {current.type === 'browser' && <BrowserApp app={current} />}
-                  {current.type === 'kakao' && <MessagesApp app={current} variant="kakao" />}
+                  {current.type === 'kakao' && <MessagesApp app={current} variant="kakao" onView={onView} ownerCode={item.code} />}
                   {current.type === 'sms' && <MessagesApp app={current} variant="sms" />}
                   {current.type === 'photos' && <PhotosApp app={current} />}
                   {current.type === 'contacts' && <ContactsApp app={current} />}

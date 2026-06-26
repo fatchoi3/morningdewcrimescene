@@ -324,7 +324,7 @@ function EvidenceModal({ item, evidence, onCollect, onClose, tapDone, onTapCompl
   if (item.schedule) return <ScheduleModal item={item} onClose={onClose} />;
   if (item.handwriting) return <HandwritingModal item={item} evidence={evidence} onClose={onClose} />;
   if (item.type === '감식') return <GamsikModal item={item} onClose={onClose} adminMode={adminMode} tapDone={tapDone} onTapComplete={onTapComplete} />;
-  if (item.phone) return <PhoneModal item={item} onClose={onClose} />;
+  if (item.phone) return <PhoneModal item={item} onClose={onClose} onView={onTapComplete} />;
   if (item.pages) return <ManualModal item={item} onClose={onClose} onCollect={onCollect} />;
   return <StandardModal item={item} onClose={onClose} tapDone={tapDone} onTapComplete={onTapComplete} />;
 }

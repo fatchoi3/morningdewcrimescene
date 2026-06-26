@@ -24,7 +24,10 @@ function method(c) {
   if (c.type === '감식') return { kind: 'op', label: '운영 · 검식 비번' };
   if (c.type === '특수') {
     const auto = (c.unlockedBy && c.unlockedBy.length) || (c.unlockedByAny && c.unlockedByAny.length);
-    return auto ? { kind: 'app', label: '앱 · 자동 해금' } : { kind: 'op', label: '운영 · 코드 배포' };
+    if (auto) return { kind: 'app', label: '앱 · 자동 해금' };
+    if (c.viewUnlock) return { kind: 'app', label: '앱 · 자동(열람 시)' };  // 특정 화면 열람 흔적으로 자동 해금
+    if (c.award) return { kind: 'qr', label: '운영자 휴대 카드(조건부)' };  // 운영자가 들고 다니다 조건 시 제시
+    return { kind: 'op', label: '운영 · 코드 배포' };
   }
   if (!(c.title || '').trim()) return { kind: 'skip', label: '' };
   return { kind: 'qr', label: 'QR 부착' };
@@ -33,6 +36,7 @@ function method(c) {
 // QR 부착 단서의 세부 분류 + 붙일 물건/위치
 function subtype(c) {
   if (OPERATOR_QR[c.code]) return { sub: OPERATOR_QR[c.code].sub, loc: OPERATOR_QR[c.code].loc };
+  if (c.type === '특수' && c.award) return { sub: '운영자 카드', loc: `운영자 휴대 — ${c.award}` };
   const t = c.title || '';
   if (/손목시계/.test(t)) return { sub: '소품(착용)', loc: `${c.person} 배우 착용 — 심문 중 제시` };
   if (/멍|긁힌 자국/.test(t)) return { sub: '신체 흔적', loc: `${c.person} 배우 분장 + QR 카드` };
@@ -44,7 +48,7 @@ function subtype(c) {
   return { sub: '소품', loc: `${c.person} 가방/방` };
 }
 
-const SUB_ORDER = ['소품', '소품(착용)', '현장 표식', '신체 흔적', '진술/안내', '안내'];
+const SUB_ORDER = ['소품', '소품(착용)', '현장 표식', '신체 흔적', '진술/안내', '안내', '운영자 카드'];
 
 export async function genQRDocs() {
   const qrClues = [];
@@ -78,14 +82,14 @@ export async function genQRDocs() {
 .sub{font-size:7.5pt;font-weight:800;border-radius:8px;padding:1px 7px}
 .s-소품{background:#e8f8f2;color:#0F6E56}.s-소품\\(착용\\){background:#e8f8f2;color:#0F6E56}
 .s-현장{background:#fdeaea;color:#A32D2D}.s-신체{background:#fff3e2;color:#9a5b00}
-.s-진술{background:#eef;color:#3a3a8a}.s-안내{background:#f1f0ec;color:#777}
+.s-진술{background:#eef;color:#3a3a8a}.s-안내{background:#f1f0ec;color:#777}.s-운영{background:#1a1a1a;color:#ffd24a}
 .tip{background:#f0f8ff;border:1px solid #b3d9ff;border-radius:8px;padding:10px 14px;margin:8px 0;font-size:8.5pt;color:#0C447C}
 .stat{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
 .stat .s{background:#f4f1e8;border:1px solid #e2d9bf;border-radius:8px;padding:7px 12px;font-size:9pt}
 .stat .s b{font-size:12pt;color:#7a5a00}
 `;
   const subBadge = (s) => {
-    const key = s.startsWith('소품') ? '소품' : s === '현장 표식' ? '현장' : s === '신체 흔적' ? '신체' : s === '진술/안내' ? '진술' : '안내';
+    const key = s.startsWith('소품') ? '소품' : s === '현장 표식' ? '현장' : s === '신체 흔적' ? '신체' : s === '진술/안내' ? '진술' : s === '운영자 카드' ? '운영' : '안내';
     return `<span class="sub s-${key}">${esc(s)}</span>`;
   };
   const personPill = (p) => `<span class="pill" style="background:${PERSON_COLOR[p] || '#666'}">${esc(p)}</span>`;
@@ -127,6 +131,7 @@ export async function genQRDocs() {
   // ── ② 인쇄용 QR 그리드 ────────────────────────────
   // 공개 순서(게임 진행 단계) — 인쇄시트를 단계 → 인물 순으로 묶는다.
   const phaseOf = (c) => {
+    if (c.type === '특수' && c.award) return 4;  // 운영자 휴대 — 조건부 공개 카드
     if (c.reveal === '시작브리핑') return 0;  // 시작 세트 — 인물 무관하게 시작 단계로
     if (OPERATOR_QR[c.code]) return OPERATOR_QR[c.code].phase;  // 부검: 1차=시작, 2차=중간점검
     if (c.person === '공용') return 0;     // 시작/상시 (게임 설명서)
@@ -139,6 +144,7 @@ export async function genQRDocs() {
     { n: 1, label: '1부 — 용의자 소지품 · 진술 · 현장 흔적 (핸드폰 금지)' },
     { n: 2, label: '중간 점검 — 목사님 방(현장) 개방' },
     { n: 3, label: '2부 — 용의자 핸드폰 공개' },
+    { n: 4, label: '운영자 휴대 — 조건부 공개 카드 (조건 충족 시 제시)' },
   ];
 
   const gridCSS = `
