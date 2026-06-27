@@ -18,7 +18,9 @@ const OPERATOR_QR = {
 
 // 획득 방식: qr(실물 부착) / app(앱에서 획득) / op(운영자 처리) / skip(빈 슬롯)
 function method(c) {
-  if (c.code === 'SIAH-72' || cctvSet.has(c.code)) return { kind: 'app', label: '앱 · CCTV 열람대' };
+  // CCTV 개별 장면 단서는 앱(열람대)에서 획득 — QR 불필요.
+  // 단, 열람대 진입점(SIAH-72) 자체는 참가자가 스캔해야 하므로 실물 QR로 인쇄한다.
+  if (cctvSet.has(c.code)) return { kind: 'app', label: '앱 · CCTV 열람대' };
   if (c.handwriting) return { kind: 'app', label: '앱 · 필적 대조' };
   if (OPERATOR_QR[c.code]) return { kind: 'qr', label: 'QR 게시(운영자)' };
   if (c.type === '감식') return { kind: 'op', label: '운영 · 검식 비번' };
@@ -36,6 +38,7 @@ function method(c) {
 // QR 부착 단서의 세부 분류 + 붙일 물건/위치
 function subtype(c) {
   if (OPERATOR_QR[c.code]) return { sub: OPERATOR_QR[c.code].sub, loc: OPERATOR_QR[c.code].loc };
+  if (c.code === 'SIAH-72') return { sub: '안내', loc: 'CCTV 열람대(공용) — 스캔 시 열람 화면 진입' };
   if (c.type === '특수' && c.award) return { sub: '운영자 카드', loc: `운영자 휴대 — ${c.award}` };
   const t = c.title || '';
   if (/손목시계/.test(t)) return { sub: '소품(착용)', loc: `${c.person} 배우 착용 — 심문 중 제시` };

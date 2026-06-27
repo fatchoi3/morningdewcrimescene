@@ -219,6 +219,16 @@ function App() {
         toastTimerRef.current = setTimeout(() => setToast(null), 4000);
       }
     }
+    // 자매 관계 자동 해금(SIST-22): 사랑 폰 톡서랍(0302) + 현지 폰 톡서랍(0815)을 양쪽 다 복구해
+    //   서로의 교차 대화를 확인하면 해금 (한쪽만으로는 부여하지 않음)
+    if (nextDone['QIVS-92:톡서랍'] && nextDone['HUOX-80:톡서랍']) {
+      const { added } = addCodes(['SIST-22']);
+      if (added.length) {
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        setToast(`특수 단서 해금: ${evidenceMap['SIST-22']?.title || '둘은 무슨 사이?'}`);
+        toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+      }
+    }
   };
 
   // 초기화 확인 후 실제 데이터를 비움 (tapReveal 완료 플래그도 함께 삭제)

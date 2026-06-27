@@ -77,12 +77,75 @@ function CallsApp({ app }) {
   );
 }
 
-/* 인터넷(브라우저) 앱 — 검색 기록 목록 → 검색 결과 페이지 */
+/* 교단 수료증 진위 조회 — 발급번호를 입력하면 교단 DB 등록 여부를 조회한다.
+ * 정답(수료증 사진의 발급번호)을 입력해야 '위조 의심' 판정이 드러난다. */
+function CertLookup({ lookup, onBack }) {
+  const [val, setVal] = useState('');
+  const [result, setResult] = useState(null);
+  const [err, setErr] = useState('');
+  const norm = (s) => String(s).trim().replace(/\s/g, '').toUpperCase();
+
+  const submit = () => {
+    if (!val.trim()) { setErr('발급번호를 입력하세요.'); setResult(null); return; }
+    if (norm(val) === norm(lookup.answer)) {
+      setResult(lookup.result);
+      setErr('');
+    } else {
+      setResult(null);
+      setErr(lookup.notFound || '조회되지 않습니다. 수료증에 적힌 발급번호를 정확히 입력해 주세요.');
+    }
+  };
+
+  return (
+    <div className="browser">
+      <div className="browser-bar">
+        <button className="browser-back" onClick={onBack} aria-label="뒤로">←</button>
+        <span className="browser-url">🔒 {lookup.url || lookup.site}</span>
+      </div>
+      <div className="browser-page">
+        <h3 className="browser-result-title">{lookup.site}</h3>
+        {lookup.desc && <p className="browser-result-text">{lookup.desc}</p>}
+        <div className="cert-form">
+          <label className="cert-label">{lookup.label || '발급번호'}</label>
+          <div className="cert-row">
+            <input
+              className="cert-input"
+              value={val}
+              placeholder={lookup.placeholder || ''}
+              autoComplete="off" autoCorrect="off" autoCapitalize="characters" spellCheck={false}
+              data-1p-ignore data-lpignore="true"
+              onChange={(e) => { setVal(e.target.value); setErr(''); }}
+              onKeyDown={(e) => e.key === 'Enter' && submit()}
+            />
+            <button className="cert-btn" type="button" onClick={submit}>조회</button>
+          </div>
+        </div>
+        {err && <p className="cert-err">{err}</p>}
+        {result && (
+          <div className="cert-result">
+            <div className="cert-result-title">⚠ {result.title}</div>
+            <ul className="cert-result-lines">
+              {result.lines.map((ln, i) => <li key={i}>{ln}</li>)}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* 인터넷(브라우저) 앱 — 검색 기록 목록 → 검색 결과 페이지. app.lookup 있으면 진위조회 북마크 노출 */
 function BrowserApp({ app }) {
   const [openIdx, setOpenIdx] = useState(null);
+  const [lookupOpen, setLookupOpen] = useState(false);
+  const searches = app.searches || [];
+
+  if (lookupOpen && app.lookup) {
+    return <CertLookup lookup={app.lookup} onBack={() => setLookupOpen(false)} />;
+  }
 
   if (openIdx !== null) {
-    const s = app.searches[openIdx];
+    const s = searches[openIdx];
     return (
       <div className="browser">
         <div className="browser-bar">
@@ -104,7 +167,14 @@ function BrowserApp({ app }) {
         <span className="browser-url">🔍 최근 검색 기록</span>
       </div>
       <div className="browser-history">
-        {app.searches.map((s, i) => (
+        {app.lookup && (
+          <button className="browser-search-item browser-search-item--bookmark" onClick={() => setLookupOpen(true)}>
+            <span className="browser-search-icon">🔖</span>
+            <span className="browser-search-q">{app.lookup.site}</span>
+            <span className="browser-search-go">›</span>
+          </button>
+        )}
+        {searches.map((s, i) => (
           <button key={i} className="browser-search-item" onClick={() => setOpenIdx(i)}>
             <span className="browser-search-icon">🔍</span>
             <span className="browser-search-q">{s.query}</span>
@@ -236,7 +306,7 @@ function MessagesApp({ app, variant, onView, ownerCode }) {
               <span className="msg-avatar">{locked ? '🔒' : (c.name?.[0] ?? '?')}</span>
               <span className="msg-chat-info">
                 <span className="msg-chat-name">
-                  {c.name}{c.deleted ? (recovered ? ' (복구됨)' : ' (삭제됨)') : ''}
+                  {locked ? '알 수 없음 (삭제됨)' : `${c.name}${c.deleted && recovered ? ' (복구됨)' : ''}`}
                 </span>
                 <span className="msg-chat-last">
                   {locked

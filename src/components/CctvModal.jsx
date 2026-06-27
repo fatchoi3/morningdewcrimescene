@@ -71,6 +71,66 @@ function markerMotion(arrow, meet) {
   return { d, dur: Math.min(9, Math.max(3, Math.round(total * 10) / 10)), keyPoints: '0;1;1', keyTimes: `0;${t1};1` };
 }
 
+/**
+ * CCTV 사각(목사방) 가시성.
+ * 카메라 시야 콘은 가로 복도(y≈141)뿐 — 우측 세로 통로 위쪽 끝(목사방)은 잡히지 않는다.
+ *  · 복도/방문 앞(x ≤ VICTIM_X) → 항상 보임
+ *  · 세로 통로라도 복도 합류부(y ≥ VIS_Y) → 보임 (※ 1층 방향 동선은 그대로 포착)
+ *  · 목사방 쪽(위)으로 올라갈수록 → 스르르 사라짐, 내려오면 스르륵 다시 보임
+ */
+const VICTIM_X = 334;   // 세로 통로(목사방·1층) 시작 x
+const VIS_Y = 124;      // 복도 상단(시야 콘 끝) — 이보다 아래는 보임
+const HID_Y = 92;       // 목사방 입구 — 이보다 위는 완전히 사각
+function opacityAt(x, y) {
+  if (x <= VICTIM_X) return 1;          // 카메라 시야(복도·방문 앞)
+  if (y >= VIS_Y) return 1;             // 통로 합류부 — 1층 방향 포함 보임
+  if (y <= HID_Y) return 0;             // 목사방 안쪽 — 사각
+  return Math.round(((y - HID_Y) / (VIS_Y - HID_Y)) * 100) / 100;  // 진입로 — 스르르
+}
+
+/**
+ * blindFade — 마커가 동선을 따라 움직이는 동안의 opacity 애니메이션(values/keyTimes)을 만든다.
+ * markerMotion과 같은 시간축(dur·keyTimes·keyPoints)을 공유하도록, 시간 tau를 촘촘히 샘플링해
+ * 그 순간의 경로 위치(x,y)를 구하고 opacityAt으로 투명도를 매긴다(왕복·만남점 모두 자연 대응).
+ */
+function blindFade(pts, m) {
+  const kp = m.keyPoints.split(';').map(Number);
+  const kt = m.keyTimes.split(';').map(Number);
+  let total = 0; const cum = [0];
+  for (let i = 1; i < pts.length; i++) { total += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); cum.push(total); }
+  const frac = cum.map((d) => (total ? d / total : 0));
+  const posAt = (f) => {
+    if (f <= 0) return pts[0];
+    if (f >= 1) return pts[pts.length - 1];
+    for (let i = 1; i < pts.length; i++) {
+      if (f <= frac[i]) {
+        const t = (f - frac[i - 1]) / ((frac[i] - frac[i - 1]) || 1);
+        return { x: pts[i - 1].x + (pts[i].x - pts[i - 1].x) * t, y: pts[i - 1].y + (pts[i].y - pts[i - 1].y) * t };
+      }
+    }
+    return pts[pts.length - 1];
+  };
+  const tToFrac = (tau) => {
+    if (tau <= kt[0]) return kp[0];
+    for (let i = 1; i < kt.length; i++) {
+      if (tau <= kt[i]) {
+        const t = (tau - kt[i - 1]) / ((kt[i] - kt[i - 1]) || 1);
+        return kp[i - 1] + (kp[i] - kp[i - 1]) * t;
+      }
+    }
+    return kp[kp.length - 1];
+  };
+  const N = 36;
+  const values = []; const times = [];
+  for (let s = 0; s <= N; s++) {
+    const tau = s / N;
+    const pos = posAt(tToFrac(tau));
+    values.push(opacityAt(pos.x, pos.y));
+    times.push(Math.round(tau * 1000) / 1000);
+  }
+  return { values: values.join(';'), keyTimes: times.join(';') };
+}
+
 /* 2층 평면도(고정 구조) + 현재 컷 인물 마커 + 동선 화살표 */
 function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
   return (
@@ -83,6 +143,16 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
         <marker id="cctvArrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto-start-reverse">
           <path d="M0,0 L7,3 L0,6 Z" fill="#ffd24a" />
         </marker>
+        {/* 동선 페이드 마스크 — 목사방 진입로(우측 세로통로 위쪽)로 갈수록 점선이 흐려진다.
+            복도·1층 방향(y ≥ 124)은 그대로 선명, 목사방 안쪽(y ≤ 92)은 사라져 진입 여부를 숨긴다. */}
+        <linearGradient id="cctvFadeGrad" x1="0" y1="92" x2="0" y2="124" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#000" />
+          <stop offset="1" stopColor="#fff" />
+        </linearGradient>
+        <mask id="cctvFade" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="280">
+          <rect x="0" y="0" width="400" height="280" fill="#fff" />
+          <rect x="334" y="0" width="66" height="280" fill="url(#cctvFadeGrad)" />
+        </mask>
       </defs>
 
       {/* CCTV 시야 콘 */}
@@ -136,17 +206,20 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
       <circle cx="47" cy="141" r="3.5" fill="#e6e9ef" />
       <text x="47" y="166" className="cctv-map-cam">CCTV</text>
 
-      {/* 동선 화살표 (현재 컷) — 복도를 따라 꺾인 경로. meet면 만남점 경유, round면 양끝 표시 */}
-      {people.map((p, i) => p.arrow && (
-        <polyline
-          key={`a${i}`}
-          points={routePoints(p.arrow, meet).map((pt) => `${pt.x},${pt.y}`).join(' ')}
-          fill="none" stroke="#ffd24a" strokeWidth="2.5" strokeDasharray="6 4"
-          strokeLinejoin="round" strokeLinecap="round"
-          markerEnd="url(#cctvArrowHead)" opacity="0.9"
-          {...(p.arrow.round ? { markerStart: 'url(#cctvArrowHead)' } : {})}
-        />
-      ))}
+      {/* 동선 화살표 (현재 컷) — 복도를 따라 꺾인 경로. meet면 만남점 경유, round면 양끝 표시.
+          목사방에 가까워질수록 점선이 그라데이션으로 흐려져, 방에 들어갔는지 알 수 없다. */}
+      <g mask="url(#cctvFade)">
+        {people.map((p, i) => p.arrow && (
+          <polyline
+            key={`a${i}`}
+            points={routePoints(p.arrow, meet).map((pt) => `${pt.x},${pt.y}`).join(' ')}
+            fill="none" stroke="#ffd24a" strokeWidth="2.5" strokeDasharray="6 4"
+            strokeLinejoin="round" strokeLinecap="round"
+            markerEnd="url(#cctvArrowHead)" opacity="0.9"
+            {...(p.arrow.round ? { markerStart: 'url(#cctvArrowHead)' } : {})}
+          />
+        ))}
+      </g>
 
       {/* 인물 마커 (현재 컷) — arrow가 있으면 동선 경로를 따라 이동.
           컷이 바뀌면 key(cutKey)가 달라져 remount → 애니메이션이 동선 시작점부터 다시 시작. */}
@@ -166,18 +239,24 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
         const clickProps = isScene ? { 'aria-hidden': 'true' } : { onClick: () => onPick(p), role: 'button' };
         if (p.arrow) {
           const m = markerMotion(p.arrow, meet);
+          const fade = blindFade(routePoints(p.arrow, meet), m);
           return (
             <g key={`${cutKey}-${i}`} className={cls} {...clickProps}>
               <animateMotion
                 dur={`${m.dur}s`} repeatCount="indefinite" calcMode="linear"
                 keyPoints={m.keyPoints} keyTimes={m.keyTimes} path={m.d}
               />
+              {/* 목사방 쪽으로 가면 스르르 사라지고, 복도로 돌아오면 다시 보임 (동선과 같은 시간축) */}
+              <animate
+                attributeName="opacity" dur={`${m.dur}s`} repeatCount="indefinite" calcMode="linear"
+                keyTimes={fade.keyTimes} values={fade.values}
+              />
               {inner}
             </g>
           );
         }
         return (
-          <g key={`${cutKey}-${i}`} className={cls} transform={`translate(${p.x}, ${p.y})`} {...clickProps}>
+          <g key={`${cutKey}-${i}`} className={cls} transform={`translate(${p.x}, ${p.y})`} opacity={opacityAt(p.x, p.y)} {...clickProps}>
             {inner}
           </g>
         );
