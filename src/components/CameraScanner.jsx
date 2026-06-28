@@ -57,14 +57,27 @@ function CameraScanner({ gameActive, onScan, externalMessage }) {
       return;
     }
 
-    // 현재 비디오 프레임을 canvas에 그려 픽셀 데이터를 얻음
+    // 화면의 중앙 가이드 박스(.scan-guide)에 해당하는 영역만 잘라 분석한다.
+    // 뷰포트는 4:3, 비디오는 object-fit:cover로 채워지므로 cover 보정을 거쳐 같은 영역을 계산.
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    const VIEW_ASPECT = 4 / 3;      // .camera-viewport aspect-ratio와 일치
+    const GUIDE_RATIO = 0.52;       // .scan-guide width(뷰포트 너비의 52%)와 일치
+    // cover로 뷰포트에 실제로 보이는 비디오 영역(visW × visH)
+    const visW = (vw / vh >= VIEW_ASPECT) ? vh * VIEW_ASPECT : vw;
+    // 가이드 박스(정사각)의 한 변 = 보이는 폭의 52% → 비디오 픽셀 기준 크롭 영역
+    const side = Math.round(visW * GUIDE_RATIO);
+    const sx = Math.round((vw - side) / 2);
+    const sy = Math.round((vh - side) / 2);
+
+    // 잘라낸 중앙 영역만 canvas에 그려 픽셀 데이터를 얻음
     const ctx = canvas.getContext('2d');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.width = side;
+    canvas.height = side;
+    ctx.drawImage(video, sx, sy, side, side, 0, 0, side, side);
 
     // jsQR로 픽셀 데이터를 분석해 QR 코드 디코딩 시도
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, side, side);
     const code = jsQR(imageData.data, imageData.width, imageData.height, {
       inversionAttempts: 'dontInvert' // 색상 반전 시도 생략 → 속도 향상
     });

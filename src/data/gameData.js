@@ -711,6 +711,14 @@ export const evidenceMap = {
     type: '보통',
     person: '목사'
   },
+  'IHKX-61': { // 현장(목사 방) — 베개
+    title: '베개',
+    description: '목사님 방에서 발견되었다.',
+    detail: '목사님 배 위에 놓여 있었다.',
+    image: '/images/베개.png',
+    type: '보통',
+    person: '목사'
+  },
 
   // =============================================
   // 이사랑 (공범 — 요힘빈 라벨 교체) — 보통 단서
