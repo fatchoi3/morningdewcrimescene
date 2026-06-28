@@ -14,6 +14,8 @@ const cctvSet = new Set(cctvClueCodes);
 // (2차 부검=중간 점검. 1차 부검은 BRIF-00 시작 브리핑 묶음으로 통합됨. 감식 비번·길잡이 트리거 단서는 제외)
 const OPERATOR_QR = {
   'LONS-62': { sub: '진술/안내', loc: '운영자 게시 — 중간 점검 때 공개', phase: 2 },
+  // 통 2차 특수 — 진행자 수동 해금. QR로 게시/배포하고, 스캔 시 앱에서 필적 대조 미니게임으로 진입.
+  'TUBE-22': { sub: '운영자 카드', loc: '운영자 휴대 — 라벨 필적 의심 단계에서 제시', phase: 3 },
 };
 
 // 획득 방식: qr(실물 부착) / app(앱에서 획득) / op(운영자 처리) / skip(빈 슬롯)
@@ -21,8 +23,9 @@ function method(c) {
   // CCTV 개별 장면 단서는 앱(열람대)에서 획득 — QR 불필요.
   // 단, 열람대 진입점(SIAH-72) 자체는 참가자가 스캔해야 하므로 실물 QR로 인쇄한다.
   if (cctvSet.has(c.code)) return { kind: 'app', label: '앱 · CCTV 열람대' };
-  if (c.handwriting) return { kind: 'app', label: '앱 · 필적 대조' };
+  // 운영자 게시 QR이 지정된 단서는 (필적 대조가 있더라도) 실물 QR로 인쇄 — 스캔 시 앱에서 미니게임 진입.
   if (OPERATOR_QR[c.code]) return { kind: 'qr', label: 'QR 게시(운영자)' };
+  if (c.handwriting) return { kind: 'app', label: '앱 · 필적 대조' };
   if (c.type === '감식') return { kind: 'op', label: '운영 · 검식 비번' };
   if (c.type === '특수') {
     const auto = (c.unlockedBy && c.unlockedBy.length) || (c.unlockedByAny && c.unlockedByAny.length);
