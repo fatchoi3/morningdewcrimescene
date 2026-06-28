@@ -1764,13 +1764,6 @@ export const evidenceMap = {
                 { from: 'me', text: '응 엄마, 수련회 끝나고 갈게.', time: '3일 전' }
               ]
             },
-            {
-              name: '청년부 회비',
-              messages: [
-                { from: 'them', text: '회장님, 이번 달 회비 정산표 메일로 보냈어요.', time: '4일 전' },
-                { from: 'me', text: '확인했어요. 감사합니다!', time: '4일 전' }
-              ]
-            }
           ]
         },
         {
@@ -1781,14 +1774,6 @@ export const evidenceMap = {
             { name: '112 (긴급신고)', direction: 'out', time: '13:31', duration: '2분 41초' },
             { name: '민석', direction: 'out', time: '11:48', duration: '연결 안 됨' },
             { name: '민석', direction: 'missed', time: '이틀 전' }
-          ]
-        },
-        {
-          id: 'photos',
-          type: 'photos',
-          name: '사진',
-          photos: [
-            { caption: '잠금화면 — 어린 딸과 볼을 맞대고 찍은 사진.', image: '/images/phone/daughter.jpg' }
           ]
         }
       ]
