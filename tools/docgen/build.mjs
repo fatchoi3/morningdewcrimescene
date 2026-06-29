@@ -10,6 +10,7 @@ import { genAllRefSheets } from './genRefSheets.mjs';
 import { genPlaceGuide } from './genPlace.mjs';
 import { genTruth } from './genTruth.mjs';
 import { genQRDocs } from './genQR.mjs';
+import { genResultSheet } from './genResult.mjs';
 import { genSlidesPptx } from './genSlides.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -26,6 +27,7 @@ function marginFor(name) {
   if (name.startsWith('이미지생성')) return M(12, 12, 12, 12);
   if (name.startsWith('QR_인쇄시트')) return M(8, 8, 8, 8);
   if (name.startsWith('QR_')) return M(14, 14, 16, 14);
+  if (name.startsWith('결과제출지')) return M(8, 8, 8, 8);
   return M(14, 14, 14, 14);
 }
 
@@ -34,7 +36,7 @@ const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 async function main() {
   const htmlOnly = process.argv.includes('--html');
 
-  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth(), ...(await genQRDocs())];
+  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth(), ...(await genQRDocs()), genResultSheet()];
 
   mkdirSync(HTML_DIR, { recursive: true });
   for (const d of docs) writeFileSync(join(HTML_DIR, d.filename), d.html, 'utf8');
@@ -78,7 +80,7 @@ async function main() {
   for (const d of docs) {
     const pdfName = d.filename.replace(/\.html$/, '.pdf');
     await page.goto('file:///' + join(HTML_DIR, d.filename).replace(/\\/g, '/'), { waitUntil: 'networkidle0', timeout: 30000 });
-    await page.pdf({ path: join(PDF_DIR, pdfName), format: 'A4', printBackground: true, margin: marginFor(d.filename) });
+    await page.pdf({ path: join(PDF_DIR, pdfName), format: 'A4', landscape: d.filename.startsWith('결과제출지'), printBackground: true, margin: marginFor(d.filename) });
     console.log('  PDF:', pdfName);
   }
   await browser.close();

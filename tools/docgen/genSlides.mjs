@@ -1,7 +1,6 @@
-// 게임 진행용 슬라이드(.pptx) 생성기.
-//   운영자가 빔프로젝터로 띄우며 진행하는 덱.
-//   피해자·용의자(웹 인물 이미지)·진행 단계·게임 방법은 gameData에서 자동 파생.
-//   진행 단계 상세는 '게임 설명서'(LSUX-91) 페이지 내용을 그대로 인용 → 앱과 동기화.
+// 게임 진행용 슬라이드(.pptx) 생성기 — 참가자용(빔프로젝터로 띄워 보여주는 화면).
+//   피해자·용의자(웹 인물 이미지)·핸드폰 QR은 gameData에서 자동 파생.
+//   운영자 전용 지시 슬라이드는 넣지 않는다(참가자 시점). 조 이름은 TEAMS 상수.
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -103,79 +102,140 @@ function personImage(pptx, slide, webPath, name, color, x, y, w, h) {
   }
 }
 
+// 6개 조 (조 인원·편성은 별도 공지)
+const TEAMS = ['원영조', '민경조', '재헌조', '도현조', '정혁조', '예림조'];
+
 export async function genSlidesPptx(outPath) {
   const pptx = new pptxgen();
   pptx.layout = 'LAYOUT_WIDE';      // 13.33 x 7.5 inch
   pptx.author = 'Morning Dew Crime Scene';
-  pptx.title = '새벽이슬 크라임씬 — 게임 진행';
+  pptx.title = '새벽이슬 크라임씬 — 참가자 가이드';
 
   const webQr = await QRCode.toDataURL(SITE_URL, { margin: 1, width: 900, errorCorrectionLevel: 'M' });
-  const briefingQr = await QRCode.toDataURL('BRIF-00', { margin: 1, width: 900, errorCorrectionLevel: 'M' });
   const urlText = SITE_URL.replace(/^https?:\/\//, '');
-  const brief = evidenceMap['BRIF-00'] || {};
-  const briefPage = (t) => (brief.pages || []).find((p) => p.title === t)?.content || '';
 
-  // 중간점검/2부 운영용 — 용의자 6인 핸드폰 QR + 2차 부검 QR
+  // 2부 용의자 6인 핸드폰 QR + 2차 부검 QR (참가자가 화면에서 스캔)
   const PHONE6 = ['박희원', '이사랑', '이현지', '최종현', '윤은재', '이가현']
     .map((name) => { const e = Object.entries(evidenceMap).find(([, v]) => v.phone && v.person === name); return e ? { name, code: e[0] } : null; })
     .filter(Boolean);
   for (const p of PHONE6) p.qr = await QRCode.toDataURL(p.code, { margin: 1, width: 600, errorCorrectionLevel: 'M' });
-  const lonsQr = await QRCode.toDataURL('LONS-62', { margin: 1, width: 900, errorCorrectionLevel: 'M' });
-  const lons = evidenceMap['LONS-62'] || {};
 
   const bg = (s) => { s.background = { color: DARK }; };
   const kicker = (s, t) => s.addText(t, { x: 0.8, y: 0.5, w: 11.7, h: 0.4, fontSize: 12, color: GOLD, charSpacing: 3, bold: true });
-  const title = (s, t) => s.addText(t, { x: 0.8, y: 0.95, w: 11.7, h: 0.9, fontSize: 32, color: LIGHT, bold: true });
+  const title = (s, t) => s.addText(t, { x: 0.8, y: 0.95, w: 11.7, h: 0.9, fontSize: 30, color: LIGHT, bold: true });
   const newSlide = (kick, ttl) => { const s = pptx.addSlide(); bg(s); if (kick) kicker(s, kick); if (ttl) title(s, ttl); return s; };
+  // 불릿 리스트
+  const bullets = (s, items, o = {}) => s.addText(
+    items.map((t) => ({ text: t, options: { bullet: { indent: 16 }, fontSize: o.fontSize || 16, color: o.color || LIGHT, breakLine: true, paraSpaceAfter: o.gap == null ? 13 : o.gap } })),
+    { x: o.x || 0.85, y: o.y || 2.0, w: o.w || 11.6, h: o.h || 4.6, valign: 'top', lineSpacingMultiple: 1.15 });
 
-  // ── 1) 표지 (QR 없음) ──────────────────────────────
+  // ── 1) 표지 ────────────────────────────────────────
   let s = pptx.addSlide(); bg(s);
   s.addText('MORNING DEW · CRIME SCENE', { x: 0.9, y: 2.5, w: 11.5, h: 0.5, fontSize: 16, color: GOLD, charSpacing: 5, bold: true, align: 'center' });
   s.addText('새벽이슬 크라임씬', { x: 0.9, y: 3.1, w: 11.5, h: 1.3, fontSize: 56, color: LIGHT, bold: true, align: 'center' });
   s.addText('— 수련회 살인 사건 —', { x: 0.9, y: 4.5, w: 11.5, h: 0.6, fontSize: 18, color: GREY, align: 'center' });
 
-  // ── 2) 사건 개요 / 피해자 (인물 이미지) ────────────
-  s = newSlide('CASE', '사건 개요 · 피해자');
-  personImage(pptx, s, victim.image, victim.name, '6b6760', 9.3, 1.7, 3.3, 4.4);
+  // ── 2) 사건 개요 + 목표 ────────────────────────────
+  s = newSlide('CASE', '사건 개요');
+  personImage(pptx, s, victim.image, victim.name, '6b6760', 9.5, 1.7, 3.1, 4.0);
   s.addText([
-    { text: `${victim.name}`, options: { fontSize: 26, color: LIGHT, bold: true, breakLine: true, paraSpaceAfter: 4 } },
-    { text: `${victim.age}세 · ${victim.gender} · ${victim.occupation}`, options: { fontSize: 14, color: GOLD, breakLine: true } },
-  ], { x: 0.85, y: 2.05, w: 8.1, h: 1.1 });
-  s.addText(page('사건 개요') || '수련회 당일, 목사님이 방에서 숨진 채 발견되었다.', { x: 0.85, y: 3.25, w: 8.1, h: 3.4, fontSize: 15, color: LIGHT, lineSpacingMultiple: 1.3, valign: 'top' });
+    { text: `피해자  ${victim.name}`, options: { fontSize: 20, color: LIGHT, bold: true, breakLine: true, paraSpaceAfter: 3 } },
+    { text: `${victim.age}세 · ${victim.occupation}`, options: { fontSize: 13, color: GOLD } },
+  ], { x: 0.85, y: 1.95, w: 8.3, h: 0.95 });
+  bullets(s, [
+    '수련회 마지막 날, 목사님이 개인 방에서 숨진 채 발견되었다.',
+    '협심증 병력이 있었지만, 부검상 단순 발작사로 보기 어려운 정황.',
+    '현장에 있던 청년부 임원 6명이 용의자다.',
+  ], { x: 0.85, y: 3.0, w: 8.3, h: 2.2, fontSize: 15 });
+  s.addShape(pptx.ShapeType.roundRect, { x: 0.85, y: 5.55, w: 8.3, h: 1.1, fill: { color: '17150F' }, line: { color: GOLD, width: 1.25 }, rectRadius: 0.05 });
+  s.addText([
+    { text: '목표  ', options: { fontSize: 14, color: GOLD, bold: true } },
+    { text: '우리 조가 단서를 모아 범인 1명 + 동기 + 방법을 밝혀낸다.', options: { fontSize: 14, color: LIGHT } },
+  ], { x: 1.1, y: 5.6, w: 7.8, h: 1.0, valign: 'middle' });
 
-  // ── 3) 등장인물 (웹 인물 이미지) ───────────────────
+  // ── 3) 등장인물 6인 (각자 방에) ────────────────────
   s = newSlide('SUSPECTS', '등장인물 — 용의자 6인');
+  s.addText('각 용의자는 자기 방에 있습니다. 조별로 방을 돌며 직접 심문하세요.', { x: 0.85, y: 1.55, w: 11.6, h: 0.4, fontSize: 13, color: GREY });
   const people = PERSON_ORDER.filter((n) => suspects.some((sp) => sp.name === n)).map((n) => suspects.find((sp) => sp.name === n));
-  const cols = 3, cw = 3.95, ch = 2.42, gx = 0.35, gy = 0.18, ox = 0.75, oy = 1.95;
-  people.slice(0, 6).forEach((sp, i) => {
-    const r = Math.floor(i / cols), c = i % cols;
-    const x = ox + c * (cw + gx), y = oy + r * (ch + gy);
-    const col = hx(PERSON_COLOR[sp.name]);
-    s.addShape(pptx.ShapeType.rect, { x, y, w: cw, h: ch, fill: { color: PANEL }, line: { color: col, width: 1.25 } });
-    personImage(pptx, s, sp.image, sp.name, PERSON_COLOR[sp.name], x + (cw - 1.5) / 2, y + 0.12, 1.5, 1.5);
-    s.addText(sp.name, { x, y: y + 1.68, w: cw, h: 0.4, align: 'center', fontSize: 16, color: LIGHT, bold: true });
-    s.addText(sp.occupation, { x: x + 0.1, y: y + 2.05, w: cw - 0.2, h: 0.32, align: 'center', fontSize: 10, color: col, bold: true });
-  });
+  {
+    const cols = 3, cw = 3.85, ch = 2.62, gx = 0.3, gy = 0.12, ox = 0.6, oy = 1.95;
+    const iw = 2.55, ih = 1.95;  // 사진 크게(여백 활용)
+    people.slice(0, 6).forEach((sp, i) => {
+      const r = Math.floor(i / cols), c = i % cols;
+      const x = ox + c * (cw + gx), y = oy + r * (ch + gy);
+      const col = hx(PERSON_COLOR[sp.name]);
+      s.addShape(pptx.ShapeType.rect, { x, y, w: cw, h: ch, fill: { color: PANEL }, line: { color: col, width: 1.25 } });
+      personImage(pptx, s, sp.image, sp.name, PERSON_COLOR[sp.name], x + (cw - iw) / 2, y + 0.12, iw, ih);
+      s.addText(sp.name, { x, y: y + 2.12, w: cw, h: 0.34, align: 'center', fontSize: 17, color: LIGHT, bold: true });
+      s.addText(sp.occupation, { x: x + 0.1, y: y + 2.42, w: cw - 0.2, h: 0.24, align: 'center', fontSize: 10, color: col, bold: true });
+    });
+  }
 
-  // ── 4) 수사 대상 — 왜 이 6명인가 (시작 브리핑) ─────
-  s = newSlide('BRIEFING', '수사 대상 — 용의자가 6명인 이유');
-  s.addText(briefPage('용의자가 6명인 이유'), { x: 0.85, y: 1.95, w: 11.6, h: 3.3, fontSize: 15, color: LIGHT, lineSpacingMultiple: 1.35, valign: 'top' });
-  s.addShape(pptx.ShapeType.roundRect, { x: 0.85, y: 5.45, w: 11.6, h: 1.25, fill: { color: '17150F' }, line: { color: GOLD, width: 1.25 }, rectRadius: 0.05 });
+  // ── 4) 왜 6명인가 + 추리 대전제 ────────────────────
+  s = newSlide('BRIEFING', '용의자가 6명인 이유');
+  bullets(s, [
+    '숙소 2층(목사님 방이 있는 층)은 청년부 임원 6명만 사용했다.',
+    '일반 청년부원·외부 참가자는 1층·별관 — 사건 시간대 2층에 올라온 외부인은 복도 CCTV에 0명.',
+    '전날~당일 목사님과 단독 접점이 있던 사람도 정확히 이 6명뿐.',
+  ], { x: 0.85, y: 2.0, w: 11.6, h: 2.8, fontSize: 16 });
+  s.addShape(pptx.ShapeType.roundRect, { x: 0.85, y: 5.2, w: 11.6, h: 1.5, fill: { color: '17150F' }, line: { color: GOLD, width: 1.25 }, rectRadius: 0.05 });
   s.addText([
-    { text: '추리 대전제  ', options: { fontSize: 14, color: GOLD, bold: true } },
-    { text: briefPage('목사님 방 위치·구조') || '목사님 방 내부는 CCTV 사각, 복도만 촬영된다.', options: { fontSize: 13, color: LIGHT } },
-  ], { x: 1.1, y: 5.55, w: 11.1, h: 1.05, valign: 'middle' });
+    { text: '추리 대전제\n', options: { fontSize: 14, color: GOLD, bold: true } },
+    { text: '목사님 방 안에는 CCTV가 없습니다. 복도에만 있어요. — “복도에서 누가·언제 움직였나”가 열쇠입니다.', options: { fontSize: 14, color: LIGHT } },
+  ], { x: 1.1, y: 5.32, w: 11.1, h: 1.3, valign: 'middle', lineSpacingMultiple: 1.2 });
 
-  // (게임 접속 QR 슬라이드는 제외 — 접속 QR은 '게임 방법' 슬라이드·클로징에 포함됨)
+  // ── 5) 준비 & 접속 + 우리 조 ───────────────────────
+  s = newSlide('READY', '준비 & 접속');
+  bullets(s, [
+    '인터넷이 되는 환경에서 진행합니다.',
+    '1인 1휴대폰 — 각자 폰으로 접속하세요.',
+    '접속: 오른쪽 QR 스캔 (또는 공지방의 링크).',
+  ], { x: 0.85, y: 2.05, w: 7.7, h: 2.3, fontSize: 16 });
+  s.addText('우리 조 (6개 조)', { x: 0.85, y: 4.55, w: 7.7, h: 0.4, fontSize: 13, color: GOLD, bold: true });
+  s.addText(TEAMS.join('   ·   '), { x: 0.85, y: 4.95, w: 7.7, h: 0.6, fontSize: 16, color: LIGHT });
+  s.addImage({ data: webQr, x: 9.5, y: 1.95, w: 3.0, h: 3.0 });
+  s.addText(urlText, { x: 9.3, y: 5.05, w: 3.4, h: 0.4, fontSize: 13, color: GOLD, bold: true, align: 'center' });
+  s.addText('스캔해 접속!  (안 되면 공지방 링크)', { x: 9.0, y: 5.45, w: 4.0, h: 0.4, fontSize: 11, color: GREY, align: 'center' });
 
-  // ── 5) 게임 진행 순서 (개요) ───────────────────────
+  // ── 6) 단서 찾는 법 (QR 위치 + 앱 입력) ────────────
+  s = newSlide('CLUES', '단서 찾는 법');
+  bullets(s, [
+    '단서 QR은 벽 · 바닥 · 물건 · 인물(배우)에 붙어 있습니다.',
+    '카메라로 QR을 스캔하면 단서가 앱에 모입니다.',
+    '스캔이 어려우면 코드를 직접 입력해도 됩니다.',
+    '예) 게임 설명서 코드 LSUX-91 을 입력해 규칙을 열어보세요.',
+  ], { x: 0.85, y: 2.05, w: 5.7, h: 3.8, fontSize: 15 });
+  drawScanMock(pptx, s, 7.0, 1.9, 4.5, 'LSUX-91');
+
+  // ── 7) CCTV 단서 보는 법 ───────────────────────────
+  s = newSlide('CLUES', 'CCTV 단서 보는 법');
+  bullets(s, [
+    '① 화면에서 시간대를 고릅니다.',
+    '② 복도에 나타난 ❓ 인물을 탭합니다.',
+    '③ 그 시각·위치의 용의자 CCTV 단서가 확보됩니다.',
+    '방 안(목사님 방)은 찍히지 않아요 — 복도 움직임에 주목!',
+  ], { x: 0.85, y: 2.1, w: 5.5, h: 3.8, fontSize: 15 });
+  drawFloorPlan(pptx, s, 7.0, 2.3, 0.0135, { route: [{ x: 160, y: 95 }, { x: 160, y: 141 }, { x: 290, y: 141 }] });
+  s.addText('※ 예시 화면 — 실제 동선과 무관', { x: 6.7, y: 6.35, w: 5.6, h: 0.35, fontSize: 10, color: 'E0584F', align: 'center', bold: true });
+
+  // ── 7-2) 단서 깊이 파기 (귀속·특수해금·톡서랍/비번) ──
+  s = newSlide('CLUES', '단서, 더 깊이 파기');
+  bullets(s, [
+    '❓ 귀속 미상 단서 — 처음엔 누구 것인지 모릅니다. 올바른 용의자에게 제시하면 주인이 밝혀지고 정보가 더 풀려요.',
+    '특수 단서 자동 해금 — 서로 관련된 단서 2개를 모으면 [특수 단서]가 저절로 열립니다.',
+    '핸드폰은 깊이 파세요 (2부) — 삭제된 카톡은 [톡서랍]으로 복구! 네 자리 비밀번호가 필요해요(일기장 등 다른 단서에 힌트). 사진 휴지통·검색 기록도 확인.',
+    '일기장·메모 — 무심히 적힌 날짜·숫자·이름이 비밀번호 힌트일 수 있어요. 꼼꼼히 읽기.',
+    '모은 단서는 [수집 증거] 탭에서 언제든 다시 볼 수 있어요.',
+  ], { x: 0.85, y: 2.0, w: 11.6, h: 4.6, fontSize: 16, gap: 16 });
+
+  // ── 8) 게임 진행 순서 ──────────────────────────────
   s = newSlide('FLOW', '게임 진행 순서');
   const STEPS = [
-    ['시작 · 브리핑', '1차 부검 결과(심정지)와 시신 발견 경위 공개'],
-    ['1부 — 단서 수집 (60분)', '용의자 1:1 심문 · 조별 10분씩 순환 (핸드폰 금지)'],
-    ['중간 점검', '단서 정리 · 검식 2개 제출 · 목사님 방 조별 탐문'],
-    ['2부 — 자유 탐문 (30분+)', '핸드폰 공개 · 자유 조사 · 2차 부검(직접 사인) 공개'],
-    ['마무리 — 발표', '조별로 범인·검거 사유 제출 및 발표'],
+    ['시작 · 브리핑', '사건 개요와 1차 부검 결과 확인'],
+    ['1부 — 심문 (60분)', '6개 조가 6개 방을 10분씩 돌며 용의자 심문 (핸드폰 금지)'],
+    ['중간 점검 (30~40분)', '단서 정리 · 감식 질문 · 목사님 방·CCTV 열람 (조별)'],
+    ['2부 — 자유 탐문 (30분+)', '핸드폰 공개 · 자유롭게 조사'],
+    ['마무리 — 발표', '조별로 범인·동기·방법 제출 & 발표'],
   ];
   STEPS.forEach((p, i) => {
     const y = 2.0 + i * 0.92;
@@ -187,118 +247,64 @@ export async function genSlidesPptx(outPath) {
     ], { x: 1.6, y, w: 11.2, h: 0.55, valign: 'middle' });
   });
 
-  // ── 6) 1부 상세 — CCTV 열람대 배치도 ───────────────
-  s = newSlide('PART 1', '1부 — 단서 수집 (60분)');
-  s.addText('용의자를 한 명씩 10분씩, 조별로 돌아가며 심문합니다. (핸드폰 금지)\n화면에는 ‘CCTV 열람대’ 배치도를 띄워 두고 동선을 함께 확인하세요.',
-    { x: 0.85, y: 1.85, w: 11.6, h: 0.95, fontSize: 14, color: LIGHT, lineSpacingMultiple: 1.25 });
-  drawFloorPlan(pptx, s, 3.55, 2.85, 0.0155);
+  // ── 9) 1부 — 심문 (순환 + 질문법) ──────────────────
+  s = newSlide('PART 1', '1부 — 심문 (60분)');
+  bullets(s, [
+    '각 조의 첫 시작 방만 배정됩니다 → 이후 10분마다 반시계 방향으로 옆 방으로 이동 → 60분에 6명 전원 심문.',
+    '용의자(배우)에게 직접 질문하세요.',
+    '용의자는 거짓·회피도 합니다 — 바로 자백하지 않아요.',
+    '모은 단서를 들이대며 추궁하면 더 많은 정보가 나옵니다.',
+    '답과 “말·증거의 모순”을 메모해 두세요. (핸드폰은 2부부터)',
+  ], { x: 0.85, y: 1.95, w: 6.3, h: 4.7, fontSize: 14 });
+  drawFloorPlan(pptx, s, 7.45, 2.2, 0.0135);
 
-  // ── 7) 중간 점검 상세 ──────────────────────────────
-  s = newSlide('CHECKPOINT', '중간 점검');
-  s.addText(page('중간 점검'), { x: 0.85, y: 1.95, w: 11.6, h: 4.8, fontSize: 15, color: LIGHT, lineSpacingMultiple: 1.3, valign: 'top' });
-
-  // ── 8) 2부 상세 ────────────────────────────────────
-  s = newSlide('PART 2', '2부 — 자유 탐문 (30분+)');
-  s.addText(page('2부 — 자유 탐문'), { x: 0.85, y: 1.95, w: 11.6, h: 4.8, fontSize: 15, color: LIGHT, lineSpacingMultiple: 1.3, valign: 'top' });
-
-  // ── 9) 마무리 상세 ─────────────────────────────────
-  s = newSlide('WRAP-UP', '마무리 — 발표 & 제출');
-  s.addText(page('마무리 — 발표 & 제출'), { x: 0.85, y: 1.95, w: 11.6, h: 4.8, fontSize: 15, color: LIGHT, lineSpacingMultiple: 1.3, valign: 'top' });
-
-  // ── 10) 게임 방법 (앱 사용법) + 웹 QR ──────────────
-  s = newSlide('HOW TO PLAY', '게임 방법');
-  const how = [
-    ['1. QR 스캔으로 접속·수집', '오른쪽 접속 QR로 사이트에 들어가고, 현장의 QR을 스캔하면 단서가 앱에 모입니다.'],
-    ['2. 단서 열람 & 추리', '소지품·핸드폰·CCTV 동선을 살펴 용의자별 동기와 기회를 파악합니다.'],
-    ['3. 심문 & 최종 지목', '용의자(배우)를 심문하고, 마지막에 범인을 지목·발표합니다.'],
-  ];
-  how.forEach((h, i) => {
-    const y = 2.0 + i * 1.45;
-    s.addText(h[0], { x: 0.85, y, w: 8.2, h: 0.5, fontSize: 18, color: GOLD, bold: true });
-    s.addText(h[1], { x: 1.05, y: y + 0.55, w: 7.9, h: 0.8, fontSize: 13, color: LIGHT, lineSpacingMultiple: 1.2 });
-  });
-  s.addImage({ data: webQr, x: 9.6, y: 2.2, w: 2.9, h: 2.9 });
-  s.addText(urlText, { x: 9.4, y: 5.2, w: 3.3, h: 0.4, fontSize: 13, color: GOLD, bold: true, align: 'center' });
-
-  // ── 11) 게임 방법 · 코드로 단서 입력 (앱 화면 예시) ──
-  s = newSlide('HOW TO PLAY', '게임 방법 · 코드로 단서 입력');
-  s.addText([
-    { text: 'QR을 스캔하거나, 코드를 직접 입력해 단서를 수집합니다.', options: { fontSize: 15, color: LIGHT, breakLine: true, paraSpaceAfter: 12 } },
-    { text: '지금 바로 ‘게임 설명서’를 열어 보세요 —', options: { fontSize: 14, color: GREY, breakLine: true, paraSpaceAfter: 4 } },
-    { text: '앱의 코드 입력란에 아래 코드를 입력하면 됩니다.', options: { fontSize: 14, color: GREY } },
-  ], { x: 0.85, y: 2.1, w: 4.3, h: 2.0, valign: 'top' });
-  // 강조 코드 (텍스트 — 실제 입력용)
-  s.addShape(pptx.ShapeType.roundRect, { x: 0.85, y: 4.25, w: 4.3, h: 1.2, fill: { color: '17150F' }, line: { color: GOLD, width: 1.5 }, rectRadius: 0.06 });
-  s.addText('게임 설명서 단서', { x: 1.05, y: 4.42, w: 3.9, h: 0.35, fontSize: 11, color: GREY });
-  s.addText('LSUX-91', { x: 1.05, y: 4.72, w: 3.9, h: 0.6, fontSize: 30, bold: true, color: GOLD, fontFace: 'Consolas' });
-  // 앱 화면 목업
-  drawScanMock(pptx, s, 6.4, 1.95, 4.6, 'LSUX-91');
-  s.addText('실제 앱 ‘증거 스캐너’ 화면 예시', { x: 6.4, y: 6.45, w: 4.6, h: 0.35, fontSize: 10, color: GREY, align: 'center' });
-
-  // ── 12) 게임 방법 · CCTV 단서 보는 법 (예시 화면) ───
-  s = newSlide('HOW TO PLAY', '게임 방법 · CCTV 단서 보는 법');
-  s.addText([
-    { text: '① 시간대를 고르고,', options: { fontSize: 15, color: LIGHT, breakLine: true, paraSpaceAfter: 10 } },
-    { text: '② 복도에 나타난 ❓ 인물을 탭하면', options: { fontSize: 15, color: LIGHT, breakLine: true, paraSpaceAfter: 10 } },
-    { text: '③ 그 시각·위치의 용의자 CCTV 단서가 확보됩니다.', options: { fontSize: 15, color: LIGHT, breakLine: true, paraSpaceAfter: 16 } },
-    { text: '방 안(목사님 방)은 찍히지 않습니다. 복도에서 누가·언제 움직였는지에 주목하세요.', options: { fontSize: 12, color: GREY } },
-  ], { x: 0.85, y: 2.1, w: 5.4, h: 4.0, valign: 'top' });
-  drawFloorPlan(pptx, s, 6.95, 2.3, 0.0135, { route: [{ x: 160, y: 95 }, { x: 160, y: 141 }, { x: 290, y: 141 }] });
-  s.addText('※ 예시 화면입니다 — 실제 게임 동선과 무관', { x: 6.6, y: 6.35, w: 5.6, h: 0.35, fontSize: 10, color: 'E0584F', align: 'center', bold: true });
-
-  // ── 13) 시작 브리핑 자료 QR (BRIF-00) ──────────────
-  s = newSlide('BRIEFING', '시작 브리핑 자료 공개');
-  s.addImage({ data: briefingQr, x: 9.5, y: 1.8, w: 3.0, h: 3.0 });
-  s.addText('스캔하면 브리핑 자료가 페이지로 열립니다', { x: 9.1, y: 4.9, w: 3.8, h: 0.4, fontSize: 11, color: GREY, align: 'center' });
-  s.addText([
-    { text: `${brief.title || '사건 브리핑'}`, options: { fontSize: 20, color: LIGHT, bold: true, breakLine: true, paraSpaceAfter: 10 } },
-    { text: '한 장의 QR에 사건 현황·1차 부검 소견·목사님 방 구조·용의자가 6명인 이유·시신 발견 경위가 페이지로 담겨 있습니다.', options: { fontSize: 14, color: LIGHT, lineSpacingMultiple: 1.35, breakLine: true, paraSpaceAfter: 10 } },
-    { text: (brief.pages || []).map((p, i) => `${i + 1}. ${p.title}`).join('   ·   '), options: { fontSize: 12, color: GREY } },
-  ], { x: 0.85, y: 2.0, w: 8.2, h: 4.4, valign: 'top' });
-  s.addText('시작 브리핑 때 이 QR을 게시하세요.', { x: 0.85, y: 6.3, w: 8.2, h: 0.4, fontSize: 12, color: GOLD, bold: true });
-
-  // ════ 운영 중 띄우는 화면 (중간 점검 · 2부) ════
-
-  // ── 14) 중간 점검 진행 (운영) ──────────────────────
-  s = newSlide('CHECKPOINT', '중간 점검 — 진행 안내');
+  // ── 10) 중간 점검 (30~40분) ────────────────────────
+  s = newSlide('CHECKPOINT', '중간 점검 (30~40분)');
+  s.addText('조별로 아래를 돌아가며 진행합니다.', { x: 0.85, y: 1.55, w: 11.6, h: 0.4, fontSize: 13, color: GREY });
   [
-    ['① 단서 정리', '조별로 모여 1부에서 모은 단서를 정리·의논합니다.'],
-    ['② 검식 의뢰 (조별 2개)', '각 조가 분석할 단서를 2개만 골라 운영자에게 제출 → 결과는 그 조에게만 공개.'],
-    ['③ 목사님 방 개방 (조별 5분)', '통제돼 있던 목사님 방(현장)을 조별로 5분씩 돌아가며 탐문합니다.'],
-    ['④ 2부 준비', '모든 조가 방 탐문을 마치면 잠깐 정비 후 2부로.'],
+    ['단서 정리·의논', '1부에서 모은 단서를 조별로 정리하고 추리를 맞춰봅니다.'],
+    ['감식 질문 (조별)', '분석할 단서를 2개만 골라 의뢰 → 결과는 우리 조에게만 공개.'],
+    ['목사님 방 탐문 — 5분', '현장을 직접 조사. 방이 떨어져 있어 오가는 이동 2분을 감안하세요.'],
+    ['CCTV 열람 — 2분', 'CCTV 열람대에서 복도 동선을 확인합니다.'],
   ].forEach((h, i) => {
-    const y = 2.05 + i * 1.15;
-    s.addText(h[0], { x: 0.85, y, w: 11.6, h: 0.45, fontSize: 17, color: GOLD, bold: true });
-    s.addText(h[1], { x: 1.05, y: y + 0.5, w: 11.4, h: 0.55, fontSize: 13, color: LIGHT, lineSpacingMultiple: 1.2 });
+    const y = 2.1 + i * 1.12;
+    s.addText('•  ' + h[0], { x: 0.85, y, w: 11.6, h: 0.45, fontSize: 16, color: GOLD, bold: true });
+    s.addText(h[1], { x: 1.2, y: y + 0.45, w: 11.1, h: 0.55, fontSize: 13, color: LIGHT, lineSpacingMultiple: 1.15 });
   });
 
-  // ── 15) 2부 시작 — 용의자 핸드폰 QR 6개 ─────────────
+  // ── 11) 2부 — 자유 탐문 ────────────────────────────
+  s = newSlide('PART 2', '2부 — 자유 탐문 (30분+)');
+  bullets(s, [
+    '모든 용의자의 핸드폰이 공개됩니다 (카톡 · 검색 기록 · 사진).',
+    '자유롭게 용의자를 다시 탐문하고, 개방된 목사님 방·현장을 조사하세요.',
+    '모은 단서를 종합해 진범을 좁혀가세요.',
+  ], { x: 0.85, y: 2.0, w: 11.6, h: 4.4, fontSize: 16 });
+
+  // ── 12) 2부 — 용의자 핸드폰 QR 6개 ─────────────────
   s = newSlide('PART 2', '2부 — 용의자 핸드폰 공개');
-  s.addText('각 QR을 스캔하면 해당 용의자의 핸드폰이 앱에서 열립니다. (1부에선 핸드폰 금지)', { x: 0.85, y: 1.5, w: 11.6, h: 0.5, fontSize: 14, color: GREY });
+  s.addText('각 QR을 스캔하면 해당 용의자의 핸드폰이 열립니다.', { x: 0.85, y: 1.5, w: 11.6, h: 0.5, fontSize: 14, color: GREY });
   {
-    const cols = 3, cw = 3.7, ch = 2.25, gx = 0.45, gy = 0.25, ox = 1.05, oy = 2.15;
+    const cols = 3, cw = 3.7, ch = 2.2, gx = 0.45, gy = 0.25, ox = 1.05, oy = 2.15;
     PHONE6.forEach((p, i) => {
       const r = Math.floor(i / cols), c = i % cols;
       const x = ox + c * (cw + gx), y = oy + r * (ch + gy);
       const col = hx(PERSON_COLOR[p.name]);
       s.addShape(pptx.ShapeType.roundRect, { x, y, w: cw, h: ch, fill: { color: 'FBFAF6' }, line: { color: col, width: 1.25 }, rectRadius: 0.05 });
       s.addImage({ data: p.qr, x: x + (cw - 1.45) / 2, y: y + 0.18, w: 1.45, h: 1.45 });
-      s.addText(`${p.name} 핸드폰`, { x, y: y + 1.7, w: cw, h: 0.4, align: 'center', fontSize: 14, bold: true, color: '2B2820' });
-      s.addText(p.code, { x, y: y + 2.0, w: cw, h: 0.25, align: 'center', fontSize: 9, color: '8A8270', fontFace: 'Consolas' });
+      s.addText(`${p.name} 핸드폰`, { x, y: y + 1.72, w: cw, h: 0.4, align: 'center', fontSize: 14, bold: true, color: '2B2820' });
     });
   }
 
-  // ── 16) 2차 부검 결과 공개 (2부 중간) ──────────────
-  s = newSlide('AUTOPSY 2', '2차 부검 결과 공개 (2부 중간)');
-  s.addImage({ data: lonsQr, x: 9.5, y: 1.8, w: 3.0, h: 3.0 });
-  s.addText('스캔하면 앱에 단서로 추가됩니다', { x: 9.1, y: 4.9, w: 3.8, h: 0.4, fontSize: 11, color: GREY, align: 'center' });
-  s.addText([
-    { text: `${lons.title || '2차 부검'}`, options: { fontSize: 20, color: LIGHT, bold: true, breakLine: true, paraSpaceAfter: 10 } },
-    { text: lons.detail || '', options: { fontSize: 14, color: GREY, lineSpacingMultiple: 1.35 } },
-  ], { x: 0.85, y: 2.0, w: 8.2, h: 4.4, valign: 'top' });
-  s.addText('2부 중간쯤 이 QR을 게시하세요. (심정지 → 질식 반전)', { x: 0.85, y: 6.3, w: 8.2, h: 0.4, fontSize: 12, color: GOLD, bold: true });
+  // ── 13) 마무리 & 채점 ──────────────────────────────
+  s = newSlide('WRAP-UP', '마무리 — 발표 & 채점');
+  bullets(s, [
+    '2부가 끝나면 1층에 모입니다.',
+    '조별로 배부된 [결과 제출지]에 각 인물(목사님·용의자 6명)에 대한 판단 — 범인 여부 · 동기 · 방법 · 근거 단서 — 을 적어 제출합니다.',
+    '추리를 발표하고, 진행자가 정답과 숨은 진실을 공개합니다.',
+    '채점: 단서 활용도 + 추리의 정확도.',
+  ], { x: 0.85, y: 2.0, w: 11.6, h: 4.4, fontSize: 16 });
 
-  // ── 17) 클로징 ─────────────────────────────────────
+  // ── 15) 클로징 ─────────────────────────────────────
   s = pptx.addSlide(); bg(s);
   s.addText('진실을 밝혀라', { x: 0.9, y: 2.9, w: 11.5, h: 1.1, fontSize: 44, color: LIGHT, bold: true, align: 'center' });
   s.addText(urlText, { x: 0.9, y: 4.1, w: 11.5, h: 0.6, fontSize: 18, color: GOLD, bold: true, align: 'center' });

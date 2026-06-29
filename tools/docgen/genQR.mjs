@@ -25,7 +25,7 @@ function method(c) {
   if (cctvSet.has(c.code)) return { kind: 'app', label: '앱 · CCTV 열람대' };
   // 운영자 게시 QR이 지정된 단서는 (필적 대조가 있더라도) 실물 QR로 인쇄 — 스캔 시 앱에서 미니게임 진입.
   if (OPERATOR_QR[c.code]) return { kind: 'qr', label: 'QR 게시(운영자)' };
-  if (c.handwriting) return { kind: 'app', label: '앱 · 필적 대조' };
+  if (c.handwriting && !c.award) return { kind: 'app', label: '앱 · 필적 대조' };  // award 있으면 운영자 휴대 카드로(아래 특수 분기)
   if (c.type === '감식') return { kind: 'op', label: '운영 · 검식 비번' };
   if (c.type === '특수') {
     const auto = (c.unlockedBy && c.unlockedBy.length) || (c.unlockedByAny && c.unlockedByAny.length);
