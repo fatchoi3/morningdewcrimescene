@@ -436,7 +436,7 @@ export const evidenceMap = {
   'SAJL-88': { // 현장(목사 방) — 텀블러
     title: '개인 텀블러',
     description: '책상 위에서 개인 텀블러를 발견했다.',
-    detail: '방은 항상 열려있다. 안에 내용물이 담겨있다. 하얀 가루가 보인다.',
+    detail: '안에 내용물이 가득 담겨있다. 내용물에 하얀 가루가 보인다.',
     image: '/images/텀블러.jpg',
     type: '보통',
     person: '목사'
@@ -718,7 +718,7 @@ export const evidenceMap = {
   'IHKX-61': { // 현장(목사 방) — 베개
     title: '베개',
     description: '목사님 방에서 발견되었다.',
-    detail: '목사님 배 위에 놓여 있었다.',
+    detail: '목사님 배 위에 놓여 있었다. 일반적인 베개이다. 배게? 베개? 뭐가 맞는 표현이지?',
     image: '/images/베개.png',
     type: '보통',
     person: '목사'
@@ -738,7 +738,7 @@ export const evidenceMap = {
   'NYBB-98': { // 이사랑 가방
     title: '사랑의 파우치',
     description: '이사랑의 가방에서 발견되었다.',
-    detail: '세면 파우치. 스킨·로션·쿠션 등 일상 화장품이 있다.',
+    detail: '스킨·로션·쿠션 등 일상 화장품이 있다.',
     image: '/images/파우치_여.jpg',
     type: '보통',
     person: '이사랑'
@@ -1104,9 +1104,9 @@ export const evidenceMap = {
     unlockedBy: []
   },
   'ODDM-57': {
-    title: '단백질 통에 담긴 하얀 가루',
+    title: '단백질 통 내용물 감식',
     description: '',
-    detail: '감식 결과: 요힘빈 고함량 검출되었다.',
+    detail: '감식 결과: 단백질이 아닌 요힘빈만 검출되었다.',
     type: '감식',
     person: '최종현',
     unlockedBy: ['TYQD-94'],  // 단백질 통(TYQD-94) 발견 시 성분 감식이 이어서 해금
@@ -1671,9 +1671,9 @@ export const evidenceMap = {
     person: '이가현'
   },
   'LWNR-86': { //
-    title: '아이가 그린 그림 편지',
+    title: '아이가 그린 그림',
     description: '',
-    detail: '아이가 그린 그림. 삐뚤빼뚤한 가족 그림으로 글씨는 거의 없다. 조카가 그렸다기엔 묘하게 살갑다.',
+    detail: '삐뚤빼뚤한 그림이다.',
     image: '/images/bible/child-letter.svg',
     type: '보통',
     person: '이가현',

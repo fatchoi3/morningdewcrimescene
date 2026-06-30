@@ -74,6 +74,15 @@ function saveAdmin(on) {
   try { localStorage.setItem(ADMIN_KEY, on ? '1' : '0'); } catch { }
 }
 
+const GAMSIK_KEY = 'crimescene_gamsik'; // 감식 단서 비밀번호 누적 오답 횟수 { [code]: 오답수 }
+function loadGamsik() {
+  try { return JSON.parse(localStorage.getItem(GAMSIK_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveGamsik(m) {
+  try { localStorage.setItem(GAMSIK_KEY, JSON.stringify(m)); } catch { }
+}
+
 // 운영자 모드 인물별 일괄획득 버튼 순서
 const PERSON_BUTTONS = ['박희원', '이사랑', '이현지', '최종현', '윤은재', '이가현', '목사', '공용'];
 
@@ -123,12 +132,14 @@ function App() {
   // 앱 시작 시 localStorage에서 이전에 수집한 증거를 복원
   const [evidenceCollected, setEvidenceCollected] = useState(loadEvidence);
   const [tapDone, setTapDone] = useState(loadTapDone); // tapReveal 완료 플래그
+  const [gamsikTries, setGamsikTries] = useState(loadGamsik); // 감식 비번 누적 오답 횟수
   const [adminMode, setAdminMode] = useState(loadAdmin); // 운영자(테스트) 모드
   const [showAllClues, setShowAllClues] = useState(false); // 운영자: 전체 단서 수동 추가 패널 열림 여부
   const [scanMessage, setScanMessage] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('evidence'); // 'evidence' | 'pastor' | 'info'
   const [specialUnlockKey, setSpecialUnlockKey] = useState(0);
+  const [unlockKinds, setUnlockKinds] = useState({ special: false, gamsik: false }); // 직전 자동해금 종류(탭 반짝 구분용)
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
@@ -158,6 +169,10 @@ function App() {
     setEvidenceCollected(merged);
     saveEvidence(merged);
     if (autoUnlocked.length > 0) {
+      setUnlockKinds({
+        special: autoUnlocked.some((e) => e.type === '특수'),
+        gamsik: autoUnlocked.some((e) => e.type === '감식'),
+      });
       setSpecialUnlockKey((k) => k + 1);
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
       setToast(autoUnlocked.map((e) => e.title).join(', '));
@@ -247,12 +262,25 @@ function App() {
     }
   };
 
-  // 초기화 확인 후 실제 데이터를 비움 (tapReveal 완료 플래그도 함께 삭제)
+  /**
+   * handleGamsikWrong
+   * 감식 단서 비밀번호를 틀렸을 때 해당 단서의 누적 오답 횟수를 1 늘려 영구 저장한다.
+   * (모달을 닫았다 다시 열거나 새로고침해도 유지되어, 5회 초과 시 잠금이 유지된다.)
+   */
+  const handleGamsikWrong = (code) => {
+    const next = { ...gamsikTries, [code]: (gamsikTries[code] || 0) + 1 };
+    setGamsikTries(next);
+    saveGamsik(next);
+  };
+
+  // 초기화 확인 후 실제 데이터를 비움 (tapReveal 완료 플래그·감식 오답 횟수도 함께 삭제)
   const handleReset = () => {
     setEvidenceCollected([]);
     saveEvidence([]);
     setTapDone({});
     saveTapDone({});
+    setGamsikTries({}); // 감식 비번 오답 횟수(잠금)도 함께 해제
+    saveGamsik({});
     setAdminMode(false); // 초기화 시 사용자 모드로 복귀
     saveAdmin(false);
     setScanMessage('증거 목록이 초기화되었습니다. (사용자 모드)');
@@ -315,8 +343,8 @@ function App() {
           </div>
 
           <div className="tab-content">
-            {activeTab === 'evidence' && <EvidenceList evidence={mainEvidence} specialUnlockKey={specialUnlockKey} onCollect={handleScan} tapDone={tapDone} onTapComplete={handleTapComplete} cctvCodes={cctvClueCodes} adminMode={adminMode} />}
-            {activeTab === 'pastor' && <EvidenceList evidence={pastorEvidence} specialUnlockKey={specialUnlockKey} onCollect={handleScan} tapDone={tapDone} onTapComplete={handleTapComplete} cctvCodes={cctvClueCodes} adminMode={adminMode} />}
+            {activeTab === 'evidence' && <EvidenceList evidence={mainEvidence} specialUnlockKey={specialUnlockKey} unlockKinds={unlockKinds} onCollect={handleScan} tapDone={tapDone} onTapComplete={handleTapComplete} cctvCodes={cctvClueCodes} adminMode={adminMode} gamsikTries={gamsikTries} onGamsikWrong={handleGamsikWrong} />}
+            {activeTab === 'pastor' && <EvidenceList evidence={pastorEvidence} specialUnlockKey={specialUnlockKey} unlockKinds={unlockKinds} onCollect={handleScan} tapDone={tapDone} onTapComplete={handleTapComplete} cctvCodes={cctvClueCodes} adminMode={adminMode} gamsikTries={gamsikTries} onGamsikWrong={handleGamsikWrong} />}
             {activeTab === 'info' && <CommonInfo victim={victim} suspects={suspects} />}
           </div>
         </div>

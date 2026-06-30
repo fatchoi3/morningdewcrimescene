@@ -2445,6 +2445,7 @@ textarea {
 .gamsik-lock-form { display: flex; gap: 8px; justify-content: center; }
 .gamsik-lock-form input { max-width: 160px; text-align: center; letter-spacing: 0.2em; }
 .gamsik-lock-err { color: #c0392b; font-size: 0.8rem; margin-top: 8px; }
+.gamsik-lock-tries { color: #e0a23c; font-size: 0.8rem; font-weight: 700; margin-top: 6px; }
 
 /* ── 단서 인물별 필터 칩 (한 줄, 가로 스크롤) ───────── */
 .person-chips {

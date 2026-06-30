@@ -312,10 +312,13 @@ function HandwritingModal({ item, evidence = [], onClose }) {
  * 한 번 공개되면 tapDone(영구 저장)에 기록되어, 모달을 닫았다 다시 열어도
  * 초기화 버튼을 누르기 전까지 계속 공개 상태로 유지된다.
  */
-function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComplete }) {
+const MAX_GAMSIK_TRIES = 5; // 비밀번호 오답 허용 횟수 (초과 시 잠금)
+
+function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComplete, tries = 0, onWrong }) {
   const [revealed, setRevealed] = useState(!item.password || !!tapDone[item.code]);
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
+  const [attempts, setAttempts] = useState(tries); // 누적 오답 횟수 (재오픈 시 영속값에서 시작)
 
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -323,13 +326,25 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
+  // 5회 이상 틀리면 운영자 모드 여부와 무관하게 잠금 (운영자는 잠금 화면의 '결과 공개' 버튼으로 해제 가능)
+  const locked = attempts >= MAX_GAMSIK_TRIES;
+
   const submit = () => {
+    if (locked) return;
+    if (!pw.trim()) { setErr('비밀번호를 입력하세요.'); return; }  // 빈값은 오답으로 세지 않음
     if (!item.password || pw.trim() === String(item.password)) {
       setRevealed(true);
       setErr('');
       onTapComplete?.(item.code); // 공개 상태를 영구 저장 (초기화 전까지 유지)
+      return;
     }
-    else setErr('비밀번호가 일치하지 않습니다.');
+    // 오답 — 누적 횟수 증가 후 영구 저장 (모달을 닫았다 다시 열거나 새로고침해도 유지)
+    const next = attempts + 1;
+    setAttempts(next);
+    setPw('');
+    onWrong?.(item.code);
+    // 오답 횟수를 (현재 / 최대) 형태로 안내. 5회째면 아래에서 잠금 화면으로 전환되어 이 메시지는 보이지 않는다.
+    setErr(`비밀번호가 일치하지 않습니다. (${next} / ${MAX_GAMSIK_TRIES})`);
   };
 
   return (
@@ -344,6 +359,26 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
           <div className="modal-detail">
             <span className="modal-detail-label">감식 결과</span>
             <p>{item.detail}</p>
+          </div>
+        ) : locked ? (
+          <div className="gamsik-lock">
+            <div className="gamsik-lock-icon">⛔</div>
+            <p className="gamsik-lock-desc">
+              비밀번호를 {MAX_GAMSIK_TRIES}회 이상 틀려 더 이상 입력할 수 없습니다.<br />
+              진행자에게 문의하세요.
+            </p>
+            {adminMode && (
+              <>
+                <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{item.password}</strong></p>
+                <button
+                  type="button"
+                  className="control-button"
+                  onClick={() => { setRevealed(true); onTapComplete?.(item.code); }}
+                >
+                  🛠 운영자: 결과 공개
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="gamsik-lock">
@@ -364,6 +399,9 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
               <button type="button" className="control-button" onClick={submit}>결과 공개</button>
             </div>
             {err && <p className="gamsik-lock-err">{err}</p>}
+            {attempts > 0 && !err && (
+              <p className="gamsik-lock-tries">비밀번호 오답 {attempts} / {MAX_GAMSIK_TRIES}</p>
+            )}
           </div>
         )}
       </div>
@@ -372,18 +410,18 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
 }
 
 // cctv > wallet > schedule > handwriting > 감식 > phone > pages > 기본 순으로 적절한 모달을 선택해 렌더링
-function EvidenceModal({ item, evidence, onCollect, onClose, tapDone, onTapComplete, adminMode }) {
+function EvidenceModal({ item, evidence, onCollect, onClose, tapDone, onTapComplete, adminMode, gamsikTries = {}, onGamsikWrong }) {
   if (item.cctv) return <CctvModal item={item} evidence={evidence} onCollect={onCollect} onClose={onClose} />;
   if (item.wallet) return <WalletModal item={item} onClose={onClose} />;
   if (item.schedule) return <ScheduleModal item={item} onClose={onClose} />;
   if (item.handwriting) return <HandwritingModal item={item} evidence={evidence} onClose={onClose} />;
-  if (item.type === '감식') return <GamsikModal item={item} onClose={onClose} adminMode={adminMode} tapDone={tapDone} onTapComplete={onTapComplete} />;
+  if (item.type === '감식') return <GamsikModal item={item} onClose={onClose} adminMode={adminMode} tapDone={tapDone} onTapComplete={onTapComplete} tries={gamsikTries[item.code] || 0} onWrong={onGamsikWrong} />;
   if (item.phone) return <PhoneModal item={item} onClose={onClose} onView={onTapComplete} />;
   if (item.pages) return <ManualModal item={item} onClose={onClose} onCollect={onCollect} />;
   return <StandardModal item={item} onClose={onClose} tapDone={tapDone} onTapComplete={onTapComplete} />;
 }
 
-function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {}, onTapComplete, cctvCodes = [], adminMode = false }) {
+function EvidenceList({ evidence, specialUnlockKey = 0, unlockKinds = { special: true, gamsik: true }, onCollect, tapDone = {}, onTapComplete, cctvCodes = [], adminMode = false, gamsikTries = {}, onGamsikWrong }) {
   const [selected, setSelected] = useState(null);
   const [query, setQuery] = useState('');
   const [filterType, setFilterType] = useState('normal'); // 'normal' | 'cctv' | 'special' | 'gamsik'
@@ -468,17 +506,17 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
           CCTV ({cctvEvidence.length})
         </button>
         <button
-          key={specialUnlockKey}
+          key={`s-${unlockKinds.special ? specialUnlockKey : 'x'}`}
           type="button"
-          className={`tab-button ${filterType === 'special' ? 'active' : ''}${specialUnlockKey > 0 ? ' tab-button--sparkle' : ''}`}
+          className={`tab-button ${filterType === 'special' ? 'active' : ''}${specialUnlockKey > 0 && unlockKinds.special ? ' tab-button--sparkle' : ''}`}
           onClick={() => changeTab('special')}
         >
           특수 단서 ({specialEvidence.length})
         </button>
         <button
-          key={`g-${specialUnlockKey}`}
+          key={`g-${unlockKinds.gamsik ? specialUnlockKey : 'x'}`}
           type="button"
-          className={`tab-button ${filterType === 'gamsik' ? 'active' : ''}${specialUnlockKey > 0 ? ' tab-button--sparkle' : ''}`}
+          className={`tab-button ${filterType === 'gamsik' ? 'active' : ''}${specialUnlockKey > 0 && unlockKinds.gamsik ? ' tab-button--sparkle' : ''}`}
           onClick={() => changeTab('gamsik')}
         >
           감식 단서 ({gamsikEvidence.length})
@@ -574,6 +612,8 @@ function EvidenceList({ evidence, specialUnlockKey = 0, onCollect, tapDone = {},
           tapDone={tapDone}
           onTapComplete={onTapComplete}
           adminMode={adminMode}
+          gamsikTries={gamsikTries}
+          onGamsikWrong={onGamsikWrong}
         />
       )}
     </>
