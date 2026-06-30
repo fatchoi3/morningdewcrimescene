@@ -77,6 +77,21 @@ function saveAdmin(on) {
 // 운영자 모드 인물별 일괄획득 버튼 순서
 const PERSON_BUTTONS = ['박희원', '이사랑', '이현지', '최종현', '윤은재', '이가현', '목사', '공용'];
 
+// 운영자 수동 추가용 — evidenceMap 전체를 인물별로 묶는다 (스캔/코드 입력이 안 될 때의 대비책)
+const CLUES_BY_PERSON = (() => {
+  const groups = {};
+  for (const [code, data] of Object.entries(evidenceMap)) {
+    const p = data.person || '기타';
+    (groups[p] = groups[p] || []).push({ code, title: data.title || code, type: data.type });
+  }
+  return groups;
+})();
+// 표시 순서 — PERSON_BUTTONS 순서를 따르고, 목록에 없는 인물은 뒤에 붙인다
+const CLUE_PERSON_ORDER = [
+  ...PERSON_BUTTONS.filter((p) => CLUES_BY_PERSON[p]),
+  ...Object.keys(CLUES_BY_PERSON).filter((p) => !PERSON_BUTTONS.includes(p)),
+];
+
 // 주어진 코드 집합 기준, 해금 조건이 충족된 미수집 특수/감식 단서를 (연쇄적으로) 반환.
 //   unlockedBy    : 모두(AND) 충족 시 해금
 //   unlockedByAny : 하나라도(OR) 충족 시 해금
@@ -109,6 +124,7 @@ function App() {
   const [evidenceCollected, setEvidenceCollected] = useState(loadEvidence);
   const [tapDone, setTapDone] = useState(loadTapDone); // tapReveal 완료 플래그
   const [adminMode, setAdminMode] = useState(loadAdmin); // 운영자(테스트) 모드
+  const [showAllClues, setShowAllClues] = useState(false); // 운영자: 전체 단서 수동 추가 패널 열림 여부
   const [scanMessage, setScanMessage] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('evidence'); // 'evidence' | 'pastor' | 'info'
@@ -247,6 +263,7 @@ function App() {
   // 목사 단서는 용의자에 귀속되지 않으므로 별도 탭에서만 보여준다.
   const pastorEvidence = evidenceCollected.filter((item) => item.person === '목사');
   const mainEvidence = evidenceCollected.filter((item) => item.person !== '목사');
+  const collectedCodes = new Set(evidenceCollected.map((item) => item.code)); // 운영자 수동 추가 목록의 보유 표시용
 
   return (
     <div className="app-shell">
@@ -311,10 +328,12 @@ function App() {
         </div>
       )}
 
-      {/* 운영자(테스트) 모드 — 인물별 단서 일괄 획득 */}
+      {/* 운영자(테스트) 모드 — ADMIN-OPEN 코드 입력 시에만 노출 */}
       {adminMode && (
         <div className="admin-bar">
-          <div className="admin-bar-title">🛠️ 운영자 모드 · 인물별 일괄 획득 (테스트용)</div>
+          <div className="admin-bar-title">🛠️ 운영자 모드 (테스트용)</div>
+
+          <div className="admin-bar-subtitle">인물별 일괄 획득</div>
           <div className="admin-bar-buttons">
             {PERSON_BUTTONS.map((p) => (
               <button key={p} type="button" className="small-button" onClick={() => collectAllOf(p)}>
@@ -322,15 +341,58 @@ function App() {
               </button>
             ))}
           </div>
-          <div className="admin-bar-note">사용자 모드로 복귀: 코드 입력에 <code>{ADMIN_CLOSE_CODE}</code> 입력 또는 [초기화] 버튼</div>
+
+          {/* 전체 단서 수동 추가 — 스캔/코드 입력이 안 되거나 코드에 문제가 생겼을 때의 대비책 */}
+          <button
+            type="button"
+            className="admin-bar-toggle"
+            onClick={() => setShowAllClues((v) => !v)}
+            aria-expanded={showAllClues}
+          >
+            {showAllClues ? '▼' : '▶'} 전체 단서 수동 추가 (인물별)
+          </button>
+          {showAllClues && (
+            <div className="admin-clue-manual">
+              <p className="admin-clue-help">
+                코드 스캔·입력이 안 될 때 아래에서 단서를 직접 눌러 추가합니다. 스캔과 동일하게 처리되어
+                연계 특수·감식 단서도 함께 해금됩니다. (이미 보유한 단서는 ✓로 표시되고 비활성화됩니다.)
+              </p>
+              {CLUE_PERSON_ORDER.map((person) => (
+                <div key={person} className="admin-clue-group">
+                  <div className="admin-clue-person">
+                    {person} <span>({CLUES_BY_PERSON[person].length})</span>
+                  </div>
+                  <div className="admin-clue-list">
+                    {CLUES_BY_PERSON[person].map((c) => {
+                      const have = collectedCodes.has(c.code);
+                      return (
+                        <button
+                          key={c.code}
+                          type="button"
+                          className={`admin-clue-chip${have ? ' admin-clue-chip--have' : ''}`}
+                          disabled={have}
+                          onClick={() => handleScan(c.code)}
+                          title={have ? '이미 보유 중' : `추가: ${c.code}`}
+                        >
+                          {have ? '✓' : '+'} [{c.code}] {c.title}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="admin-bar-note">사용자 모드로 복귀: 코드 입력에 <code>{ADMIN_CLOSE_CODE}</code> 입력</div>
+
+          <div className="admin-bar-reset">
+            <button type="button" className="small-button" onClick={() => setConfirmOpen(true)}>
+              초기화
+            </button>
+          </div>
         </div>
       )}
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
-        <button type="button" className="small-button" onClick={() => setConfirmOpen(true)}>
-          초기화
-        </button>
-      </div>
 
     </div>
   );

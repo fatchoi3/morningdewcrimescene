@@ -5,6 +5,23 @@ import WalletModal from './WalletModal.jsx';
 import ScheduleModal from './ScheduleModal.jsx';
 
 /**
+ * ImageLightbox
+ * 단서 이미지를 전체화면으로 크게 보여주는 라이트박스.
+ * 오버레이/이미지 아무 곳이나 탭하거나 ✕ 로 닫는다.
+ * (ESC 키 처리는 라이트박스를 띄운 부모 모달이 소유 — 모달과 동시에 닫히지 않도록)
+ */
+function ImageLightbox({ src, alt, onClose }) {
+  if (!src) return null;
+  return (
+    <div className="lightbox-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <button className="lightbox-close" onClick={onClose} aria-label="확대 닫기">✕</button>
+      <img src={src} alt={alt || ''} className="lightbox-img" />
+      <div className="lightbox-hint">아무 곳이나 탭하면 닫힙니다</div>
+    </div>
+  );
+}
+
+/**
  * ManualModal
  * pages 배열이 있는 증거 아이템에 표시되는 페이지네이션 설명서 팝업.
  * 이전/다음 버튼으로 페이지를 이동하며, ESC 또는 오버레이 클릭으로 닫는다.
@@ -16,16 +33,23 @@ function ManualModal({ item, onClose, onCollect }) {
   const current = pages[page];
   const firedRef = useRef(new Set()); // 이번 열람에서 이미 확보 처리한 unlocks 코드
   const [unlockNotice, setUnlockNotice] = useState('');
+  const [lightbox, setLightbox] = useState(false); // 페이지 이미지 확대(라이트박스)
 
   useEffect(() => {
     const handleKey = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        // 라이트박스가 열려 있으면 ESC는 라이트박스만 닫는다
+        if (lightbox) setLightbox(false);
+        else onClose();
+        return;
+      }
+      if (lightbox) return; // 라이트박스 열림 중에는 페이지 이동 막기
       if (e.key === 'ArrowRight') setPage((p) => Math.min(p + 1, total - 1));
       if (e.key === 'ArrowLeft') setPage((p) => Math.max(p - 1, 0));
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [onClose, total]);
+  }, [onClose, total, lightbox]);
 
   // 특정 페이지(예: 성경책 속 그림 편지)를 펼치면 연결된 단서를 자동으로 확보한다.
   useEffect(() => {
@@ -39,6 +63,7 @@ function ManualModal({ item, onClose, onCollect }) {
   }, [page, current, onCollect]);
 
   return (
+    <>
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-panel manual-panel" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
@@ -61,8 +86,14 @@ function ManualModal({ item, onClose, onCollect }) {
         {/* 페이지 본문 */}
         <div className="manual-content">
           {current.image && (
-            <div className="manual-image-wrap">
+            <div
+              className="manual-image-wrap"
+              onClick={() => setLightbox(true)}
+              style={{ cursor: 'pointer' }}
+              title="탭하면 크게 볼 수 있어요"
+            >
               <img src={current.image} alt={current.title} className="manual-image" />
+              <span className="modal-image-zoom-hint">🔍 크게</span>
             </div>
           )}
           <h2 className="manual-title">{current.title}</h2>
@@ -98,6 +129,10 @@ function ManualModal({ item, onClose, onCollect }) {
         </div>
       </div>
     </div>
+    {lightbox && current.image && (
+      <ImageLightbox src={current.image} alt={current.title} onClose={() => setLightbox(false)} />
+    )}
+    </>
   );
 }
 
@@ -111,63 +146,82 @@ function StandardModal({ item, onClose, tapDone = {}, onTapComplete }) {
   const reveal = item.tapReveal;
   const [taps, setTaps] = useState(0);
   const [revealed, setRevealed] = useState(() => (reveal ? !!tapDone[item.code] : false));
+  const [lightbox, setLightbox] = useState(false); // 이미지 확대(라이트박스) 열림 여부
 
   useEffect(() => {
-    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleKey = (e) => {
+      if (e.key !== 'Escape') return;
+      // 라이트박스가 열려 있으면 ESC는 라이트박스만 닫는다 (단서 모달은 유지)
+      if (lightbox) setLightbox(false);
+      else onClose();
+    };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  }, [onClose, lightbox]);
 
   const need = reveal?.taps || 5;
+  const tappable = reveal && !revealed; // 탭-투-리빌(숨은 단서) 연출이 진행 중인 상태
+  const currentSrc = revealed && reveal?.image ? reveal.image : item.image;
+
   const handleImgTap = () => {
-    if (!reveal || revealed) return;
-    const n = taps + 1;
-    setTaps(n);
-    if (n >= need) {
-      setRevealed(true);
-      // 완료 플래그 저장 + tapReveal 기반 특수 단서 해금 판정은 App에 위임
-      onTapComplete?.(item.code);
+    // 탭-투-리빌 단서는 기존 "N번 두드리기" 연출을 그대로 유지
+    if (tappable) {
+      const n = taps + 1;
+      setTaps(n);
+      if (n >= need) {
+        setRevealed(true);
+        // 완료 플래그 저장 + tapReveal 기반 특수 단서 해금 판정은 App에 위임
+        onTapComplete?.(item.code);
+      }
+      return;
     }
+    // 그 외(일반 단서 또는 이미 공개된 단서)는 이미지를 크게 본다
+    setLightbox(true);
   };
 
-  const tappable = reveal && !revealed;
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
-        <div className="modal-code">[{item.code}]</div>
-        <h2 className="modal-title">{item.title}</h2>
+    <>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+          <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
+          <div className="modal-code">[{item.code}]</div>
+          <h2 className="modal-title">{item.title}</h2>
 
-        {item.image && (
-          <div
-            className="modal-image-wrap"
-            onClick={handleImgTap}
-            style={tappable ? { cursor: 'pointer' } : undefined}
-            title={tappable ? '사진을 살펴보세요' : undefined}
-          >
-            <img
-              src={revealed && reveal?.image ? reveal.image : item.image}
-              alt={item.title}
-              className={`modal-image${item.image.includes('길잡이') ? ' modal-image--guide' : ''}`}
-            />
+          {item.image && (
+            <div
+              className="modal-image-wrap"
+              onClick={handleImgTap}
+              style={{ cursor: 'pointer' }}
+              title={tappable ? '사진을 살펴보세요' : '탭하면 크게 볼 수 있어요'}
+            >
+              <img
+                src={currentSrc}
+                alt={item.title}
+                className={`modal-image${item.image.includes('길잡이') ? ' modal-image--guide' : ''}`}
+              />
+              {!tappable && <span className="modal-image-zoom-hint">🔍 크게</span>}
+            </div>
+          )}
+
+          <p className="modal-description">{item.description}</p>
+          <div className="modal-detail">
+            <span className="modal-detail-label">추가 정보</span>
+            <p>{item.detail}</p>
           </div>
-        )}
 
-        <p className="modal-description">{item.description}</p>
-        <div className="modal-detail">
-          <span className="modal-detail-label">추가 정보</span>
-          <p>{item.detail}</p>
+          {revealed && (
+            <div className="modal-event">
+              <span className="modal-event-label">⚠️ 발견</span>
+              <p>{reveal.text}</p>
+            </div>
+          )}
         </div>
-
-        {revealed && (
-          <div className="modal-event">
-            <span className="modal-event-label">⚠️ 발견</span>
-            <p>{reveal.text}</p>
-          </div>
-        )}
       </div>
-    </div>
+
+      {lightbox && (
+        <ImageLightbox src={currentSrc} alt={item.title} onClose={() => setLightbox(false)} />
+      )}
+    </>
   );
 }
 

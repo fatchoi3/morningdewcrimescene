@@ -12,6 +12,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh; /* 모바일 주소창 변화에 맞춰 실제 보이는 높이 사용 (미지원 시 위 100vh 폴백) */
   background: #161a21;
 }
 
@@ -296,7 +297,9 @@ textarea {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  /* 노치·홈인디케이터(safe-area)를 피해 최소 20px 여백 — 모달이 화면 밖/노치 뒤로 가지 않게 */
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  overflow-y: auto; /* 혹시 내용이 보이는 높이를 넘으면 오버레이가 세로 스크롤 */
   animation: fadeIn 0.18s ease;
 }
 
@@ -314,6 +317,7 @@ textarea {
   max-width: 580px;
   width: 100%;
   max-height: 90vh;
+  max-height: 90dvh; /* 주소창 표시 중에도 보이는 영역 안에 들어오도록 */
   overflow-y: auto;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
   animation: slideUp 0.2s ease;
@@ -362,6 +366,7 @@ textarea {
 }
 
 .modal-image-wrap {
+  position: relative;
   width: 100%;
   border-radius: 16px;
   overflow: hidden;
@@ -450,9 +455,11 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 0;
+  overflow: hidden; /* 패널 자체는 스크롤하지 않고 .manual-content 가 스크롤한다 (nav 겹침 방지) */
 }
 
 .manual-pagination-dots {
+  flex-shrink: 0; /* 상단 헤더 — 줄어들지 않음 */
   display: flex;
   justify-content: center;
   gap: 8px;
@@ -476,11 +483,14 @@ textarea {
 }
 
 .manual-content {
-  flex: 1;
-  min-height: 200px;
+  flex: 1 1 auto;
+  min-height: 0; /* flex 자식이 내용보다 작게 줄어들어 내부 스크롤이 동작하도록 */
+  overflow-y: auto;
+  padding-right: 4px; /* 스크롤바가 본문 글자를 가리지 않도록 */
 }
 
 .manual-image-wrap {
+  position: relative;
   width: 100%;
   height: 168px;
   margin-bottom: 18px;
@@ -531,6 +541,7 @@ textarea {
 }
 
 .manual-nav {
+  flex-shrink: 0; /* 하단 푸터 — 항상 패널 맨 아래에 고정, 줄어들지 않음 */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -588,6 +599,7 @@ textarea {
   width: 330px;
   max-width: 92vw;
   height: 78vh;
+  height: 78dvh; /* 모바일 주소창에 가려지지 않도록 */
   max-height: 660px;
   background: #05070b;
   border: 2px solid #2a2f3a;
@@ -2302,10 +2314,13 @@ textarea {
   background: #1a1a1a;
   color: #fff;
   padding: 12px 20px;
-  border-radius: 999px;
+  border-radius: 18px; /* 긴 텍스트가 여러 줄이 되어도 자연스럽게 (기존 알약형은 짧은 텍스트 전제) */
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
   z-index: 2000;
-  white-space: nowrap;
+  max-width: calc(100vw - 32px); /* 좁은 폰에서 화면 밖으로 삐져나가지 않게 */
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
   animation: toastIn 0.25s ease, toastOut 0.4s ease 3.6s forwards;
 }
 
@@ -2351,6 +2366,76 @@ textarea {
 .admin-bar-note { margin-top: 10px; font-size: 0.78rem; color: #8a857c; }
 .admin-bar-note code { background: #f1f0ec; border: 1px solid #e0ddd6; border-radius: 3px; padding: 1px 5px; font-family: monospace; }
 
+/* 운영자: 섹션 소제목 / 전체 단서 수동 추가 패널 */
+.admin-bar-subtitle { font-size: 0.8rem; font-weight: 700; color: #c0392b; margin: 4px 0 8px; }
+
+.admin-bar-toggle {
+  margin-top: 14px;
+  width: 100%;
+  text-align: left;
+  background: rgba(192, 57, 43, 0.12);
+  border: 1px solid rgba(192, 57, 43, 0.4);
+  color: #e6b0aa;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-bar-toggle:hover { background: rgba(192, 57, 43, 0.2); }
+
+.admin-clue-manual {
+  margin-top: 10px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.admin-clue-help { margin: 0 0 12px; font-size: 0.76rem; color: #9aa4b4; line-height: 1.55; }
+
+.admin-clue-group { margin-bottom: 12px; }
+.admin-clue-person {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #1c1716; /* admin-bar 반투명 배경 위에서 가독성 확보 */
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #e6e9ef;
+  padding: 3px 0;
+  margin-bottom: 6px;
+}
+.admin-clue-person span { color: #9aa4b4; font-weight: 600; }
+
+.admin-clue-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.admin-clue-chip {
+  border: 1px solid #3c4554;
+  background: #222834;
+  color: #cdd6e2;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-align: left;
+  max-width: 100%;
+  white-space: normal;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.admin-clue-chip:hover { background: #2f3a4a; border-color: #4a90e2; }
+.admin-clue-chip--have {
+  opacity: 0.55;
+  cursor: default;
+  border-color: rgba(92, 184, 92, 0.5);
+  color: #9cc79c;
+}
+
+.admin-bar-reset {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px dashed rgba(192, 57, 43, 0.35);
+  padding-top: 12px;
+}
+
 /* ── 감식 단서 비밀번호 잠금 ──────────────────────── */
 .gamsik-lock { text-align: center; padding: 18px 10px 6px; }
 .gamsik-lock-icon { font-size: 2rem; }
@@ -2386,3 +2471,78 @@ textarea {
 }
 .person-chip.active,
 .person-chip:hover { background: #4a90e2; color: #fff; }
+
+/* ============================================= */
+/* 이미지 라이트박스 (단서 사진 확대 보기)          */
+/* ============================================= */
+
+/* 확대 가능한 이미지 우하단의 "🔍 크게" 배지 */
+.modal-image-zoom-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  pointer-events: none; /* 클릭은 아래 wrap 의 onClick 으로 전달 */
+  backdrop-filter: blur(2px);
+}
+
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000; /* modal-overlay(1000)·toast(2000) 보다 위 */
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  cursor: zoom-out;
+  animation: fadeIn 0.18s ease;
+}
+
+.lightbox-img {
+  max-width: 96vw;
+  max-height: 92vh;
+  max-height: 92dvh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  touch-action: pinch-zoom; /* 태블릿/폰에서 핀치 줌 허용 */
+}
+
+.lightbox-close {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3001;
+}
+
+.lightbox-close:hover { background: rgba(255, 255, 255, 0.2); }
+
+.lightbox-hint {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
