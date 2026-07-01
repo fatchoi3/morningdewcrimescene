@@ -19,9 +19,9 @@ const BIBLE_PAGES = [
 const GAHYUN_BIBLE_PAGES = [
   ...BIBLE_PAGES,
   {
-    title: '성경책 사이에 끼워진 그림 편지',
+    title: '성경책 사이에 끼워진 그림',
     image: '/images/bible/child-letter.svg',
-    content: '성경책 갈피 사이에서 작은 종이 한 장이 떨어진다. 아이가 크레용으로 그린 그림 편지다.\n\n손을 맞잡은 큰 사람과 작은 사람, 집과 해가 그려져 있다. 글씨는 거의 없다. 조카가 그려줬다기엔 묘하게 살갑다.',
+    content: '성경책 갈피 사이에서 작은 종이 한 장이 떨어진다. 아이가 크레용으로 그린 그림 편지다.\n\n손을 맞잡은 큰 사람과 작은 사람, 집과 해가 그려져 있다.',
     unlocks: 'LWNR-86'  // 이 페이지를 펼치면 '아이가 그린 그림 편지' 단서가 확보된다
   }
 ];
@@ -1747,7 +1747,7 @@ export const evidenceMap = {
               messages: [
                 { from: 'them', text: '가현아, 우리... 더는 안 될 것 같아.', time: '이틀 전' },
                 { from: 'me', text: '갑자기 무슨 소리야', time: '이틀 전' },
-                { from: 'them', text: '애기 얘기, 왜 나한테 말 안 했어. 다 들었어.', time: '이틀 전' },
+                { from: 'them', text: '왜... 나한테 말 안 했어. 다 들었어...', time: '이틀 전' },
                 { from: 'me', text: '그건... 내가 설명할게. 제발.', time: '이틀 전' },
                 { from: 'them', text: '미안해. 그만하자.', time: '이틀 전' }
               ]
