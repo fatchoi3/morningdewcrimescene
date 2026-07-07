@@ -10,6 +10,11 @@ import { esc } from './render.mjs';
 
 const cctvSet = new Set(cctvClueCodes);
 
+// 방(공간) QR로 편입된 물건 단서 코드 — 개별 QR 대신 방 열람으로 확보(인쇄 제외).
+const roomObjectSet = new Set(
+  allClues.flatMap((c) => (c.room?.objects || []).map((o) => (typeof o === 'string' ? o : o.code))),
+);
+
 // 운영자가 단계에 맞춰 "게시"하는 특수 단서 — 비번/트리거가 없어 QR 게시가 적합.
 // (2차 부검=중간 점검. 1차 부검은 BRIF-00 시작 브리핑 묶음으로 통합됨. 감식 비번·길잡이 트리거 단서는 제외)
 const OPERATOR_QR = {
@@ -23,6 +28,10 @@ function method(c) {
   // CCTV 개별 장면 단서는 앱(열람대)에서 획득 — QR 불필요.
   // 단, 열람대 진입점(SIAH-72) 자체는 참가자가 스캔해야 하므로 실물 QR로 인쇄한다.
   if (cctvSet.has(c.code)) return { kind: 'app', label: '앱 · CCTV 열람대' };
+  // 방 QR로 편입된 물건은 개별 QR 미인쇄 — 방을 둘러보며 앱에서 확보.
+  if (roomObjectSet.has(c.code)) return { kind: 'app', label: '앱 · 방 열람' };
+  // 방(공간) 자체는 입구에 실물 QR 부착.
+  if (c.type === '방') return { kind: 'qr', label: 'QR 부착(방 입구)' };
   // 운영자 게시 QR이 지정된 단서는 (필적 대조가 있더라도) 실물 QR로 인쇄 — 스캔 시 앱에서 미니게임 진입.
   if (OPERATOR_QR[c.code]) return { kind: 'qr', label: 'QR 게시(운영자)' };
   if (c.handwriting && !c.award) return { kind: 'app', label: '앱 · 필적 대조' };  // award 있으면 운영자 휴대 카드로(아래 특수 분기)
@@ -40,6 +49,7 @@ function method(c) {
 
 // QR 부착 단서의 세부 분류 + 붙일 물건/위치
 function subtype(c) {
+  if (c.type === '방') return { sub: '방 입구', loc: `${c.room?.label || c.title} 입구 — 스캔 시 방 둘러보기` };
   if (OPERATOR_QR[c.code]) return { sub: OPERATOR_QR[c.code].sub, loc: OPERATOR_QR[c.code].loc };
   if (c.code === 'SIAH-72') return { sub: '안내', loc: 'CCTV 열람대(공용) — 스캔 시 열람 화면 진입' };
   if (c.type === '특수' && c.award) return { sub: '운영자 카드', loc: `운영자 휴대 — ${c.award}` };
@@ -54,7 +64,7 @@ function subtype(c) {
   return { sub: '소품', loc: `${c.person} 가방/방` };
 }
 
-const SUB_ORDER = ['소품', '소품(착용)', '현장 표식', '신체 흔적', '진술/안내', '안내', '운영자 카드'];
+const SUB_ORDER = ['방 입구', '소품', '소품(착용)', '현장 표식', '신체 흔적', '진술/안내', '안내', '운영자 카드'];
 
 export async function genQRDocs() {
   const qrClues = [];

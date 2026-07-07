@@ -1835,7 +1835,44 @@ export const evidenceMap = {
     image: '/images/파우치_여.jpg',
     type: '보통',
     person: '이가현',
-    
+
+  },
+
+  // ── 방(공간) QR — 스캔 시 방을 "둘러보며" 물건 단서를 확보(개별 물건 QR 대체) ──
+  //   QR 페이로드=ASCII 코드, 화면/인쇄 라벨=한글(room.label). objects=방 안 물건(기존 단서 코드).
+  'ROOM-JH': {
+    title: '종현방', type: '방', person: '최종현',
+    room: { label: '종현방', objects: ['VNTD-61', 'NDVA-68', 'HPKM-53', 'TYQD-94', 'OYJW-26', 'EDEZ-28', 'NMFM-21', 'OIMO-99'], showBody: false, people: [] },
+  },
+  'ROOM-SR': {
+    title: '사랑방', type: '방', person: '이사랑',
+    room: { label: '사랑방', objects: ['NYBB-98', 'LBPG-31', 'GLUE-77', 'OLUX-30', 'SUIX-89', 'BCZN-89', 'UJVD-65'], showBody: false, people: [] },
+  },
+  'ROOM-HW': {
+    title: '희원방', type: '방', person: '박희원',
+    room: { label: '희원방', objects: ['UTUW-73', 'JAJZ-77', 'VJMU-45', 'HTXI-85', 'MZKW-75'], showBody: false, people: [] },
+  },
+  'ROOM-HJ': {
+    title: '현지방', type: '방', person: '이현지',
+    room: { label: '현지방', objects: ['BXNP-29', 'BUFL-52', 'ESQN-14', 'IJRP-82', 'LKUJ-60', 'KPVH-32'], showBody: false, people: [] },
+  },
+  'ROOM-GH': {
+    title: '가현방', type: '방', person: '이가현',
+    room: { label: '가현방', objects: ['NBZL-83', 'AYMX-96', 'ZNUS-26', 'PEDR-58', 'KTGF-02'], showBody: false, people: [] },
+  },
+  'ROOM-EJ': {
+    title: '은재방', type: '방', person: '윤은재',
+    room: { label: '은재방', objects: ['VUDC-50', 'UHRU-61', 'GYPV-39', 'LWFJ-99', 'MZVN-14', 'ALLZ-85'], showBody: false, people: [] },
+  },
+  'ROOM-PS': {
+    title: '목사방', type: '방', person: '목사',
+    room: {
+      label: '목사방',
+      objects: ['SAJL-88', 'TQPA-93', 'IWND-38', 'MEXF-73', 'HODM-06', 'GZYJ-12', 'AVLP-75', 'IHKX-61', 'PRBO-03', 'HQIR-26', 'LTXB-98', 'EUMM-81'],
+      showBody: true,
+      body: { label: '목사 시신', detail: '침대 위에서 숨진 채 발견. 얼굴에 눌린 자국이 있고, 협심증 발작 직후 베개로 짓눌린 정황이 보인다. (성분·접촉흔 등은 개별 감식 단서로 확인)' },
+      people: [],
+    },
   },
 };
 
