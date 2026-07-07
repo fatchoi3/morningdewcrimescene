@@ -3,6 +3,7 @@ import PhoneModal from './PhoneModal.jsx';
 import CctvModal from './CctvModal.jsx';
 import WalletModal from './WalletModal.jsx';
 import ScheduleModal from './ScheduleModal.jsx';
+import { provider } from '../services/index.js';
 
 /**
  * ImageLightbox
@@ -315,7 +316,8 @@ function HandwritingModal({ item, evidence = [], onClose }) {
 const MAX_GAMSIK_TRIES = 5; // 비밀번호 오답 허용 횟수 (초과 시 잠금)
 
 function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComplete, tries = 0, onWrong }) {
-  const [revealed, setRevealed] = useState(!item.password || !!tapDone[item.code]);
+  const protectedClue = provider.isGamsikProtected(item.code); // 비번 필요 여부(정답은 provider가 소유)
+  const [revealed, setRevealed] = useState(!protectedClue || !!tapDone[item.code]);
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
   const [attempts, setAttempts] = useState(tries); // 누적 오답 횟수 (재오픈 시 영속값에서 시작)
@@ -329,10 +331,12 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
   // 5회 이상 틀리면 운영자 모드 여부와 무관하게 잠금 (운영자는 잠금 화면의 '결과 공개' 버튼으로 해제 가능)
   const locked = attempts >= MAX_GAMSIK_TRIES;
 
-  const submit = () => {
+  const submit = async () => {
     if (locked) return;
     if (!pw.trim()) { setErr('비밀번호를 입력하세요.'); return; }  // 빈값은 오답으로 세지 않음
-    if (!item.password || pw.trim() === String(item.password)) {
+    // 검증은 provider가 수행(정답은 로컬 secrets 또는 B단계에서 서버가 소유)
+    const ok = await provider.verifyGamsik(item.code, pw);
+    if (ok) {
       setRevealed(true);
       setErr('');
       onTapComplete?.(item.code); // 공개 상태를 영구 저장 (초기화 전까지 유지)
@@ -369,7 +373,7 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
             </p>
             {adminMode && (
               <>
-                <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{item.password}</strong></p>
+                <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{provider.debugSecret(item.code)}</strong></p>
                 <button
                   type="button"
                   className="control-button"
@@ -384,8 +388,8 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
           <div className="gamsik-lock">
             <div className="gamsik-lock-icon">🔒</div>
             <p className="gamsik-lock-desc">운영자 전용 감식 결과입니다. 진행자에게 받은 비밀번호를 입력하세요.</p>
-            {adminMode && item.password && (
-              <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{item.password}</strong></p>
+            {adminMode && protectedClue && (
+              <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{provider.debugSecret(item.code)}</strong></p>
             )}
             <div className="gamsik-lock-form">
               <input

@@ -465,7 +465,6 @@ export const evidenceMap = {
     type: '감식',
     person: '목사',
     unlockedBy: ['TQPA-93'],
-    password: '7382'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
   'LWUY-33': { // 목사 핸드폰 — 지문 인식으로 풀림. 카톡에 삭제된 대화(김민석·이가현) → 톡서랍 복구
     title: '목사님 핸드폰',
@@ -510,24 +509,14 @@ export const evidenceMap = {
             desc: '수료증에 기재된 발급번호를 입력하면 교단 DB 등록 여부를 조회합니다.',
             label: '발급번호',
             placeholder: '예: 0000-0000',
-            answer: '2016-0847',   // ★ 박희원 수료증 사진(certificate.jpg)에 적힌 발급번호와 동일해야 함
-            notFound: '조회되지 않습니다. 수료증에 적힌 발급번호를 정확히 입력해 주세요.',
-            result: {
-              title: '조회 결과 · 등록된 수료 기록 없음',
-              lines: [
-                '성명: 박희원',
-                '발급번호: 2016-0847',
-                '교단 등록 여부: 일치하는 수료 기록 없음',
-                '판정: 미등록 발급번호'
-              ]
-            }
+            notFound: '조회되지 않습니다. 수료증에 적힌 발급번호를 정확히 입력해 주세요.'
+            // answer(정답)·result(위조 판정)는 secrets.js로 분리 — 런타임에 mergeSecrets로 주입
           }
         },
         {
           id: 'kakao',
           type: 'kakao',
           name: '카카오톡',
-          recoverPassword: '0419',   // 결혼기념일 4월 19일 — 목사님 일기장(PRBO-03)에서 유도
           chats: [
             {
               name: '박 목사 (지인)',
@@ -645,7 +634,6 @@ export const evidenceMap = {
     type: '감식',
     person: '목사',
     unlockedBy: ['LTXB-98'],
-    password: '9460'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
   'MEXF-73': {
     title: '설하정 약통',
@@ -662,7 +650,6 @@ export const evidenceMap = {
     type: '감식',
     person: '목사',
     unlockedBy: ['MEXF-73'],
-    password: '5170'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
   'HODM-06': {
     title: '작은 약통',
@@ -679,7 +666,6 @@ export const evidenceMap = {
     type: '감식',
     person: '목사',
     unlockedBy: ['HODM-06'],
-    password: '2061'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
   'GZYJ-12': { //목사 협심증 진단서
     title: '목사님 협심증 진단서',
@@ -705,7 +691,6 @@ export const evidenceMap = {
     type: '감식',
     person: '목사',
     unlockedBy: ['EUMM-81'],
-    password: '7715'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
   'AVLP-75': { // 현장(목사 방)
     title: '바닥의 단추',
@@ -817,7 +802,6 @@ export const evidenceMap = {
           id: 'kakao',
           type: 'kakao',
           name: '카카오톡',
-          recoverPassword: '0302',
           chats: [
             {
               name: '김호치 목사님',
@@ -1111,7 +1095,6 @@ export const evidenceMap = {
     type: '감식',
     person: '최종현',
     unlockedBy: ['TYQD-94'],  // 단백질 통(TYQD-94) 발견 시 성분 감식이 이어서 해금
-    password: '8503'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
   'TUBE-12': { // 통 1차 특수 (길잡이형) — 두 통 보유 시 해금 → 종현 글씨 위화감 유도
     title: '라벨이 이상하다',
@@ -1219,7 +1202,6 @@ export const evidenceMap = {
           id: 'kakao',
           type: 'kakao',
           name: '카카오톡',
-          recoverPassword: '0815',
           chats: [
             {
               name: '사랑이❤',
@@ -1303,7 +1285,6 @@ export const evidenceMap = {
     type: '감식',
     person: '목사',
     unlockedBy: ['SAJL-88'],
-    password: '4127'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
 
   // =============================================
@@ -1324,7 +1305,6 @@ export const evidenceMap = {
     type: '감식',
     person: '박희원',
     unlockedBy: ['UTUW-73'],
-    password: '3948'  // 운영자 전용 — 입력 시 감식 결과 공개
   },
   'JAJZ-77': { //
     title: '희원의 성경책',
@@ -1616,7 +1596,6 @@ export const evidenceMap = {
     type: '감식',
     person: '윤은재',
     unlockedBy: ['LWFJ-99'],
-    password: '6294'  // 운영자 전용 — 은재가 입력
   },
   'PMIK-13': {
     title: '은재의 파우치',
@@ -1942,6 +1921,12 @@ export const cctvClueCodes = Array.from(new Set(
   (evidenceMap['SIAH-72']?.cctv?.timeline || []).flatMap((t) => (t.people || []).map((p) => p.unlocks).filter(Boolean))
 ));
 
-// 운영자(테스트) 모드 마스터 코드
-export const ADMIN_OPEN_CODE = 'ADMIN-OPEN';
-export const ADMIN_CLOSE_CODE = 'ADMIN-CLOSE';
+// tapReveal 조합 자동 해금 규칙 — 열람 흔적 조합이 모이면 특수 단서를 부여 (App/provider가 사용)
+export const tapRules = [
+  // 목사 폰 톡서랍(0419) 복구 열람 + 가현 폰 카톡 열람 → 사라진 대화방(DISC-11)
+  { grants: 'DISC-11', requiresTaps: ['LWUY-33:톡서랍', 'TCGA-87:kakao'] },
+  // 사랑·현지 폰 톡서랍을 양쪽 다 복구해 교차 대화 확인 → 자매 관계(SIST-22)
+  { grants: 'SIST-22', requiresTaps: ['QIVS-92:톡서랍', 'HUOX-80:톡서랍'] },
+];
+
+// 운영자(테스트) 모드 마스터 코드는 gameConfig(단일 설정)에서 관리한다.
