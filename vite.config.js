@@ -16,6 +16,9 @@ const secretsPath = demo
 
 export default defineConfig({
   plugins: [react()],
+  // 로컬 폰 테스트(ngrok 등 터널) 시 외부 호스트 접근 허용
+  server: { host: true, allowedHosts: true },
+  preview: { host: true, allowedHosts: true },
   resolve: {
     alias: {
       '@secrets': secretsPath,
