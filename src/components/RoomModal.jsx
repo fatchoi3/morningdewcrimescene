@@ -20,6 +20,15 @@ const norm = (d) => (((d + 180) % 360) + 360) % 360 - 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const emojiOf = (c) => (!c ? '📦' : c.pages ? '📖' : c.wallet ? '👛' : c.schedule ? '📅' : c.phone ? '📱' : '📦');
 
+// 화면 밖 단서 방향 표시(가장자리 화살표) 스타일
+const edgeStyle = (side) => {
+  const base = { position: 'absolute', zIndex: 15, pointerEvents: 'none', background: '#000a', color: '#ffd76b', fontWeight: 700, fontSize: 13, padding: '4px 9px', borderRadius: 8 };
+  if (side === 'left') return { ...base, left: 6, top: '50%', transform: 'translateY(-50%)' };
+  if (side === 'right') return { ...base, right: 6, top: '50%', transform: 'translateY(-50%)' };
+  if (side === 'up') return { ...base, top: 44, left: '50%', transform: 'translateX(-50%)' };
+  return { ...base, bottom: 40, left: '50%', transform: 'translateX(-50%)' };
+};
+
 function RoomModal({ item, evidence = [], onCollect, onClose }) {
   const room = item.room || {};
   const [mode, setMode] = useState('ar');            // 'ar' | 'list'
@@ -130,6 +139,18 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
 
   const remaining = markers.filter((m) => !m.isBody && !collected.has(m.code)).length;
 
+  // 화면 밖 미확보 마커가 어느 방향에 있는지 집계(가장자리 화살표용)
+  const edge = { left: 0, right: 0, up: 0, down: 0 };
+  for (const m of markers) {
+    if (m.isBody || collected.has(m.code)) continue;
+    const dyaw = norm(m.az - view.yaw) * YAW_SIGN;
+    const dp = (m.el - view.pitch) * PITCH_SIGN;
+    const hOff = Math.abs(dyaw) > HFOV / 2, vOff = Math.abs(dp) > VFOV / 2;
+    if (!hOff && !vOff) continue; // 이미 화면 안
+    if (hOff && (!vOff || Math.abs(dyaw) / HFOV >= Math.abs(dp) / VFOV)) edge[dyaw < 0 ? 'left' : 'right']++;
+    else edge[dp > 0 ? 'up' : 'down']++;
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="room-modal" onClick={(e) => e.stopPropagation()}
@@ -186,6 +207,16 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
                 </button>
               );
             })}
+
+            {/* 화면 밖 단서 방향 화살표(어디로 돌아야 남은 단서가 있는지) */}
+            {started && (
+              <>
+                {edge.left > 0 && <div style={edgeStyle('left')}>◀ {edge.left}</div>}
+                {edge.right > 0 && <div style={edgeStyle('right')}>{edge.right} ▶</div>}
+                {edge.up > 0 && <div style={edgeStyle('up')}>▲ {edge.up}</div>}
+                {edge.down > 0 && <div style={edgeStyle('down')}>▼ {edge.down}</div>}
+              </>
+            )}
 
             {/* 시작 오버레이(카메라/자이로 권한 제스처) */}
             {!started && (
