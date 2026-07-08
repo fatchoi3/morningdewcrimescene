@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { provider } from '../services/index.js';
 
 /**
  * RoomModal — "방 스캔(AR-lite 심화)" 모드.
  *   ① 입장 → 카메라로 방을 한 바퀴 둘러보며 스캔(자이로 커버리지) → "방 구성이 완료되었습니다".
- *   ② 마커는 고정 방향에 앵커(벽에 붙은 느낌). 멀리선 잠긴 힌트만, 화면 중앙 조준점으로
- *      정조준해 잠깐 머무르면(=다가가면) 링이 차오르며 열림 → 단서 확보.
+ *   ② 마커는 고정 방향에 앵커(벽에 붙은 느낌). 멀리선 잠긴 힌트(❓)만, 화면 중앙 조준점으로
+ *      조준하면 가장 가까운 마커가 🔍로 바뀌고, 그 🔍 마커를 탭하면 단서 확보.
  *   - 실제 깊이/평면 인식(WebXR)이 아니라 방향+정조준 시뮬레이션(아이폰 포함 웹 호환).
  *   - 카메라/자이로 미지원·데스크톱이면 스타일 배경 + 드래그로 둘러보기 폴백.
  *   - '목록' 버튼으로 정적 그리드 폴백.
@@ -17,9 +17,7 @@ const HFOV = 70, VFOV = 90;
 const YAW_SIGN = 1, PITCH_SIGN = 1;
 const SCAN_BUCKETS = 12;        // 방위 12등분
 const SCAN_NEEDED = 8;          // 이만큼(≈240°) 둘러보면 스캔 완료
-const OPEN_TOL = 9;             // 이 각도 안으로 정조준하면 개방 카운트(도)
-const FOCUS_TOL = 26;           // 이 각도 안이면 "가까움" 하이라이트(도)
-const DWELL_MS = 650;           // 정조준 유지 시간 → 개방
+const FOCUS_TOL = 26;           // 이 각도 안(가장 가까운 1개)으로 조준하면 🔍 → 탭하여 확보
 
 const norm = (d) => (((d + 180) % 360) + 360) % 360 - 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -45,7 +43,7 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
   const [doneMsg, setDoneMsg] = useState(false);
   const [view, setView] = useState({ yaw: 0, pitch: 0 });
   const [anchors, setAnchors] = useState(null);
-  const [focus, setFocus] = useState({ id: null, pct: 0 });
+  const [focusId, setFocusId] = useState(null);
   const [flash, setFlash] = useState(null);
   const [openClue, setOpenClue] = useState(null);
   const [bodyOpen, setBodyOpen] = useState(false);
@@ -58,7 +56,10 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
   const seenRef = useRef(new Set());
   const anchorsRef = useRef(null);
   const collectedRef = useRef(new Set());
-  const focusRef = useRef({ id: null, start: 0 });
+  const pressRef = useRef(null);        // 탭 중인 마커 id(포커스 래치 → 탭 유실 방지)
+  const gestureRef = useRef(null);      // { id, x0,y0, lx,ly, moved }
+  const doneMsgRef = useRef(false);     // 완료 배너 표시 중(루프에서 확보 잠금)
+  const doneTimerRef = useRef(null);    // 완료 배너 타이머(언마운트 정리)
 
   const collected = new Set(evidence.map((e) => e.code));
   collectedRef.current = collected;
@@ -66,11 +67,14 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
   const applyView = (next) => { viewRef.current = next; setView(next); };
   const setPhaseBoth = (p) => { phaseRef.current = p; setPhase(p); };
 
-  function onOrient(e) {
+  // 안정 핸들러(렌더마다 재생성 금지) → add/remove 참조 일치, 리스너 누수 방지
+  const onOrient = useCallback((e) => {
     if (e.alpha == null) return;
     setUseGyro(true);
-    applyView({ yaw: e.alpha, pitch: (e.beta == null ? 90 : e.beta) - 90 });
-  }
+    const next = { yaw: e.alpha, pitch: (e.beta == null ? 90 : e.beta) - 90 };
+    viewRef.current = next;
+    setView(next);
+  }, []);
 
   async function start() {
     setStarted(true);
@@ -117,13 +121,19 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
           setAnchors(anchorsRef.current);
           setPhaseBoth('find');
           setDoneMsg(true);
-          setTimeout(() => setDoneMsg(false), 1900);
+          doneMsgRef.current = true;
+          doneTimerRef.current = setTimeout(() => { setDoneMsg(false); doneMsgRef.current = false; }, 1900);
         }
         return;
       }
-      // find: 화면 중앙(조준점)에 가장 가까운 미확보 마커 개방 판정
+      // find: 화면 중앙(조준점)에 가장 가까운 미확보 마커를 포커스(🔍) — 탭하면 확보
+      if (doneMsgRef.current) return;               // 완료 배너 동안엔 포커스/확보 비활성
       const list = anchorsRef.current;
       if (!list) return;
+      if (pressRef.current) {                        // 탭 진행 중이면 그 마커에 포커스 고정(탭 유실 방지)
+        setFocusId((prev) => (prev === pressRef.current ? prev : pressRef.current));
+        return;
+      }
       let best = null, bestAng = 1e9;
       for (const m of list) {
         if (!m.isBody && collectedRef.current.has(m.code)) continue;
@@ -131,19 +141,8 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
         const ang = Math.hypot(dyaw, dp);
         if (ang < bestAng) { bestAng = ang; best = m; }
       }
-      const id = best ? (best.isBody ? 'body' : best.code) : null;
-      if (best && bestAng <= OPEN_TOL) {
-        if (focusRef.current.id !== id) focusRef.current = { id, start: performance.now() };
-        const dwell = performance.now() - focusRef.current.start;
-        if (dwell >= DWELL_MS) { focusRef.current = { id: null, start: 0 }; setFocus({ id: null, pct: 0 }); openMarker(best); }
-        else setFocus({ id, pct: Math.max(0.06, dwell / DWELL_MS) });
-      } else if (best && bestAng <= FOCUS_TOL) {
-        focusRef.current = { id: null, start: 0 };
-        setFocus({ id, pct: 0 });
-      } else {
-        focusRef.current = { id: null, start: 0 };
-        setFocus((f) => (f.id ? { id: null, pct: 0 } : f));
-      }
+      const id = best && bestAng <= FOCUS_TOL ? (best.isBody ? 'body' : best.code) : null;
+      setFocusId((prev) => (prev === id ? prev : id));
     }, 90);
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -152,8 +151,9 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
   // 언마운트 정리
   useEffect(() => () => {
     if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+    if (doneTimerRef.current) clearTimeout(doneTimerRef.current);
     window.removeEventListener('deviceorientation', onOrient);
-  }, []); // eslint-disable-line
+  }, [onOrient]);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key !== 'Escape') return; if (openClue) setOpenClue(null); else if (bodyOpen) setBodyOpen(false); else onClose(); };
@@ -170,7 +170,7 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
     setFlash({ ok: !!res.success, text: res.message || (res.success ? '단서 확보!' : '확보 실패') });
     if (res.success) showClue(code);
   };
-  const openMarker = (m) => { if (m.isBody) { setOpenClue(null); setBodyOpen(true); setFlash({ ok: true, text: '🛏 시신을 살펴봅니다' }); } else pick(m.code); };
+  const openMarker = (m) => { setFocusId(null); if (m.isBody) { setOpenClue(null); setBodyOpen(true); setFlash({ ok: true, text: '🛏 시신을 살펴봅니다' }); } else pick(m.code); };
 
   // 드래그(자이로 폴백)
   const onDown = (e) => { if (useGyro) return; dragRef.current = { x: e.clientX, y: e.clientY }; };
@@ -182,6 +182,29 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
     applyView({ yaw: norm(v.yaw - dx * 0.25), pitch: clamp(v.pitch + dy * 0.25, -70, 70) });
   };
   const onUp = () => { dragRef.current = null; };
+
+  // 마커 제스처: 탭(이동 없음)=확보, 드래그(이동)=둘러보기 — 팬 데드존·오확보·탭 유실 방지
+  const markerDown = (e, id) => {
+    e.stopPropagation();
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* noop */ }
+    pressRef.current = id;                 // 포커스 래치 시작(탭 중 다른 마커로 안 넘어감)
+    gestureRef.current = { id, x0: e.clientX, y0: e.clientY, lx: e.clientX, ly: e.clientY, moved: false };
+    setFocusId(id);
+  };
+  const markerMove = (e) => {
+    const g = gestureRef.current;
+    if (!g) return;
+    if (Math.hypot(e.clientX - g.x0, e.clientY - g.y0) > 8) { g.moved = true; pressRef.current = null; } // 드래그 판정 → 래치 해제
+    if (!useGyro) { const v = viewRef.current; applyView({ yaw: norm(v.yaw - (e.clientX - g.lx) * 0.25), pitch: clamp(v.pitch + (e.clientY - g.ly) * 0.25, -70, 70) }); }
+    g.lx = e.clientX; g.ly = e.clientY;
+  };
+  const markerUp = (e, m) => {
+    e.stopPropagation();
+    const g = gestureRef.current;
+    gestureRef.current = null; pressRef.current = null;
+    if (g && !g.moved) openMarker(m);      // 이동 없이 뗐으면 탭 → 확보
+  };
+  const markerCancel = () => { gestureRef.current = null; pressRef.current = null; };
 
   const project = (m) => {
     const dyaw = norm(m.az - view.yaw) * YAW_SIGN, dp = (m.el - view.pitch) * PITCH_SIGN;
@@ -227,34 +250,34 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
               <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 26, height: 26, border: '2px solid #ffffffcc', borderRadius: '50%', zIndex: 14, pointerEvents: 'none' }} />
             )}
 
-            {/* find 단계 마커(잠금→정조준 개방) */}
-            {phase === 'find' && anchors && anchors.map((m) => {
+            {/* find 단계 마커(조준→🔍→탭 확보). 완료 배너 동안은 숨김(조준점과 함께 등장) */}
+            {phase === 'find' && !doneMsg && anchors && anchors.map((m) => {
               const p = project(m);
               if (!p.inView) return null;
               const id = m.isBody ? 'body' : m.code;
               const have = !m.isBody && collected.has(m.code);
-              const focused = focus.id === id;
-              const c = m.isBody ? null : provider.getClue(m.code);
+              const focused = focusId === id;
+              const tappable = focused && !have;
               return (
-                <div key={id} style={{ position: 'absolute', left: `${clamp(p.x, 4, 96)}%`, top: `${clamp(p.y, 10, 90)}%`, transform: 'translate(-50%,-50%)', pointerEvents: 'none', textAlign: 'center' }}>
+                <div key={id}
+                  onPointerDown={tappable ? (e) => markerDown(e, id) : undefined}
+                  onPointerMove={tappable ? markerMove : undefined}
+                  onPointerUp={tappable ? (e) => markerUp(e, m) : undefined}
+                  onPointerCancel={tappable ? markerCancel : undefined}
+                  style={{ position: 'absolute', left: `${clamp(p.x, 4, 96)}%`, top: `${clamp(p.y, 10, 90)}%`, transform: 'translate(-50%,-50%)', pointerEvents: tappable ? 'auto' : 'none', cursor: tappable ? 'pointer' : 'default', touchAction: 'none', textAlign: 'center' }}>
                   <div style={{
-                    width: 52, height: 52, margin: '0 auto', borderRadius: '50%',
+                    width: 54, height: 54, margin: '0 auto', borderRadius: '50%',
                     border: `2px ${have ? 'solid' : 'dashed'} ${have ? '#3b6d11' : focused ? '#ffd76b' : '#ffffff88'}`,
-                    background: have ? '#0a0' : focused ? '#000a' : '#0006',
+                    background: have ? '#0a0' : focused ? '#1a1a1acc' : '#0006',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-                    boxShadow: focused ? '0 0 14px #ffd76b88' : 'none',
+                    boxShadow: focused ? '0 0 16px #ffd76bcc' : 'none',
+                    transform: focused ? 'scale(1.12)' : 'none',
                   }}>
                     {have ? '✓' : m.isBody ? '🛏' : focused ? '🔍' : '❓'}
                   </div>
-                  {/* 정조준 진행 링(막대) */}
-                  {focused && focus.pct > 0 && (
-                    <div style={{ width: 52, height: 4, background: '#0008', borderRadius: 3, margin: '3px auto 0', overflow: 'hidden' }}>
-                      <div style={{ width: `${focus.pct * 100}%`, height: '100%', background: '#ffd76b' }} />
-                    </div>
-                  )}
                   {(focused || have) && (
-                    <div style={{ fontSize: 10, marginTop: 2, color: '#fff', background: '#000a', borderRadius: 4, padding: '1px 4px' }}>
-                      {have ? `✓ ${m.isBody ? '' : m.code}` : m.isBody ? '시신 — 조준 유지' : '조준 유지…'}
+                    <div style={{ fontSize: 10, marginTop: 3, fontWeight: 700, background: tappable ? '#c9a84c' : '#000a', color: tappable ? '#1a1a1a' : '#fff', borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap' }}>
+                      {have ? `✓ ${m.isBody ? '' : m.code}` : m.isBody ? '탭하여 살펴보기' : '탭하여 확보'}
                     </div>
                   )}
                 </div>
@@ -262,7 +285,7 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
             })}
 
             {/* 화면 밖 방향 화살표 */}
-            {phase === 'find' && (
+            {phase === 'find' && !doneMsg && (
               <>
                 {edge.left > 0 && <div style={edgeStyle('left')}>◀ {edge.left}</div>}
                 {edge.right > 0 && <div style={edgeStyle('right')}>{edge.right} ▶</div>}
@@ -300,10 +323,10 @@ function RoomModal({ item, evidence = [], onCollect, onClose }) {
             )}
 
             {/* 상태바 */}
-            {started && phase === 'find' && (
+            {started && phase === 'find' && !doneMsg && (
               <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10, display: 'flex', justifyContent: 'space-between', pointerEvents: 'none' }}>
                 <span style={{ fontSize: 12, background: '#000a', padding: '3px 8px', borderRadius: 6 }}>
-                  미확보 {remaining}개 {remaining > 0 ? '· 조준점을 단서에 맞춰 다가가세요' : '· 다 찾았어요'}
+                  미확보 {remaining}개 {remaining > 0 ? '· 조준해 🔍가 뜨면 탭하세요' : '· 다 찾았어요'}
                 </span>
                 <span style={{ fontSize: 11, color: '#9c9a92', background: '#000a', padding: '3px 8px', borderRadius: 6 }}>{useGyro ? '자이로' : '드래그'}로 둘러보기</span>
               </div>
