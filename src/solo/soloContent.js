@@ -52,11 +52,13 @@ const clueIcon = (c) => {
 // 2) 방에 안 속한 나머지 단서를 성격별 특수 장소로 편입:
 //    CCTV 열람실 / 압수 소지품(폰) / 감식 의뢰실 / 공용 현장. (특수=자동해금, 미배치)
 function buildLocations() {
+  // 수사 단계(stage): 1=탐문(용의자 방·소지품) · 2=중간점검(목사방 현장·감식·CCTV) · 3=2부(폰)
   const rooms = roomEntries.map((r) => ({
     id: r.code,
     kind: 'room',
     label: r.room?.label || r.title,
     person: r.person,
+    stage: r.person === '목사' ? 2 : 1,   // 목사방(현장)은 중간점검에 개방
     bg: ROOM_BG[r.person] || 'linear-gradient(160deg,#1c2230,#0c1018)',
     showBody: !!r.room?.showBody,
     body: r.room?.body || null,
@@ -79,10 +81,10 @@ function buildLocations() {
   }
 
   const tools = [];
-  if (cctv.length) tools.push({ id: 'LOC-CCTV', kind: 'cctv', label: 'CCTV 열람실', bg: 'linear-gradient(160deg,#101820,#080c10)', objects: cctv });
-  if (phones.length) tools.push({ id: 'LOC-PHONE', kind: 'phone', label: '압수 소지품 (휴대폰)', bg: 'linear-gradient(160deg,#141824,#0a0c12)', objects: phones });
-  if (gamsik.length) tools.push({ id: 'LOC-LAB', kind: 'lab', label: '감식 의뢰실', bg: 'linear-gradient(160deg,#0e1a1c,#070f10)', objects: gamsik });
-  if (common.length) tools.push({ id: 'LOC-COMMON', kind: 'common', label: '공용 현장 (복도·1층)', bg: 'linear-gradient(160deg,#1a1a20,#0c0c10)', objects: common });
+  if (cctv.length) tools.push({ id: 'LOC-CCTV', kind: 'cctv', label: 'CCTV 열람실', stage: 2, bg: 'linear-gradient(160deg,#101820,#080c10)', objects: cctv });
+  if (phones.length) tools.push({ id: 'LOC-PHONE', kind: 'phone', label: '압수 소지품 (휴대폰)', stage: 3, bg: 'linear-gradient(160deg,#141824,#0a0c12)', objects: phones });
+  if (gamsik.length) tools.push({ id: 'LOC-LAB', kind: 'lab', label: '감식 의뢰실', stage: 2, bg: 'linear-gradient(160deg,#0e1a1c,#070f10)', objects: gamsik });
+  if (common.length) tools.push({ id: 'LOC-COMMON', kind: 'common', label: '공용 현장 (복도·1층)', stage: 1, bg: 'linear-gradient(160deg,#1a1a20,#0c0c10)', objects: common });
 
   return { rooms, tools, all: [...rooms, ...tools] };
 }
@@ -135,11 +137,16 @@ const caseAnswers = {
   S2: { role: '무고', method: 'm_none', motive: 'mo_none' },         // 윤은재
 };
 
+const _locations = buildLocations();
+
 export const soloContent = {
   briefing,
   suspects,
   victim,
-  locations: buildLocations(),
+  locations: _locations,
+  // 목사방(현장) 단서 코드 — 단계 2→3 진행 판정에 사용
+  crimeSceneCodes: (_locations.rooms.find((r) => r.person === '목사')?.objects) || [],
+  suspectIds: suspects.map((s) => s.id),
   caseKey: { roles: ROLES, methods: METHODS, motives: MOTIVES, answers: caseAnswers },
   getClue: (code) => byCode[code] || null,
   clueIcon,

@@ -3,7 +3,35 @@ import { soloContent } from './soloContent.js';
 import { availableQuestions, answerOf, questionText, confrontOf } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 
-const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue } = soloContent;
+const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds } = soloContent;
+
+// 수사 단계 — 자동 개방(퍼즐/탐정). 가이드는 처음부터 전부 개방.
+const STAGE_LABEL = { 1: '1부 · 탐문', 2: '중간점검 · 현장 조사', 3: '2부 · 전면 공개' };
+const STAGE_BANNER = {
+  2: '🔓 중간점검 개방 — 목사님 방·감식실·CCTV가 열렸습니다',
+  3: '🔓 2부 개방 — 압수한 휴대폰이 모두 열렸습니다',
+};
+const SCENE_NEEDED = 3; // 단계 2→3: 목사방 현장 단서 이만큼 확보
+
+function interrogatedCount(state) {
+  const log = state.interrogation || {};
+  return suspectIds.filter((id) => (log[id] || []).length >= 1).length;
+}
+function sceneClueCount(state) {
+  const got = new Set(state.collected || []);
+  return crimeSceneCodes.filter((c) => got.has(c)).length;
+}
+// 진행도로부터 도달 단계 계산(단조 증가)
+function computeStage(state) {
+  if (interrogatedCount(state) < suspectIds.length) return 1;   // 6인 모두 심문해야 중간점검
+  if (sceneClueCount(state) < SCENE_NEEDED) return 2;           // 현장 조사해야 2부(폰)
+  return 3;
+}
+const stageHint = (locStage) => locStage === 2
+  ? `🔒 중간점검에 열림 — 용의자 ${suspectIds.length}명을 모두 심문하세요`
+  : locStage === 3
+    ? `🔒 2부에 열림 — 목사님 방(현장)에서 단서 ${SCENE_NEEDED}개를 찾으세요`
+    : '🔒 잠김';
 
 const DIFFS = [
   { id: 'guide', name: '가이드', desc: '단서가 술술 열리고 비번 힌트도 보입니다. 부담 없이.' },
@@ -47,6 +75,15 @@ export default function SoloApp() {
   const collectedSet = useMemo(() => new Set(state.collected), [state.collected]);
 
   const showToast = (t) => { setToast(t); setTimeout(() => setToast((cur) => (cur === t ? null : cur)), 2400); };
+
+  // 현재 수사 단계(가이드=전부 개방, 그 외=진행도 기반 자동 개방)
+  const stage = state.difficulty === 'guide' ? 3 : computeStage(state);
+  // 새 단계 개방 시 1회 배너 알림
+  useEffect(() => {
+    if (state.difficulty === 'guide') return;
+    if (stage > (state.stageSeen || 1)) { showToast(STAGE_BANNER[stage]); update({ stageSeen: stage }); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage]);
 
   function collect(code) {
     if (collectedSet.has(code)) return { added: [] };
@@ -220,22 +257,37 @@ export default function SoloApp() {
         ) : state.hubTab === 'notebook' ? (
           <NotebookView state={state} onNotes={(v) => update({ notes: v })} onOpen={(code) => setModalCode(code)} />
         ) : state.hubTab === 'casefile' ? (
-          <CaseFileView state={state}
+          <CaseFileView state={state} stageLocked={state.difficulty !== 'guide' && stage < 3} stageLabel={STAGE_LABEL[stage]}
             onSet={(sid, field, val) => update({ casefile: { ...(state.casefile || {}), [sid]: { ...(state.casefile?.[sid] || {}), [field]: val } } })}
             onSubmit={() => update({ submitted: true, result: scoreCase(state.casefile || {}), screen: 'ending' })} />
         ) : (
           <>
+            <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px', margin: '4px 0 6px' }}>
+              <div style={{ fontWeight: 800, color: 'var(--gold)' }}>🔎 {STAGE_LABEL[stage]}</div>
+              <div style={{ fontSize: '.78rem', color: 'var(--muted)', marginTop: 3 }}>
+                용의자 심문 {interrogatedCount(state)}/{suspectIds.length}
+                {stage >= 2 ? ` · 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}` : ''}
+                {' · '}
+                {stage === 1 ? '다음: 6명 모두 심문하면 현장·감식·CCTV 개방'
+                  : stage === 2 ? '다음: 목사방에서 단서를 모으면 휴대폰 개방'
+                  : '모든 장소가 개방되었습니다'}
+              </div>
+            </div>
             <div className="s-section-t">현장 · 장소</div>
             <div className="s-grid">
-              {locations.rooms.map((l) => (
-                <LocCard key={l.id} loc={l} collectedSet={collectedSet} onClick={() => setSceneId(l.id)} />
-              ))}
+              {locations.rooms.map((l) => {
+                const locked = l.stage > stage;
+                return <LocCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked}
+                  onClick={locked ? () => showToast(stageHint(l.stage)) : () => setSceneId(l.id)} />;
+              })}
             </div>
             <div className="s-section-t">조사 시설</div>
             <div className="s-grid">
-              {locations.tools.map((l) => (
-                <LocCard key={l.id} loc={l} collectedSet={collectedSet} onClick={() => setSceneId(l.id)} />
-              ))}
+              {locations.tools.map((l) => {
+                const locked = l.stage > stage;
+                return <LocCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked}
+                  onClick={locked ? () => showToast(stageHint(l.stage)) : () => setSceneId(l.id)} />;
+              })}
             </div>
           </>
         )}
@@ -277,15 +329,18 @@ function scoreCase(casefile) {
 }
 
 // ── 장소 카드 ─────────────────────────────────────────────────────────────
-function LocCard({ loc, collectedSet, onClick }) {
+function LocCard({ loc, collectedSet, locked, onClick }) {
   const total = loc.objects.length;
   const got = loc.objects.filter((c) => collectedSet.has(c)).length;
+  const icon = loc.kind === 'room' ? (loc.person === '목사' ? '⚰️' : '🚪') : loc.kind === 'cctv' ? '📹' : loc.kind === 'phone' ? '📱' : loc.kind === 'lab' ? '🔬' : '📍';
   return (
-    <button className="s-card" onClick={onClick}>
-      <div className="ck">{loc.kind === 'room' ? '🚪' : loc.kind === 'cctv' ? '📹' : loc.kind === 'phone' ? '📱' : loc.kind === 'lab' ? '🔬' : '📍'}</div>
+    <button className="s-card" onClick={onClick} style={locked ? { opacity: 0.55, borderStyle: 'dashed' } : null}>
+      <div className="ck">{locked ? '🔒' : icon}</div>
       <div className="cn">{loc.label}</div>
-      <div className="cm">단서 {got}/{total}</div>
-      {got === total && total > 0 ? <span className="cbadge">탐색 완료</span> : null}
+      {locked
+        ? <div className="cm">{loc.stage === 2 ? '중간점검에 열림' : '2부에 열림'}</div>
+        : <div className="cm">단서 {got}/{total}</div>}
+      {!locked && got === total && total > 0 ? <span className="cbadge">탐색 완료</span> : null}
     </button>
   );
 }
@@ -546,7 +601,7 @@ function NotebookView({ state, onNotes, onOpen }) {
 }
 
 // ── 사건 파일(최종 제출) ───────────────────────────────────────────────────
-function CaseFileView({ state, onSet, onSubmit }) {
+function CaseFileView({ state, stageLocked, stageLabel, onSet, onSubmit }) {
   const submitted = state.submitted && state.result;
   const per = state.result?.per || {};
   const filledAll = suspects.every((s) => { const g = state.casefile?.[s.id]; return g?.role && g?.method && g?.motive; });
@@ -594,9 +649,13 @@ function CaseFileView({ state, onSet, onSubmit }) {
       })}
       {!submitted && (
         <div style={{ textAlign: 'center', margin: '18px 0' }}>
-          <button className="s-btn" disabled={!filledAll} style={!filledAll ? { opacity: .5 } : {}} onClick={onSubmit}>
-            {filledAll ? '사건 파일 제출 →' : '모든 인물을 채워주세요'}
-          </button>
+          {stageLocked ? (
+            <div style={{ color: 'var(--muted)', fontSize: '.85rem', lineHeight: 1.7 }}>🔒 2부(전면 공개)까지 조사를 마쳐야 제출할 수 있습니다.<br />현재 단계: <b>{stageLabel}</b></div>
+          ) : (
+            <button className="s-btn" disabled={!filledAll} style={!filledAll ? { opacity: 0.5 } : {}} onClick={onSubmit}>
+              {filledAll ? '사건 파일 제출 →' : '모든 인물을 채워주세요'}
+            </button>
+          )}
         </div>
       )}
     </>

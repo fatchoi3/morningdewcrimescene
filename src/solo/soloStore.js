@@ -10,6 +10,7 @@ export function defaultState() {
     started: false,
     difficulty: 'puzzle',       // 'guide' | 'puzzle' | 'detective'
     screen: 'start',            // start | briefing | hub | scene | suspect | casefile | ending
+    stageSeen: 1,               // 안내 배너를 이미 띄운 최고 단계(1/2/3)
     collected: [],              // 확보한 단서 코드
     visited: [],                // 방문한 장소 id
     notes: '',                  // 수사 수첩 자유 메모
