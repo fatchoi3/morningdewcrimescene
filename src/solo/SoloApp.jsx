@@ -282,21 +282,29 @@ export default function SoloApp() {
                   : '모든 장소가 개방되었습니다'}
               </div>
             </div>
-            <div className="s-section-t">현장 · 장소</div>
-            <div className="s-grid">
-              {locations.rooms.map((l) => {
-                const locked = l.stage > stage;
-                return <LocCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked}
-                  onClick={locked ? () => showToast(stageHint(l.stage)) : () => setSceneId(l.id)} />;
-              })}
+            <div className="s-section-t">숙소 복도 — 문을 눌러 들어가기</div>
+            <div className="s-hall">
+              <div className="s-hall-sign">🏢 수련회 숙소 · 인물들의 방</div>
+              <div className="s-doors">
+                {locations.rooms.map((l) => {
+                  const locked = l.stage > stage;
+                  const isCrime = l.person === '목사';
+                  return <DoorCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked} isCrime={isCrime}
+                    onClick={locked
+                      ? () => showToast(isCrime ? '🚧 목사님 방은 통제 중입니다 — 중간점검 때 개방됩니다' : stageHint(l.stage))
+                      : () => setSceneId(l.id)} />;
+                })}
+              </div>
             </div>
             <div className="s-section-t">조사 시설</div>
-            <div className="s-grid">
-              {locations.tools.map((l) => {
-                const locked = l.stage > stage;
-                return <LocCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked}
-                  onClick={locked ? () => showToast(stageHint(l.stage)) : () => setSceneId(l.id)} />;
-              })}
+            <div className="s-hall">
+              <div className="s-doors">
+                {locations.tools.map((l) => {
+                  const locked = l.stage > stage;
+                  return <DoorCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked}
+                    onClick={locked ? () => showToast(stageHint(l.stage)) : () => setSceneId(l.id)} />;
+                })}
+              </div>
             </div>
           </>
         )}
@@ -338,18 +346,26 @@ function scoreCase(casefile) {
 }
 
 // ── 장소 카드 ─────────────────────────────────────────────────────────────
-function LocCard({ loc, collectedSet, locked, onClick }) {
+// ── 복도의 문(장소 진입) ───────────────────────────────────────────────────
+function DoorCard({ loc, collectedSet, locked, isCrime, onClick }) {
   const total = loc.objects.length;
   const got = loc.objects.filter((c) => collectedSet.has(c)).length;
-  const icon = loc.kind === 'room' ? (loc.person === '목사' ? '⚰️' : '🚪') : loc.kind === 'cctv' ? '📹' : loc.kind === 'phone' ? '📱' : loc.kind === 'lab' ? '🔬' : '📍';
+  const done = !locked && total > 0 && got === total;
+  const icon = loc.kind === 'room' ? (isCrime ? '⚰️' : '🚪')
+    : loc.kind === 'cctv' ? '📹' : loc.kind === 'phone' ? '📱' : loc.kind === 'lab' ? '🔬' : '🚶';
   return (
-    <button className="s-card" onClick={onClick} style={locked ? { opacity: 0.55, borderStyle: 'dashed' } : null}>
-      <div className="ck">{locked ? '🔒' : icon}</div>
-      <div className="cn">{loc.label}</div>
-      {locked
-        ? <div className="cm">{loc.stage === 2 ? '중간점검에 열림' : '2부에 열림'}</div>
-        : <div className="cm">단서 {got}/{total}</div>}
-      {!locked && got === total && total > 0 ? <span className="cbadge">탐색 완료</span> : null}
+    <button className={`s-door${locked ? ' locked' : ''}${isCrime ? ' crime' : ''}`} onClick={onClick}>
+      <div className="s-door-body">
+        <span className="s-door-icon">{locked ? '🔒' : icon}</span>
+        <span className="s-door-handle" />
+        {isCrime && locked && <span className="s-door-tape" />}
+      </div>
+      <div className="s-door-plate">{loc.label}</div>
+      <div className="s-door-stat">
+        {locked ? (isCrime ? '통제 중' : loc.stage === 2 ? '중간점검 개방' : '2부 개방')
+          : loc.kind === 'room' ? (done ? '✓ 탐색완료' : `단서 ${got}/${total}`)
+          : '열람'}
+      </div>
     </button>
   );
 }
