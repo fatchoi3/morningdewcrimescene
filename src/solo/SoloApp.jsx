@@ -16,8 +16,9 @@ const SCENE_NEEDED = 3; // 단계 2→3: 목사방 현장 단서 이만큼 확�
 const TRUST_MAX = 5;    // 신뢰도(HP)
 
 function interrogatedCount(state) {
-  const pressed = state.pressed || {};
-  return suspectIds.filter((id) => (pressed[id] || []).length >= 1).length;
+  const pressed = state.pressed || {}, broke = state.broke || {};
+  // 추궁했거나(증언 눌러봄) 증거로 모순을 잡았으면 '심문함'으로 인정
+  return suspectIds.filter((id) => (pressed[id] || []).length >= 1 || (broke[id] || []).length >= 1).length;
 }
 function sceneClueCount(state) {
   const got = new Set(state.collected || []);
@@ -244,9 +245,10 @@ export default function SoloApp() {
               } else if (r.result === 'soft') {
                 showToast(r.text.length > 42 ? r.text.slice(0, 40) + '…' : r.text);
               } else {
-                const t = Math.max(0, (state.trust ?? TRUST_MAX) - 1);
-                if (t <= 0) { update({ trust: TRUST_MAX }); setSuspectId(null); showToast('⚠ 신뢰도가 바닥났습니다 — 잠시 정비 후 다시 심문하세요'); }
-                else { update({ trust: t }); showToast(`관계없는 증거입니다. (신뢰도 -1 · 남은 ${t})`); }
+                const tr = { ...(state.trust || {}) };
+                const t = Math.max(0, (tr[suspectId] ?? TRUST_MAX) - 1);
+                if (t <= 0) { tr[suspectId] = TRUST_MAX; update({ trust: tr }); setSuspectId(null); showToast('⚠ 신뢰도가 바닥났습니다 — 잠시 정비 후 다시 심문하세요'); }
+                else { tr[suspectId] = t; update({ trust: tr }); showToast(`관계없는 증거입니다. (신뢰도 -1 · 남은 ${t})`); }
               }
             }} />
         ) : state.hubTab === 'suspects' ? (
@@ -703,7 +705,7 @@ function CrossExamView({ suspect, state, collectedClues, onPress, onPresent }) {
   const unlocked = state.stUnlocked?.[sid] || [];
   const pressed = state.pressed?.[sid] || [];
   const broke = state.broke?.[sid] || [];
-  const trust = state.trust ?? TRUST_MAX;
+  const trust = state.trust?.[sid] ?? TRUST_MAX;
   const statements = visibleStatements(sid, collected, unlocked);
   const brokeOf = (id) => broke.find((e) => e.id === id);
   const confessed = broke.some((e) => e.confess);

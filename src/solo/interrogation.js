@@ -140,12 +140,3 @@ export function presentOn(sid, stId, code) {
   if (s.soft && s.soft[code]) return { result: 'soft', text: s.soft[code] };
   return { result: 'wrong', text: WRONG };
 }
-
-/** 이 인물에게 아직 못 잡은 모순이 남았는지(대기 중인 결정 증거 존재) */
-export function hasPendingContradiction(sid, collected = [], unlocked = [], broke = []) {
-  const brokenIds = new Set(broke);
-  return visibleStatements(sid, collected, unlocked).some((v) => {
-    const s = stOf(sid, v.id);
-    return s?.contradict && !brokenIds.has(s.id);
-  });
-}

@@ -15,7 +15,7 @@ export function defaultState() {
     visited: [],                // 방문한 장소 id
     notes: '',                  // 수사 수첩 자유 메모
     suspicion: {},              // { S1: 0..3 } 플레이어의 의심도 마킹
-    trust: 5,                   // 신뢰도(HP) — 엉뚱한 증거 제시 시 감소
+    trust: {},                  // { S1: 5 } 인물별 신뢰도(HP) — 엉뚱한 증거 제시 시 감소
     pressed: {},                // { S1: [증언id] } — 추궁한 진술
     broke: {},                  // { S1: [{ id, text, confess }] } — 모순 잡은 진술
     stUnlocked: {},             // { S1: [증언id] } — 추궁/모순으로 열린 숨은 증언
