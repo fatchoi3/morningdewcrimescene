@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { soloContent } from './soloContent.js';
 import { introOf, visibleStatements, pressOf, presentOn } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
-import { SceneBg, Avatar, BriefingArt, EndingArt } from './art.jsx';
+import { SceneBg, Avatar, BriefingArt, EndingArt, CorridorBg } from './art.jsx';
 
 const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds } = soloContent;
 
@@ -62,6 +62,23 @@ const REVEAL = {
   },
   essence: '여섯 사람이 각자 다른 이유로, 서로 모르게, 같은 날 같은 사람을 노렸다. 실제로 목사를 죽인 건 박희원의 베개였지만, 그 죽음을 만든 건 목사가 무심코 건드린 여섯 사람의 얽힌 원한 전부였다.',
 };
+
+// 그날의 진실 — 시간 순(엔딩 공개용)
+const TIMELINE = [
+  ['전날 밤', '이사랑이 언니의 송금 내역을 발견해 오해를 풀고, 횡령 위기를 이현지에게 고백.'],
+  ['당일 아침', '목사가 찬조금 미입금을 발견 → 이사랑 면담, 수련회 후 재정 점검 예고.'],
+  ['10:00', '최종현·목사 등산 출발 (방·복도가 한동안 빔).'],
+  ['10:10~12', '박희원이 설하정 6알을 비타민으로 바꿔치기. 진짜 약은 자기 요일별 약통에 숨김.'],
+  ['10:20', '이현지가 목사 텀블러에 졸피뎀 투입.'],
+  ['10:25', '이사랑이 최종현 방에서 요힘빈↔단백질 라벨을 교체.'],
+  ['12:40', '최종현이 (바뀐) "단백질" 음료를 목사에게 전달.'],
+  ['12:41~45', '윤은재가 목사방에서 언쟁(손목 멍). 나올 때 목사는 멀쩡·음료 미복용.'],
+  ['~12:50', '목사가 요힘빈 음료를 마심 → 컨디션 악화.'],
+  ['13:10', '협심증 발작. 가짜 약을 눈치채고 품속 진짜 설하정 복용 후 안정.'],
+  ['13:15', '박희원이 유리창으로 "실패"라 판단 → 진입 → 베개로 질식 (직접 사인).'],
+  ['13:20', '이가현이 발견 → 이미 사망. 목사 폰 톡서랍(0419) 기록 삭제.'],
+  ['13:31', '이가현이 119 신고 (진입~신고 공백이 의심을 부름).'],
+];
 
 const norm = (s) => String(s ?? '').trim().replace(/\s/g, '').toUpperCase();
 
@@ -169,6 +186,7 @@ export default function SoloApp() {
               {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : '✗ 진범을 놓쳤습니다'}
             </div>
             <div style={{ color: 'var(--muted)', marginTop: 6 }}>{r.grade}</div>
+            <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>박희원</b> · 직접 사인 <b style={{ color: '#fff' }}>베개 질식</b></div>
           </div>
           <div className="s-reveal">
             <h2 style={{ textAlign: 'center' }}>사건의 전말</h2>
@@ -181,6 +199,15 @@ export default function SoloApp() {
                 </div>
               );
             })}
+            <h3 style={{ borderBottom: '1px solid var(--line)', paddingBottom: 6, marginTop: 24 }}>🕰 그날의 진실 — 시간 순</h3>
+            <div className="s-timeline">
+              {TIMELINE.map(([t, d], i) => (
+                <div className="s-tl2-row" key={i}>
+                  <div className="s-tl2-t">{t}</div>
+                  <div className="s-tl2-d">{d}</div>
+                </div>
+              ))}
+            </div>
             <div style={{ background: '#0f0e0c', border: '1px solid var(--gold)', borderRadius: 12, padding: 18, marginTop: 22 }}>
               <div className="s-eye" style={{ color: 'var(--gold)' }}>사건의 본질</div>
               <p style={{ lineHeight: 1.9, marginBottom: 0 }}>{REVEAL.essence}</p>
@@ -286,6 +313,7 @@ export default function SoloApp() {
             </div>
             <div className="s-section-t">숙소 복도 — 문을 눌러 들어가기</div>
             <div className="s-hall">
+              <CorridorBg />
               <div className="s-hall-sign">🏢 수련회 숙소 · 인물들의 방</div>
               <div className="s-doors">
                 {locations.rooms.map((l) => {
@@ -300,6 +328,7 @@ export default function SoloApp() {
             </div>
             <div className="s-section-t">조사 시설</div>
             <div className="s-hall">
+              <CorridorBg />
               <div className="s-doors">
                 {locations.tools.map((l) => {
                   const locked = l.stage > stage;

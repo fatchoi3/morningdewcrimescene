@@ -308,6 +308,47 @@ export function BriefingArt() {
   );
 }
 
+// ── 복도 원근 배경(문 카드 뒤에 깔림) ──
+export function CorridorBg() {
+  return (
+    <svg viewBox="0 0 800 320" preserveAspectRatio="xMidYMid slice"
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+      <defs>
+        <radialGradient id="cend" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor="#e6c877" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#e6c877" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* 소실점 안쪽 벽 */}
+      <rect x="330" y="112" width="140" height="96" fill="#1c222e" />
+      <rect x="330" y="112" width="140" height="96" fill="url(#cend)" />
+      {/* 천장 / 바닥 / 좌우 벽 (1점 투시) */}
+      <polygon points="0,0 800,0 470,112 330,112" fill="#0e121b" />
+      <polygon points="0,320 800,320 470,208 330,208" fill="#0b0e15" />
+      <polygon points="0,0 330,112 330,208 0,320" fill="#161c28" />
+      <polygon points="800,0 470,112 470,208 800,320" fill="#131824" />
+      {/* 천장 조명(소실선 따라) */}
+      {[0, 1, 2].map((i) => {
+        const t = 0.18 + i * 0.22;
+        const x1 = 330 * (1 - t), y1 = 112 * (1 - t);
+        const x2 = 470 + (800 - 470) * (1 - t), y2 = 112 * (1 - t);
+        return <line key={i} x1={x1} y1={y1 + 4} x2={x2} y2={y2 + 4} stroke="#e6c877" strokeWidth={1 + i} opacity="0.35" />;
+      })}
+      {/* 좌우 벽 문틀(방들이 늘어선 느낌) */}
+      {[0, 1].map((i) => {
+        const near = 0.34 + i * 0.34, far = near + 0.24;
+        const lxN = 330 * (1 - near), lxF = 330 * (1 - far);
+        const tyN = 112 * (1 - near), tyF = 112 * (1 - far);
+        const byN = 320 - (320 - 208) * (1 - near), byF = 320 - (320 - 208) * (1 - far);
+        return <g key={i}>
+          <polygon points={`${lxN},${tyN + 18} ${lxF},${tyF + 14} ${lxF},${byF - 10} ${lxN},${byN - 14}`} fill="#0c1017" opacity="0.8" />
+          <polygon points={`${800 - lxN},${tyN + 18} ${800 - lxF},${tyF + 14} ${800 - lxF},${byF - 10} ${800 - lxN},${byN - 14}`} fill="#0c1017" opacity="0.8" />
+        </g>;
+      })}
+    </svg>
+  );
+}
+
 // ── 엔딩 히어로 ──
 export function EndingArt({ good }) {
   const c = good ? '#6fae4e' : '#c06868';

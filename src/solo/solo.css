@@ -154,6 +154,13 @@ button { font-family: inherit; }
 .s-verdict .c { color: var(--ok); }
 .s-verdict .w { color: var(--danger); }
 
+/* 엔딩 타임라인 */
+.s-timeline { margin: 10px 0 4px; }
+.s-tl2-row { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.s-tl2-row:last-child { border-bottom: none; }
+.s-tl2-t { flex: 0 0 76px; font-weight: 800; color: var(--gold); font-size: .82rem; }
+.s-tl2-d { flex: 1; font-size: .9rem; line-height: 1.55; color: #d8d4cc; }
+
 /* 엔딩 */
 .s-score { text-align: center; padding: 26px 16px; }
 .s-score .big { font-size: 3.4rem; font-weight: 900; color: var(--gold); }
