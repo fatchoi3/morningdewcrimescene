@@ -622,7 +622,7 @@ function SuspectView({ suspect, state, onAsk, onSuspicion }) {
           <button key={n} className={suspicion === n ? 'on' : ''} onClick={() => onSuspicion(n)}>{n === 0 ? '없음' : '★'.repeat(n)}</button>
         ))}
       </div>
-      <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 14 }}>💡 (2단계에서 이 심문이 자유 대화형 AI로 바뀝니다. 지금은 정해진 진술입니다.)</p>
+      <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 14 }}>💡 질문을 골라 진술을 받고, 진술과 증거 사이의 모순을 찾아보세요.</p>
     </>
   );
 }
