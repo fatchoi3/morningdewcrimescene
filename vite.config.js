@@ -24,4 +24,13 @@ export default defineConfig({
       '@secrets': secretsPath,
     },
   },
+  // 멀티페이지: 기존 QR 게임(index.html) + 솔로 추리게임(solo.html)
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolvePath('./index.html'),
+        solo: resolvePath('./solo.html'),
+      },
+    },
+  },
 });
