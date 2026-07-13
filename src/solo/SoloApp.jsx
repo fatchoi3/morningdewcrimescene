@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { soloContent } from './soloContent.js';
-import { TOPICS, ask } from './interrogation.js';
+import { availableQuestions, answerOf, questionText, confrontOf } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 
 const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue } = soloContent;
@@ -179,13 +179,28 @@ export default function SoloApp() {
             onOpen={(code) => setModalCode(code)} onLockedToast={showToast} difficulty={state.difficulty} />
         ) : suspectId ? (
           <SuspectView suspect={suspects.find((s) => s.id === suspectId)} state={state}
-            onAsk={(topicId) => {
-              const a = ask(suspectId, topicId);
+            collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
+            onAsk={(qId) => {
               const log = { ...(state.interrogation || {}) };
               const cur = log[suspectId] || [];
-              const q = TOPICS.find((t) => t.id === topicId)?.q;
-              log[suspectId] = [...cur.filter((e) => e.topicId !== topicId), { topicId, q, a }];
+              if (cur.some((e) => e.id === qId)) return;
+              log[suspectId] = [...cur, { id: qId, q: questionText(suspectId, qId), a: answerOf(suspectId, qId) }];
               update({ interrogation: log });
+            }}
+            onConfront={(code) => {
+              const cf = { ...(state.confronts || {}) };
+              const cur = cf[suspectId] || [];
+              if (cur.some((e) => e.code === code)) return;
+              const r = confrontOf(suspectId, code);
+              cf[suspectId] = [...cur, { code, a: r.a }];
+              const patch = { confronts: cf };
+              if (r.unlock) {
+                const u = { ...(state.qUnlocked || {}) };
+                u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])];
+                patch.qUnlocked = u;
+                showToast('🔓 새로운 질문이 열렸습니다');
+              }
+              update(patch);
             }}
             onSuspicion={(v) => update({ suspicion: { ...(state.suspicion || {}), [suspectId]: v } })} />
         ) : state.hubTab === 'suspects' ? (
@@ -589,11 +604,19 @@ function CaseFileView({ state, onSet, onSubmit }) {
 }
 
 // ── 용의자 심문 ────────────────────────────────────────────────────────────
-function SuspectView({ suspect, state, onAsk, onSuspicion }) {
+function SuspectView({ suspect, state, collectedClues, onAsk, onConfront, onSuspicion }) {
+  const [showEvi, setShowEvi] = useState(false);
   if (!suspect) return null;
-  const log = state.interrogation?.[suspect.id] || [];
-  const suspicion = state.suspicion?.[suspect.id] || 0;
-  const answered = (topicId) => log.find((e) => e.topicId === topicId);
+  const sid = suspect.id;
+  const log = state.interrogation?.[sid] || [];
+  const confronts = state.confronts?.[sid] || [];
+  const suspicion = state.suspicion?.[sid] || 0;
+  const askedIds = log.map((e) => e.id);
+  const unlockedIds = state.qUnlocked?.[sid] || [];
+  const questions = availableQuestions(sid, askedIds, unlockedIds);
+  const answered = (id) => log.find((e) => e.id === id);
+  const presented = (code) => confronts.find((e) => e.code === code);
+
   return (
     <>
       <div className="s-dossier">
@@ -606,12 +629,44 @@ function SuspectView({ suspect, state, onAsk, onSuspicion }) {
       <p style={{ lineHeight: 1.7, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10, padding: 12 }}>{suspect.notes}</p>
 
       <div className="s-section-t">심문 — 질문을 선택하세요</div>
-      {TOPICS.map((t) => {
+      {questions.map((t) => {
         const a = answered(t.id);
         return (
-          <div key={t.id}>
-            <button className="s-topic" onClick={() => onAsk(t.id)}>❓ {t.q}</button>
+          <div key={t.id} style={t.follow ? { marginLeft: 12, borderLeft: '2px solid var(--gold)', paddingLeft: 8 } : null}>
+            <button className="s-topic" onClick={() => onAsk(t.id)}>
+              {t.follow ? '↳ ' : '❓ '}{t.q}{t.follow && !a ? <span className="s-tag" style={{ color: 'var(--gold)' }}>추가</span> : null}
+            </button>
             {a && <div className="s-qa"><div className="q">{suspect.name}</div><div>{a.a}</div></div>}
+          </div>
+        );
+      })}
+
+      <div className="s-section-t">증거 들이밀기</div>
+      <button className="s-btn ghost sm" onClick={() => setShowEvi((v) => !v)}>
+        🔍 확보한 단서 제시 {showEvi ? '▲' : '▼'} ({collectedClues.length})
+      </button>
+      {showEvi && (
+        collectedClues.length === 0
+          ? <p style={{ color: 'var(--muted)', fontSize: '.82rem', marginTop: 8 }}>제시할 단서가 없습니다. 현장을 먼저 조사하세요.</p>
+          : <div className="s-grid" style={{ marginTop: 8 }}>
+              {collectedClues.map((c) => {
+                const done = presented(c.code);
+                return (
+                  <button key={c.code} className="s-card" style={done ? { borderColor: 'var(--gold)' } : null} onClick={() => onConfront(c.code)}>
+                    <div className="ck">{clueIcon(c)}</div>
+                    <div className="cn" style={{ fontSize: '.85rem' }}>{c.title}</div>
+                    <div className="cm">{done ? '✓ 제시함' : '제시하기'}</div>
+                  </button>
+                );
+              })}
+            </div>
+      )}
+      {confronts.map((e) => {
+        const c = getClue(e.code);
+        return (
+          <div className="s-qa" key={e.code} style={{ borderColor: 'var(--gold)' }}>
+            <div className="q">💼 [{e.code}] {c?.title} 제시</div>
+            <div>{suspect.name}: {e.a}</div>
           </div>
         );
       })}
@@ -622,7 +677,7 @@ function SuspectView({ suspect, state, onAsk, onSuspicion }) {
           <button key={n} className={suspicion === n ? 'on' : ''} onClick={() => onSuspicion(n)}>{n === 0 ? '없음' : '★'.repeat(n)}</button>
         ))}
       </div>
-      <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 14 }}>💡 질문을 골라 진술을 받고, 진술과 증거 사이의 모순을 찾아보세요.</p>
+      <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 14 }}>💡 질문과 증거를 엮어 진술의 모순을 찾으세요. 어떤 증거는 새 질문을 엽니다.</p>
     </>
   );
 }

@@ -14,7 +14,9 @@ export function defaultState() {
     visited: [],                // 방문한 장소 id
     notes: '',                  // 수사 수첩 자유 메모
     suspicion: {},              // { S1: 0..3 } 플레이어의 의심도 마킹
-    interrogation: {},          // { S1: [{ q, a }] }
+    interrogation: {},          // { S1: [{ id, q, a }] } —물어본 질문
+    confronts: {},              // { S1: [{ code, a }] } —들이민 증거와 반응
+    qUnlocked: {},              // { S1: [질문id] } — 증거로 열린 숨은 질문
     casefile: {},               // { S1: { role, method, motive } }
     submitted: false,
     result: null,               // 채점 결과
