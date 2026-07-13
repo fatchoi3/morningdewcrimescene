@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { soloContent } from './soloContent.js';
-import { availableQuestions, answerOf, questionText, confrontOf } from './interrogation.js';
+import { introOf, visibleStatements, pressOf, presentOn } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { SceneBg, Avatar, BriefingArt, EndingArt } from './art.jsx';
 
@@ -13,10 +13,11 @@ const STAGE_BANNER = {
   3: '🔓 2부 개방 — 압수한 휴대폰이 모두 열렸습니다',
 };
 const SCENE_NEEDED = 3; // 단계 2→3: 목사방 현장 단서 이만큼 확보
+const TRUST_MAX = 5;    // 신뢰도(HP)
 
 function interrogatedCount(state) {
-  const log = state.interrogation || {};
-  return suspectIds.filter((id) => (log[id] || []).length >= 1).length;
+  const pressed = state.pressed || {};
+  return suspectIds.filter((id) => (pressed[id] || []).length >= 1).length;
 }
 function sceneClueCount(state) {
   const got = new Set(state.collected || []);
@@ -216,33 +217,38 @@ export default function SoloApp() {
       <div className="s-body">
         {sceneId ? (
           <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet}
+            roomSuspect={suspects.find((s) => s.name === locations.all.find((l) => l.id === sceneId)?.person)}
+            onTalk={(id) => { setSceneId(null); setSuspectId(id); }}
             onOpen={(code) => setModalCode(code)} onLockedToast={showToast} difficulty={state.difficulty} />
         ) : suspectId ? (
-          <SuspectView suspect={suspects.find((s) => s.id === suspectId)} state={state}
+          <CrossExamView suspect={suspects.find((s) => s.id === suspectId)} state={state}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
-            onAsk={(qId) => {
-              const log = { ...(state.interrogation || {}) };
-              const cur = log[suspectId] || [];
-              if (cur.some((e) => e.id === qId)) return;
-              log[suspectId] = [...cur, { id: qId, q: questionText(suspectId, qId), a: answerOf(suspectId, qId) }];
-              update({ interrogation: log });
-            }}
-            onConfront={(code) => {
-              const cf = { ...(state.confronts || {}) };
-              const cur = cf[suspectId] || [];
-              if (cur.some((e) => e.code === code)) return;
-              const r = confrontOf(suspectId, code);
-              cf[suspectId] = [...cur, { code, a: r.a }];
-              const patch = { confronts: cf };
-              if (r.unlock) {
-                const u = { ...(state.qUnlocked || {}) };
-                u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])];
-                patch.qUnlocked = u;
-                showToast('🔓 새로운 질문이 열렸습니다');
-              }
+            onPress={(stId) => {
+              const r = pressOf(suspectId, stId);
+              const pr = { ...(state.pressed || {}) };
+              pr[suspectId] = [...new Set([...(pr[suspectId] || []), stId])];
+              const patch = { pressed: pr };
+              if (r.unlock) { const u = { ...(state.stUnlocked || {}) }; u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])]; patch.stUnlocked = u; }
               update(patch);
             }}
-            onSuspicion={(v) => update({ suspicion: { ...(state.suspicion || {}), [suspectId]: v } })} />
+            onPresent={(stId, code) => {
+              const r = presentOn(suspectId, stId, code);
+              if (r.result === 'contradict') {
+                const bk = { ...(state.broke || {}) };
+                const cur = bk[suspectId] || [];
+                if (!cur.some((e) => e.id === stId)) bk[suspectId] = [...cur, { id: stId, text: r.text, confess: !!r.confess }];
+                const patch = { broke: bk };
+                if (r.unlock) { const u = { ...(state.stUnlocked || {}) }; u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])]; patch.stUnlocked = u; }
+                update(patch);
+                showToast('❗모순을 잡았습니다!');
+              } else if (r.result === 'soft') {
+                showToast(r.text.length > 42 ? r.text.slice(0, 40) + '…' : r.text);
+              } else {
+                const t = Math.max(0, (state.trust ?? TRUST_MAX) - 1);
+                if (t <= 0) { update({ trust: TRUST_MAX }); setSuspectId(null); showToast('⚠ 신뢰도가 바닥났습니다 — 잠시 정비 후 다시 심문하세요'); }
+                else { update({ trust: t }); showToast(`관계없는 증거입니다. (신뢰도 -1 · 남은 ${t})`); }
+              }
+            }} />
         ) : state.hubTab === 'suspects' ? (
           <>
             <div className="s-section-t">용의자 6인 — 탭하여 심문</div>
@@ -252,7 +258,7 @@ export default function SoloApp() {
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}><Avatar person={s.name} image={s.image} size={48} /></div>
                   <div className="cn">{s.name}</div>
                   <div className="cm">{s.occupation}</div>
-                  {state.suspicion?.[s.id] ? <span className="cbadge">의심 {'★'.repeat(state.suspicion[s.id])}</span> : null}
+                  {state.broke?.[s.id]?.length ? <span className="cbadge">모순 {state.broke[s.id].length}</span> : null}
                 </button>
               ))}
             </div>
@@ -349,13 +355,19 @@ function LocCard({ loc, collectedSet, locked, onClick }) {
 }
 
 // ── 장면(포인트앤클릭) ─────────────────────────────────────────────────────
-function SceneView({ location, collectedSet, onOpen, onLockedToast, difficulty }) {
+function SceneView({ location, collectedSet, roomSuspect, onTalk, onOpen, onLockedToast, difficulty }) {
   if (!location) return null;
   return (
     <>
       <div className="s-scene" style={{ background: '#0b0d12' }}>
         <SceneBg location={location} />
-        <div className="s-scene-hint">🔦 {location.label} — 빛나는 지점을 눌러 조사하세요{location.showBody ? ' · 🛏 시신도 확인' : ''}</div>
+        <div className="s-scene-hint">🔦 {location.label} — 빛나는 지점을 눌러 조사{roomSuspect ? ' · 인물을 눌러 심문' : ''}{location.showBody ? ' · 🛏 시신 확인' : ''}</div>
+        {roomSuspect && onTalk && (
+          <button className="s-figure" onClick={() => onTalk(roomSuspect.id)}>
+            <Avatar person={roomSuspect.name} image={roomSuspect.image} size={76} />
+            <span className="s-figure-lab">{roomSuspect.name} · 심문</span>
+          </button>
+        )}
         {location.showBody && (
           <div className="s-hot" style={{ left: '50%', top: '20%' }} onClick={() => onOpen('__body__')}>
             <div className="dot" style={{ borderColor: '#c06868', background: '#2a1414' }}>🛏</div>
@@ -667,80 +679,70 @@ function CaseFileView({ state, stageLocked, stageLabel, onSet, onSubmit }) {
 }
 
 // ── 용의자 심문 ────────────────────────────────────────────────────────────
-function SuspectView({ suspect, state, collectedClues, onAsk, onConfront, onSuspicion }) {
-  const [showEvi, setShowEvi] = useState(false);
+function CrossExamView({ suspect, state, collectedClues, onPress, onPresent }) {
+  const [presentFor, setPresentFor] = useState(null); // 증거 제시 대상 증언 id
   if (!suspect) return null;
   const sid = suspect.id;
-  const log = state.interrogation?.[sid] || [];
-  const confronts = state.confronts?.[sid] || [];
-  const suspicion = state.suspicion?.[sid] || 0;
-  const askedIds = log.map((e) => e.id);
-  const unlockedIds = state.qUnlocked?.[sid] || [];
-  const questions = availableQuestions(sid, askedIds, unlockedIds);
-  const answered = (id) => log.find((e) => e.id === id);
-  const presented = (code) => confronts.find((e) => e.code === code);
+  const collected = state.collected || [];
+  const unlocked = state.stUnlocked?.[sid] || [];
+  const pressed = state.pressed?.[sid] || [];
+  const broke = state.broke?.[sid] || [];
+  const trust = state.trust ?? TRUST_MAX;
+  const statements = visibleStatements(sid, collected, unlocked);
+  const brokeOf = (id) => broke.find((e) => e.id === id);
+  const confessed = broke.some((e) => e.confess);
 
   return (
     <>
       <div className="s-dossier">
         <Avatar person={suspect.name} image={suspect.image} size={64} />
-        <div>
+        <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{suspect.name} <span className="s-tag">{suspect.age}세</span></div>
           <div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{suspect.occupation}</div>
         </div>
+        <div title="신뢰도" style={{ fontSize: '1.05rem', letterSpacing: 1, whiteSpace: 'nowrap' }}>
+          <span style={{ color: '#e06a6a' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: 0.3 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
+        </div>
       </div>
-      <p style={{ lineHeight: 1.7, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10, padding: 12 }}>{suspect.notes}</p>
+      <p style={{ lineHeight: 1.7, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10, padding: 12, fontStyle: 'italic', color: '#cfcabb' }}>“{introOf(sid)}”</p>
 
-      <div className="s-section-t">심문 — 질문을 선택하세요</div>
-      {questions.map((t) => {
-        const a = answered(t.id);
+      <div className="s-section-t">증언 — 추궁하거나 증거를 들이대세요</div>
+      {statements.map((v) => {
+        const bk = brokeOf(v.id);
+        const wasPressed = pressed.includes(v.id);
+        const pr = wasPressed ? pressOf(sid, v.id) : null;
         return (
-          <div key={t.id} style={t.follow ? { marginLeft: 12, borderLeft: '2px solid var(--gold)', paddingLeft: 8 } : null}>
-            <button className="s-topic" onClick={() => onAsk(t.id)}>
-              {t.follow ? '↳ ' : '❓ '}{t.q}{t.follow && !a ? <span className="s-tag" style={{ color: 'var(--gold)' }}>추가</span> : null}
-            </button>
-            {a && <div className="s-qa"><div className="q">{suspect.name}</div><div>{a.a}</div></div>}
-          </div>
-        );
-      })}
-
-      <div className="s-section-t">증거 들이밀기</div>
-      <button className="s-btn ghost sm" onClick={() => setShowEvi((v) => !v)}>
-        🔍 확보한 단서 제시 {showEvi ? '▲' : '▼'} ({collectedClues.length})
-      </button>
-      {showEvi && (
-        collectedClues.length === 0
-          ? <p style={{ color: 'var(--muted)', fontSize: '.82rem', marginTop: 8 }}>제시할 단서가 없습니다. 현장을 먼저 조사하세요.</p>
-          : <div className="s-grid" style={{ marginTop: 8 }}>
-              {collectedClues.map((c) => {
-                const done = presented(c.code);
-                return (
-                  <button key={c.code} className="s-card" style={done ? { borderColor: 'var(--gold)' } : null} onClick={() => onConfront(c.code)}>
-                    <div className="ck">{clueIcon(c)}</div>
-                    <div className="cn" style={{ fontSize: '.85rem' }}>{c.title}</div>
-                    <div className="cm">{done ? '✓ 제시함' : '제시하기'}</div>
-                  </button>
-                );
-              })}
+          <div key={v.id} className="s-stmt" style={bk ? { borderColor: 'var(--gold)' } : null}>
+            <div className="s-stmt-t">{bk ? '✅ ' : '💬 '}“{v.text}”</div>
+            {pr && <div className="s-stmt-press">↳ {pr.text}</div>}
+            {bk && <div className="s-stmt-break">{bk.text}{bk.confess ? ' ⚖️ (자백)' : ''}</div>}
+            <div className="s-stmt-btns">
+              <button className="s-btn ghost sm" onClick={() => onPress(v.id)}>🔎 추궁</button>
+              {!bk && <button className="s-btn ghost sm" onClick={() => setPresentFor(presentFor === v.id ? null : v.id)}>📁 증거 제시</button>}
             </div>
-      )}
-      {confronts.map((e) => {
-        const c = getClue(e.code);
-        return (
-          <div className="s-qa" key={e.code} style={{ borderColor: 'var(--gold)' }}>
-            <div className="q">💼 [{e.code}] {c?.title} 제시</div>
-            <div>{suspect.name}: {e.a}</div>
+            {presentFor === v.id && !bk && (
+              collectedClues.length === 0
+                ? <div style={{ color: 'var(--muted)', fontSize: '.82rem', marginTop: 8 }}>제시할 단서가 없습니다. 현장을 먼저 조사하세요.</div>
+                : <div className="s-grid" style={{ marginTop: 8 }}>
+                    {collectedClues.map((c) => (
+                      <button key={c.code} className="s-card" onClick={() => { onPresent(v.id, c.code); setPresentFor(null); }}>
+                        <div className="ck">{clueIcon(c)}</div>
+                        <div className="cn" style={{ fontSize: '.82rem' }}>{c.title}</div>
+                      </button>
+                    ))}
+                  </div>
+            )}
           </div>
         );
       })}
 
-      <div className="s-section-t">이 사람에 대한 의심도</div>
-      <div className="s-suspect-toggle">
-        {[0, 1, 2, 3].map((n) => (
-          <button key={n} className={suspicion === n ? 'on' : ''} onClick={() => onSuspicion(n)}>{n === 0 ? '없음' : '★'.repeat(n)}</button>
-        ))}
-      </div>
-      <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 14 }}>💡 질문과 증거를 엮어 진술의 모순을 찾으세요. 어떤 증거는 새 질문을 엽니다.</p>
+      {confessed && (
+        <div className="s-qa" style={{ borderColor: 'var(--danger)', marginTop: 12 }}>
+          <div className="q">⚖️ 자백 확보</div>
+          <div>이 인물의 관여를 자백받았습니다. [사건 파일]에 반영하세요.</div>
+        </div>
+      )}
+      <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 14 }}>💡 진술을 추궁하고, 모순되는 증거를 제시해 “모순!”을 잡으세요. 관련 단서를 더 모으면 새 증언이 열립니다. (엉뚱한 증거는 신뢰도 −1)</p>
     </>
   );
 }

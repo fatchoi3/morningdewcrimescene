@@ -109,6 +109,19 @@ button { font-family: inherit; }
 .s-suspect-toggle button { flex: 1; background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: 6px; cursor: pointer; font-size: .8rem; }
 .s-suspect-toggle button.on { border-color: var(--danger); color: var(--danger); background: #2a1414; }
 
+/* 역전재판식 증언 */
+.s-stmt { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; margin: 9px 0; }
+.s-stmt-t { line-height: 1.6; }
+.s-stmt-press { color: var(--muted); font-size: .9rem; margin-top: 7px; padding-left: 9px; border-left: 2px solid var(--line); line-height: 1.55; }
+.s-stmt-break { margin-top: 9px; background: #241f14; color: var(--gold); border: 1px solid var(--gold); border-radius: 8px; padding: 9px 11px; font-size: .92rem; line-height: 1.6; font-weight: 600; }
+.s-stmt-btns { display: flex; gap: 8px; margin-top: 9px; }
+
+/* 장면 속 용의자 피규어 */
+.s-figure { position: absolute; left: 5%; bottom: 6%; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; filter: drop-shadow(0 4px 10px #000a); }
+.s-figure:hover { transform: translateY(-2px); }
+.s-figure:active { transform: scale(.97); }
+.s-figure-lab { font-size: .74rem; background: var(--gold); color: #1a1a1a; font-weight: 800; padding: 3px 9px; border-radius: 8px; white-space: nowrap; }
+
 /* 사건 파일(채점) */
 .s-cf-row { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
 .s-cf-name { font-weight: 800; margin-bottom: 8px; }
