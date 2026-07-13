@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { soloContent } from './soloContent.js';
 import { availableQuestions, answerOf, questionText, confrontOf } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
+import { SceneBg, Avatar, BriefingArt, EndingArt } from './art.jsx';
 
 const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds } = soloContent;
 
@@ -131,11 +132,12 @@ export default function SoloApp() {
   if (state.screen === 'briefing') {
     return (
       <div className="solo-wrap">
-        <div className="s-body" style={{ paddingTop: 40 }}>
-          <div className="s-eye" style={{ textAlign: 'center' }}>사건 브리핑</div>
+        <div className="s-body" style={{ paddingTop: 24 }}>
+          <BriefingArt />
+          <div className="s-eye" style={{ textAlign: 'center', marginTop: 14 }}>사건 브리핑</div>
           <h1 style={{ textAlign: 'center', marginTop: 6 }}>사건 개요</h1>
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: 14, margin: '16px 0' }}>
-            <div className="s-avatar" style={{ width: 72, height: 72, fontSize: '2rem' }}>🕯️</div>
+            <Avatar person={victim.name} image={victim.image} size={72} />
             <div>
               <div style={{ fontWeight: 800 }}>{victim.name} <span className="s-tag">피해자 · {victim.age}세</span></div>
               <div style={{ color: 'var(--muted)', fontSize: '.85rem', marginTop: 4 }}>{victim.occupation}</div>
@@ -156,7 +158,8 @@ export default function SoloApp() {
     const r = state.result;
     return (
       <div className="solo-wrap">
-        <div className="s-body" style={{ paddingTop: 30 }}>
+        <div className="s-body" style={{ paddingTop: 24 }}>
+          <EndingArt good={r.culpritRight} />
           <div className="s-score">
             <div className="s-eye">사건 종결</div>
             <div className="big">{r.total} / {r.max}</div>
@@ -246,7 +249,7 @@ export default function SoloApp() {
             <div className="s-grid">
               {suspects.map((s) => (
                 <button key={s.id} className="s-card" onClick={() => { setSuspectId(s.id); }}>
-                  <div className="ck">🧑</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}><Avatar person={s.name} image={s.image} size={48} /></div>
                   <div className="cn">{s.name}</div>
                   <div className="cm">{s.occupation}</div>
                   {state.suspicion?.[s.id] ? <span className="cbadge">의심 {'★'.repeat(state.suspicion[s.id])}</span> : null}
@@ -350,7 +353,8 @@ function SceneView({ location, collectedSet, onOpen, onLockedToast, difficulty }
   if (!location) return null;
   return (
     <>
-      <div className="s-scene" style={{ background: location.bg }}>
+      <div className="s-scene" style={{ background: '#0b0d12' }}>
+        <SceneBg location={location} />
         <div className="s-scene-hint">🔦 {location.label} — 빛나는 지점을 눌러 조사하세요{location.showBody ? ' · 🛏 시신도 확인' : ''}</div>
         {location.showBody && (
           <div className="s-hot" style={{ left: '50%', top: '20%' }} onClick={() => onOpen('__body__')}>
@@ -679,7 +683,7 @@ function SuspectView({ suspect, state, collectedClues, onAsk, onConfront, onSusp
   return (
     <>
       <div className="s-dossier">
-        <div className="s-avatar">🧑</div>
+        <Avatar person={suspect.name} image={suspect.image} size={64} />
         <div>
           <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{suspect.name} <span className="s-tag">{suspect.age}세</span></div>
           <div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{suspect.occupation}</div>
