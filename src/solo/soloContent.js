@@ -6,10 +6,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { provider } from '../services/index.js';
 import { victim as _victim, suspects as _suspects } from '../data/gameData.js';
+import { TESTIMONY } from './interrogation.js';
 
 const all = provider.getAllClues();
 const byCode = Object.fromEntries(all.map((c) => [c.code, c]));
 const cctvSet = new Set(provider.getCctvClueCodes());
+
+// 증언 단서(대화로 확보) — 단서 조회에서 함께 해석되도록 code 형태로 정규화.
+const testimonyByCode = Object.fromEntries(
+  Object.entries(TESTIMONY).map(([code, t]) => [code, { code, title: t.title, type: '증언', person: t.person, desc: t.detail, detail: t.detail }]),
+);
 
 // 게임 메타(설명서 등) — 솔로는 자체 브리핑/튜토리얼이 있으므로 인게임 단서에서 제외
 const META_CODES = new Set(['LSUX-91']);
@@ -36,6 +42,7 @@ const ROOM_BG = {
 
 const clueIcon = (c) => {
   if (!c) return '📦';
+  if (c.type === '증언') return '🗣';
   if (c.cctv) return '📹';
   if (c.phone) return '📱';
   if (c.type === '감식') return '🔬';
@@ -148,7 +155,7 @@ export const soloContent = {
   crimeSceneCodes: (_locations.rooms.find((r) => r.person === '목사')?.objects) || [],
   suspectIds: suspects.map((s) => s.id),
   caseKey: { roles: ROLES, methods: METHODS, motives: MOTIVES, answers: caseAnswers },
-  getClue: (code) => byCode[code] || null,
+  getClue: (code) => byCode[code] || testimonyByCode[code] || null,
   clueIcon,
   // 특수 단서: 현재 보유 단서로 자동 해금되는 코드 목록
   computeAutoUnlocked: (codeSet) => provider.computeAutoUnlocked(codeSet),

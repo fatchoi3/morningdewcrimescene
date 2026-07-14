@@ -137,6 +137,32 @@ button { font-family: inherit; }
 .aa-record { position: absolute; inset: 0; z-index: 12; background: #060a12ee; padding: 46px 14px 60px; overflow: auto; }
 .aa-record h3 { margin: 0 0 10px; }
 
+/* 법정 반대신문 — 신뢰도/피규어/증언넘김/컷인/제시 */
+.aa-court { background: radial-gradient(120% 90% at 50% 0%, #1a2233 0%, #0a0e16 60%, #05070b 100%); }
+.aa-court::after { content: ''; position: absolute; inset: 0; background: radial-gradient(70% 60% at 50% 42%, #ffffff10, #0000 70%); pointer-events: none; }
+.aa-hp { position: absolute; top: 12px; right: 12px; z-index: 6; background: #000000b0; border: 1px solid #ffffff22; border-radius: 8px; padding: 5px 10px; font-size: 1rem; letter-spacing: 1px; white-space: nowrap; }
+.aa-court-fig { position: absolute; left: 0; right: 0; top: 52px; bottom: 150px; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; }
+.aa-court-fig > * { filter: drop-shadow(0 8px 22px #000b); }
+.aa-court-name { font-weight: 800; font-size: 1.05rem; color: #fff; background: #00000088; border: 1px solid #ffffff20; border-radius: 9px; padding: 5px 14px; }
+.aa-court-name span { color: var(--muted); font-weight: 600; font-size: .84rem; }
+.aa-court-tag { background: var(--danger); color: #fff; font-weight: 800; font-size: .78rem; padding: 3px 12px; border-radius: 20px; }
+.aa-tnav { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; background: #000000a8; border: 1px solid #ffffff22; border-radius: 20px; padding: 4px 6px; }
+.aa-tnav button { background: #ffffff14; border: none; color: #fff; width: 34px; height: 30px; border-radius: 14px; font-size: .95rem; cursor: pointer; }
+.aa-tnav button:active { background: #ffffff28; }
+.aa-tnav span { color: #cdd3df; font-size: .8rem; font-weight: 700; min-width: 42px; text-align: center; }
+
+/* 모순! 컷인 */
+.aa-cutin { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; pointer-events: none; background: radial-gradient(closest-side, #00000055, #0000); }
+.aa-cutin span { font-weight: 900; font-size: 2.6rem; color: #ffec8a; text-shadow: 0 0 4px #000, 3px 3px 0 #b23030, -1px -1px 0 #b23030; transform: rotate(-7deg); animation: cutin .32s cubic-bezier(.2,1.4,.4,1); letter-spacing: 2px; }
+@keyframes cutin { 0% { transform: rotate(-7deg) scale(0.2); opacity: 0; } 60% { transform: rotate(-7deg) scale(1.15); opacity: 1; } 100% { transform: rotate(-7deg) scale(1); } }
+.aa-shake { animation: aashake .48s; }
+@keyframes aashake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+
+/* 증거 제시 시트(관련 단서만) */
+.aa-present { position: absolute; left: 0; right: 0; bottom: 48px; z-index: 11; max-height: 46vh; overflow: auto; background: linear-gradient(180deg, #0b1220f6, #060a12fb); border-top: 2px solid var(--gold); padding: 10px 12px 14px; box-shadow: 0 -8px 24px #000a; }
+.aa-present-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: .82rem; color: #cdd3df; }
+.aa-present-h .aa-close { position: static; width: 28px; height: 28px; font-size: .9rem; }
+
 /* 복도(건물) + 문 */
 .s-hall { position: relative; background: linear-gradient(180deg, #1b2030 0%, #12151f 55%, #0b0d12 100%); border: 1px solid var(--line); border-radius: 12px; padding: 16px 12px 18px; margin-bottom: 6px; overflow: hidden; }
 .s-hall::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 22px; background: linear-gradient(180deg, #000000aa, #0000); }

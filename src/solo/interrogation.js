@@ -109,6 +109,31 @@ const DATA = {
 
 const stOf = (sid, stId) => DATA[sid]?.statements.find((s) => s.id === stId) || null;
 
+// 대화(추궁)로 얻는 증언 단서 — 특정 진술을 추궁하면 법정기록에 확보됨.
+export const TESTIMONY = {
+  'TST-JH': { title: '종현의 증언 — 음료 전달', person: '최종현', type: '증언', detail: '"단백질"이라 적힌 통으로 음료를 타 드렸다고 진술. 라벨이 바뀌어 있었다면 종현은 도구로 이용된 것이다.' },
+  'TST-EJ': { title: '은재의 증언 — 생존 시각', person: '윤은재', type: '증언', detail: '12시 45분 방을 나올 때 목사는 멀쩡했고 음료도 마시기 전이었다. 요힘빈 복용 시각을 뒤로 좁히는 알리바이.' },
+  'TST-HJ': { title: '현지의 증언 — 자매 관계', person: '이현지', type: '증언', detail: '이사랑과 친자매임을 인정. 동생을 지키려 상속을 포기하고 몰래 빚을 갚아왔다.' },
+  'TST-HW': { title: '희원의 반응 — 수료증 회피', person: '박희원', type: '증언', detail: '수료증 진위 얘기에 말을 아끼고 굳는다. 무언가를 숨기는 정황.' },
+  'TST-SR': { title: '사랑의 증언 — 재정 압박', person: '이사랑', type: '증언', detail: '목사가 수련회 후 재정을 점검하겠다고 해 극도로 불안했다고 진술.' },
+  'TST-GH': { title: '가현의 증언 — 결정적 목격', person: '이가현', type: '증언', detail: '진입했을 때 목사는 이미 사망, 방은 비어 있었다. 직전에 누군가 다녀갔음을 시사한다(→진범 동선).' },
+};
+
+// 어떤 진술을 추궁하면 어떤 증언 단서를 주는가.
+const GRANTS = { S1: { am: 'TST-JH' }, S2: { noon: 'TST-EJ' }, S3: { sis2: 'TST-HJ' }, S4: { cert2: 'TST-HW' }, S5: { money: 'TST-SR' }, S6: { key: 'TST-GH' } };
+
+/** 이 인물과 '관련 있는' 증거 코드 집합(모순·반응에 쓰이는 코드) — 제시 목록 필터용. */
+export function relatedCodes(sid) {
+  const d = DATA[sid];
+  const set = new Set();
+  if (!d) return set;
+  for (const s of d.statements) {
+    if (s.contradict) set.add(s.contradict.code);
+    if (s.soft) Object.keys(s.soft).forEach((c) => set.add(c));
+  }
+  return set;
+}
+
 export const introOf = (sid) => DATA[sid]?.intro || '';
 
 /** 현재 노출되는 증언: 기본(always) + needs 충족 + hidden 해금. */
@@ -124,10 +149,11 @@ export function visibleStatements(sid, collected = [], unlocked = []) {
   }).map((s) => ({ id: s.id, text: s.text }));
 }
 
-/** 추궁 → { text, unlock? } */
+/** 추궁 → { text, unlock?, grants? } (grants: 대화로 확보되는 증언 단서 코드) */
 export function pressOf(sid, stId) {
   const s = stOf(sid, stId);
-  return s ? { text: s.press || '…(더 할 말이 없다.)', unlock: s.pressUnlock } : { text: '' };
+  if (!s) return { text: '' };
+  return { text: s.press || '…(더 할 말이 없다.)', unlock: s.pressUnlock, grants: GRANTS[sid]?.[stId] };
 }
 
 /** 증거 제시 → { result:'contradict'|'soft'|'wrong', text, unlock?, confess? } */

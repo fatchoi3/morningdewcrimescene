@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { soloContent } from './soloContent.js';
-import { introOf, visibleStatements, pressOf, presentOn } from './interrogation.js';
+import { visibleStatements, pressOf, presentOn, relatedCodes } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { SceneBg, Avatar, BriefingArt, EndingArt, CorridorBg } from './art.jsx';
 import { DialogueBox, CommandBar } from './vn.jsx';
@@ -234,6 +234,7 @@ export default function SoloApp() {
         ) : suspectId ? (
           <CrossExamView suspect={suspects.find((s) => s.id === suspectId)} state={state}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
+            onExit={() => goHub('suspects')}
             onPress={(stId) => {
               const r = pressOf(suspectId, stId);
               const pr = { ...(state.pressed || {}) };
@@ -241,6 +242,8 @@ export default function SoloApp() {
               const patch = { pressed: pr };
               if (r.unlock) { const u = { ...(state.stUnlocked || {}) }; u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])]; patch.stUnlocked = u; }
               update(patch);
+              if (r.grants) collect(r.grants); // 대화로 증언 단서 확보
+              return r; // 자식이 대사창에 결과 표시
             }}
             onPresent={(stId, code) => {
               const r = presentOn(suspectId, stId, code);
@@ -251,15 +254,13 @@ export default function SoloApp() {
                 const patch = { broke: bk };
                 if (r.unlock) { const u = { ...(state.stUnlocked || {}) }; u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])]; patch.stUnlocked = u; }
                 update(patch);
-                showToast('❗모순을 잡았습니다!');
-              } else if (r.result === 'soft') {
-                showToast(r.text.length > 42 ? r.text.slice(0, 40) + '…' : r.text);
-              } else {
+              } else if (r.result === 'wrong') {
                 const tr = { ...(state.trust || {}) };
                 const t = Math.max(0, (tr[suspectId] ?? TRUST_MAX) - 1);
                 if (t <= 0) { tr[suspectId] = TRUST_MAX; update({ trust: tr }); setSuspectId(null); showToast('⚠ 신뢰도가 바닥났습니다 — 잠시 정비 후 다시 심문하세요'); }
-                else { tr[suspectId] = t; update({ trust: tr }); showToast(`관계없는 증거입니다. (신뢰도 -1 · 남은 ${t})`); }
+                else { tr[suspectId] = t; update({ trust: tr }); }
               }
+              return r; // 자식이 컷인/대사창에 결과 표시
             }} />
         ) : state.hubTab === 'suspects' ? (
           <>
@@ -760,71 +761,149 @@ function CaseFileView({ state, stageLocked, stageLabel, onSet, onSubmit }) {
   );
 }
 
-// ── 용의자 심문 ────────────────────────────────────────────────────────────
-function CrossExamView({ suspect, state, collectedClues, onPress, onPresent }) {
-  const [presentFor, setPresentFor] = useState(null); // 증거 제시 대상 증언 id
-  if (!suspect) return null;
-  const sid = suspect.id;
+// ── 용의자 심문 (역전재판식 법정 반대신문) ──────────────────────────────────
+//   증언을 한 토막씩 대사창에 띄우고(◀▶), 추궁/증거제시로 모순을 잡는다.
+//   증거 제시 목록은 '이 인물과 관련 있는 단서'로만 좁힌다. 대화(추궁)로 증언 단서 확보.
+function CrossExamView({ suspect, state, collectedClues, onPress, onPresent, onExit }) {
+  const [idx, setIdx] = useState(0);
+  const [line, setLine] = useState(null);   // 대사창 오버라이드: { text, kind }
+  const [picker, setPicker] = useState(false);
+  const [cutin, setCutin] = useState(null); // 모순! 컷인
+  const [record, setRecord] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const sid = suspect?.id;
   const collected = state.collected || [];
   const unlocked = state.stUnlocked?.[sid] || [];
-  const pressed = state.pressed?.[sid] || [];
   const broke = state.broke?.[sid] || [];
   const trust = state.trust?.[sid] ?? TRUST_MAX;
-  const statements = visibleStatements(sid, collected, unlocked);
+  const statements = sid ? visibleStatements(sid, collected, unlocked) : [];
   const brokeOf = (id) => broke.find((e) => e.id === id);
   const confessed = broke.some((e) => e.confess);
 
+  const total = statements.length;
+  const safeIdx = total ? Math.min(idx, total - 1) : 0;
+  const cur = total ? statements[safeIdx] : null;
+  const bk = cur ? brokeOf(cur.id) : null;
+
+  // 이 인물과 관련 있는 '증거'만 제시 목록에 노출(모순·반응 코드 + 인물 소속 단서, 증언은 제외)
+  const rel = sid ? relatedCodes(sid) : new Set();
+  const isRelated = (c) => c.type !== '증언' && (rel.has(c.code) || c.person === suspect?.name);
+  const presentable = collectedClues.filter(isRelated);
+
+  if (!suspect) return null;
+
+  const nav = (d) => { setLine(null); setPicker(false); setIdx((i) => total ? (Math.min(i, total - 1) + d + total) % total : 0); };
+
+  const doPress = () => {
+    if (!cur) return;
+    setPicker(false);
+    const r = onPress(cur.id) || {};
+    let extra = '';
+    if (r.grants) { const t = getClue(r.grants); if (t) extra = `\n🗣 증언 확보 — ${t.title}`; }
+    setLine({ text: (r.text || '…') + extra, kind: 'press' });
+  };
+
+  const doPresent = (code) => {
+    if (!cur) return;
+    setPicker(false);
+    const r = onPresent(cur.id, code) || {};
+    if (r.result === 'contradict') {
+      setCutin('모순!');
+      setTimeout(() => setCutin((c) => (c === '모순!' ? null : c)), 1300);
+      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : ''), kind: 'break' });
+    } else if (r.result === 'soft') {
+      setLine({ text: r.text || '', kind: 'soft' });
+    } else {
+      setShake(true); setTimeout(() => setShake(false), 480);
+      setLine({ text: '그건 저와는 상관없는 물건이잖아요. 왜 저한테…', kind: 'wrong' });
+    }
+  };
+
+  const dlgText = line ? line.text
+    : cur ? cur.text
+    : '…(지금은 더 들을 말이 없다. 관련 단서를 모으면 새 증언이 열린다.)';
+  const dlgLoc = line
+    ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다' : '추궁')
+    : (bk ? '✅ 모순을 잡은 증언' : `${suspect.name}의 증언`);
+  const dlgHint = line ? '탭하여 계속 ▶'
+    : total ? `증언 ${safeIdx + 1}/${total}${bk ? ' · 이미 모순을 짚음' : ' · ◀ ▶ 로 넘기기'}` : '';
+
   return (
-    <>
-      <div className="s-dossier">
-        <Avatar person={suspect.name} image={suspect.image} size={64} />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{suspect.name} <span className="s-tag">{suspect.age}세</span></div>
-          <div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{suspect.occupation}</div>
-        </div>
-        <div title="신뢰도" style={{ fontSize: '1.05rem', letterSpacing: 1, whiteSpace: 'nowrap' }}>
-          <span style={{ color: '#e06a6a' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: 0.3 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
-        </div>
+    <div className={`aa-fs${shake ? ' aa-shake' : ''}`}>
+      <div className="aa-stage aa-court" style={{ background: 'radial-gradient(120% 90% at 50% 0%, #1a2233 0%, #0a0e16 60%, #05070b 100%)' }} />
+      <div className="aa-loc-chip">⚖️ {suspect.name} 반대신문</div>
+      <div className="aa-hp" title="신뢰도">
+        <span style={{ color: '#e8706e' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: .28 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
       </div>
-      <p style={{ lineHeight: 1.7, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10, padding: 12, fontStyle: 'italic', color: '#cfcabb' }}>“{introOf(sid)}”</p>
 
-      <div className="s-section-t">증언 — 추궁하거나 증거를 들이대세요</div>
-      {statements.map((v) => {
-        const bk = brokeOf(v.id);
-        const wasPressed = pressed.includes(v.id);
-        const pr = wasPressed ? pressOf(sid, v.id) : null;
-        return (
-          <div key={v.id} className="s-stmt" style={bk ? { borderColor: 'var(--gold)' } : null}>
-            <div className="s-stmt-t">{bk ? '✅ ' : '💬 '}“{v.text}”</div>
-            {pr && <div className="s-stmt-press">↳ {pr.text}</div>}
-            {bk && <div className="s-stmt-break">{bk.text}{bk.confess ? ' ⚖️ (자백)' : ''}</div>}
-            <div className="s-stmt-btns">
-              <button className="s-btn ghost sm" onClick={() => onPress(v.id)}>🔎 추궁</button>
-              {!bk && <button className="s-btn ghost sm" onClick={() => setPresentFor(presentFor === v.id ? null : v.id)}>📁 증거 제시</button>}
-            </div>
-            {presentFor === v.id && !bk && (
-              collectedClues.length === 0
-                ? <div style={{ color: 'var(--muted)', fontSize: '.82rem', marginTop: 8 }}>제시할 단서가 없습니다. 현장을 먼저 조사하세요.</div>
-                : <div className="s-grid" style={{ marginTop: 8 }}>
-                    {collectedClues.map((c) => (
-                      <button key={c.code} className="s-card" onClick={() => { onPresent(v.id, c.code); setPresentFor(null); }}>
-                        <div className="ck">{clueIcon(c)}</div>
-                        <div className="cn" style={{ fontSize: '.82rem' }}>{c.title}</div>
-                      </button>
-                    ))}
-                  </div>
-            )}
-          </div>
-        );
-      })}
+      <div className="aa-court-fig">
+        <Avatar person={suspect.name} image={suspect.image} size={188} />
+        <div className="aa-court-name">{suspect.name}<span> · {suspect.occupation}</span></div>
+        {confessed && <div className="aa-court-tag">⚖️ 관여 자백</div>}
+      </div>
 
-      {confessed && (
-        <div className="s-qa" style={{ borderColor: 'var(--danger)', marginTop: 12 }}>
-          <div className="q">⚖️ 자백 확보</div>
-          <div>이 인물의 관여를 자백받았습니다. [사건 파일]에 반영하세요.</div>
+      {!line && total > 1 && (
+        <div className="aa-tnav">
+          <button onClick={() => nav(-1)} aria-label="이전 증언">◀</button>
+          <span>{safeIdx + 1} / {total}</span>
+          <button onClick={() => nav(1)} aria-label="다음 증언">▶</button>
         </div>
       )}
-      <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 14 }}>💡 진술을 추궁하고, 모순되는 증거를 제시해 “모순!”을 잡으세요. 관련 단서를 더 모으면 새 증언이 열립니다. (엉뚱한 증거는 신뢰도 −1)</p>
-    </>
+
+      {cutin && <div className="aa-cutin"><span>{cutin}</span></div>}
+
+      <DialogueBox location={dlgLoc} speaker={line ? suspect.name : null} text={dlgText}
+        onAdvance={line ? () => setLine(null) : undefined} hint={dlgHint} />
+
+      <CommandBar items={[
+        { icon: '🔎', label: '추궁', onClick: doPress },
+        !bk && { icon: '📁', label: '증거 제시', active: picker, onClick: () => { setLine(null); setPicker((p) => !p); } },
+        { icon: '📑', label: '법정기록', onClick: () => { setPicker(false); setRecord(true); } },
+        { icon: '↩', label: '나가기', onClick: onExit },
+      ]} />
+
+      {picker && !bk && (
+        <div className="aa-present">
+          <div className="aa-present-h">
+            <span>이 증언에 들이댈 증거 — <b>{suspect.name}</b> 관련</span>
+            <button className="aa-close" onClick={() => setPicker(false)}>✕</button>
+          </div>
+          {presentable.length === 0
+            ? <p style={{ color: 'var(--muted)', fontSize: '.85rem', padding: '4px 2px' }}>이 인물과 관련된 단서가 아직 없습니다. 현장·대화로 단서를 더 모으세요.</p>
+            : <div className="s-grid">
+                {presentable.map((c) => (
+                  <button key={c.code} className="s-card" onClick={() => doPresent(c.code)}>
+                    <div className="ck">{clueIcon(c)}</div>
+                    <div className="cn" style={{ fontSize: '.82rem' }}>{c.title}</div>
+                    <div className="cm">{c.person}</div>
+                  </button>
+                ))}
+              </div>}
+        </div>
+      )}
+
+      {record && (
+        <div className="aa-record">
+          <button className="aa-close" onClick={() => setRecord(false)}>✕</button>
+          <h3>법정기록 · 확보한 단서 ({collectedClues.length})</h3>
+          {collectedClues.length === 0
+            ? <p style={{ color: 'var(--muted)' }}>아직 확보한 단서가 없습니다. 현장을 조사하거나 인물과 대화하세요.</p>
+            : <div className="s-grid">
+                {collectedClues.map((c) => {
+                  const relv = isRelated(c);
+                  return (
+                    <button key={c.code} className="s-card" style={relv ? { borderColor: 'var(--gold)' } : { opacity: .6 }}
+                      onClick={() => { if (relv) { setRecord(false); setPicker(true); } }}>
+                      <div className="ck">{clueIcon(c)}</div>
+                      <div className="cn" style={{ fontSize: '.82rem' }}>{c.title}</div>
+                      <div className="cm">{c.type === '증언' ? '증언' : relv ? '이 인물과 관련' : c.person}</div>
+                    </button>
+                  );
+                })}
+              </div>}
+        </div>
+      )}
+    </div>
   );
 }
