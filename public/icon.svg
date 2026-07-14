@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="104" fill="#0b0d12"/>
+  <rect x="24" y="24" width="464" height="464" rx="84" fill="none" stroke="#1c222e" stroke-width="6"/>
+  <!-- 폴리스 라인 -->
+  <g transform="rotate(-16 256 366)">
+    <rect x="40" y="352" width="432" height="30" fill="#c9a84c"/>
+    <text x="120" y="374" font-family="monospace" font-size="20" font-weight="700" fill="#1a1206" letter-spacing="5">CRIME SCENE</text>
+  </g>
+  <!-- 돋보기 -->
+  <g>
+    <circle cx="228" cy="212" r="112" fill="#12303e" stroke="#e6c877" stroke-width="14"/>
+    <circle cx="228" cy="212" r="112" fill="#ffffff10"/>
+    <path d="M196 176 a44 44 0 0 1 40 -28" fill="none" stroke="#ffffff66" stroke-width="12" stroke-linecap="round"/>
+    <rect x="300" y="286" width="150" height="40" rx="20" transform="rotate(45 300 286)" fill="#e6c877"/>
+    <text x="228" y="238" text-anchor="middle" font-family="Georgia, serif" font-size="120" font-weight="800" fill="#e6c877">?</text>
+  </g>
+</svg>
