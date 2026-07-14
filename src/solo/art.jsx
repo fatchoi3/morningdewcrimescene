@@ -295,17 +295,20 @@ export function Avatar({ person, image, size = 64 }) {
 }
 
 // ── 브리핑 히어로 (실제 그림 /images/briefing.{jpg,png} 있으면 우선) ──
-export function BriefingArt() {
+export function BriefingArt({ fill }) {
+  const wrap = fill
+    ? { position: 'absolute', inset: 0, overflow: 'hidden' }
+    : { position: 'relative', height: 180, borderRadius: 12, overflow: 'hidden' };
   return (
-    <div style={{ position: 'relative', height: 180, borderRadius: 12, overflow: 'hidden' }}>
-      <BriefingSVG />
+    <div style={wrap}>
+      <BriefingSVG fill={fill} />
       <HybridImg candidates={['/images/briefing.jpg', '/images/briefing.png']} style={COVER} />
     </div>
   );
 }
-function BriefingSVG() {
+function BriefingSVG({ fill }) {
   return (
-    <svg viewBox="0 0 800 260" preserveAspectRatio="xMidYMid slice" style={{ width: '100%', height: 180, borderRadius: 12, display: 'block' }}>
+    <svg viewBox="0 0 800 260" preserveAspectRatio="xMidYMid slice" style={{ width: '100%', height: fill ? '100%' : 180, borderRadius: fill ? 0 : 12, display: 'block' }}>
       <defs>
         <linearGradient id="bnight" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1a1220" /><stop offset="100%" stopColor="#0b0d12" /></linearGradient>
       </defs>

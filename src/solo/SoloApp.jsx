@@ -3,6 +3,7 @@ import { soloContent } from './soloContent.js';
 import { introOf, visibleStatements, pressOf, presentOn } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { SceneBg, Avatar, BriefingArt, EndingArt, CorridorBg } from './art.jsx';
+import { DialogueBox, CommandBar } from './vn.jsx';
 
 const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds } = soloContent;
 
@@ -147,29 +148,9 @@ export default function SoloApp() {
     );
   }
 
-  // ── 브리핑 ──────────────────────────────────────────────────────────────
+  // ── 브리핑 (역전재판식 VN 시퀀스) ─────────────────────────────────────────
   if (state.screen === 'briefing') {
-    return (
-      <div className="solo-wrap">
-        <div className="s-body" style={{ paddingTop: 24 }}>
-          <BriefingArt />
-          <div className="s-eye" style={{ textAlign: 'center', marginTop: 14 }}>사건 브리핑</div>
-          <h1 style={{ textAlign: 'center', marginTop: 6 }}>사건 개요</h1>
-          <div style={{ display: 'flex', gap: 14, alignItems: 'center', background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: 14, margin: '16px 0' }}>
-            <Avatar person={victim.name} image={victim.image} size={72} />
-            <div>
-              <div style={{ fontWeight: 800 }}>{victim.name} <span className="s-tag">피해자 · {victim.age}세</span></div>
-              <div style={{ color: 'var(--muted)', fontSize: '.85rem', marginTop: 4 }}>{victim.occupation}</div>
-            </div>
-          </div>
-          {briefing.lines.map((l, i) => (<p key={i} style={{ lineHeight: 1.8 }}>{l}</p>))}
-          <p style={{ color: 'var(--muted)', fontSize: '.85rem', marginTop: 12 }}>단서를 모으고 용의자를 심문한 뒤, [사건 파일]에서 인물별로 누가·어떻게·왜 했는지 제출하면 채점과 함께 전말이 공개됩니다.</p>
-          <div style={{ textAlign: 'center', marginTop: 20 }}>
-            <button className="s-btn" onClick={() => goHub('places')}>현장으로 →</button>
-          </div>
-        </div>
-      </div>
-    );
+    return <BriefingVN onDone={() => goHub('places')} />;
   }
 
   // ── 엔딩 ────────────────────────────────────────────────────────────────
@@ -246,8 +227,10 @@ export default function SoloApp() {
         {sceneId ? (
           <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet}
             roomSuspect={suspects.find((s) => s.name === locations.all.find((l) => l.id === sceneId)?.person)}
+            collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             onTalk={(id) => { setSceneId(null); setSuspectId(id); }}
-            onOpen={(code) => setModalCode(code)} onLockedToast={showToast} difficulty={state.difficulty} />
+            onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
+            onBack={() => goHub()} />
         ) : suspectId ? (
           <CrossExamView suspect={suspects.find((s) => s.id === suspectId)} state={state}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
@@ -401,44 +384,96 @@ function DoorCard({ loc, collectedSet, locked, isCrime, onClick }) {
   );
 }
 
-// ── 장면(포인트앤클릭) ─────────────────────────────────────────────────────
-function SceneView({ location, collectedSet, roomSuspect, onTalk, onOpen, onLockedToast, difficulty }) {
-  if (!location) return null;
+// ── 브리핑 (역전재판식 VN 시퀀스) ─────────────────────────────────────────
+function BriefingVN({ onDone }) {
+  const beats = [
+    { loc: '프롤로그', text: briefing.subtitle },
+    ...briefing.lines.map((l) => ({ text: l })),
+    { text: '당신은 수사관이다. 현장을 조사하고 용의자를 심문해, 누가·어떻게·왜 죽였는지 밝혀라.' },
+  ];
+  const [i, setI] = useState(0);
+  const beat = beats[Math.min(i, beats.length - 1)];
+  const last = i >= beats.length - 1;
   return (
-    <>
-      <div className="s-scene" style={{ background: '#0b0d12' }}>
-        <SceneBg location={location} />
-        <div className="s-scene-hint">🔦 {location.label} — 빛나는 지점을 눌러 조사{roomSuspect ? ' · 인물을 눌러 심문' : ''}{location.showBody ? ' · 🛏 시신 확인' : ''}</div>
-        {roomSuspect && onTalk && (
-          <button className="s-figure" onClick={() => onTalk(roomSuspect.id)}>
-            <Avatar person={roomSuspect.name} image={roomSuspect.image} size={76} />
-            <span className="s-figure-lab">{roomSuspect.name} · 심문</span>
-          </button>
-        )}
-        {location.showBody && (
-          <div className="s-hot" style={{ left: '50%', top: '20%' }} onClick={() => onOpen('__body__')}>
-            <div className="dot" style={{ borderColor: '#c06868', background: '#2a1414' }}>🛏</div>
-            <div className="lab">시신</div>
+    <div className="aa-fs">
+      <div className="aa-stage"><BriefingArt fill /></div>
+      <div className="aa-loc-chip">사건 브리핑 · {victim.name}({victim.age})</div>
+      <DialogueBox location={beat.loc} text={beat.text}
+        onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }}
+        hint={last ? '▶ 현장으로' : `${i + 1}/${beats.length} · 탭하여 다음`} />
+      <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
+    </div>
+  );
+}
+
+// ── 장면(역전재판식 풀블리드: 조사/이야기/이동 + 법정기록) ────────────────────
+function SceneView({ location, collectedSet, roomSuspect, collectedClues, onTalk, onOpen, onLockedToast, onBack }) {
+  const [examine, setExamine] = useState(true);
+  const [record, setRecord] = useState(false);
+  if (!location) return null;
+  const hotY = (y) => 20 + (y / 100) * 46; // 하단 대사창을 피해 상단 2/3에 배치
+  return (
+    <div className="aa-fs">
+      <div className="aa-stage"><SceneBg location={location} /></div>
+      <div className="aa-loc-chip">🔦 {location.label}</div>
+
+      {examine && location.showBody && (
+        <div className="s-hot" style={{ left: '50%', top: '16%' }} onClick={() => onOpen('__body__')}>
+          <div className="dot" style={{ borderColor: '#c06868', background: '#2a1414' }}>🛏</div>
+          <div className="lab">시신</div>
+        </div>
+      )}
+      {examine && location.objects.map((code, i) => {
+        const c = getClue(code); if (!c) return null;
+        const have = collectedSet.has(code);
+        const p = posFor(i);
+        return (
+          <div key={code} className={`s-hot${have ? ' have' : ''}`} style={{ left: `${p.x}%`, top: `${hotY(p.y)}%` }}
+            onClick={() => {
+              if (c.type === '감식' && !have) { onLockedToast('아직 분석 결과가 없습니다 — 관련 단서를 더 찾으세요'); return; }
+              onOpen(code);
+            }}>
+            <div className="dot">{have ? '✓' : clueIcon(c)}</div>
+            <div className="lab">{have ? c.title : '???'}</div>
           </div>
-        )}
-        {location.objects.map((code, i) => {
-          const c = getClue(code); if (!c) return null;
-          const have = collectedSet.has(code);
-          const p = posFor(i);
-          return (
-            <div key={code} className={`s-hot${have ? ' have' : ''}`} style={{ left: `${p.x}%`, top: `${p.y}%` }}
-              onClick={() => {
-                if (c.type === '감식' && !have) { onLockedToast('아직 분석 결과가 없습니다 — 관련 단서를 더 찾으세요'); return; }
-                onOpen(code);
-              }}>
-              <div className="dot">{have ? '✓' : clueIcon(c)}</div>
-              <div className="lab">{have ? c.title : '???'}</div>
-            </div>
-          );
-        })}
-      </div>
-      {location.showBody && location.body && <BodyNote body={location.body} />}
-    </>
+        );
+      })}
+
+      {roomSuspect && onTalk && (
+        <button className="s-figure" onClick={() => onTalk(roomSuspect.id)}>
+          <Avatar person={roomSuspect.name} image={roomSuspect.image} size={84} />
+          <span className="s-figure-lab">{roomSuspect.name}</span>
+        </button>
+      )}
+
+      <DialogueBox location={location.label}
+        text={examine ? ('빛나는 지점을 눌러 조사하자.' + (roomSuspect ? ' 인물과 이야기할 수도 있다.' : '')) : '무엇을 할까?'} />
+
+      <CommandBar items={[
+        { icon: '🔍', label: '조사한다', active: examine, onClick: () => setExamine((e) => !e) },
+        roomSuspect && { icon: '💬', label: '이야기한다', onClick: () => onTalk(roomSuspect.id) },
+        { icon: '📁', label: '법정기록', onClick: () => setRecord(true) },
+        { icon: '🚶', label: '이동한다', onClick: onBack },
+      ]} />
+
+      {record && (
+        <div className="aa-record">
+          <button className="aa-close" onClick={() => setRecord(false)}>✕</button>
+          <h3>법정기록 · 확보한 단서 ({collectedClues.length})</h3>
+          {collectedClues.length === 0
+            ? <p style={{ color: 'var(--muted)' }}>아직 확보한 단서가 없습니다. 현장을 조사하세요.</p>
+            : <div className="s-grid">
+                {collectedClues.map((c) => (
+                  <button key={c.code} className="s-card" onClick={() => { setRecord(false); onOpen(c.code); }}>
+                    <div className="ck">{clueIcon(c)}</div>
+                    <div className="cn" style={{ fontSize: '.85rem' }}>{c.title}</div>
+                    <div className="cm">{c.person}</div>
+                  </button>
+                ))}
+              </div>}
+        </div>
+      )}
+    </div>
   );
 }
 
