@@ -239,17 +239,27 @@ function SceneSVG({ location }) {
   );
 }
 
-/** 장면 배경 — 실제 그림(/images/scenes/<id>.jpg)이 있으면 우선, 없으면 SVG. */
+const COVER = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' };
+
+// 후보 이미지들을 순서대로 시도, 다 실패하면 아무것도 안 그림(뒤 SVG가 보임).
+function HybridImg({ candidates, style, extra }) {
+  const [i, setI] = useState(0);
+  const list = candidates.filter(Boolean);
+  if (i >= list.length) return null;
+  return <img src={list[i]} alt="" style={style} onError={() => setI((n) => n + 1)} {...extra} />;
+}
+
+const scenesFor = (id, image) => [image, `/images/scenes/${id}.jpg`, `/images/scenes/${id}.png`, `/images/scenes/${id}.webp`];
+
+/** 장면 배경 — 실제 그림(/images/scenes/<id>.{jpg,png,webp})이 있으면 우선, 없으면 SVG. */
 export function SceneBg({ location }) {
-  const [imgOk, setImgOk] = useState(true);
-  const src = location.image || `/images/scenes/${location.id}.jpg`;
   return (
     <>
       <SceneSVG location={location} />
-      {imgOk && (
-        <img src={src} alt="" onError={() => setImgOk(false)}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
-      )}
+      <HybridImg candidates={scenesFor(location.id, location.image)} style={{ ...COVER, pointerEvents: 'none' }} />
+      {/* 필름 톤 비네트 — SVG/실사 위에 공통으로 얹어 분위기 통일 */}
+      <div style={{ ...COVER, pointerEvents: 'none', background: 'radial-gradient(125% 90% at 50% 40%, transparent 52%, #000000b0 100%)' }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', boxShadow: 'inset 0 0 60px #000000aa' }} />
     </>
   );
 }
@@ -284,8 +294,16 @@ export function Avatar({ person, image, size = 64 }) {
   return <AvatarSVG person={person} size={size} />;
 }
 
-// ── 브리핑 히어로 ──
+// ── 브리핑 히어로 (실제 그림 /images/briefing.{jpg,png} 있으면 우선) ──
 export function BriefingArt() {
+  return (
+    <div style={{ position: 'relative', height: 180, borderRadius: 12, overflow: 'hidden' }}>
+      <BriefingSVG />
+      <HybridImg candidates={['/images/briefing.jpg', '/images/briefing.png']} style={COVER} />
+    </div>
+  );
+}
+function BriefingSVG() {
   return (
     <svg viewBox="0 0 800 260" preserveAspectRatio="xMidYMid slice" style={{ width: '100%', height: 180, borderRadius: 12, display: 'block' }}>
       <defs>
@@ -349,8 +367,16 @@ export function CorridorBg() {
   );
 }
 
-// ── 엔딩 히어로 ──
+// ── 엔딩 히어로 (실제 그림 /images/ending.{jpg,png} 있으면 우선) ──
 export function EndingArt({ good }) {
+  return (
+    <div style={{ position: 'relative', height: 130, borderRadius: 12, overflow: 'hidden' }}>
+      <EndingSVG good={good} />
+      <HybridImg candidates={['/images/ending.jpg', '/images/ending.png']} style={COVER} />
+    </div>
+  );
+}
+function EndingSVG({ good }) {
   const c = good ? '#6fae4e' : '#c06868';
   return (
     <svg viewBox="0 0 800 200" preserveAspectRatio="xMidYMid slice" style={{ width: '100%', height: 130, borderRadius: 12, display: 'block' }}>
