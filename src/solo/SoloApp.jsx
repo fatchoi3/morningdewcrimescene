@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { soloContent } from './soloContent.js';
 import { visibleStatements, pressOf, presentOn, relatedCodes, introOf } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
@@ -113,6 +113,9 @@ const TIMELINE = [
 
 const norm = (s) => String(s ?? '').trim().replace(/\s/g, '').toUpperCase();
 
+// 풀블리드 VN 화면: 버튼·시트·오버레이가 아닌 곳을 탭하면 대사 넘김(대사창 tap 위임)
+const isUiTap = (e) => !!e.target.closest('button, .aa-cmd, .aa-tnav, .aa-present, .aa-record, .aa-dialogue, .aa-hp, .s-modal');
+
 export default function SoloApp() {
   const [state, setState] = useState(() => loadSave() || defaultState());
   const [sceneId, setSceneId] = useState(null);
@@ -185,13 +188,14 @@ export default function SoloApp() {
               </button>
             ))}
           </div>
-          <button className="s-btn" onClick={() => update({ started: true, screen: 'briefing' })}>수사 시작</button>
+          {/* 새 수사 = 저장 초기화 후 시작(난이도만 유지) — 이어하기는 별도 버튼 */}
+          <button className="s-btn" onClick={() => { clearSave(); setState({ ...defaultState(), difficulty: state.difficulty, started: true, screen: 'briefing' }); }}>
+            {state.started ? '새 수사 시작 (처음부터)' : '수사 시작'}
+          </button>
           {state.collected.length > 0 && (
             <button className="s-link" style={{ marginTop: 14 }} onClick={() => goHub()}>이어하기 (단서 {state.collected.length})</button>
           )}
-          {state.started && (
-            <button className="s-link" style={{ marginTop: 6, color: '#8a8880' }} onClick={() => { clearSave(); setState(defaultState()); }}>처음부터 다시</button>
-          )}
+          <button className="s-link" style={{ marginTop: 6, color: '#8a8880' }} onClick={() => { clearSave(); setState(defaultState()); }}>🔄 저장 초기화 (테스트용)</button>
         </div>
       </div>
     );
@@ -274,6 +278,8 @@ export default function SoloApp() {
         )}
         <div className="s-h">{topH}</div>
         <div className="s-count">단서 {state.collected.length}</div>
+        <button className="s-back" title="저장 초기화(테스트용)" style={{ marginLeft: 6 }}
+          onClick={() => { if (window.confirm('저장을 초기화하고 처음부터 시작할까요?\n(단서·심문·진행 전부 삭제)')) { clearSave(); setState(defaultState()); } }}>⟲</button>
       </div>
 
       <div className="s-body">
@@ -440,13 +446,14 @@ function BriefingVN({ onDone }) {
     { text: '당신은 수사관이다. 현장을 조사하고 용의자를 심문해, 누가·어떻게·왜 죽였는지 밝혀라.' },
   ];
   const [i, setI] = useState(0);
+  const dlgRef = useRef(null);
   const beat = beats[Math.min(i, beats.length - 1)];
   const last = i >= beats.length - 1;
   return (
-    <div className="aa-fs">
+    <div className="aa-fs" onClick={(e) => { if (!isUiTap(e)) dlgRef.current?.tap(); }}>
       <div className="aa-stage"><BriefingArt fill /></div>
       <div className="aa-loc-chip">사건 브리핑 · {victim.name}({victim.age})</div>
-      <DialogueBox location={beat.loc} text={beat.text}
+      <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }}
         hint={last ? '▶ 현장으로' : `${i + 1}/${beats.length} · 탭하여 다음`} />
       <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
@@ -465,15 +472,16 @@ function EventVN({ onDone }) {
     { text: '…낮의 진술들을 물증으로 검증할 차례다. 거짓말은 반드시 무너진다.' },
   ];
   const [i, setI] = useState(0);
+  const dlgRef = useRef(null);
   const beat = beats[Math.min(i, beats.length - 1)];
   const last = i >= beats.length - 1;
   return (
-    <div className="aa-fs">
+    <div className="aa-fs" onClick={(e) => { if (!isUiTap(e)) dlgRef.current?.tap(); }}>
       <div className="aa-stage" style={{ background: 'radial-gradient(120% 100% at 50% 0%, #2a1214 0%, #140a0c 55%, #07050a 100%)' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 40% at 50% 30%, #c0585822, transparent 70%)', animation: 'aablink 2.2s ease-in-out infinite' }} />
       </div>
       <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 중간 사건 · 부검 소견</div>
-      <DialogueBox location={beat.loc} text={beat.text}
+      <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }}
         hint={last ? '▶ 전면 조사 시작' : `${i + 1}/${beats.length} · 탭하여 다음`} />
       <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
@@ -861,6 +869,7 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, on
   const [cutin, setCutin] = useState(null); // 모순! 컷인
   const [record, setRecord] = useState(false);
   const [shake, setShake] = useState(false);
+  const dlgRef = useRef(null); // 화면 아무 데나 탭 → 대사 넘김 위임
 
   const sid = suspect?.id;
   const collected = state.collected || [];
@@ -917,10 +926,11 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, on
     ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다' : line.kind === 'intro' ? (phase >= 2 ? '2차 심문' : '심문 시작') : '추궁')
     : (bk ? '✅ 모순을 잡은 증언' : `${suspect.name}의 증언`);
   const dlgHint = line ? '탭하여 계속 ▶'
-    : total ? `증언 ${safeIdx + 1}/${total}${bk ? ' · 이미 모순을 짚음' : ' · ◀ ▶ 로 넘기기'}` : '';
+    : total ? `증언 ${safeIdx + 1}/${total}${bk ? ' · 이미 모순을 짚음' : ''} · 탭하면 다음` : '';
 
   return (
-    <div className={`aa-fs${shake ? ' aa-shake' : ''}`}>
+    <div className={`aa-fs${shake ? ' aa-shake' : ''}`}
+      onClick={(e) => { if (!isUiTap(e)) dlgRef.current?.tap(); }}>
       <div className="aa-stage">
         {location ? <SceneBg location={location} />
           : <div className="aa-court" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 90% at 50% 0%, #1a2233 0%, #0a0e16 60%, #05070b 100%)' }} />}
@@ -946,8 +956,8 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, on
 
       {cutin && <div className="aa-cutin"><span>{cutin}</span></div>}
 
-      <DialogueBox location={dlgLoc} speaker={line ? suspect.name : null} text={dlgText}
-        onAdvance={line ? () => setLine(null) : undefined} hint={dlgHint} />
+      <DialogueBox ref={dlgRef} location={dlgLoc} speaker={line ? suspect.name : null} text={dlgText}
+        onAdvance={line ? () => setLine(null) : (total ? () => nav(1) : undefined)} hint={dlgHint} />
 
       <CommandBar items={[
         { icon: '🔎', label: '추궁', onClick: doPress },
