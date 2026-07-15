@@ -25,10 +25,21 @@ function Frame({ p }) {
   return (
     <>
       <rect x="0" y="0" width="800" height="300" fill={p.wall} />
+      {/* 좌우 벽 음영(원근 입체감) */}
+      <polygon points="0,0 130,0 130,300 0,300" fill="#0000002e" />
+      <polygon points="670,0 800,0 800,300 670,300" fill="#0000002e" />
       <rect x="0" y="0" width="800" height="300" fill="url(#vin)" />
+      {/* 바닥 + 소실점(400,300) 방향 원근 라인 */}
       <polygon points="0,300 800,300 800,480 0,480" fill={p.floor} />
-      <polygon points="0,300 800,300 640,360 160,360" fill="#ffffff08" />
-      <rect x="0" y="296" width="800" height="8" fill="#00000040" />
+      <polygon points="0,300 800,300 640,352 160,352" fill="#ffffff0a" />
+      {[-500, -220, -20, 170, 400, 630, 820, 1020, 1300].map((x, i) => (
+        <line key={i} x1={x} y1="480" x2="400" y2="300" stroke="#ffffff10" strokeWidth="1.5" />
+      ))}
+      {[336, 388, 448].map((y, i) => (
+        <line key={i} x1="0" y1={y} x2="800" y2={y} stroke="#00000026" strokeWidth={1 + i * 0.6} />
+      ))}
+      {/* 걸레받이 그림자 */}
+      <rect x="0" y="294" width="800" height="10" fill="#00000055" />
     </>
   );
 }

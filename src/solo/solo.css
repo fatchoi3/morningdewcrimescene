@@ -67,22 +67,25 @@ button { font-family: inherit; }
 /* 장면(방) — 포인트앤클릭 */
 .s-scene { position: relative; border-radius: 14px; overflow: hidden; min-height: 320px; border: 1px solid var(--line); }
 .s-scene-hint { position: absolute; top: 10px; left: 12px; right: 12px; font-size: .8rem; color: #cfcabb; background: #0009; padding: 6px 10px; border-radius: 8px; }
-/* 조사 존 — 배경 그림 위 '반짝임'을 눌러 단서 확보(원/아이콘 칩 없음) */
-.s-zone { position: absolute; transform: translate(-50%,-50%); width: 86px; height: 86px; background: none; border: none; padding: 0; cursor: zoom-in; z-index: 7; }
-.s-zone-glow { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 50% 50%, #ffe9a8b0 0%, #ffe9a840 32%, #ffe9a800 68%); animation: zoneglow 2.4s ease-in-out infinite; }
-@keyframes zoneglow { 0%,100% { opacity: .38; transform: scale(.8); } 50% { opacity: .95; transform: scale(1.08); } }
-.s-zone::after { content: ''; position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; transform: translate(-50%,-50%); border-radius: 50%; background: #fff6de; box-shadow: 0 0 9px 3px #ffe9a8cc; }
-.s-zone:hover .s-zone-glow { animation: none; opacity: 1; transform: scale(1.16); background: radial-gradient(circle at 50% 50%, #ffd76bd0 0%, #ffd76b55 36%, #ffd76b00 70%); }
-.s-zone:active { transform: translate(-50%,-50%) scale(.93); }
-.s-zone-lab { position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); font-size: .68rem; background: #000c; color: #ffe9a8; padding: 2px 8px; border-radius: 6px; white-space: nowrap; opacity: 0; transition: opacity .12s; pointer-events: none; }
+/* 조사 존 — 배경 그림 위 '반짝임'(깊이 배율 --s, 제자리 점멸: 공중부양 X) */
+.s-zone { position: absolute; transform: translate(-50%,-50%) scale(var(--s,1)); width: 82px; height: 82px; background: none; border: none; padding: 0; cursor: zoom-in; z-index: 7; transition: transform .12s; }
+.s-zone-ground { position: absolute; left: 50%; top: 66%; width: 50px; height: 15px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse at 50% 50%, #00000070 0%, #00000000 72%); }
+.s-zone-glow { position: absolute; left: 50%; top: 43%; width: 62px; height: 62px; transform: translate(-50%,-50%); border-radius: 50%; background: radial-gradient(circle at 50% 46%, #ffe9a8c4 0%, #ffe9a842 34%, #ffe9a800 70%); animation: zoneglow 2.6s ease-in-out infinite; }
+@keyframes zoneglow { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+.s-zone::after { content: ''; position: absolute; left: 50%; top: 43%; width: 8px; height: 8px; transform: translate(-50%,-50%); border-radius: 50%; background: #fff6de; box-shadow: 0 0 8px 3px #ffe9a8cc; }
+.s-zone:hover { transform: translate(-50%,-50%) scale(calc(var(--s,1) * 1.14)); }
+.s-zone:hover .s-zone-glow { animation: none; opacity: 1; background: radial-gradient(circle at 50% 46%, #ffd76bda 0%, #ffd76b60 38%, #ffd76b00 72%); }
+.s-zone:active { transform: translate(-50%,-50%) scale(calc(var(--s,1) * .92)); }
+.s-zone-lab { position: absolute; left: 50%; top: 72%; transform: translateX(-50%); font-size: .68rem; background: #000c; color: #ffe9a8; padding: 2px 8px; border-radius: 6px; white-space: nowrap; opacity: 0; transition: opacity .12s; pointer-events: none; }
 .s-zone:hover .s-zone-lab { opacity: 1; }
 .s-zone.have { cursor: pointer; }
-.s-zone.have .s-zone-glow { animation: none; opacity: .45; background: radial-gradient(circle at 50% 50%, #57d08a55 0%, #57d08a00 64%); }
+.s-zone.have .s-zone-glow { animation: none; opacity: .5; background: radial-gradient(circle at 50% 46%, #57d08a66 0%, #57d08a00 64%); }
 .s-zone.have::after { display: none; }
-.s-zone-check { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 1rem; font-weight: 800; color: #86e6ab; text-shadow: 0 1px 3px #000, 0 0 8px #000; }
+.s-zone.have .s-zone-ground { opacity: .5; }
+.s-zone-check { position: absolute; left: 50%; top: 43%; transform: translate(-50%,-50%); font-size: 1rem; font-weight: 800; color: #86e6ab; text-shadow: 0 1px 3px #000, 0 0 8px #000; }
 .s-zone.have .s-zone-lab { color: #a6e6bd; }
-.s-zone.body .s-zone-glow { background: radial-gradient(circle at 50% 50%, #e07a7ac0 0%, #e07a7a40 34%, #e07a7a00 70%); }
-.s-zone.body::after { background: #ffd6d6; box-shadow: 0 0 9px 3px #e07a7ac0; }
+.s-zone.body .s-zone-glow { background: radial-gradient(circle at 50% 46%, #e07a7ac8 0%, #e07a7a44 36%, #e07a7a00 70%); }
+.s-zone.body::after { background: #ffd6d6; box-shadow: 0 0 9px 3px #e07a7ac8; }
 .s-zone.body .s-zone-lab { color: #f0b8b8; opacity: 1; }
 
 /* 모달 */
@@ -202,7 +205,7 @@ button { font-family: inherit; }
 .s-stmt-btns { display: flex; gap: 8px; margin-top: 9px; }
 
 /* 장면 속 용의자 피규어 */
-.s-figure { position: absolute; left: 5%; bottom: 6%; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; filter: drop-shadow(0 4px 10px #000a); }
+.s-figure { position: absolute; left: auto; right: 3%; bottom: 176px; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; filter: drop-shadow(0 6px 12px #000c); }
 .s-figure:hover { transform: translateY(-2px); }
 .s-figure:active { transform: scale(.97); }
 .s-figure-lab { font-size: .74rem; background: var(--gold); color: #1a1a1a; font-weight: 800; padding: 3px 9px; border-radius: 8px; white-space: nowrap; }

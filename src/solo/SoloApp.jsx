@@ -43,13 +43,40 @@ const DIFFS = [
   { id: 'detective', name: '탐정', desc: '힌트 최소. 모든 걸 스스로 엮어야 합니다.' },
 ];
 
-// 장면 핫스팟 위치(스캐터) — index 기반 결정적 배치
-const HOT = [
-  { x: 24, y: 36 }, { x: 52, y: 30 }, { x: 78, y: 38 }, { x: 34, y: 58 },
-  { x: 63, y: 55 }, { x: 20, y: 76 }, { x: 47, y: 79 }, { x: 75, y: 74 },
-  { x: 88, y: 58 }, { x: 12, y: 56 }, { x: 50, y: 70 }, { x: 38, y: 42 },
-];
-const posFor = (i) => HOT[i % HOT.length];
+// 장면 종류별 '표면 앵커' — 배경 가구/바닥에 맞춰 배치(깊을수록 s 작게).
+//   x,y = 화면 % (하단 대사창을 피해 y≤70), s = 원근 배율. index로 결정적 매핑 → 늘 같은 자리.
+//   인물이 있는 방은 우측(78%~)을 인물 자리로 비워둠.
+const ANCHORS = {
+  room: [
+    { x: 15, y: 62, s: 1.06 }, { x: 70, y: 55, s: 1.0 }, { x: 39, y: 26, s: 0.68 }, { x: 45, y: 68, s: 1.04 },
+    { x: 20, y: 31, s: 0.72 }, { x: 60, y: 66, s: 1.0 }, { x: 30, y: 56, s: 0.9 }, { x: 55, y: 42, s: 0.8 },
+    { x: 24, y: 45, s: 0.84 }, { x: 66, y: 34, s: 0.74 }, { x: 50, y: 60, s: 0.96 }, { x: 12, y: 48, s: 0.85 },
+  ],
+  crime: [
+    { x: 52, y: 50, s: 1.0 }, { x: 33, y: 63, s: 1.05 }, { x: 71, y: 60, s: 1.03 }, { x: 21, y: 47, s: 0.85 },
+    { x: 60, y: 40, s: 0.78 }, { x: 44, y: 66, s: 1.04 }, { x: 82, y: 50, s: 0.9 }, { x: 15, y: 61, s: 1.0 },
+    { x: 38, y: 37, s: 0.75 }, { x: 75, y: 35, s: 0.72 }, { x: 28, y: 55, s: 0.9 }, { x: 64, y: 55, s: 0.95 },
+  ],
+  cctv: [
+    { x: 22, y: 30, s: 0.8 }, { x: 44, y: 30, s: 0.8 }, { x: 66, y: 31, s: 0.8 }, { x: 33, y: 52, s: 0.9 },
+    { x: 55, y: 52, s: 0.9 }, { x: 77, y: 42, s: 0.82 }, { x: 20, y: 52, s: 0.88 }, { x: 50, y: 66, s: 1.0 },
+    { x: 70, y: 64, s: 1.0 },
+  ],
+  lab: [
+    { x: 24, y: 55, s: 0.95 }, { x: 40, y: 53, s: 0.92 }, { x: 56, y: 52, s: 0.9 }, { x: 70, y: 52, s: 0.9 },
+    { x: 32, y: 66, s: 1.0 }, { x: 60, y: 64, s: 1.0 }, { x: 82, y: 57, s: 0.9 }, { x: 16, y: 59, s: 0.95 },
+  ],
+  phone: [
+    { x: 20, y: 57, s: 0.95 }, { x: 37, y: 56, s: 0.95 }, { x: 54, y: 56, s: 0.95 }, { x: 71, y: 56, s: 0.95 },
+    { x: 86, y: 57, s: 0.95 }, { x: 30, y: 68, s: 1.02 }, { x: 62, y: 68, s: 1.02 },
+  ],
+  common: [
+    { x: 18, y: 52, s: 1.0 }, { x: 82, y: 52, s: 1.0 }, { x: 35, y: 44, s: 0.85 }, { x: 65, y: 44, s: 0.85 },
+    { x: 50, y: 60, s: 1.05 }, { x: 26, y: 38, s: 0.72 }, { x: 74, y: 38, s: 0.72 }, { x: 50, y: 34, s: 0.66 },
+  ],
+};
+const anchorKind = (loc) => (loc.showBody || loc.person === '목사') ? 'crime' : (ANCHORS[loc.kind] ? loc.kind : 'room');
+const posFor = (loc, i) => { const a = ANCHORS[anchorKind(loc)]; return a[i % a.length]; };
 
 const REVEAL = {
   order: ['S4', 'S5', 'S3', 'S6', 'S1', 'S2'],
@@ -214,7 +241,7 @@ export default function SoloApp() {
     <div className="solo-wrap">
       <div className="s-top">
         {(sceneId || suspectId) ? (
-          <button className="s-back" onClick={() => goHub()}>← 뒤로</button>
+          <button className="s-back" onClick={suspectId ? () => setSuspectId(null) : () => goHub()}>← 뒤로</button>
         ) : (
           <button className="s-back" onClick={() => update({ screen: 'start' })}>≡</button>
         )}
@@ -223,17 +250,10 @@ export default function SoloApp() {
       </div>
 
       <div className="s-body">
-        {sceneId ? (
-          <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet}
-            roomSuspect={suspects.find((s) => s.name === locations.all.find((l) => l.id === sceneId)?.person)}
-            collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
-            onTalk={(id) => { setSceneId(null); setSuspectId(id); }}
-            onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
-            onBack={() => goHub()} />
-        ) : suspectId ? (
+        {suspectId ? (
           <CrossExamView suspect={suspects.find((s) => s.id === suspectId)} state={state}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
-            onExit={() => goHub('places')}
+            onExit={() => (sceneId ? setSuspectId(null) : goHub('places'))}
             onPress={(stId) => {
               const r = pressOf(suspectId, stId);
               const pr = { ...(state.pressed || {}) };
@@ -261,6 +281,13 @@ export default function SoloApp() {
               }
               return r; // 자식이 컷인/대사창에 결과 표시
             }} />
+        ) : sceneId ? (
+          <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet}
+            roomSuspect={suspects.find((s) => s.name === locations.all.find((l) => l.id === sceneId)?.person)}
+            collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
+            onTalk={(id) => setSuspectId(id)}
+            onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
+            onBack={() => goHub()} />
         ) : state.hubTab === 'notebook' ? (
           <NotebookView state={state} onNotes={(v) => update({ notes: v })} onOpen={(code) => setModalCode(code)} />
         ) : state.hubTab === 'casefile' ? (
@@ -397,14 +424,14 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, onTalk
   const [examine, setExamine] = useState(true);
   const [record, setRecord] = useState(false);
   if (!location) return null;
-  const hotY = (y) => 20 + (y / 100) * 46; // 하단 대사창을 피해 상단 2/3에 배치
   return (
     <div className="aa-fs">
       <div className="aa-stage"><SceneBg location={location} /></div>
       <div className="aa-loc-chip">🔦 {location.label}</div>
 
       {examine && location.showBody && (
-        <button className="s-zone body" style={{ left: '50%', top: '18%' }} onClick={() => onOpen('__body__')} aria-label="시신 조사">
+        <button className="s-zone body" style={{ left: '50%', top: '46%', '--s': 1.1 }} onClick={() => onOpen('__body__')} aria-label="시신 조사">
+          <span className="s-zone-ground" />
           <span className="s-zone-glow" />
           <span className="s-zone-lab">시신</span>
         </button>
@@ -412,14 +439,15 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, onTalk
       {examine && location.objects.map((code, i) => {
         const c = getClue(code); if (!c) return null;
         const have = collectedSet.has(code);
-        const p = posFor(i);
+        const p = posFor(location, i);
         return (
-          <button key={code} className={`s-zone${have ? ' have' : ''}`} style={{ left: `${p.x}%`, top: `${hotY(p.y)}%` }}
+          <button key={code} className={`s-zone${have ? ' have' : ''}`} style={{ left: `${p.x}%`, top: `${p.y}%`, '--s': p.s }}
             aria-label={have ? c.title : '단서 조사'}
             onClick={() => {
               if (c.type === '감식' && !have) { onLockedToast('아직 분석 결과가 없습니다 — 관련 단서를 더 찾으세요'); return; }
               onOpen(code);
             }}>
+            <span className="s-zone-ground" />
             <span className="s-zone-glow" />
             {have && <span className="s-zone-check">✓</span>}
             <span className="s-zone-lab">{have ? c.title : '조사'}</span>
@@ -429,8 +457,8 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, onTalk
 
       {roomSuspect && onTalk && (
         <button className="s-figure" onClick={() => onTalk(roomSuspect.id)}>
-          <Avatar person={roomSuspect.name} image={roomSuspect.image} size={84} />
-          <span className="s-figure-lab">{roomSuspect.name}</span>
+          <Avatar person={roomSuspect.name} image={roomSuspect.image} size={76} />
+          <span className="s-figure-lab">💬 {roomSuspect.name}</span>
         </button>
       )}
 
@@ -847,7 +875,7 @@ function CrossExamView({ suspect, state, collectedClues, onPress, onPresent, onE
         { icon: '🔎', label: '추궁', onClick: doPress },
         !bk && { icon: '📁', label: '증거 제시', active: picker, onClick: () => { setLine(null); setPicker((p) => !p); } },
         { icon: '📑', label: '법정기록', onClick: () => { setPicker(false); setRecord(true); } },
-        { icon: '↩', label: '나가기', onClick: onExit },
+        { icon: '↩', label: '돌아가기', onClick: onExit },
       ]} />
 
       {picker && !bk && (
