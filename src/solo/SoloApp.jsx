@@ -114,7 +114,7 @@ const TIMELINE = [
 const norm = (s) => String(s ?? '').trim().replace(/\s/g, '').toUpperCase();
 
 // 풀블리드 VN 화면: 버튼·시트·오버레이가 아닌 곳을 탭하면 대사 넘김(대사창 tap 위임)
-const isUiTap = (e) => !!e.target.closest('button, .aa-cmd, .aa-tnav, .aa-present, .aa-record, .aa-dialogue, .aa-hp, .s-modal');
+const isUiTap = (e) => !!e.target.closest('button, .aa-cmd, .aa-ask, .aa-present, .aa-record, .aa-dialogue, .aa-hp, .s-modal');
 
 export default function SoloApp() {
   const [state, setState] = useState(() => loadSave() || defaultState());
@@ -286,6 +286,7 @@ export default function SoloApp() {
         {suspectId ? (
           <CrossExamView key={suspectId} suspect={suspects.find((s) => s.id === suspectId)} state={state}
             phase={stage >= 3 ? 2 : 1}
+            tutorialSeen={!!state.tutorialSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
             location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             onExit={() => (sceneId ? setSuspectId(null) : goHub('places'))}
@@ -347,6 +348,11 @@ export default function SoloApp() {
                   : stage === 2 ? `다음: 목사님 방 단서 ${SCENE_NEEDED}개 확보 시 2차 심문 개방 — 감식 의뢰를 잊지 마세요`
                   : '2차 심문: 새 증언을 추궁하고, 다 모였으면 사건 파일을 제출하세요'}
               </div>
+              {stage === 1 && interrogatedCount(state) === 0 && (
+                <div style={{ fontSize: '.8rem', color: 'var(--gold)', marginTop: 5 }}>
+                  💡 먼저 <b>종현방</b>부터 — 목사님께 마지막 음료를 건넨 사람이다. 방을 조사하고, 본인을 눌러 이야기를 들어보자.
+                </div>
+              )}
             </div>
             <div className="s-section-t">숙소 복도 — 문을 눌러 들어가기</div>
             <div className="s-hall">
@@ -357,6 +363,7 @@ export default function SoloApp() {
                   const locked = l.stage > stage;
                   const isCrime = l.person === '목사';
                   return <DoorCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked} isCrime={isCrime}
+                    recommend={stage === 1 && interrogatedCount(state) === 0 && l.person === '최종현'}
                     onClick={locked
                       ? () => showToast(isCrime ? '🚧 목사님 방은 경찰 통제 중입니다 — 부검 소견이 나오면 개방됩니다' : stageHint(l.stage))
                       : () => setSceneId(l.id)} />;
@@ -415,7 +422,7 @@ function scoreCase(casefile) {
 
 // ── 장소 카드 ─────────────────────────────────────────────────────────────
 // ── 복도의 문(장소 진입) ───────────────────────────────────────────────────
-function DoorCard({ loc, collectedSet, locked, isCrime, onClick }) {
+function DoorCard({ loc, collectedSet, locked, isCrime, recommend, onClick }) {
   const total = loc.objects.length;
   const got = loc.objects.filter((c) => collectedSet.has(c)).length;
   const done = !locked && total > 0 && got === total;
@@ -423,6 +430,7 @@ function DoorCard({ loc, collectedSet, locked, isCrime, onClick }) {
     : loc.kind === 'cctv' ? '📹' : loc.kind === 'phone' ? '📱' : loc.kind === 'lab' ? '🔬' : '🚶';
   return (
     <button className={`s-door${locked ? ' locked' : ''}${isCrime ? ' crime' : ''}`} onClick={onClick}>
+      {recommend && <span className="s-door-rec">▼ 여기부터</span>}
       <div className="s-door-body">
         <span className="s-door-icon">{locked ? '🔒' : icon}</span>
         <span className="s-door-handle" />
@@ -857,12 +865,12 @@ function CaseFileView({ state, stageLocked, stageLabel, onSet, onSubmit }) {
   );
 }
 
-// ── 용의자 심문 (방 안에서 대화하며 반대신문) ────────────────────────────────
-//   방 배경을 그대로 두고 인물과 마주 서서 대화한다(별도 페이지 X).
-//   증언을 한 토막씩 대사창에 띄우고(◀▶), 추궁/증거제시로 모순을 잡는다.
-//   증거 제시 목록은 '이 인물과 관련 있는 단서'로만 좁힌다. 대화(추궁)로 증언 단서 확보.
-function CrossExamView({ suspect, location, state, collectedClues, phase = 1, onPress, onPresent, onExit }) {
-  const [idx, setIdx] = useState(0);
+// ── 용의자 심문 (방 안 대화형 — 질문 선택 → 대답 → 캐묻기/그 말에 증거) ────────
+//   질문 목록에서 골라 물으면 인물이 대답한다. 수상하면 「캐묻는다」로 파고들고,
+//   거짓이다 싶으면 「이 말에 증거」로 지금 그 대답에 단서를 들이댄다(모순!).
+//   ❗=새로 열린 질문 · ✅=모순을 밝힌 질문. 「이만 마친다」로 방에 복귀(반복 없음).
+function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onPress, onPresent, onExit }) {
+  const [curId, setCurId] = useState(null); // 지금 붙잡고 있는 질문(진술 id) — null = 질문 목록
   // 대사창 오버라이드: { text, kind } — 진입 시 인사말(1차/2차 다름)부터
   const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
   const [picker, setPicker] = useState(false);
@@ -874,15 +882,14 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, on
   const sid = suspect?.id;
   const collected = state.collected || [];
   const unlocked = state.stUnlocked?.[sid] || [];
+  const pressedIds = state.pressed?.[sid] || [];
   const broke = state.broke?.[sid] || [];
   const trust = state.trust?.[sid] ?? TRUST_MAX;
   const statements = sid ? visibleStatements(sid, collected, unlocked, phase) : [];
   const brokeOf = (id) => broke.find((e) => e.id === id);
   const confessed = broke.some((e) => e.confess);
 
-  const total = statements.length;
-  const safeIdx = total ? Math.min(idx, total - 1) : 0;
-  const cur = total ? statements[safeIdx] : null;
+  const cur = curId ? statements.find((s) => s.id === curId) : null;
   const bk = cur ? brokeOf(cur.id) : null;
 
   // 이 인물과 관련 있는 '증거'만 제시 목록에 노출(모순·반응 코드 + 인물 소속 단서, 증언은 제외)
@@ -892,14 +899,30 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, on
 
   if (!suspect) return null;
 
-  const nav = (d) => { setLine(null); setPicker(false); setIdx((i) => total ? (Math.min(i, total - 1) + d + total) % total : 0); };
+  const toMenu = () => { setLine(null); setCurId(null); setPicker(false); };
+
+  // 대사 넘김: 인사말→(첫 심문이면 안내)→질문 목록 / 대답·반응을 읽고 나면 질문 목록
+  const advance = () => {
+    if (line) {
+      if (line.kind === 'intro' && !tutorialSeen) {
+        onTutorialSeen?.();
+        setLine({ kind: 'guide', text: '(수사 노트) 질문을 골라 이야기를 듣자.\n수상한 대답은 「🔎 캐묻는다」로 파고들고, 거짓이다 싶으면 「📁 이 말에 증거」로 단서를 들이대자.\n❗ 표시가 붙은 새 질문이 열리면 놓치지 말 것.' });
+        return;
+      }
+      if (line.kind === 'intro' || line.kind === 'guide') { setLine(null); return; }
+      toMenu();
+      return;
+    }
+    if (cur) toMenu();
+  };
 
   const doPress = () => {
     if (!cur) return;
     setPicker(false);
     const r = onPress(cur.id) || {};
     let extra = '';
-    if (r.grants) { const t = getClue(r.grants); if (t) extra = `\n🗣 증언 확보 — ${t.title}`; }
+    if (r.grants) { const t = getClue(r.grants); if (t) extra += `\n🗣 증언 확보 — ${t.title}`; }
+    if (r.unlock) extra += '\n❗ 새로운 질문이 열렸다.';
     setLine({ text: (r.text || '…') + extra, kind: 'press' });
   };
 
@@ -910,23 +933,30 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, on
     if (r.result === 'contradict') {
       setCutin('모순!');
       setTimeout(() => setCutin((c) => (c === '모순!' ? null : c)), 1300);
-      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : ''), kind: 'break' });
+      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : ''), kind: 'break' });
     } else if (r.result === 'soft') {
       setLine({ text: r.text || '', kind: 'soft' });
     } else {
       setShake(true); setTimeout(() => setShake(false), 480);
-      setLine({ text: '그건 저와는 상관없는 물건이잖아요. 왜 저한테…', kind: 'wrong' });
+      const c = getClue(code);
+      const own = c && c.person === suspect.name;
+      setLine({ text: own
+        ? '…그건 제 물건이 맞는데요. 지금 이 얘기랑 무슨 상관이죠?'
+        : '그건 제 것도 아닌데… 왜 저한테 보여주시는 거예요?', kind: 'wrong' });
     }
   };
 
+  const menuOpen = !line && !cur;
+  const qLabel = (s) => s.q || (s.text.length > 18 ? s.text.slice(0, 18) + '…' : s.text);
+
   const dlgText = line ? line.text
     : cur ? cur.text
-    : '…(지금은 더 들을 말이 없다. 단서를 모으거나 수사가 진행되면 새 증언이 열린다.)';
+    : (statements.length ? '무엇을 물어볼까. (아래에서 질문을 고르자)' : '…(지금은 물어볼 것이 없다. 단서를 모으거나 수사가 진행되면 질문이 생긴다.)');
   const dlgLoc = line
-    ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다' : line.kind === 'intro' ? (phase >= 2 ? '2차 심문' : '심문 시작') : '추궁')
-    : (bk ? '✅ 모순을 잡은 증언' : `${suspect.name}의 증언`);
-  const dlgHint = line ? '탭하여 계속 ▶'
-    : total ? `증언 ${safeIdx + 1}/${total}${bk ? ' · 이미 모순을 짚음' : ''} · 탭하면 다음` : '';
+    ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다' : line.kind === 'guide' ? '수사 노트' : line.kind === 'intro' ? (phase >= 2 ? '2차 심문' : '심문 시작') : '캐묻는다')
+    : cur ? (bk ? '✅ 밝혀낸 이야기' : `${suspect.name}의 대답`) : '질문 선택';
+  const speakerName = (line && line.kind !== 'guide') || cur ? suspect.name : null;
+  const dlgHint = (line || cur) ? '탭하여 계속 ▶' : '';
 
   return (
     <div className={`aa-fs${shake ? ' aa-shake' : ''}`}
@@ -946,30 +976,42 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, on
         <div className="aa-court-name">{suspect.name}<span> · {suspect.occupation}</span></div>
       </div>
 
-      {!line && total > 1 && (
-        <div className="aa-tnav">
-          <button onClick={() => nav(-1)} aria-label="이전 증언">◀</button>
-          <span>{safeIdx + 1} / {total}</span>
-          <button onClick={() => nav(1)} aria-label="다음 증언">▶</button>
+      {cutin && <div className="aa-cutin"><span>{cutin}</span></div>}
+
+      {/* 질문 선택지 — 대답/반응을 읽는 중엔 숨김 */}
+      {menuOpen && (
+        <div className="aa-ask">
+          <div className="aa-ask-h">🎙 무엇을 물어볼까</div>
+          {statements.map((s) => {
+            const b = brokeOf(s.id);
+            const isNew = s.hidden && !pressedIds.includes(s.id) && !b;
+            return (
+              <button key={s.id} className={b ? 'done' : isNew ? 'new' : ''} onClick={() => setCurId(s.id)}>
+                {b ? '✅ ' : isNew ? '❗ ' : '💬 '}{qLabel(s)}
+              </button>
+            );
+          })}
+          <button className="end" onClick={onExit}>↩ 이만 마친다 — 방으로 돌아간다</button>
         </div>
       )}
 
-      {cutin && <div className="aa-cutin"><span>{cutin}</span></div>}
+      <DialogueBox ref={dlgRef} location={dlgLoc} speaker={speakerName} text={dlgText}
+        onAdvance={(line || cur) ? advance : undefined} hint={dlgHint} />
 
-      <DialogueBox ref={dlgRef} location={dlgLoc} speaker={line ? suspect.name : null} text={dlgText}
-        onAdvance={line ? () => setLine(null) : (total ? () => nav(1) : undefined)} hint={dlgHint} />
-
-      <CommandBar items={[
-        { icon: '🔎', label: '추궁', onClick: doPress },
-        !bk && { icon: '📁', label: '증거 제시', active: picker, onClick: () => { setLine(null); setPicker((p) => !p); } },
+      <CommandBar items={cur ? [
+        { icon: '🔎', label: '캐묻는다', onClick: doPress },
+        !bk && { icon: '📁', label: '이 말에 증거', active: picker, onClick: () => { setLine(null); setPicker((p) => !p); } },
+        { icon: '↩', label: '다른 질문', onClick: toMenu },
         { icon: '📑', label: '법정기록', onClick: () => { setPicker(false); setRecord(true); } },
+      ] : [
+        { icon: '📑', label: '법정기록', onClick: () => setRecord(true) },
         { icon: '↩', label: '돌아가기', onClick: onExit },
       ]} />
 
-      {picker && !bk && (
+      {picker && cur && !bk && (
         <div className="aa-present">
           <div className="aa-present-h">
-            <span>이 증언에 들이댈 증거 — <b>{suspect.name}</b> 관련</span>
+            <span>이 말에 들이댈 증거 — “{cur.text.length > 24 ? cur.text.slice(0, 24) + '…' : cur.text}”</span>
             <button className="aa-close" onClick={() => setPicker(false)}>✕</button>
           </div>
           {presentable.length === 0
