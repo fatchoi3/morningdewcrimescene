@@ -974,10 +974,10 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tu
         <span style={{ color: '#e8706e' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: .28 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
       </div>
 
-      <div className="aa-room-fig">
+      {/* 상반신 프레이밍 — 인물을 크게 그리고 하반신은 대사창 뒤로 잠기게(역전재판식) */}
+      <div className="aa-room-fig bust">
         {confessed && <div className="aa-court-tag">⚖️ 관여 자백</div>}
-        <StandingFigure sid={sid} person={suspect.name} image={suspect.image} height={300} fallbackSize={160} />
-        <div className="aa-court-name">{suspect.name}<span> · {suspect.occupation}</span></div>
+        <StandingFigure sid={sid} person={suspect.name} image={suspect.image} height={620} fallbackSize={160} />
       </div>
 
       {cutin && <div className="aa-cutin"><span>{cutin}</span></div>}

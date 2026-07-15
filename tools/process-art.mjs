@@ -43,10 +43,11 @@ for (const f of readdirSync(STAND).filter((f) => f.endsWith('.png'))) {
   }
   // 경계 부드럽게: 투명 픽셀과 맞닿은 흰 기 도는 픽셀 알파 절반
   const buf = await sharp(data, { raw: { width: W, height: H, channels: 4 } })
+    .trim() // 투명 여백 제거 — objectFit 레터박스 방지(인물이 실제 크기로 보이도록)
     .resize({ height: 1200, withoutEnlargement: true })
     .png({ compressionLevel: 9 })
     .toBuffer();
   await sharp(buf).toFile(src);
-  console.log('stand:', f, 'keyed + resized');
+  console.log('stand:', f, 'keyed + trimmed + resized');
 }
 console.log('done');

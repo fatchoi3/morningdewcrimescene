@@ -164,6 +164,10 @@ button { font-family: inherit; }
 /* 방 안에서 마주 서서 대화(별도 페이지 아님) — 인물이 바닥에 서 있는 배치 */
 .aa-room-fig { position: absolute; left: 50%; transform: translateX(-50%); bottom: 176px; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
 .aa-room-fig > * { filter: drop-shadow(0 8px 20px #000c); }
+/* 심문: 상반신 프레이밍 — 인물을 크게, 하반신은 대사창(z-8) 뒤로 잠김 */
+.aa-room-fig.bust { bottom: 6px; }
+.aa-room-fig.bust img { height: min(86vh, 760px) !important; }
+.aa-room-fig.bust .aa-court-tag { position: absolute; top: 16%; left: 50%; transform: translateX(-50%); z-index: 2; }
 .aa-court-name { font-weight: 800; font-size: 1.05rem; color: #fff; background: #00000088; border: 1px solid #ffffff20; border-radius: 9px; padding: 5px 14px; }
 .aa-court-name span { color: var(--muted); font-weight: 600; font-size: .84rem; }
 .aa-court-tag { background: var(--danger); color: #fff; font-weight: 800; font-size: .78rem; padding: 3px 12px; border-radius: 20px; }
