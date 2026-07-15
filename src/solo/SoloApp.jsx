@@ -206,7 +206,6 @@ export default function SoloApp() {
   // ── 메인(허브/장면/용의자) ────────────────────────────────────────────────
   const topH = sceneId ? (locations.all.find((l) => l.id === sceneId)?.label)
     : suspectId ? '용의자 심문'
-    : state.hubTab === 'suspects' ? '용의자'
     : state.hubTab === 'notebook' ? '수사 수첩'
     : state.hubTab === 'casefile' ? '사건 파일'
     : '현장';
@@ -234,7 +233,7 @@ export default function SoloApp() {
         ) : suspectId ? (
           <CrossExamView suspect={suspects.find((s) => s.id === suspectId)} state={state}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
-            onExit={() => goHub('suspects')}
+            onExit={() => goHub('places')}
             onPress={(stId) => {
               const r = pressOf(suspectId, stId);
               const pr = { ...(state.pressed || {}) };
@@ -262,20 +261,6 @@ export default function SoloApp() {
               }
               return r; // 자식이 컷인/대사창에 결과 표시
             }} />
-        ) : state.hubTab === 'suspects' ? (
-          <>
-            <div className="s-section-t">용의자 6인 — 탭하여 심문</div>
-            <div className="s-grid">
-              {suspects.map((s) => (
-                <button key={s.id} className="s-card" onClick={() => { setSuspectId(s.id); }}>
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}><Avatar person={s.name} image={s.image} size={48} /></div>
-                  <div className="cn">{s.name}</div>
-                  <div className="cm">{s.occupation}</div>
-                  {state.broke?.[s.id]?.length ? <span className="cbadge">모순 {state.broke[s.id].length}</span> : null}
-                </button>
-              ))}
-            </div>
-          </>
         ) : state.hubTab === 'notebook' ? (
           <NotebookView state={state} onNotes={(v) => update({ notes: v })} onOpen={(code) => setModalCode(code)} />
         ) : state.hubTab === 'casefile' ? (
@@ -327,7 +312,7 @@ export default function SoloApp() {
 
       {/* 하단 탭바 */}
       <div className="s-tabs">
-        {[['places', '🗺️', '현장'], ['suspects', '🧑', '용의자'], ['notebook', '📓', '수첩'], ['casefile', '📂', '사건파일']].map(([id, ic, nm]) => (
+        {[['places', '🗺️', '현장'], ['notebook', '📓', '수첩'], ['casefile', '📂', '사건파일']].map(([id, ic, nm]) => (
           <button key={id} className={!sceneId && !suspectId && state.hubTab === id ? 'on' : ''} onClick={() => goHub(id)}>
             <span className="ti">{ic}</span>{nm}
           </button>
@@ -419,24 +404,26 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, onTalk
       <div className="aa-loc-chip">🔦 {location.label}</div>
 
       {examine && location.showBody && (
-        <div className="s-hot" style={{ left: '50%', top: '16%' }} onClick={() => onOpen('__body__')}>
-          <div className="dot" style={{ borderColor: '#c06868', background: '#2a1414' }}>🛏</div>
-          <div className="lab">시신</div>
-        </div>
+        <button className="s-zone body" style={{ left: '50%', top: '18%' }} onClick={() => onOpen('__body__')} aria-label="시신 조사">
+          <span className="s-zone-glow" />
+          <span className="s-zone-lab">시신</span>
+        </button>
       )}
       {examine && location.objects.map((code, i) => {
         const c = getClue(code); if (!c) return null;
         const have = collectedSet.has(code);
         const p = posFor(i);
         return (
-          <div key={code} className={`s-hot${have ? ' have' : ''}`} style={{ left: `${p.x}%`, top: `${hotY(p.y)}%` }}
+          <button key={code} className={`s-zone${have ? ' have' : ''}`} style={{ left: `${p.x}%`, top: `${hotY(p.y)}%` }}
+            aria-label={have ? c.title : '단서 조사'}
             onClick={() => {
               if (c.type === '감식' && !have) { onLockedToast('아직 분석 결과가 없습니다 — 관련 단서를 더 찾으세요'); return; }
               onOpen(code);
             }}>
-            <div className="dot">{have ? '✓' : clueIcon(c)}</div>
-            <div className="lab">{have ? c.title : '???'}</div>
-          </div>
+            <span className="s-zone-glow" />
+            {have && <span className="s-zone-check">✓</span>}
+            <span className="s-zone-lab">{have ? c.title : '조사'}</span>
+          </button>
         );
       })}
 
@@ -448,7 +435,7 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, onTalk
       )}
 
       <DialogueBox location={location.label}
-        text={examine ? ('빛나는 지점을 눌러 조사하자.' + (roomSuspect ? ' 인물과 이야기할 수도 있다.' : '')) : '무엇을 할까?'} />
+        text={examine ? ('그림 속 빛나는 곳을 눌러 조사하자.' + (roomSuspect ? ' 인물과 이야기할 수도 있다.' : '')) : '무엇을 할까?'} />
 
       <CommandBar items={[
         { icon: '🔍', label: '조사한다', active: examine, onClick: () => setExamine((e) => !e) },
