@@ -252,6 +252,7 @@ export default function SoloApp() {
       <div className="s-body">
         {suspectId ? (
           <CrossExamView suspect={suspects.find((s) => s.id === suspectId)} state={state}
+            location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             onExit={() => (sceneId ? setSuspectId(null) : goHub('places'))}
             onPress={(stId) => {
@@ -776,10 +777,11 @@ function CaseFileView({ state, stageLocked, stageLabel, onSet, onSubmit }) {
   );
 }
 
-// ── 용의자 심문 (역전재판식 법정 반대신문) ──────────────────────────────────
+// ── 용의자 심문 (방 안에서 대화하며 반대신문) ────────────────────────────────
+//   방 배경을 그대로 두고 인물과 마주 서서 대화한다(별도 페이지 X).
 //   증언을 한 토막씩 대사창에 띄우고(◀▶), 추궁/증거제시로 모순을 잡는다.
 //   증거 제시 목록은 '이 인물과 관련 있는 단서'로만 좁힌다. 대화(추궁)로 증언 단서 확보.
-function CrossExamView({ suspect, state, collectedClues, onPress, onPresent, onExit }) {
+function CrossExamView({ suspect, location, state, collectedClues, onPress, onPresent, onExit }) {
   const [idx, setIdx] = useState(0);
   const [line, setLine] = useState(null);   // 대사창 오버라이드: { text, kind }
   const [picker, setPicker] = useState(false);
@@ -846,16 +848,19 @@ function CrossExamView({ suspect, state, collectedClues, onPress, onPresent, onE
 
   return (
     <div className={`aa-fs${shake ? ' aa-shake' : ''}`}>
-      <div className="aa-stage aa-court" style={{ background: 'radial-gradient(120% 90% at 50% 0%, #1a2233 0%, #0a0e16 60%, #05070b 100%)' }} />
-      <div className="aa-loc-chip">⚖️ {suspect.name} 반대신문</div>
+      <div className="aa-stage">
+        {location ? <SceneBg location={location} />
+          : <div className="aa-court" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 90% at 50% 0%, #1a2233 0%, #0a0e16 60%, #05070b 100%)' }} />}
+      </div>
+      <div className="aa-loc-chip">⚖️ {location?.label ? `${location.label} · ` : ''}{suspect.name} 심문</div>
       <div className="aa-hp" title="신뢰도">
         <span style={{ color: '#e8706e' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: .28 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
       </div>
 
-      <div className="aa-court-fig">
-        <Avatar person={suspect.name} image={suspect.image} size={188} />
-        <div className="aa-court-name">{suspect.name}<span> · {suspect.occupation}</span></div>
+      <div className="aa-room-fig">
         {confessed && <div className="aa-court-tag">⚖️ 관여 자백</div>}
+        <Avatar person={suspect.name} image={suspect.image} size={160} />
+        <div className="aa-court-name">{suspect.name}<span> · {suspect.occupation}</span></div>
       </div>
 
       {!line && total > 1 && (
