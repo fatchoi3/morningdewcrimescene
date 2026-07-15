@@ -87,6 +87,10 @@ button { font-family: inherit; }
 .s-zone.body .s-zone-glow { background: radial-gradient(circle at 50% 46%, #e07a7ac8 0%, #e07a7a44 36%, #e07a7a00 70%); }
 .s-zone.body::after { background: #ffd6d6; box-shadow: 0 0 9px 3px #e07a7ac8; }
 .s-zone.body .s-zone-lab { color: #f0b8b8; opacity: 1; }
+/* 감식 의뢰 접수(분석 중) — 청록 톤 */
+.s-zone.req .s-zone-glow { animation: none; opacity: .6; background: radial-gradient(circle at 50% 46%, #6fd7e688 0%, #6fd7e600 66%); }
+.s-zone.req::after { background: #d8f6fb; box-shadow: 0 0 8px 3px #6fd7e6aa; }
+.s-zone.req .s-zone-lab { color: #a8e6f0; }
 
 /* 모달 */
 .s-modal-ov { position: fixed; inset: 0; background: #000b; display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 40; }

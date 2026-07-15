@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { soloContent } from './soloContent.js';
-import { visibleStatements, pressOf, presentOn, relatedCodes } from './interrogation.js';
+import { visibleStatements, pressOf, presentOn, relatedCodes, introOf } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { SceneBg, Avatar, BriefingArt, EndingArt, CorridorBg } from './art.jsx';
 import { DialogueBox, CommandBar } from './vn.jsx';
 
-const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds } = soloContent;
+const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds, gamsikCodes, gamsikReady } = soloContent;
 
 // 수사 단계 — 자동 개방(퍼즐/탐정). 가이드는 처음부터 전부 개방.
-const STAGE_LABEL = { 1: '1부 · 탐문', 2: '중간점검 · 현장 조사', 3: '2부 · 전면 공개' };
+//   1 = 1차 탐문(인물 방·1차 심문) → [중간 사건: 부검 소견] →
+//   2 = 전면 조사(목사방·CCTV·휴대폰·감식 의뢰) →
+//   3 = 2차 심문(감식 결과 도착, 새 증언 개방, 사건 파일 제출)
+const STAGE_LABEL = { 1: '1차 탐문 · 인물 방과 심문', 2: '전면 조사 · 현장·CCTV·휴대폰', 3: '2차 심문 · 물증으로 추궁' };
 const STAGE_BANNER = {
-  2: '🔓 중간점검 개방 — 목사님 방·감식실·CCTV가 열렸습니다',
-  3: '🔓 2부 개방 — 압수한 휴대폰이 모두 열렸습니다',
+  2: '🔓 살인 사건 전환 — 목사님 방·CCTV·휴대폰·감식 의뢰실이 열렸습니다',
+  3: '🔬 2차 심문 개방 — 감식 결과가 도착했고, 용의자들의 새 증언이 열렸습니다',
 };
 const SCENE_NEEDED = 3; // 단계 2→3: 목사방 현장 단서 이만큼 확보
 const TRUST_MAX = 5;    // 신뢰도(HP)
@@ -32,9 +35,9 @@ function computeStage(state) {
   return 3;
 }
 const stageHint = (locStage) => locStage === 2
-  ? `🔒 중간점검에 열림 — 용의자 ${suspectIds.length}명을 모두 심문하세요`
+  ? `🔒 1차 심문 후 개방 — 용의자 ${suspectIds.length}명을 모두 심문하세요`
   : locStage === 3
-    ? `🔒 2부에 열림 — 목사님 방(현장)에서 단서 ${SCENE_NEEDED}개를 찾으세요`
+    ? `🔒 2차 심문 때 개방 — 목사님 방(현장)에서 단서 ${SCENE_NEEDED}개를 찾으세요`
     : '🔒 잠김';
 
 const DIFFS = [
@@ -125,7 +128,8 @@ export default function SoloApp() {
   const showToast = (t) => { setToast(t); setTimeout(() => setToast((cur) => (cur === t ? null : cur)), 2400); };
 
   // 현재 수사 단계(가이드=전부 개방, 그 외=진행도 기반 자동 개방)
-  const stage = state.difficulty === 'guide' ? 3 : computeStage(state);
+  const progressStage = computeStage(state); // 진행도 기반(이벤트·감식 배달 판정용)
+  const stage = state.difficulty === 'guide' ? 3 : progressStage;
   // 새 단계 개방 시 1회 배너 알림
   useEffect(() => {
     if (state.difficulty === 'guide') return;
@@ -133,15 +137,33 @@ export default function SoloApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
 
+  // 2차 심문 개방 시: 의뢰해 둔 감식 결과 일괄 도착
+  useEffect(() => {
+    if (stage < 3) return;
+    const pending = (state.labReq || []).filter((c) => !collectedSet.has(c) && gamsikReady(c, state.collected));
+    if (!pending.length) return;
+    const set = new Set(state.collected);
+    pending.forEach((c) => set.add(c));
+    soloContent.computeAutoUnlocked(set); // 특수 연쇄
+    for (const g of gamsikCodes) if (!pending.includes(g) && !collectedSet.has(g)) set.delete(g); // 미의뢰 감식은 제외
+    update({ collected: [...set] });
+    showToast(`🔬 감식 결과 ${pending.length}건 도착 — 수첩에서 확인하세요`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, state.labReq]);
+
   function collect(code) {
     if (collectedSet.has(code)) return { added: [] };
     const set = new Set(state.collected);
     set.add(code);
     const autos = soloContent.computeAutoUnlocked(set) || []; // set을 변형하며 특수/감식 연쇄 해금
+    // 감식은 자동 수령하지 않는다 — 감식실에서 의뢰하면 2차 심문 때 결과 도착.
+    const stripped = autos.filter((a) => gamsikCodes.has(a.code) && a.code !== code && !collectedSet.has(a.code));
+    stripped.forEach((a) => set.delete(a.code));
+    const kept = autos.filter((a) => !stripped.includes(a));
     update({ collected: [...set] });
     const c = getClue(code);
-    showToast(`단서 확보: ${c?.title || code}${autos.length ? ` (+특수 ${autos.length})` : ''}`);
-    return { added: [code, ...autos.map((a) => a.code)] };
+    showToast(`단서 확보: ${c?.title || code}${kept.length ? ` (+특수 ${kept.length})` : ''}`);
+    return { added: [code, ...kept.map((a) => a.code)] };
   }
 
   const goHub = (tab) => { setSceneId(null); setSuspectId(null); update({ screen: 'hub', hubTab: tab || state.hubTab || 'places' }); };
@@ -230,6 +252,11 @@ export default function SoloApp() {
     );
   }
 
+  // ── 중간 사건 — 1차 심문(6인)을 마치면 부검 소견이 도착한다 ────────────────
+  if (!state.eventSeen && progressStage >= 2 && !suspectId) {
+    return <EventVN onDone={() => update({ eventSeen: true })} />;
+  }
+
   // ── 메인(허브/장면/용의자) ────────────────────────────────────────────────
   const topH = sceneId ? (locations.all.find((l) => l.id === sceneId)?.label)
     : suspectId ? '용의자 심문'
@@ -251,7 +278,8 @@ export default function SoloApp() {
 
       <div className="s-body">
         {suspectId ? (
-          <CrossExamView suspect={suspects.find((s) => s.id === suspectId)} state={state}
+          <CrossExamView key={suspectId} suspect={suspects.find((s) => s.id === suspectId)} state={state}
+            phase={stage >= 3 ? 2 : 1}
             location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             onExit={() => (sceneId ? setSuspectId(null) : goHub('places'))}
@@ -286,6 +314,12 @@ export default function SoloApp() {
           <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet}
             roomSuspect={suspects.find((s) => s.name === locations.all.find((l) => l.id === sceneId)?.person)}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
+            lab={{
+              stage,
+              requested: (code) => (state.labReq || []).includes(code),
+              ready: (code) => gamsikReady(code, state.collected),
+              request: (code) => { update({ labReq: [...new Set([...(state.labReq || []), code])] }); showToast('🔬 감식 의뢰 접수 — 결과는 2차 심문이 열리면 도착합니다'); },
+            }}
             onTalk={(id) => setSuspectId(id)}
             onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
             onBack={() => goHub()} />
@@ -303,9 +337,9 @@ export default function SoloApp() {
                 용의자 심문 {interrogatedCount(state)}/{suspectIds.length}
                 {stage >= 2 ? ` · 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}` : ''}
                 {' · '}
-                {stage === 1 ? '다음: 6명 모두 심문하면 현장·감식·CCTV 개방'
-                  : stage === 2 ? '다음: 목사방에서 단서를 모으면 휴대폰 개방'
-                  : '모든 장소가 개방되었습니다'}
+                {stage === 1 ? '다음: 6명 모두 1차 심문하면 사건이 움직입니다'
+                  : stage === 2 ? `다음: 목사님 방 단서 ${SCENE_NEEDED}개 확보 시 2차 심문 개방 — 감식 의뢰를 잊지 마세요`
+                  : '2차 심문: 새 증언을 추궁하고, 다 모였으면 사건 파일을 제출하세요'}
               </div>
             </div>
             <div className="s-section-t">숙소 복도 — 문을 눌러 들어가기</div>
@@ -318,7 +352,7 @@ export default function SoloApp() {
                   const isCrime = l.person === '목사';
                   return <DoorCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked} isCrime={isCrime}
                     onClick={locked
-                      ? () => showToast(isCrime ? '🚧 목사님 방은 통제 중입니다 — 중간점검 때 개방됩니다' : stageHint(l.stage))
+                      ? () => showToast(isCrime ? '🚧 목사님 방은 경찰 통제 중입니다 — 부검 소견이 나오면 개방됩니다' : stageHint(l.stage))
                       : () => setSceneId(l.id)} />;
                 })}
               </div>
@@ -390,7 +424,7 @@ function DoorCard({ loc, collectedSet, locked, isCrime, onClick }) {
       </div>
       <div className="s-door-plate">{loc.label}</div>
       <div className="s-door-stat">
-        {locked ? (isCrime ? '통제 중' : loc.stage === 2 ? '중간점검 개방' : '2부 개방')
+        {locked ? (isCrime ? '통제 중' : loc.stage === 2 ? '사건 후 개방' : '2차 개방')
           : loc.kind === 'room' ? (done ? '✓ 탐색완료' : `단서 ${got}/${total}`)
           : '열람'}
       </div>
@@ -420,8 +454,35 @@ function BriefingVN({ onDone }) {
   );
 }
 
+// ── 중간 사건 — 1차 심문 완료 후 부검 소견 도착(살인 전환) 연출 ───────────────
+function EventVN({ onDone }) {
+  const beats = [
+    { loc: '무전', text: '"…수사관님, 국과수입니다. 김호치 목사 1차 부검 소견이 나왔습니다."' },
+    { loc: '부검 소견', text: '"사인은 단순 심장 발작이 아닙니다. 코와 입 주변의 압박흔, 안면의 점상출혈 — 질식 소견입니다."' },
+    { loc: '수사 전환', text: '단순 발작사가 아니다. 사건은 지금부로 살인 사건으로 전환된다.' },
+    { text: '통제 중이던 목사님 방이 개방되었다. 압수했던 CCTV 원본과 관계자 휴대폰도 열람할 수 있다.' },
+    { text: '감식반이 합류했다. 채취물을 가져가면 감식 의뢰실에서 분석을 맡길 수 있다 — 단, 결과가 나오기까지는 시간이 걸린다.' },
+    { text: '…낮의 진술들을 물증으로 검증할 차례다. 거짓말은 반드시 무너진다.' },
+  ];
+  const [i, setI] = useState(0);
+  const beat = beats[Math.min(i, beats.length - 1)];
+  const last = i >= beats.length - 1;
+  return (
+    <div className="aa-fs">
+      <div className="aa-stage" style={{ background: 'radial-gradient(120% 100% at 50% 0%, #2a1214 0%, #140a0c 55%, #07050a 100%)' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 40% at 50% 30%, #c0585822, transparent 70%)', animation: 'aablink 2.2s ease-in-out infinite' }} />
+      </div>
+      <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 중간 사건 · 부검 소견</div>
+      <DialogueBox location={beat.loc} text={beat.text}
+        onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }}
+        hint={last ? '▶ 전면 조사 시작' : `${i + 1}/${beats.length} · 탭하여 다음`} />
+      <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
+    </div>
+  );
+}
+
 // ── 장면(역전재판식 풀블리드: 조사/이야기/이동 + 법정기록) ────────────────────
-function SceneView({ location, collectedSet, roomSuspect, collectedClues, onTalk, onOpen, onLockedToast, onBack }) {
+function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, onTalk, onOpen, onLockedToast, onBack }) {
   const [examine, setExamine] = useState(true);
   const [record, setRecord] = useState(false);
   if (!location) return null;
@@ -441,17 +502,28 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, onTalk
         const c = getClue(code); if (!c) return null;
         const have = collectedSet.has(code);
         const p = posFor(location, i);
+        const isGamsik = c.type === '감식';
+        const req = isGamsik && lab ? lab.requested(code) : false;
+        const zoneLab = have ? c.title
+          : isGamsik && lab ? (req ? '🔬 분석 중…' : lab.ready(code) ? '🔬 감식 의뢰' : '채취물 필요')
+          : '조사';
         return (
-          <button key={code} className={`s-zone${have ? ' have' : ''}`} style={{ left: `${p.x}%`, top: `${p.y}%`, '--s': p.s }}
-            aria-label={have ? c.title : '단서 조사'}
+          <button key={code} className={`s-zone${have ? ' have' : ''}${req && !have ? ' req' : ''}`} style={{ left: `${p.x}%`, top: `${p.y}%`, '--s': p.s }}
+            aria-label={zoneLab}
             onClick={() => {
-              if (c.type === '감식' && !have) { onLockedToast('아직 분석 결과가 없습니다 — 관련 단서를 더 찾으세요'); return; }
+              if (isGamsik && !have) {
+                // 감식은 '의뢰 → 2차 심문 때 결과' 흐름 (2차 개방 후엔 즉시 결과)
+                if (!lab || !lab.ready(code)) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
+                if (lab.stage >= 3) { onOpen(code); return; }
+                if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
+                lab.request(code); return;
+              }
               onOpen(code);
             }}>
             <span className="s-zone-ground" />
             <span className="s-zone-glow" />
             {have && <span className="s-zone-check">✓</span>}
-            <span className="s-zone-lab">{have ? c.title : '조사'}</span>
+            <span className="s-zone-lab">{zoneLab}</span>
           </button>
         );
       })}
@@ -781,9 +853,10 @@ function CaseFileView({ state, stageLocked, stageLabel, onSet, onSubmit }) {
 //   방 배경을 그대로 두고 인물과 마주 서서 대화한다(별도 페이지 X).
 //   증언을 한 토막씩 대사창에 띄우고(◀▶), 추궁/증거제시로 모순을 잡는다.
 //   증거 제시 목록은 '이 인물과 관련 있는 단서'로만 좁힌다. 대화(추궁)로 증언 단서 확보.
-function CrossExamView({ suspect, location, state, collectedClues, onPress, onPresent, onExit }) {
+function CrossExamView({ suspect, location, state, collectedClues, phase = 1, onPress, onPresent, onExit }) {
   const [idx, setIdx] = useState(0);
-  const [line, setLine] = useState(null);   // 대사창 오버라이드: { text, kind }
+  // 대사창 오버라이드: { text, kind } — 진입 시 인사말(1차/2차 다름)부터
+  const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
   const [picker, setPicker] = useState(false);
   const [cutin, setCutin] = useState(null); // 모순! 컷인
   const [record, setRecord] = useState(false);
@@ -794,7 +867,7 @@ function CrossExamView({ suspect, location, state, collectedClues, onPress, onPr
   const unlocked = state.stUnlocked?.[sid] || [];
   const broke = state.broke?.[sid] || [];
   const trust = state.trust?.[sid] ?? TRUST_MAX;
-  const statements = sid ? visibleStatements(sid, collected, unlocked) : [];
+  const statements = sid ? visibleStatements(sid, collected, unlocked, phase) : [];
   const brokeOf = (id) => broke.find((e) => e.id === id);
   const confessed = broke.some((e) => e.confess);
 
@@ -839,9 +912,9 @@ function CrossExamView({ suspect, location, state, collectedClues, onPress, onPr
 
   const dlgText = line ? line.text
     : cur ? cur.text
-    : '…(지금은 더 들을 말이 없다. 관련 단서를 모으면 새 증언이 열린다.)';
+    : '…(지금은 더 들을 말이 없다. 단서를 모으거나 수사가 진행되면 새 증언이 열린다.)';
   const dlgLoc = line
-    ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다' : '추궁')
+    ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다' : line.kind === 'intro' ? (phase >= 2 ? '2차 심문' : '심문 시작') : '추궁')
     : (bk ? '✅ 모순을 잡은 증언' : `${suspect.name}의 증언`);
   const dlgHint = line ? '탭하여 계속 ▶'
     : total ? `증언 ${safeIdx + 1}/${total}${bk ? ' · 이미 모순을 짚음' : ' · ◀ ▶ 로 넘기기'}` : '';
@@ -852,7 +925,7 @@ function CrossExamView({ suspect, location, state, collectedClues, onPress, onPr
         {location ? <SceneBg location={location} />
           : <div className="aa-court" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 90% at 50% 0%, #1a2233 0%, #0a0e16 60%, #05070b 100%)' }} />}
       </div>
-      <div className="aa-loc-chip">⚖️ {location?.label ? `${location.label} · ` : ''}{suspect.name} 심문</div>
+      <div className="aa-loc-chip">⚖️ {location?.label ? `${location.label} · ` : ''}{suspect.name} {phase >= 2 ? '2차 심문' : '심문'}</div>
       <div className="aa-hp" title="신뢰도">
         <span style={{ color: '#e8706e' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: .28 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
       </div>

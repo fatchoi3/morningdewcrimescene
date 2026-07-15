@@ -89,7 +89,7 @@ function buildLocations() {
 
   const tools = [];
   if (cctv.length) tools.push({ id: 'LOC-CCTV', kind: 'cctv', label: 'CCTV 열람실', stage: 2, bg: 'linear-gradient(160deg,#101820,#080c10)', objects: cctv });
-  if (phones.length) tools.push({ id: 'LOC-PHONE', kind: 'phone', label: '압수 소지품 (휴대폰)', stage: 3, bg: 'linear-gradient(160deg,#141824,#0a0c12)', objects: phones });
+  if (phones.length) tools.push({ id: 'LOC-PHONE', kind: 'phone', label: '압수 소지품 (휴대폰)', stage: 2, bg: 'linear-gradient(160deg,#141824,#0a0c12)', objects: phones });
   if (gamsik.length) tools.push({ id: 'LOC-LAB', kind: 'lab', label: '감식 의뢰실', stage: 2, bg: 'linear-gradient(160deg,#0e1a1c,#070f10)', objects: gamsik });
   if (common.length) tools.push({ id: 'LOC-COMMON', kind: 'common', label: '공용 현장 (복도·1층)', stage: 1, bg: 'linear-gradient(160deg,#1a1a20,#0c0c10)', objects: common });
 
@@ -159,6 +159,14 @@ export const soloContent = {
   clueIcon,
   // 특수 단서: 현재 보유 단서로 자동 해금되는 코드 목록
   computeAutoUnlocked: (codeSet) => provider.computeAutoUnlocked(codeSet),
+  // 감식 단서 코드 집합 — 자동 수령 대신 '의뢰 → 2차 심문 때 결과 도착' 흐름에 사용
+  gamsikCodes: new Set(all.filter((c) => c.type === '감식').map((c) => c.code)),
+  // 이 감식이 지금 의뢰 가능한가(채취물=선행 단서를 모았는가)
+  gamsikReady: (code, collected) => {
+    const s = new Set(collected);
+    provider.computeAutoUnlocked(s);
+    return s.has(code);
+  },
   provider,
 };
 
