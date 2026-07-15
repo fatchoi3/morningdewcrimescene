@@ -1,6 +1,6 @@
 // 서비스워커 — 오프라인 실행용(런타임 캐시, 앱셸 폴백).
 //   프로덕션에서만 등록됨(main.jsx). 개발(HMR)에는 등록 안 함.
-const CACHE = 'morningdew-solo-v6';
+const CACHE = 'morningdew-solo-v7';
 const SHELL = ['/solo.html', '/manifest.webmanifest', '/icon.svg', '/favicon2.png'];
 
 self.addEventListener('install', (e) => {
@@ -41,7 +41,9 @@ self.addEventListener('fetch', (e) => {
 
   e.respondWith(
     caches.match(req).then((hit) => hit || fetch(req).then((res) => {
-      if (res && res.status === 200 && res.type === 'basic') {
+      // SPA 폴백(HTML)이 에셋 키로 캐싱되는 오염 방지 — 비HTML 요청엔 HTML 응답을 캐싱하지 않음
+      const ct = (res && res.headers.get('content-type')) || '';
+      if (res && res.status === 200 && res.type === 'basic' && !ct.includes('text/html')) {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy));
       }
