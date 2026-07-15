@@ -186,7 +186,12 @@ button { font-family: inherit; }
 .aa-ask button:active { background: #16233a; }
 .aa-ask button.done { opacity: .72; border-color: #2b5a3a; }
 .aa-ask button.new { border-color: var(--gold); color: #ffe9a8; }
+.aa-ask button.asked { opacity: .62; border-color: #2a3346; color: #b9c0cd; } /* ✔ 이미 들은 질문 */
 .aa-ask button.end { background: #00000090; border-style: dashed; border-color: #ffffff33; color: var(--muted); text-align: center; font-weight: 700; }
+
+/* 튜토리얼 표시 — 일반 상황과 구분 */
+.aa-tut-chip { position: absolute; top: 46px; left: 12px; z-index: 6; background: #12240fd8; color: #a6e6bd; font-weight: 800; font-size: .74rem; padding: 4px 11px; border-radius: 8px; border: 1px solid #2b5a3a; }
+.s-tut-badge { display: inline-block; background: #12240f; color: #a6e6bd; border: 1px solid #2b5a3a; font-weight: 800; font-size: .68rem; padding: 1px 8px; border-radius: 8px; margin-right: 5px; }
 
 /* 증거 제시 시트(관련 단서만) */
 .aa-present { position: absolute; left: 0; right: 0; bottom: 48px; z-index: 11; max-height: 46vh; overflow: auto; background: linear-gradient(180deg, #0b1220f6, #060a12fb); border-top: 2px solid var(--gold); padding: 10px 12px 14px; box-shadow: 0 -8px 24px #000a; }
@@ -227,6 +232,9 @@ button { font-family: inherit; }
 .s-figure:hover { transform: translateY(-2px); }
 .s-figure:active { transform: scale(.97); }
 .s-figure-lab { font-size: .74rem; background: var(--gold); color: #1a1a1a; font-weight: 800; padding: 3px 9px; border-radius: 8px; white-space: nowrap; }
+/* 인물 호버 툴팁 — '이야기를 한다' (커맨드바 대신) */
+.s-figure-tip { position: absolute; top: -30px; left: 50%; transform: translateX(-50%) translateY(4px); background: #0b1220f2; color: #ffe9a8; border: 1px solid var(--gold); font-size: .76rem; font-weight: 800; padding: 4px 11px; border-radius: 9px; white-space: nowrap; opacity: 0; transition: opacity .14s, transform .14s; pointer-events: none; }
+.s-figure:hover .s-figure-tip, .s-figure:focus-visible .s-figure-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* 사건 파일(채점) */
 .s-cf-row { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; }

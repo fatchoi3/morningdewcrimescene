@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { soloContent } from './soloContent.js';
 import { visibleStatements, pressOf, presentOn, relatedCodes, introOf } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
-import { SceneBg, Avatar, BriefingArt, EndingArt, CorridorBg } from './art.jsx';
+import { SceneBg, Avatar, StandingFigure, BriefingArt, EndingArt, CorridorBg } from './art.jsx';
 import { DialogueBox, CommandBar } from './vn.jsx';
 
 const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds, gamsikCodes, gamsikReady } = soloContent;
@@ -287,6 +287,7 @@ export default function SoloApp() {
           <CrossExamView key={suspectId} suspect={suspects.find((s) => s.id === suspectId)} state={state}
             phase={stage >= 3 ? 2 : 1}
             tutorialSeen={!!state.tutorialSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
+            onAsked={(stId) => { const a = { ...(state.askedQ || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), stId])]; update({ askedQ: a }); }}
             location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             onExit={() => (sceneId ? setSuspectId(null) : goHub('places'))}
@@ -350,7 +351,7 @@ export default function SoloApp() {
               </div>
               {stage === 1 && interrogatedCount(state) === 0 && (
                 <div style={{ fontSize: '.8rem', color: 'var(--gold)', marginTop: 5 }}>
-                  💡 먼저 <b>종현방</b>부터 — 목사님께 마지막 음료를 건넨 사람이다. 방을 조사하고, 본인을 눌러 이야기를 들어보자.
+                  <span className="s-tut-badge">📖 튜토리얼</span> 먼저 <b>종현방</b>부터 — 목사님께 마지막 음료를 건넨 사람이다. 방을 조사하고, 본인을 눌러 이야기를 들어보자.
                 </div>
               )}
             </div>
@@ -545,18 +546,18 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, o
       })}
 
       {roomSuspect && onTalk && (
-        <button className="s-figure" onClick={() => onTalk(roomSuspect.id)}>
-          <Avatar person={roomSuspect.name} image={roomSuspect.image} size={76} />
-          <span className="s-figure-lab">💬 {roomSuspect.name}</span>
+        <button className="s-figure" onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
+          <span className="s-figure-tip">💬 이야기를 한다</span>
+          <StandingFigure sid={roomSuspect.id} person={roomSuspect.name} image={roomSuspect.image} height={150} fallbackSize={76} />
+          <span className="s-figure-lab">{roomSuspect.name}</span>
         </button>
       )}
 
       <DialogueBox location={location.label}
-        text={examine ? ('그림 속 빛나는 곳을 눌러 조사하자.' + (roomSuspect ? ' 인물과 이야기할 수도 있다.' : '')) : '무엇을 할까?'} />
+        text={examine ? ('그림 속 빛나는 곳을 눌러 조사하자.' + (roomSuspect ? ` ${roomSuspect.name}을(를) 누르면 이야기할 수 있다.` : '')) : '무엇을 할까?'} />
 
       <CommandBar items={[
         { icon: '🔍', label: '조사한다', active: examine, onClick: () => setExamine((e) => !e) },
-        roomSuspect && { icon: '💬', label: '이야기한다', onClick: () => onTalk(roomSuspect.id) },
         { icon: '📁', label: '법정기록', onClick: () => setRecord(true) },
         { icon: '🚶', label: '이동한다', onClick: onBack },
       ]} />
@@ -869,7 +870,7 @@ function CaseFileView({ state, stageLocked, stageLabel, onSet, onSubmit }) {
 //   질문 목록에서 골라 물으면 인물이 대답한다. 수상하면 「캐묻는다」로 파고들고,
 //   거짓이다 싶으면 「이 말에 증거」로 지금 그 대답에 단서를 들이댄다(모순!).
 //   ❗=새로 열린 질문 · ✅=모순을 밝힌 질문. 「이만 마친다」로 방에 복귀(반복 없음).
-function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onPress, onPresent, onExit }) {
+function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onAsked, onPress, onPresent, onExit }) {
   const [curId, setCurId] = useState(null); // 지금 붙잡고 있는 질문(진술 id) — null = 질문 목록
   // 대사창 오버라이드: { text, kind } — 진입 시 인사말(1차/2차 다름)부터
   const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
@@ -877,12 +878,14 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tu
   const [cutin, setCutin] = useState(null); // 모순! 컷인
   const [record, setRecord] = useState(false);
   const [shake, setShake] = useState(false);
+  const [isTutorial] = useState(() => !tutorialSeen); // 이 심문이 첫(튜토리얼) 심문인가 — 화면 표시용
   const dlgRef = useRef(null); // 화면 아무 데나 탭 → 대사 넘김 위임
 
   const sid = suspect?.id;
   const collected = state.collected || [];
   const unlocked = state.stUnlocked?.[sid] || [];
   const pressedIds = state.pressed?.[sid] || [];
+  const askedIds = state.askedQ?.[sid] || [];
   const broke = state.broke?.[sid] || [];
   const trust = state.trust?.[sid] ?? TRUST_MAX;
   const statements = sid ? visibleStatements(sid, collected, unlocked, phase) : [];
@@ -966,28 +969,32 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tu
           : <div className="aa-court" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 90% at 50% 0%, #1a2233 0%, #0a0e16 60%, #05070b 100%)' }} />}
       </div>
       <div className="aa-loc-chip">⚖️ {location?.label ? `${location.label} · ` : ''}{suspect.name} {phase >= 2 ? '2차 심문' : '심문'}</div>
+      {isTutorial && <div className="aa-tut-chip">📖 튜토리얼 — 처음이니 차근차근</div>}
       <div className="aa-hp" title="신뢰도">
         <span style={{ color: '#e8706e' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: .28 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
       </div>
 
       <div className="aa-room-fig">
         {confessed && <div className="aa-court-tag">⚖️ 관여 자백</div>}
-        <Avatar person={suspect.name} image={suspect.image} size={160} />
+        <StandingFigure sid={sid} person={suspect.name} image={suspect.image} height={300} fallbackSize={160} />
         <div className="aa-court-name">{suspect.name}<span> · {suspect.occupation}</span></div>
       </div>
 
       {cutin && <div className="aa-cutin"><span>{cutin}</span></div>}
 
-      {/* 질문 선택지 — 대답/반응을 읽는 중엔 숨김 */}
+      {/* 질문 선택지 — 대답/반응을 읽는 중엔 숨김. ✔=이미 들은 질문 */}
       {menuOpen && (
         <div className="aa-ask">
-          <div className="aa-ask-h">🎙 무엇을 물어볼까</div>
+          <div className="aa-ask-h">🎙 무엇을 물어볼까{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
           {statements.map((s) => {
             const b = brokeOf(s.id);
-            const isNew = s.hidden && !pressedIds.includes(s.id) && !b;
+            const isNew = s.hidden && !askedIds.includes(s.id) && !pressedIds.includes(s.id) && !b;
+            const asked = askedIds.includes(s.id) || pressedIds.includes(s.id);
+            const cls = b ? 'done' : isNew ? 'new' : asked ? 'asked' : '';
+            const mark = b ? '✅ ' : isNew ? '❗ ' : asked ? '✔ ' : '💬 ';
             return (
-              <button key={s.id} className={b ? 'done' : isNew ? 'new' : ''} onClick={() => setCurId(s.id)}>
-                {b ? '✅ ' : isNew ? '❗ ' : '💬 '}{qLabel(s)}
+              <button key={s.id} className={cls} onClick={() => { onAsked?.(s.id); setCurId(s.id); }}>
+                {mark}{qLabel(s)}
               </button>
             );
           })}

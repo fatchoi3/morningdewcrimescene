@@ -305,6 +305,18 @@ export function Avatar({ person, image, size = 64 }) {
   return <AvatarSVG person={person} size={size} />;
 }
 
+/** 스탠딩 인물(배경 없는 전신/상반신) — /images/people/stand/<sid>.png|webp 있으면 사용,
+ *  없으면 머그샷(Avatar)으로 폴백. 심문·방 장면에서 인물이 서 있는 연출용. */
+export function StandingFigure({ sid, person, image, height = 260, fallbackSize = 120 }) {
+  const [i, setI] = useState(0);
+  const candidates = sid ? [`/images/people/stand/${sid}.png`, `/images/people/stand/${sid}.webp`] : [];
+  if (i < candidates.length) {
+    return <img src={candidates[i]} alt="" onError={() => setI((n) => n + 1)}
+      style={{ height, width: 'auto', maxWidth: '78vw', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 10px 18px #000c)' }} />;
+  }
+  return <Avatar person={person} image={image} size={fallbackSize} />;
+}
+
 // ── 브리핑 히어로 (실제 그림 /images/briefing.{jpg,png} 있으면 우선) ──
 export function BriefingArt({ fill }) {
   const wrap = fill
