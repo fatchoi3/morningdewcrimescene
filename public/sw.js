@@ -1,6 +1,6 @@
 // 서비스워커 — 오프라인 실행용(런타임 캐시, 앱셸 폴백).
 //   프로덕션에서만 등록됨(main.jsx). 개발(HMR)에는 등록 안 함.
-const CACHE = 'morningdew-solo-v4';
+const CACHE = 'morningdew-solo-v5';
 const SHELL = ['/solo.html', '/manifest.webmanifest', '/icon.svg', '/favicon2.png'];
 
 self.addEventListener('install', (e) => {
