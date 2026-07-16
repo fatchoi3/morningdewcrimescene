@@ -393,6 +393,21 @@ export function CorridorBg() {
   );
 }
 
+// ── 복도/시설 배경 이미지 (T자 네비게이션) ──
+//   /images/hall/<name>.{jpg,png,webp} 있으면 우선, 없으면 CorridorBg(SVG) 폴백.
+//   16:9 이미지를 16:9 컨테이너(.hall-stage)에 cover로 채워 좌표(핫스팟)가 그림과 1:1 매칭.
+export function HallBg({ name }) {
+  return (
+    <>
+      <CorridorBg />
+      <HybridImg candidates={[`/images/hall/${name}.jpg`, `/images/hall/${name}.png`, `/images/hall/${name}.webp`]}
+        style={{ ...COVER, pointerEvents: 'none' }} />
+      {/* 필름 비네트 — 그림/SVG 위에 공통으로 얹어 톤 통일 */}
+      <div style={{ ...COVER, pointerEvents: 'none', background: 'radial-gradient(130% 95% at 50% 45%, transparent 55%, #000000a6 100%)' }} />
+    </>
+  );
+}
+
 // ── 엔딩 히어로 (실제 그림 /images/ending.{jpg,png} 있으면 우선) ──
 export function EndingArt({ good }) {
   return (

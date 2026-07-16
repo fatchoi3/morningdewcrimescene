@@ -29,8 +29,12 @@ button { font-family: inherit; }
 .s-btn.sm { padding: 7px 14px; font-size: .85rem; border-radius: 8px; }
 .s-link { background: none; border: none; color: var(--gold); cursor: pointer; font-size: .9rem; text-decoration: underline; }
 
-/* 시작 화면 */
-.s-start { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px; gap: 8px; }
+/* 시작 화면 — 실사 배경(/images/start.jpg) + 어둠 오버레이 */
+.s-start { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px; gap: 8px; position: relative; overflow: hidden; }
+.s-start::before { content: ''; position: absolute; inset: 0; background: url('/images/start.jpg') center/cover no-repeat; z-index: 0; }
+.s-start::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, #0b0d12d9 0%, #0b0d1299 42%, #0b0d12f2 100%); z-index: 0; }
+.s-start > * { position: relative; z-index: 1; }
+.s-start .s-title { text-shadow: 0 3px 18px #000, 0 1px 3px #000; }
 .s-eye { font-size: .72rem; letter-spacing: .3em; color: var(--muted); text-transform: uppercase; }
 .s-title { font-size: 2.6rem; font-weight: 900; line-height: 1.1; margin: 6px 0; }
 .s-sub { color: var(--muted); margin-bottom: 24px; max-width: 460px; }
@@ -223,6 +227,34 @@ button { font-family: inherit; }
 .s-door.locked .s-door-plate { background: #3a3a42; color: #9c9a92; }
 .s-door-stat { font-size: .7rem; color: var(--muted); margin-top: 5px; }
 .s-door.crime.locked .s-door-stat { color: var(--danger); font-weight: 700; }
+
+/* ── T자 복도 네비게이션 (실사 배경 + 핫스팟) ── */
+.hall-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #0b0d12; box-shadow: 0 6px 18px #0007; }
+.hall-here { text-align: center; font-size: .78rem; color: var(--muted); letter-spacing: .04em; margin: 8px 4px 2px; }
+
+/* 방문/시설 핫스팟 — 배경 그림 위 % 좌표 */
+.hall-hot { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; padding: 0; cursor: pointer; z-index: 6; transition: transform .12s; }
+.hall-hot::before { content: ''; position: absolute; top: 12px; left: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, #ffe9a848 0%, #ffe9a800 70%); animation: zoneglow 2.6s ease-in-out infinite; pointer-events: none; }
+.hall-hot:hover { transform: translate(-50%, -50%) scale(1.08); }
+.hall-hot:active { transform: translate(-50%, -50%) scale(.94); }
+.hall-hot-ic { font-size: 1.55rem; filter: drop-shadow(0 2px 5px #000); }
+.hall-hot-plate { font-size: .78rem; font-weight: 800; background: #efe4c8ee; color: #2a2114; border-radius: 5px; padding: 2px 9px; white-space: nowrap; box-shadow: 0 2px 7px #000a; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
+.hall-hot-sub { font-size: .64rem; color: #e8e4dc; background: #000b; padding: 1px 7px; border-radius: 4px; white-space: nowrap; }
+.hall-hot.locked::before { animation: none; background: radial-gradient(circle, #ffffff22 0%, #fff0 70%); }
+.hall-hot.locked .hall-hot-plate { background: #3a3a42e6; color: #b8b6ae; }
+.hall-hot.crime .hall-hot-plate { background: #e4c14e; }
+.hall-hot.crime::before { background: radial-gradient(circle, #e07a7a55 0%, #e07a7a00 70%); }
+.hall-hot-rec { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #1a1a1a; font-size: .62rem; font-weight: 800; padding: 2px 9px; border-radius: 9px; white-space: nowrap; box-shadow: 0 2px 8px #0009; animation: recbob 1.4s ease-in-out infinite; }
+
+/* 이동(길) 버튼 행 — 무대 하단 */
+.hall-nav-row { position: absolute; left: 0; right: 0; bottom: 8px; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; padding: 0 10px; z-index: 7; pointer-events: none; }
+.hall-arrow { pointer-events: auto; background: #0b0d12d0; color: var(--text); border: 1px solid var(--gold); border-radius: 999px; padding: 8px 13px; font-weight: 800; font-size: .8rem; cursor: pointer; backdrop-filter: blur(3px); box-shadow: 0 3px 10px #0009; transition: transform .1s, background .1s; }
+.hall-arrow:hover { background: #241f14; transform: translateY(-2px); }
+.hall-arrow:active { transform: scale(.96); }
+@media (max-width: 480px) {
+  .hall-arrow { font-size: .72rem; padding: 7px 10px; }
+  .hall-hot-plate { font-size: .72rem; padding: 2px 7px; }
+}
 
 /* 역전재판식 증언 */
 .s-stmt { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; margin: 9px 0; }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { soloContent } from './soloContent.js';
 import { visibleStatements, pressOf, presentOn, relatedCodes, introOf } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
-import { SceneBg, Avatar, StandingFigure, BriefingArt, EndingArt, CorridorBg } from './art.jsx';
+import { SceneBg, Avatar, StandingFigure, BriefingArt, EndingArt, HallBg } from './art.jsx';
 import { DialogueBox, CommandBar } from './vn.jsx';
 
 const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds, gamsikCodes, gamsikReady } = soloContent;
@@ -355,33 +355,10 @@ export default function SoloApp() {
                 </div>
               )}
             </div>
-            <div className="s-section-t">숙소 복도 — 문을 눌러 들어가기</div>
-            <div className="s-hall">
-              <CorridorBg />
-              <div className="s-hall-sign">🏢 수련회 숙소 · 인물들의 방</div>
-              <div className="s-doors">
-                {locations.rooms.map((l) => {
-                  const locked = l.stage > stage;
-                  const isCrime = l.person === '목사';
-                  return <DoorCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked} isCrime={isCrime}
-                    recommend={stage === 1 && interrogatedCount(state) === 0 && l.person === '최종현'}
-                    onClick={locked
-                      ? () => showToast(isCrime ? '🚧 목사님 방은 경찰 통제 중입니다 — 부검 소견이 나오면 개방됩니다' : stageHint(l.stage))
-                      : () => setSceneId(l.id)} />;
-                })}
-              </div>
-            </div>
-            <div className="s-section-t">조사 시설</div>
-            <div className="s-hall">
-              <CorridorBg />
-              <div className="s-doors">
-                {locations.tools.map((l) => {
-                  const locked = l.stage > stage;
-                  return <DoorCard key={l.id} loc={l} collectedSet={collectedSet} locked={locked}
-                    onClick={locked ? () => showToast(stageHint(l.stage)) : () => setSceneId(l.id)} />;
-                })}
-              </div>
-            </div>
+            <div className="s-section-t">숙소 · 복도를 둘러보며 이동하세요</div>
+            <HallNav locations={locations} stage={stage} collectedSet={collectedSet}
+              recommendPerson={stage === 1 && interrogatedCount(state) === 0 ? '최종현' : null}
+              onEnter={(id) => setSceneId(id)} onToast={showToast} />
           </>
         )}
       </div>
@@ -444,6 +421,102 @@ function DoorCard({ loc, collectedSet, locked, isCrime, recommend, onClick }) {
           : '열람'}
       </div>
     </button>
+  );
+}
+
+// ── T자 복도 네비게이션 (실사 배경 + 핫스팟) ─────────────────────────────────
+//   main   : 양옆에 인물 방 6개 · 오른쪽 길→목사방 · 왼쪽 길→1층
+//   pastor : 복도 끝 목사님 방(현장)
+//   floor1 : CCTV 열람실 · 압수 소지품 (밖으로 나가면→감식 의뢰실)
+//   lab    : 감식 의뢰실
+// main.jpg 위 방문 위치(%): 좌벽 근→원, 우벽 근→원 (배경 16:9를 16:9 무대에 cover)
+const HALL_DOORS = [
+  { person: '최종현', x: 9, y: 60 },
+  { person: '이가현', x: 27.5, y: 57 },
+  { person: '윤은재', x: 38.5, y: 55 },
+  { person: '박희원', x: 61, y: 55 },
+  { person: '이현지', x: 71.5, y: 57 },
+  { person: '이사랑', x: 91, y: 60 },
+];
+
+function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {
+  return (
+    <button className={`hall-hot${locked ? ' locked' : ''}${tone ? ' ' + tone : ''}`}
+      style={{ left: `${x}%`, top: `${y}%` }} onClick={onClick}>
+      {recommend && <span className="hall-hot-rec">▼ 여기부터</span>}
+      <span className="hall-hot-ic">{locked ? '🔒' : icon}</span>
+      <span className="hall-hot-plate">{label}</span>
+      {sub && <span className="hall-hot-sub">{sub}</span>}
+    </button>
+  );
+}
+
+function HallNav({ locations, stage, collectedSet, recommendPerson, onEnter, onToast }) {
+  const [view, setView] = useState('main'); // main | pastor | floor1 | lab
+  const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
+  const pastor = locations.rooms.find((l) => l.person === '목사');
+  const tool = (id) => locations.all.find((l) => l.id === id);
+  const cctv = tool('LOC-CCTV'), phone = tool('LOC-PHONE'), lab = tool('LOC-LAB'), common = tool('LOC-COMMON');
+
+  const subOf = (loc, isCrime) => {
+    if (loc.stage > stage) return isCrime ? '통제 중' : loc.stage === 2 ? '사건 후 개방' : '2차 개방';
+    if (loc.kind !== 'room') return '열람';
+    const total = loc.objects.length, got = loc.objects.filter((c) => collectedSet.has(c)).length;
+    return total > 0 && got === total ? '✓ 탐색완료' : `단서 ${got}/${total}`;
+  };
+  const enter = (loc, isCrime) => {
+    if (!loc) return;
+    if (loc.stage > stage) { onToast(isCrime ? '🚧 목사님 방은 경찰 통제 중입니다 — 부검 소견이 나오면 개방됩니다' : stageHint(loc.stage)); return; }
+    onEnter(loc.id);
+  };
+  const here = view === 'main' ? '숙소 2층 복도 — 인물들의 방'
+    : view === 'pastor' ? '복도 끝 — 목사님 방 (사건 현장)'
+    : view === 'floor1' ? '1층 — CCTV 열람실 · 압수 소지품'
+    : '건물 밖 — 감식 의뢰실';
+
+  return (
+    <>
+      <div className="hall-stage">
+        <HallBg name={view} />
+
+        {view === 'main' && HALL_DOORS.map((d) => {
+          const loc = roomByPerson(d.person);
+          if (!loc) return null;
+          return <HallHot key={d.person} x={d.x} y={d.y} icon="🚪" label={loc.label}
+            sub={subOf(loc, false)} locked={loc.stage > stage}
+            recommend={recommendPerson === d.person} onClick={() => enter(loc, false)} />;
+        })}
+
+        {view === 'pastor' && pastor && (
+          <HallHot x={50} y={50} icon="⚰️" tone="crime" label={pastor.label}
+            sub={subOf(pastor, true)} locked={pastor.stage > stage} onClick={() => enter(pastor, true)} />
+        )}
+
+        {view === 'floor1' && <>
+          {cctv && <HallHot x={47} y={52} icon="📹" label={cctv.label} sub={subOf(cctv)} locked={cctv.stage > stage} onClick={() => enter(cctv)} />}
+          {phone && <HallHot x={63} y={52} icon="📱" label={phone.label} sub={subOf(phone)} locked={phone.stage > stage} onClick={() => enter(phone)} />}
+          {common && <HallHot x={13} y={62} icon="🚶" label={common.label} sub={subOf(common)} locked={common.stage > stage} onClick={() => enter(common)} />}
+        </>}
+
+        {view === 'lab' && lab && (
+          <HallHot x={43} y={56} icon="🔬" label={lab.label} sub={subOf(lab)} locked={lab.stage > stage} onClick={() => enter(lab)} />
+        )}
+
+        <div className="hall-nav-row">
+          {view === 'main' ? <>
+            <button className="hall-arrow" onClick={() => setView('floor1')}>◀ 왼쪽 · 1층</button>
+            <button className="hall-arrow" onClick={() => setView('pastor')}>오른쪽 · 목사님 방 ▶</button>
+          </> : view === 'floor1' ? <>
+            <button className="hall-arrow" onClick={() => setView('main')}>◀ 복도로</button>
+            {lab && <button className="hall-arrow" onClick={() => setView('lab')}>감식 의뢰실 ▶</button>}
+          </> : <>
+            <button className="hall-arrow" onClick={() => setView(view === 'lab' ? 'floor1' : 'main')}>◀ {view === 'lab' ? '1층으로' : '복도로'}</button>
+            <span />
+          </>}
+        </div>
+      </div>
+      <div className="hall-here">📍 {here}</div>
+    </>
   );
 }
 
