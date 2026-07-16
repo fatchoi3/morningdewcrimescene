@@ -95,9 +95,9 @@ function buildLocations() {
   if (cctv.length) tools.push({ id: 'LOC-CCTV', kind: 'cctv', label: 'CCTV 열람실', stage: 2, bg: 'linear-gradient(160deg,#101820,#080c10)', objects: cctv });
   if (phones.length) tools.push({ id: 'LOC-PHONE', kind: 'phone', label: '압수 소지품 (휴대폰)', stage: 2, bg: 'linear-gradient(160deg,#141824,#0a0c12)', objects: phones });
   if (gamsik.length) tools.push({ id: 'LOC-LAB', kind: 'lab', label: '감식 의뢰실', stage: 2, bg: 'linear-gradient(160deg,#0e1a1c,#070f10)', objects: gamsik });
-  if (common.length) tools.push({ id: 'LOC-COMMON', kind: 'common', label: '공용 현장 (복도·1층)', stage: 1, bg: 'linear-gradient(160deg,#1a1a20,#0c0c10)', objects: common });
+  // 공용 현장(LOC-COMMON)은 폐지 — 방/시설에 안 속한 단서(사건 브리핑 등)는 시작 시 사건 기록에 기본 수록.
 
-  return { rooms, tools, all: [...rooms, ...tools] };
+  return { rooms, tools, all: [...rooms, ...tools], starting: common };
 }
 
 // ── 브리핑(스포일러 없음) ────────────────────────────────────────────────────
@@ -158,6 +158,8 @@ export const soloContent = {
   // 목사방(현장) 단서 코드 — 단계 2→3 진행 판정에 사용
   crimeSceneCodes: (_locations.rooms.find((r) => r.person === '목사')?.objects) || [],
   suspectIds: suspects.map((s) => s.id),
+  // 시작 시 사건 기록에 기본 수록되는 단서(사건 브리핑 등) — 공용 현장 폐지 대체
+  startingClues: _locations.starting || [],
   caseKey: { roles: ROLES, methods: METHODS, motives: MOTIVES, answers: caseAnswers },
   getClue: (code) => byCode[code] || testimonyByCode[code] || null,
   clueIcon,

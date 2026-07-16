@@ -61,10 +61,17 @@ button { font-family: inherit; }
 .tut-arrow { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; filter: drop-shadow(0 2px 4px #000a); animation: tutbob 0.9s ease-in-out infinite; }
 .tut-arrow.up { border-bottom: 15px solid #ffe9a8; }
 .tut-arrow.down { border-top: 15px solid #ffe9a8; }
-.tut-cap { margin: 6px 0; background: #0b1220f2; color: #ffe9a8; border: 1px solid var(--gold); border-radius: 10px; padding: 8px 14px; font-size: .86rem; font-weight: 800; max-width: 80vw; text-align: center; box-shadow: 0 4px 16px #000b; }
+.tut-cap { margin: 6px 0; background: #0b1220f2; color: #ffe9a8; border: 1px solid var(--gold); border-radius: 10px; padding: 8px 14px; font-size: .86rem; font-weight: 800; max-width: min(460px, 88vw); text-align: center; box-shadow: 0 4px 16px #000b; }
 .tut-skip { position: fixed; top: 12px; right: 12px; z-index: 62; pointer-events: auto; background: #000000b0; color: #cfcabb; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: .74rem; cursor: pointer; }
 @keyframes tutpulse { 0%, 100% { box-shadow: 0 0 0 3px #ffe9a855, 0 0 18px 4px #ffe9a655; } 50% { box-shadow: 0 0 0 5px #ffe9a880, 0 0 28px 7px #ffe9a690; } }
 @keyframes tutbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
+
+/* 튜토리얼 마무리 멘트 */
+.tut-finale-ov { position: fixed; inset: 0; z-index: 65; background: rgba(3, 5, 9, 0.82); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.tut-finale { max-width: 440px; width: 100%; background: var(--panel); border: 1px solid var(--gold); border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 12px 40px #000c; }
+.tut-finale .tf-badge { display: inline-block; background: var(--gold); color: #1a1a1a; font-weight: 800; font-size: .78rem; padding: 4px 12px; border-radius: 999px; margin-bottom: 12px; }
+.tut-finale h3 { margin: 0 0 10px; font-size: 1.3rem; }
+.tut-finale p { color: #cfcabb; line-height: 1.9; font-size: .9rem; margin: 0 0 18px; }
 
 /* 사건 기록 — 상단 탭 / 인물별·유형별 세그먼트 / 인물 카드 */
 .s-record-tabs { display: flex; gap: 6px; margin: 2px 0 12px; }

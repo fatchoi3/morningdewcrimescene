@@ -21,7 +21,9 @@ export function defaultState() {
     broke: {},                  // { S1: [{ id, text, confess }] } — 모순 잡은 진술
     stUnlocked: {},             // { S1: [증언id] } — 추궁/모순으로 열린 숨은 증언
     eventSeen: false,           // 중간 사건(부검 소견) 연출을 봤는가
-    tutorialSeen: false,        // 첫 심문 안내(질문·캐묻기·증거)를 봤는가
+    tutorialSeen: false,        // 첫 심문 안내(질문·캐묻기·증거)를 봤는가 = 튜토리얼 코치 종료 플래그
+    tutRecordDone: false,       // 튜토리얼: 사건 기록을 한 번 열어봤는가
+    tutFinaleSeen: false,       // 튜토리얼: 마무리 멘트를 봤는가
     labReq: [],                 // 감식 의뢰한 코드 — 결과는 2차 심문 개방 때 도착
     casefile: {},               // { S1: { role, method, motive } }
     submitted: false,

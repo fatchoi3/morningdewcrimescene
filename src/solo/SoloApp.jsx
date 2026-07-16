@@ -5,7 +5,7 @@ import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { SceneBg, Avatar, StandingFigure, BriefingArt, EndingArt, HallBg } from './art.jsx';
 import { DialogueBox, CommandBar } from './vn.jsx';
 
-const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds, gamsikCodes, gamsikReady } = soloContent;
+const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds, gamsikCodes, gamsikReady, startingClues } = soloContent;
 
 // 수사 단계 — 자동 개방(퍼즐/탐정). 가이드는 처음부터 전부 개방.
 //   1 = 1차 탐문(인물 방·1차 심문) → [중간 사건: 부검 소견] →
@@ -247,6 +247,15 @@ export default function SoloApp() {
 
   const goHub = (tab) => { setSceneId(null); setSuspectId(null); update({ screen: 'hub', hubTab: tab || state.hubTab || 'places' }); };
 
+  // 튜토리얼: 사건 기록을 열어봤다가 '현장'으로 돌아오면 기록 단계 완료 → 종현방 단계로
+  const tutSawRecordRef = useRef(false);
+  useEffect(() => {
+    if (state.tutorialSeen) return;
+    if (state.hubTab === 'notebook') tutSawRecordRef.current = true;
+    else if (state.hubTab === 'places' && tutSawRecordRef.current && !state.tutRecordDone) update({ tutRecordDone: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.hubTab, state.tutorialSeen, state.tutRecordDone]);
+
   // ── 시작 ────────────────────────────────────────────────────────────────
   if (state.screen === 'start') {
     return (
@@ -265,7 +274,7 @@ export default function SoloApp() {
             ))}
           </div>
           {/* 새 수사 = 저장 초기화 후 시작(난이도만 유지) — 이어하기는 별도 버튼 */}
-          <button className="s-btn" onClick={() => { clearSave(); setState({ ...defaultState(), difficulty: state.difficulty, started: true, screen: 'briefing' }); }}>
+          <button className="s-btn" onClick={() => { clearSave(); setState({ ...defaultState(), difficulty: state.difficulty, started: true, screen: 'briefing', collected: [...startingClues] }); }}>
             {state.started ? '새 수사 시작 (처음부터)' : '수사 시작'}
           </button>
           {state.collected.length > 0 && (
@@ -346,12 +355,19 @@ export default function SoloApp() {
 
   // 튜토리얼 코치마크(첫 수사 · 종현방) — 문 클릭 → 소품 조사 → 인물 대화 순서로 유도
   let coach = null;
-  if (!state.tutorialSeen && stage === 1 && interrogatedCount(state) === 0 && !suspectId && !modalCode) {
+  if (!state.tutorialSeen && !suspectId && !modalCode) {
     const jhObjs = locations.rooms.find((l) => l.id === 'ROOM-JH')?.objects || [];
     const jhExamined = jhObjs.some((c) => collectedSet.has(c));
-    if (!sceneId && state.hubTab === 'places') coach = { sel: '[data-tut="door"]', text: '여기부터! 종현방을 눌러 들어가세요' };
-    else if (sceneId === 'ROOM-JH' && !jhExamined) coach = { sel: '.aa-track .s-zone', text: '빛나는 소품을 눌러 단서를 조사하세요' };
-    else if (sceneId === 'ROOM-JH' && jhExamined) coach = { sel: '.s-figure', text: '인물을 눌러 이야기를 시작하세요' };
+    if (!state.tutRecordDone) {
+      // 1) 사건 기록을 먼저 열어 기본 단서(사건 개요)를 확인
+      if (!sceneId && state.hubTab === 'notebook') coach = { sel: '[data-tut="field-tab"]', text: '사건 기록엔 사건 개요가 기본으로 들어 있어요. 단서·인물을 확인했으면 「현장」을 눌러 계속하세요', dim: false };
+      else if (!sceneId) coach = { sel: '[data-tut="record-tab"]', text: '먼저 여기! 「사건 기록」에 사건 개요 등 기본 단서가 들어 있어요 — 눌러서 확인하세요' };
+    } else {
+      // 2) 종현방: 문 → 소품 → 대화
+      if (!sceneId && state.hubTab === 'places') coach = { sel: '[data-tut="door"]', text: '이제 종현방을 눌러 들어가세요' };
+      else if (sceneId === 'ROOM-JH' && !jhExamined) coach = { sel: '.aa-track .s-zone', text: '빛나는 소품을 눌러 단서를 조사하세요' };
+      else if (sceneId === 'ROOM-JH' && jhExamined) coach = { sel: '.s-figure', text: '인물을 눌러 이야기를 시작하세요' };
+    }
   }
 
   return (
@@ -436,15 +452,10 @@ export default function SoloApp() {
                   : stage === 2 ? `다음: 목사님 방 단서 ${SCENE_NEEDED}개 확보 시 2차 심문 개방 — 감식 의뢰를 잊지 마세요`
                   : '2차 심문: 새 증언을 추궁하고, 다 모였으면 사건 파일을 제출하세요'}
               </div>
-              {stage === 1 && interrogatedCount(state) === 0 && (
-                <div style={{ fontSize: '.8rem', color: 'var(--gold)', marginTop: 5 }}>
-                  <span className="s-tut-badge">📖 튜토리얼</span> 먼저 <b>종현방</b>부터 — 목사님께 마지막 음료를 건넨 사람이다. 방을 조사하고, 본인을 눌러 이야기를 들어보자.
-                </div>
-              )}
             </div>
             <div className="s-section-t">숙소 · 복도를 둘러보며 이동하세요</div>
             <HallNav locations={locations} stage={stage} collectedSet={collectedSet}
-              recommendPerson={stage === 1 && interrogatedCount(state) === 0 ? '최종현' : null}
+              recommendPerson={!state.tutorialSeen && state.tutRecordDone ? '최종현' : null}
               onEnter={(id) => setSceneId(id)} onToast={showToast} />
           </>
         )}
@@ -453,7 +464,8 @@ export default function SoloApp() {
       {/* 하단 탭바 */}
       <div className="s-tabs">
         {[['places', '🗺️', '현장'], ['notebook', '📓', '사건기록'], ['casefile', '📂', '사건파일']].map(([id, ic, nm]) => (
-          <button key={id} className={!sceneId && !suspectId && state.hubTab === id ? 'on' : ''} onClick={() => goHub(id)}>
+          <button key={id} data-tut={id === 'notebook' ? 'record-tab' : id === 'places' ? 'field-tab' : undefined}
+            className={!sceneId && !suspectId && state.hubTab === id ? 'on' : ''} onClick={() => goHub(id)}>
             <span className="ti">{ic}</span>{nm}
           </button>
         ))}
@@ -464,7 +476,10 @@ export default function SoloApp() {
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {toast && <div className="s-toast">{toast}</div>}
-      {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} onSkip={() => update({ tutorialSeen: true })} />}
+      {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
+      {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && (
+        <TutorialFinale onClose={() => update({ tutFinaleSeen: true })} />
+      )}
     </div>
   );
 }
@@ -532,7 +547,6 @@ function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {
     <button className={`hall-hot${locked ? ' locked' : ''}${tone ? ' ' + tone : ''}`}
       data-tut={recommend ? 'door' : undefined}
       style={{ left: `${x}%`, top: `${y}%` }} onClick={onClick}>
-      {recommend && <span className="hall-hot-rec">▼ 여기부터</span>}
       <span className="hall-hot-ic">{locked ? '🔒' : icon}</span>
       <span className="hall-hot-plate">{label}</span>
       {sub && <span className="hall-hot-sub">{sub}</span>}
@@ -662,7 +676,7 @@ function EventVN({ onDone }) {
 
 // ── 튜토리얼 코치마크 — 클릭할 곳만 밝히고 주변은 어둡게+클릭 차단, 깜빡이는 화살표 안내 ──
 //   targetSel(선택자)의 실제 위치를 추적해 '구멍'을 내고, 나머지 4개 마스크가 클릭을 막는다.
-function TutorialCoach({ targetSel, text, onSkip }) {
+function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   const [rect, setRect] = useState(null);
   useEffect(() => {
     let raf;
@@ -681,13 +695,16 @@ function TutorialCoach({ targetSel, text, onSkip }) {
   const hw = rect.w + pad * 2, hh = rect.h + pad * 2;
   const below = hy < window.innerHeight * 0.5; // 타깃이 위쪽이면 말풍선을 아래에
   const cx = rect.x + rect.w / 2;
-  const tipLeft = Math.min(Math.max(cx, 130), window.innerWidth - 130); // 말풍선이 화면 밖으로 나가지 않게
+  const half = Math.min(230, window.innerWidth * 0.44); // 말풍선 반폭 — 화면 밖으로 안 나가게 클램프
+  const tipLeft = Math.min(Math.max(cx, half + 8), window.innerWidth - half - 8);
   return (
     <div className="tut-coach">
-      <div className="tut-mask" style={{ left: 0, top: 0, width: '100%', height: hy }} />
-      <div className="tut-mask" style={{ left: 0, top: hy + hh, width: '100%', height: `calc(100% - ${hy + hh}px)` }} />
-      <div className="tut-mask" style={{ left: 0, top: hy, width: hx, height: hh }} />
-      <div className="tut-mask" style={{ left: hx + hw, top: hy, width: `calc(100% - ${hx + hw}px)`, height: hh }} />
+      {dim && <>
+        <div className="tut-mask" style={{ left: 0, top: 0, width: '100%', height: hy }} />
+        <div className="tut-mask" style={{ left: 0, top: hy + hh, width: '100%', height: `calc(100% - ${hy + hh}px)` }} />
+        <div className="tut-mask" style={{ left: 0, top: hy, width: hx, height: hh }} />
+        <div className="tut-mask" style={{ left: hx + hw, top: hy, width: `calc(100% - ${hx + hw}px)`, height: hh }} />
+      </>}
       <div className="tut-ring" style={{ left: hx, top: hy, width: hw, height: hh }} />
       <div className="tut-tip" style={{ left: tipLeft, top: below ? hy + hh + 6 : hy - 6, transform: below ? 'translate(-50%,0)' : 'translate(-50%,-100%)' }}>
         {below
@@ -695,6 +712,23 @@ function TutorialCoach({ targetSel, text, onSkip }) {
           : (<><div className="tut-cap">{text}</div><div className="tut-arrow down" /></>)}
       </div>
       <button className="tut-skip" onClick={onSkip}>튜토리얼 건너뛰기 ✕</button>
+    </div>
+  );
+}
+
+// ── 튜토리얼 마무리 멘트 — 첫 심문까지 마치면 한 번 표시 ──
+function TutorialFinale({ onClose }) {
+  return (
+    <div className="tut-finale-ov">
+      <div className="tut-finale">
+        <div className="tf-badge">🎓 튜토리얼 완료</div>
+        <h3>수사의 기본을 익혔습니다</h3>
+        <p>이제 복도를 오가며 <b>용의자 6명의 방을 모두 조사하고 심문</b>하세요.<br />
+          확보한 단서는 <b>사건 기록</b>에서 인물·유형별로 확인할 수 있습니다.<br />
+          사건이 <b>살인</b>으로 전환되면 목사님 방·CCTV·휴대폰·감식 의뢰실이 열립니다.<br />
+          충분히 조사했다면 <b>사건 파일</b>을 제출해 사건을 마무리하세요.</p>
+        <button className="s-btn" onClick={onClose}>수사 시작</button>
+      </div>
     </div>
   );
 }
@@ -1162,6 +1196,8 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tu
   const [shake, setShake] = useState(false);
   const [isTutorial] = useState(() => !tutorialSeen); // 이 심문이 첫(튜토리얼) 심문인가 — 화면 표시용
   const dlgRef = useRef(null); // 화면 아무 데나 탭 → 대사 넘김 위임
+  // 첫 심문에 진입하면 코치마크 종료(이후 나가면 마무리 멘트) — 인트로를 안 넘겨도 확실히 처리
+  useEffect(() => { if (!tutorialSeen) onTutorialSeen?.(); /* eslint-disable-next-line */ }, []);
 
   const sid = suspect?.id;
   const collected = state.collected || [];
@@ -1291,9 +1327,9 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tu
         { icon: '🔎', label: '캐묻는다', onClick: doPress },
         !bk && { icon: '📁', label: '이 말에 증거', active: picker, onClick: () => { setLine(null); setPicker((p) => !p); } },
         { icon: '↩', label: '다른 질문', onClick: toMenu },
-        { icon: '📑', label: '법정기록', onClick: () => { setPicker(false); setRecord(true); } },
+        { icon: '📑', label: '사건기록', onClick: () => { setPicker(false); setRecord(true); } },
       ] : [
-        { icon: '📑', label: '법정기록', onClick: () => setRecord(true) },
+        { icon: '📑', label: '사건기록', onClick: () => setRecord(true) },
         { icon: '↩', label: '돌아가기', onClick: onExit },
       ]} />
 
@@ -1320,7 +1356,7 @@ function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tu
       {record && (
         <div className="aa-record">
           <button className="aa-close" onClick={() => setRecord(false)}>✕</button>
-          <h3>법정기록 · 확보한 단서 ({collectedClues.length})</h3>
+          <h3>사건 기록 · 이 인물에게 들이댈 증거 ({collectedClues.length})</h3>
           {collectedClues.length === 0
             ? <p style={{ color: 'var(--muted)' }}>아직 확보한 단서가 없습니다. 현장을 조사하거나 인물과 대화하세요.</p>
             : <div className="s-grid">
