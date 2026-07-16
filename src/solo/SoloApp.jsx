@@ -344,6 +344,16 @@ export default function SoloApp() {
     : state.hubTab === 'casefile' ? '사건 파일'
     : '현장';
 
+  // 튜토리얼 코치마크(첫 수사 · 종현방) — 문 클릭 → 소품 조사 → 인물 대화 순서로 유도
+  let coach = null;
+  if (!state.tutorialSeen && stage === 1 && interrogatedCount(state) === 0 && !suspectId && !modalCode) {
+    const jhObjs = locations.rooms.find((l) => l.id === 'ROOM-JH')?.objects || [];
+    const jhExamined = jhObjs.some((c) => collectedSet.has(c));
+    if (!sceneId && state.hubTab === 'places') coach = { sel: '[data-tut="door"]', text: '여기부터! 종현방을 눌러 들어가세요' };
+    else if (sceneId === 'ROOM-JH' && !jhExamined) coach = { sel: '.aa-track .s-zone', text: '빛나는 소품을 눌러 단서를 조사하세요' };
+    else if (sceneId === 'ROOM-JH' && jhExamined) coach = { sel: '.s-figure', text: '인물을 눌러 이야기를 시작하세요' };
+  }
+
   return (
     <div className="solo-wrap">
       <div className="s-top">
@@ -454,6 +464,7 @@ export default function SoloApp() {
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {toast && <div className="s-toast">{toast}</div>}
+      {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} onSkip={() => update({ tutorialSeen: true })} />}
     </div>
   );
 }
@@ -519,6 +530,7 @@ const HALL_DOORS = [
 function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {
   return (
     <button className={`hall-hot${locked ? ' locked' : ''}${tone ? ' ' + tone : ''}`}
+      data-tut={recommend ? 'door' : undefined}
       style={{ left: `${x}%`, top: `${y}%` }} onClick={onClick}>
       {recommend && <span className="hall-hot-rec">▼ 여기부터</span>}
       <span className="hall-hot-ic">{locked ? '🔒' : icon}</span>
@@ -648,7 +660,46 @@ function EventVN({ onDone }) {
   );
 }
 
-// ── 장면(역전재판식 풀블리드: 조사/이야기/이동 + 법정기록) ────────────────────
+// ── 튜토리얼 코치마크 — 클릭할 곳만 밝히고 주변은 어둡게+클릭 차단, 깜빡이는 화살표 안내 ──
+//   targetSel(선택자)의 실제 위치를 추적해 '구멍'을 내고, 나머지 4개 마스크가 클릭을 막는다.
+function TutorialCoach({ targetSel, text, onSkip }) {
+  const [rect, setRect] = useState(null);
+  useEffect(() => {
+    let raf;
+    const tick = () => {
+      const el = document.querySelector(targetSel);
+      if (el) { const r = el.getBoundingClientRect(); setRect({ x: r.left, y: r.top, w: r.width, h: r.height }); }
+      else setRect(null);
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [targetSel]);
+  if (!rect || rect.w === 0) return null;
+  const pad = 12;
+  const hx = Math.max(0, rect.x - pad), hy = Math.max(0, rect.y - pad);
+  const hw = rect.w + pad * 2, hh = rect.h + pad * 2;
+  const below = hy < window.innerHeight * 0.5; // 타깃이 위쪽이면 말풍선을 아래에
+  const cx = rect.x + rect.w / 2;
+  const tipLeft = Math.min(Math.max(cx, 130), window.innerWidth - 130); // 말풍선이 화면 밖으로 나가지 않게
+  return (
+    <div className="tut-coach">
+      <div className="tut-mask" style={{ left: 0, top: 0, width: '100%', height: hy }} />
+      <div className="tut-mask" style={{ left: 0, top: hy + hh, width: '100%', height: `calc(100% - ${hy + hh}px)` }} />
+      <div className="tut-mask" style={{ left: 0, top: hy, width: hx, height: hh }} />
+      <div className="tut-mask" style={{ left: hx + hw, top: hy, width: `calc(100% - ${hx + hw}px)`, height: hh }} />
+      <div className="tut-ring" style={{ left: hx, top: hy, width: hw, height: hh }} />
+      <div className="tut-tip" style={{ left: tipLeft, top: below ? hy + hh + 6 : hy - 6, transform: below ? 'translate(-50%,0)' : 'translate(-50%,-100%)' }}>
+        {below
+          ? (<><div className="tut-arrow up" /><div className="tut-cap">{text}</div></>)
+          : (<><div className="tut-cap">{text}</div><div className="tut-arrow down" /></>)}
+      </div>
+      <button className="tut-skip" onClick={onSkip}>튜토리얼 건너뛰기 ✕</button>
+    </div>
+  );
+}
+
+// ── 장면(역전재판식 풀블리드: 조사/이야기/이동 + 사건기록) ────────────────────
 function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, onTalk, onOpen, onLockedToast, onBack }) {
   const [examine, setExamine] = useState(true);
   const [record, setRecord] = useState(false);
