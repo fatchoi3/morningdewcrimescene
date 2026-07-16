@@ -155,6 +155,9 @@ const ROOM_HOTSPOTS = {
     'LTXB-98': { x: 70, y: 63, s: 0.9 },   // 시신 손 부근(손톱 밑 이물질)
     'EUMM-81': { x: 78, y: 55, s: 0.9 },   // 시신 상체 옷깃
   },
+  'LOC-CCTV': {
+    'SIAH-72': { x: 50, y: 40, s: 1.25 },  // 책상 위 모니터 화면 — 누르면 CCTV 열람대(뷰어)
+  },
 };
 const hotspotFor = (loc, code, i) => ROOM_HOTSPOTS[loc.id]?.[code] || posFor(loc, i);
 
