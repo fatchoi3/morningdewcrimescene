@@ -87,6 +87,13 @@ button { font-family: inherit; }
 .s-person-card .pc-notes { font-size: .86rem; line-height: 1.6; color: #cfcabb; }
 .s-tag.danger { border-color: var(--danger); color: var(--danger); }
 
+/* 운영자(테스트) 모드 */
+.s-admin-chip { display: inline-block; margin-left: 8px; background: var(--danger); color: #fff; font-size: .62rem; font-weight: 800; padding: 2px 7px; border-radius: 6px; vertical-align: middle; letter-spacing: .05em; }
+.s-adm-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+.s-adm-toggle { flex: none; background: #2a2f3c; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; font-weight: 800; font-size: .82rem; padding: 6px 16px; cursor: pointer; }
+.s-adm-toggle.on { background: var(--ok); color: #0b1a0b; border-color: var(--ok); }
+.s-adm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
 /* 지갑 모달 — 항목 그리드 + 상세 */
 .s-wallet { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin: 6px 0 4px; }
 .s-wallet-item { display: flex; flex-direction: column; align-items: center; gap: 5px; background: var(--panel); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 8px; cursor: pointer; color: var(--text); transition: border-color .12s, transform .08s; }
@@ -97,6 +104,60 @@ button { font-family: inherit; }
 .s-wallet-item .wi-lb { font-size: .78rem; font-weight: 700; }
 .s-wallet-detail { margin-top: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
 .s-wallet-detail img { width: 100%; max-height: 260px; object-fit: contain; border-radius: 8px; margin-bottom: 8px; background: #000; }
+
+/* 휴대폰 모달 — 실제 폰 화면처럼(베젤+홈+앱) */
+.s-phone-x { position: fixed; top: 16px; right: 16px; z-index: 60; width: 40px; height: 40px; border-radius: 50%; background: #000a; border: 1px solid var(--line); color: #fff; font-size: 1rem; cursor: pointer; }
+.s-phone { position: relative; width: min(360px, 92vw); height: min(720px, 86vh); background: #0a0d13; border: 3px solid #262a34; border-radius: 34px; box-shadow: 0 24px 70px #000c, inset 0 0 0 2px #000; overflow: hidden; display: flex; flex-direction: column; }
+.s-phone-status { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 10px 22px 6px; font-size: .72rem; color: #cfcabb; }
+.s-phone-status .pst-r { letter-spacing: 1px; }
+.s-phone-screen { flex: 1; overflow-y: auto; padding: 10px 14px 22px; }
+.s-phone-home { text-align: center; }
+.s-phone-owner { font-weight: 800; margin-top: 10px; font-size: 1rem; }
+.s-phone-sub { font-size: .74rem; color: var(--muted); margin: 3px 0 18px; }
+.s-app-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 8px; padding: 6px 4px; }
+.s-app-ic { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text); transition: transform .08s; }
+.s-app-ic:active { transform: scale(.93); }
+.s-app-ic .ai-badge { width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(160deg, #2c313f, #171a21); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; box-shadow: 0 4px 10px #0008, inset 0 1px 0 #ffffff12; }
+.s-app-ic .ai-lb { font-size: .74rem; }
+.s-phone-appbar { flex: none; display: flex; align-items: center; gap: 6px; padding: 4px 8px 10px; border-bottom: 1px solid var(--line); font-weight: 800; }
+.pab-back { background: none; border: none; color: var(--gold); font-size: 1.7rem; line-height: 1; cursor: pointer; padding: 0 6px; }
+.s-phone-contact { display: flex; align-items: center; gap: 11px; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+.s-phone-contact .pc-av { width: 34px; height: 34px; border-radius: 50%; background: #3a4257; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .9rem; flex: none; }
+.s-phone-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.s-phone-photos .pph { background: none; border: none; padding: 0; cursor: pointer; color: var(--text); }
+.s-phone-photos .pph img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; display: block; background: #000; }
+.s-phone-photos .pph-no { width: 100%; aspect-ratio: 1; border-radius: 10px; background: #1a1d24; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+.s-phone-photos .pph-cap { font-size: .74rem; color: var(--muted); margin-top: 5px; text-align: left; }
+.pbr-card { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+.pbr-q { color: var(--gold); font-size: .82rem; }
+.pbr-t { font-weight: 700; margin-top: 3px; }
+.pbr-s { color: var(--muted); font-size: .82rem; margin-top: 3px; line-height: 1.5; }
+.pbr-lookup { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.pbr-site { font-weight: 700; }
+.pbr-desc { color: var(--muted); font-size: .8rem; margin: 5px 0 9px; line-height: 1.5; }
+.pbr-res { color: var(--gold); margin-top: 9px; font-weight: 700; }
+.s-kk-row { width: 100%; display: flex; gap: 11px; align-items: center; background: none; border: none; border-bottom: 1px solid var(--line); padding: 11px 4px; cursor: pointer; text-align: left; color: var(--text); }
+.s-kk-row .kk-av { width: 42px; height: 42px; border-radius: 14px; background: #f7e14b; color: #3a3320; display: flex; align-items: center; justify-content: center; font-weight: 800; flex: none; }
+.kk-body { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 2px; }
+.kk-name { font-weight: 700; display: flex; gap: 6px; align-items: center; }
+.kk-prev { color: var(--muted); font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-kk-chat { display: flex; flex-direction: column; gap: 5px; padding: 6px 2px; }
+.s-kk-msg { display: flex; flex-direction: column; max-width: 82%; }
+.s-kk-msg.them { align-self: flex-start; align-items: flex-start; }
+.s-kk-msg.me { align-self: flex-end; align-items: flex-end; }
+.kkm-bubble { background: var(--panel2); padding: 8px 12px; border-radius: 13px; font-size: .88rem; line-height: 1.5; }
+.s-kk-msg.them .kkm-bubble { border-top-left-radius: 4px; }
+.s-kk-msg.me .kkm-bubble { background: #f7e14b; color: #2a2411; border-top-right-radius: 4px; }
+.kkm-time { font-size: .62rem; color: var(--muted); margin: 2px 5px; }
+.s-kk-recover { text-align: center; padding: 26px 12px; }
+.kkr-lock { font-size: 1.15rem; font-weight: 800; }
+.kkr-desc { color: var(--muted); font-size: .84rem; margin: 7px 0; }
+.kkr-hint { color: var(--gold); font-size: .76rem; margin-bottom: 10px; }
+.kkr-err { color: var(--danger); font-size: .8rem; margin-top: 7px; }
+.s-phone-zoom { position: fixed; inset: 0; z-index: 61; background: #000d; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 10px; }
+.s-phone-zoom img { max-width: 94vw; max-height: 80vh; object-fit: contain; border-radius: 10px; }
+.s-phone-zoom .pz-cap { color: #cfcabb; font-size: .85rem; }
+
 
 /* 카드 그리드 (허브 장소/용의자) */
 .s-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }

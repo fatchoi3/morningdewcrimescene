@@ -28,6 +28,7 @@ export function defaultState() {
     casefile: {},               // { S1: { role, method, motive } }
     submitted: false,
     result: null,               // 채점 결과
+    admin: false,               // 운영자(테스트) 모드 — 전 구역 개방
   };
 }
 

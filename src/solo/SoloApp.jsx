@@ -208,7 +208,9 @@ export default function SoloApp() {
 
   // 현재 수사 단계(가이드=전부 개방, 그 외=진행도 기반 자동 개방)
   const progressStage = computeStage(state); // 진행도 기반(이벤트·감식 배달 판정용)
-  const stage = state.difficulty === 'guide' ? 3 : progressStage;
+  const stage = (state.admin || state.difficulty === 'guide') ? 3 : progressStage; // 운영자 모드=전 구역 개방
+  const [adminOpen, setAdminOpen] = useState(false);
+  const ALL_CODES = useMemo(() => provider.getAllClues().map((c) => c.code), []);
   // 새 단계 개방 시 1회 배너 알림
   useEffect(() => {
     if (state.difficulty === 'guide') return;
@@ -342,7 +344,7 @@ export default function SoloApp() {
   }
 
   // ── 중간 사건 — 1차 심문(6인)을 마치면 부검 소견이 도착한다 ────────────────
-  if (!state.eventSeen && progressStage >= 2 && !suspectId) {
+  if (!state.eventSeen && !state.admin && progressStage >= 2 && !suspectId) {
     return <EventVN onDone={() => update({ eventSeen: true })} />;
   }
 
@@ -378,8 +380,9 @@ export default function SoloApp() {
         ) : (
           <button className="s-back" onClick={() => update({ screen: 'start' })}>≡</button>
         )}
-        <div className="s-h">{topH}</div>
+        <div className="s-h">{topH}{state.admin && <span className="s-admin-chip">ADMIN</span>}</div>
         <div className="s-count">단서 {state.collected.length}</div>
+        <button className="s-back" title="운영자 모드(테스트)" style={{ marginLeft: 6 }} onClick={() => setAdminOpen(true)}>⚙</button>
         <button className="s-back" title="저장 초기화(테스트용)" style={{ marginLeft: 6 }}
           onClick={() => { if (window.confirm('저장을 초기화하고 처음부터 시작할까요?\n(단서·심문·진행 전부 삭제)')) { clearSave(); setState(defaultState()); } }}>⟲</button>
       </div>
@@ -480,6 +483,41 @@ export default function SoloApp() {
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && (
         <TutorialFinale onClose={() => update({ tutFinaleSeen: true })} />
       )}
+      {adminOpen && (
+        <AdminPanel state={state} onClose={() => setAdminOpen(false)} onUpdate={update}
+          onCollectAll={() => { update({ collected: [...new Set([...state.collected, ...ALL_CODES])] }); showToast('📦 모든 단서를 확보했습니다'); }}
+          onClearClues={() => { update({ collected: [...startingClues] }); showToast('🧹 단서를 비웠습니다'); }}
+          onReset={() => { if (window.confirm('저장을 초기화할까요?')) { clearSave(); setState(defaultState()); setAdminOpen(false); } }} />
+      )}
+    </div>
+  );
+}
+
+// ── 운영자(테스트) 모드 패널 — 방입장·단서 취득을 쉽게 ──
+function AdminPanel({ state, onClose, onUpdate, onCollectAll, onClearClues, onReset }) {
+  return (
+    <div className="s-modal-ov" onClick={onClose}>
+      <div className="s-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="s-modal-h"><div className="mt">⚙ 운영자 모드 <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: '.8rem' }}>(테스트용)</span></div><button className="mx" onClick={onClose}>✕</button></div>
+        <div className="s-modal-b">
+          <div className="s-adm-row">
+            <div><div style={{ fontWeight: 800 }}>전 구역 개방</div><div style={{ fontSize: '.78rem', color: 'var(--muted)' }}>단계 잠금 없이 모든 방·CCTV·휴대폰·감식·목사님 방 입장 + 2차 심문</div></div>
+            <button className={`s-adm-toggle${state.admin ? ' on' : ''}`}
+              onClick={() => onUpdate(state.admin ? { admin: false } : { admin: true, eventSeen: true, tutorialSeen: true, tutRecordDone: true, tutFinaleSeen: true })}>
+              {state.admin ? 'ON' : 'OFF'}
+            </button>
+          </div>
+          <div className="s-adm-actions">
+            <button className="s-btn sm" onClick={onCollectAll}>📦 모든 단서 확보</button>
+            <button className="s-btn sm ghost" onClick={onClearClues}>🧹 단서 비우기</button>
+            <button className="s-btn sm ghost" onClick={() => onUpdate({ tutorialSeen: true, tutRecordDone: true, tutFinaleSeen: true })}>🎓 튜토리얼 스킵</button>
+            <button className="s-btn sm ghost" onClick={onReset}>♻ 저장 초기화</button>
+          </div>
+          <p style={{ fontSize: '.76rem', color: 'var(--muted)', marginTop: 12, lineHeight: 1.6 }}>
+            테스트 편의 기능입니다. ‘전 구역 개방’을 켜면 진행도와 무관하게 모든 장소에 바로 들어가고, ‘모든 단서 확보’로 사건 기록을 가득 채워 확인할 수 있어요.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -955,16 +993,19 @@ function Shell({ title, onClose, children }) {
   );
 }
 
-// ── 폰 모달 ────────────────────────────────────────────────────────────────
+// ── 폰 모달 — 실제 휴대폰 화면처럼(홈 → 앱 → 상세) ─────────────────────────────
+const PHONE_APP_ICON = { contacts: '📇', kakao: '💬', browser: '🌐', photos: '🖼️', gallery: '🖼️', messages: '✉️' };
 function PhoneModal({ code, clue, difficulty, onClose }) {
   const apps = clue.phone.apps || [];
-  const [appId, setAppId] = useState(apps[0]?.id || null);
+  const [appId, setAppId] = useState(null);   // null = 홈 화면
+  const [chatIdx, setChatIdx] = useState(null); // 카톡: null = 대화 목록
   const [recovered, setRecovered] = useState(false);
   const [pw, setPw] = useState('');
   const [msg, setMsg] = useState('');
   const [lookup, setLookup] = useState('');
   const [lookupRes, setLookupRes] = useState(null);
-  const app = apps.find((a) => a.id === appId) || apps[0];
+  const [zoom, setZoom] = useState(null); // 사진 확대
+  const app = appId ? apps.find((a) => a.id === appId) : null;
   const recoverProtected = provider.isRecoverProtected(code);
 
   const tryRecover = async () => {
@@ -975,73 +1016,116 @@ function PhoneModal({ code, clue, difficulty, onClose }) {
     const res = await provider.verifyLookup(code, lookup);
     setLookupRes(res.ok ? (res.result || '조회 결과가 확인되었습니다.') : (app?.lookup?.notFound || '조회되지 않습니다.'));
   };
+  const back = () => { if (appId === 'kakao' && chatIdx != null) setChatIdx(null); else { setAppId(null); setChatIdx(null); } };
+  const initial = (s) => (s || '?').replace(/\s.*$/, '').slice(0, 1);
 
   return (
-    <Shell title={<>{clue.title}<span className="s-tag">휴대폰</span></>} onClose={onClose}>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-        {apps.map((a) => (
-          <button key={a.id} className="s-btn sm ghost" style={appId === a.id ? { borderColor: 'var(--gold)', color: 'var(--gold)' } : {}} onClick={() => setAppId(a.id)}>{a.name || a.type}</button>
-        ))}
-      </div>
+    <div className="s-modal-ov" onClick={onClose}>
+      <button className="s-phone-x" onClick={onClose} aria-label="닫기">✕</button>
+      <div className="s-phone" onClick={(e) => e.stopPropagation()}>
+        <div className="s-phone-status"><span>9:41</span><span className="pst-r">•••• 📶 🔋</span></div>
 
-      {app?.type === 'contacts' && (
-        <div>{(app.contacts || []).map((ct, i) => (<div key={i} style={{ padding: '6px 0', borderBottom: '1px solid var(--line)' }}>📇 {ct.name}</div>))}</div>
-      )}
-
-      {app?.type === 'photos' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {(app.photos || []).map((ph, i) => (
-            <div key={i}>{ph.image && <img src={ph.image} alt="" />}<div style={{ fontSize: '.78rem', color: 'var(--muted)' }}>{ph.caption}</div></div>
-          ))}
-        </div>
-      )}
-
-      {app?.type === 'browser' && (
-        <div>
-          {(app.searches || []).map((s, i) => (
-            <div key={i} style={{ marginBottom: 10 }}><div style={{ color: 'var(--gold)' }}>🔍 {s.query}</div><div style={{ fontWeight: 700 }}>{s.title}</div><div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{s.snippet}</div></div>
-          ))}
-          {app.lookup && (
-            <div style={{ background: 'var(--panel2)', border: '1px solid var(--line)', borderRadius: 10, padding: 12, marginTop: 8 }}>
-              <div style={{ fontWeight: 700 }}>{app.lookup.site}</div>
-              <div style={{ color: 'var(--muted)', fontSize: '.82rem', margin: '4px 0 8px' }}>{app.lookup.desc}</div>
-              <div className="s-pw">
-                <input value={lookup} onChange={(e) => setLookup(e.target.value)} placeholder={app.lookup.placeholder || app.lookup.label} />
-                <button className="s-btn sm" onClick={tryLookup}>조회</button>
-              </div>
-              {lookupRes && <p style={{ marginTop: 8, color: 'var(--gold)' }}>{lookupRes}</p>}
+        {!app ? (
+          <div className="s-phone-screen s-phone-home">
+            <div className="s-phone-owner">📱 {clue.phone.owner || clue.title}</div>
+            <div className="s-phone-sub">압수 휴대폰 · 앱을 눌러 확인하세요</div>
+            <div className="s-app-grid">
+              {apps.map((a) => (
+                <button key={a.id} className="s-app-ic" onClick={() => { setAppId(a.id); setChatIdx(null); }}>
+                  <span className="ai-badge">{PHONE_APP_ICON[a.type] || '📱'}</span>
+                  <span className="ai-lb">{a.name || a.type}</span>
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          <>
+            <div className="s-phone-appbar"><button className="pab-back" onClick={back} aria-label="뒤로">‹</button><span>{appId === 'kakao' && chatIdx != null ? (app.chats?.[chatIdx]?.name || app.name) : (app.name || app.type)}</span></div>
+            <div className="s-phone-screen">
 
-      {app?.type === 'kakao' && (
-        <div>
-          {(app.chats || []).map((ch, i) => {
-            const hidden = ch.deleted && recoverProtected && !recovered;
-            return (
-              <div key={i} style={{ marginBottom: 14 }}>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>💬 {ch.name}{ch.deleted && <span className="s-tag" style={{ color: 'var(--danger)' }}>{recoverProtected && !recovered ? '삭제됨' : '복원됨'}</span>}</div>
-                {hidden ? (
-                  <div className="s-locked" style={{ background: 'var(--panel2)', borderRadius: 8 }}>
-                    <div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>🔒 삭제된 대화 — 톡서랍 복구 비밀번호 필요</div>
-                    {difficulty === 'guide' && <div style={{ fontSize: '.75rem', color: 'var(--gold)', marginTop: 4 }}>힌트: {provider.debugSecret ? '' : ''}상대의 생일 4자리(다이어리에서)</div>}
-                    <div className="s-pw"><input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="복구 비밀번호 4자리" /><button className="s-btn sm" onClick={tryRecover}>복구</button></div>
-                    {msg && <div style={{ color: 'var(--danger)', fontSize: '.8rem', marginTop: 6 }}>{msg}</div>}
-                  </div>
-                ) : (
-                  (ch.messages || []).map((m, j) => (
-                    <div key={j} style={{ textAlign: m.from === 'me' ? 'right' : 'left', margin: '3px 0' }}>
-                      <span style={{ display: 'inline-block', background: m.from === 'me' ? '#3a3320' : 'var(--panel2)', borderRadius: 10, padding: '6px 10px', maxWidth: '80%', fontSize: '.88rem' }}>{m.text}</span>
+              {app.type === 'contacts' && (app.contacts || []).map((ct, i) => (
+                <div key={i} className="s-phone-contact"><span className="pc-av">{initial(ct.name)}</span><span>{ct.name}</span></div>
+              ))}
+
+              {app.type === 'photos' && (
+                <div className="s-phone-photos">
+                  {(app.photos || []).map((ph, i) => (
+                    <button key={i} className="pph" onClick={() => ph.image && setZoom(ph)}>
+                      {ph.image ? <img src={ph.image} alt="" /> : <div className="pph-no">사진</div>}
+                      <div className="pph-cap">{ph.caption}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {app.type === 'browser' && (
+                <div className="s-phone-browser">
+                  {(app.searches || []).map((s, i) => (
+                    <div key={i} className="pbr-card"><div className="pbr-q">🔍 {s.query}</div><div className="pbr-t">{s.title}</div><div className="pbr-s">{s.snippet}</div></div>
+                  ))}
+                  {app.lookup && (
+                    <div className="pbr-lookup">
+                      <div className="pbr-site">🌐 {app.lookup.site}</div>
+                      <div className="pbr-desc">{app.lookup.desc}</div>
+                      <div className="s-pw"><input value={lookup} onChange={(e) => setLookup(e.target.value)} placeholder={app.lookup.placeholder || app.lookup.label} /><button className="s-btn sm" onClick={tryLookup}>조회</button></div>
+                      {lookupRes && <p className="pbr-res">{lookupRes}</p>}
                     </div>
-                  ))
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </div>
+              )}
+
+              {app.type === 'kakao' && chatIdx == null && (
+                <div className="s-kk-list">
+                  {(app.chats || []).map((ch, i) => {
+                    const locked = ch.deleted && recoverProtected && !recovered;
+                    const last = (ch.messages || [])[(ch.messages || []).length - 1];
+                    return (
+                      <button key={i} className="s-kk-row" onClick={() => setChatIdx(i)}>
+                        <span className="kk-av">{initial(ch.name)}</span>
+                        <span className="kk-body">
+                          <span className="kk-name">{ch.name}{ch.deleted && <span className="s-tag danger">{locked ? '삭제됨' : '복원됨'}</span>}</span>
+                          <span className="kk-prev">{locked ? '🔒 삭제된 대화 — 복구 필요' : (last?.text || '')}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {app.type === 'kakao' && chatIdx != null && (() => {
+                const ch = (app.chats || [])[chatIdx]; if (!ch) return null;
+                const locked = ch.deleted && recoverProtected && !recovered;
+                if (locked) return (
+                  <div className="s-kk-recover">
+                    <div className="kkr-lock">🔒 삭제된 대화</div>
+                    <div className="kkr-desc">톡서랍 복구 비밀번호가 필요합니다.</div>
+                    {difficulty === 'guide' && <div className="kkr-hint">힌트: 상대의 생일 4자리(다이어리에서)</div>}
+                    <div className="s-pw"><input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="복구 비밀번호 4자리" inputMode="numeric" /><button className="s-btn sm" onClick={tryRecover}>복구</button></div>
+                    {msg && <div className="kkr-err">{msg}</div>}
+                  </div>
+                );
+                return (
+                  <div className="s-kk-chat">
+                    {(ch.messages || []).map((m, j) => (
+                      <div key={j} className={`s-kk-msg ${m.from === 'me' ? 'me' : 'them'}`}>
+                        <span className="kkm-bubble">{m.text}</span>
+                        {m.time && <span className="kkm-time">{m.time}</span>}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+            </div>
+          </>
+        )}
+      </div>
+      {zoom && (
+        <div className="s-phone-zoom" onClick={(e) => { e.stopPropagation(); setZoom(null); }}>
+          <img src={zoom.image} alt="" /><div className="pz-cap">{zoom.caption}</div>
         </div>
       )}
-    </Shell>
+    </div>
   );
 }
 
