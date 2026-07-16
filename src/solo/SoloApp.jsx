@@ -214,6 +214,8 @@ export default function SoloApp() {
   const progressStage = computeStage(state); // 진행도 기반(이벤트·감식 배달 판정용)
   const stage = (state.admin || state.difficulty === 'guide') ? 3 : progressStage; // 운영자 모드=전 구역 개방
   const [adminOpen, setAdminOpen] = useState(false);
+  const [recordOpen, setRecordOpen] = useState(false);   // 수첩(사건 기록) 오버레이
+  const [casefileOpen, setCasefileOpen] = useState(false); // 범인 지목 오버레이
   const ALL_CODES = useMemo(() => provider.getAllClues().map((c) => c.code), []);
   // 새 단계 개방 시 1회 배너 알림
   useEffect(() => {
@@ -251,16 +253,7 @@ export default function SoloApp() {
     return { added: [code, ...kept.map((a) => a.code)] };
   }
 
-  const goHub = (tab) => { setSceneId(null); setSuspectId(null); update({ screen: 'hub', hubTab: tab || state.hubTab || 'places' }); };
-
-  // 튜토리얼: 사건 기록을 열어봤다가 '현장'으로 돌아오면 기록 단계 완료 → 종현방 단계로
-  const tutSawRecordRef = useRef(false);
-  useEffect(() => {
-    if (state.tutorialSeen) return;
-    if (state.hubTab === 'notebook') tutSawRecordRef.current = true;
-    else if (state.hubTab === 'places' && tutSawRecordRef.current && !state.tutRecordDone) update({ tutRecordDone: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.hubTab, state.tutorialSeen, state.tutRecordDone]);
+  const goHub = () => { setSceneId(null); setSuspectId(null); update({ screen: 'hub' }); };
 
   // ── 시작 ────────────────────────────────────────────────────────────────
   if (state.screen === 'start') {
@@ -306,11 +299,10 @@ export default function SoloApp() {
           <EndingArt good={r.culpritRight} />
           <div className="s-score">
             <div className="s-eye">사건 종결</div>
-            <div className="big">{r.total} / {r.max}</div>
+            <div className="big" style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)' }}>{r.culpritRight ? '정답' : '오답'}</div>
             <div style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)', fontWeight: 800, marginTop: 6 }}>
-              {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : '✗ 진범을 놓쳤습니다'}
+              {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : `✗ 당신의 지목: ${suspects.find((s) => s.id === r.pick)?.name || '—'}`}
             </div>
-            <div style={{ color: 'var(--muted)', marginTop: 6 }}>{r.grade}</div>
             <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>박희원</b> · 직접 사인 <b style={{ color: '#fff' }}>베개 질식</b></div>
           </div>
           <div className="s-reveal">
@@ -339,8 +331,7 @@ export default function SoloApp() {
             </div>
           </div>
           <div style={{ textAlign: 'center', margin: '24px 0' }}>
-            <button className="s-btn ghost" onClick={() => goHub('casefile')}>사건 파일 다시 보기</button>
-            <button className="s-btn" style={{ marginLeft: 8 }} onClick={() => { clearSave(); setState(defaultState()); }}>새 사건</button>
+            <button className="s-btn" onClick={() => { clearSave(); setState(defaultState()); }}>새 사건</button>
           </div>
         </div>
       </div>
@@ -353,46 +344,22 @@ export default function SoloApp() {
   }
 
   // ── 메인(허브/장면/용의자) ────────────────────────────────────────────────
-  const topH = sceneId ? (locations.all.find((l) => l.id === sceneId)?.label)
-    : suspectId ? '용의자 심문'
-    : state.hubTab === 'notebook' ? '사건 기록'
-    : state.hubTab === 'casefile' ? '사건 파일'
-    : '현장';
-
-  // 튜토리얼 코치마크(첫 수사 · 종현방) — 문 클릭 → 소품 조사 → 인물 대화 순서로 유도
+  // 튜토리얼 코치마크(첫 수사) — 수첩(사건 기록) → 종현방 문 → 소품 → 대화 순서로 유도
   let coach = null;
-  if (!state.tutorialSeen && !suspectId && !modalCode) {
+  if (!state.tutorialSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && !adminOpen) {
     const jhObjs = locations.rooms.find((l) => l.id === 'ROOM-JH')?.objects || [];
     const jhExamined = jhObjs.some((c) => collectedSet.has(c));
-    if (!state.tutRecordDone) {
-      // 1) 사건 기록을 먼저 열어 기본 단서(사건 개요)를 확인
-      if (!sceneId && state.hubTab === 'notebook') coach = { sel: '[data-tut="field-tab"]', text: '사건 기록엔 사건 개요가 기본으로 들어 있어요. 단서·인물을 확인했으면 「현장」을 눌러 계속하세요', dim: false };
-      else if (!sceneId) coach = { sel: '[data-tut="record-tab"]', text: '먼저 여기! 「사건 기록」에 사건 개요 등 기본 단서가 들어 있어요 — 눌러서 확인하세요' };
-    } else {
-      // 2) 종현방: 문 → 소품 → 대화
-      if (!sceneId && state.hubTab === 'places') coach = { sel: '[data-tut="door"]', text: '이제 종현방을 눌러 들어가세요' };
-      else if (sceneId === 'ROOM-JH' && !jhExamined) coach = { sel: '.aa-track .s-zone', text: '빛나는 소품을 눌러 단서를 조사하세요' };
-      else if (sceneId === 'ROOM-JH' && jhExamined) coach = { sel: '.s-figure', text: '인물을 눌러 이야기를 시작하세요' };
-    }
+    if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기! 📓 수첩(사건 기록)에 사건 개요 등 기본 단서가 들어 있어요 — 눌러서 확인하세요' };
+    else if (!sceneId) coach = { sel: '[data-tut="door"]', text: '이제 종현방을 눌러 들어가세요' };
+    else if (sceneId === 'ROOM-JH' && !jhExamined) coach = { sel: '.aa-track .s-zone', text: '빛나는 소품을 눌러 단서를 조사하세요' };
+    else if (sceneId === 'ROOM-JH' && jhExamined) coach = { sel: '.s-figure', text: '인물을 눌러 이야기를 시작하세요' };
   }
+  const progressText = `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}` + (stage >= 2 ? ` · 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}` : '');
+  const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
 
   return (
-    <div className="solo-wrap">
-      <div className="s-top">
-        {(sceneId || suspectId) ? (
-          <button className="s-back" onClick={suspectId ? () => setSuspectId(null) : () => goHub()}>← 뒤로</button>
-        ) : (
-          <button className="s-back" onClick={() => update({ screen: 'start' })}>≡</button>
-        )}
-        <div className="s-h">{topH}{state.admin && <span className="s-admin-chip">ADMIN</span>}</div>
-        <div className="s-count">단서 {state.collected.length}</div>
-        <button className="s-back" title="운영자 모드(테스트)" style={{ marginLeft: 6 }} onClick={() => setAdminOpen(true)}>⚙</button>
-        <button className="s-back" title="저장 초기화(테스트용)" style={{ marginLeft: 6 }}
-          onClick={() => { if (window.confirm('저장을 초기화하고 처음부터 시작할까요?\n(단서·심문·진행 전부 삭제)')) { clearSave(); setState(defaultState()); } }}>⟲</button>
-      </div>
-
-      <div className="s-body">
-        {suspectId ? (
+    <>
+      {suspectId ? (
           <CrossExamView key={suspectId} suspect={suspects.find((s) => s.id === suspectId)} state={state}
             phase={stage >= 3 ? 2 : 1}
             tutorialSeen={!!state.tutorialSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
@@ -440,43 +407,27 @@ export default function SoloApp() {
             onTalk={(id) => setSuspectId(id)}
             onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
             onBack={() => goHub()} />
-        ) : state.hubTab === 'notebook' ? (
-          <CaseRecord clues={state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방')}
-            onOpen={(code) => setModalCode(code)} notes={state.notes} onNotes={(v) => update({ notes: v })} />
-        ) : state.hubTab === 'casefile' ? (
-          <CaseFileView state={state} stageLocked={state.difficulty !== 'guide' && stage < 3} stageLabel={STAGE_LABEL[stage]}
-            onSet={(sid, field, val) => update({ casefile: { ...(state.casefile || {}), [sid]: { ...(state.casefile?.[sid] || {}), [field]: val } } })}
-            onSubmit={() => update({ submitted: true, result: scoreCase(state.casefile || {}), screen: 'ending' })} />
         ) : (
-          <>
-            <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px', margin: '4px 0 6px' }}>
-              <div style={{ fontWeight: 800, color: 'var(--gold)' }}>🔎 {STAGE_LABEL[stage]}</div>
-              <div style={{ fontSize: '.78rem', color: 'var(--muted)', marginTop: 3 }}>
-                용의자 심문 {interrogatedCount(state)}/{suspectIds.length}
-                {stage >= 2 ? ` · 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}` : ''}
-                {' · '}
-                {stage === 1 ? '다음: 6명 모두 1차 심문하면 사건이 움직입니다'
-                  : stage === 2 ? `다음: 목사님 방 단서 ${SCENE_NEEDED}개 확보 시 2차 심문 개방 — 감식 의뢰를 잊지 마세요`
-                  : '2차 심문: 새 증언을 추궁하고, 다 모였으면 사건 파일을 제출하세요'}
-              </div>
-            </div>
-            <div className="s-section-t">숙소 · 복도를 둘러보며 이동하세요</div>
-            <HallNav locations={locations} stage={stage} collectedSet={collectedSet}
-              recommendPerson={!state.tutorialSeen && state.tutRecordDone ? '최종현' : null}
-              onEnter={(id) => setSceneId(id)} onToast={showToast} />
-          </>
+          <HallNav locations={locations} stage={stage} collectedSet={collectedSet}
+            recommendPerson={!state.tutorialSeen && state.tutRecordDone ? '최종현' : null}
+            admin={state.admin} stageLabel={STAGE_LABEL[stage]} progressText={progressText} canAccuse={stage >= 3}
+            onEnter={(id) => setSceneId(id)} onToast={showToast}
+            onOpenRecord={() => { setRecordOpen(true); if (!state.tutorialSeen && !state.tutRecordDone) update({ tutRecordDone: true }); }}
+            onOpenMenu={() => setAdminOpen(true)}
+            onAccuse={() => setCasefileOpen(true)} />
         )}
-      </div>
 
-      {/* 하단 탭바 */}
-      <div className="s-tabs">
-        {[['places', '🗺️', '현장'], ['notebook', '📓', '사건기록'], ['casefile', '📂', '사건파일']].map(([id, ic, nm]) => (
-          <button key={id} data-tut={id === 'notebook' ? 'record-tab' : id === 'places' ? 'field-tab' : undefined}
-            className={!sceneId && !suspectId && state.hubTab === id ? 'on' : ''} onClick={() => goHub(id)}>
-            <span className="ti">{ic}</span>{nm}
-          </button>
-        ))}
-      </div>
+      {recordOpen && (
+        <SheetOverlay title={`📓 사건 기록 · 단서 ${recordClues.length}`} onClose={() => setRecordOpen(false)}>
+          <CaseRecord clues={recordClues} onOpen={(code) => setModalCode(code)} notes={state.notes} onNotes={(v) => update({ notes: v })} />
+        </SheetOverlay>
+      )}
+      {casefileOpen && (
+        <SheetOverlay title="🔍 범인 지목" onClose={() => setCasefileOpen(false)}>
+          <CaseFileView state={state} onPick={(sid) => update({ casefile: { culprit: sid } })}
+            onSubmit={() => { setCasefileOpen(false); update({ submitted: true, result: scoreCase(state.casefile || {}), screen: 'ending' }); }} />
+        </SheetOverlay>
+      )}
 
       {modalCode && (
         <ClueModal code={modalCode} collectedSet={collectedSet} difficulty={state.difficulty}
@@ -484,21 +435,22 @@ export default function SoloApp() {
       )}
       {toast && <div className="s-toast">{toast}</div>}
       {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
-      {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && (
+      {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (
         <TutorialFinale onClose={() => update({ tutFinaleSeen: true })} />
       )}
       {adminOpen && (
         <AdminPanel state={state} onClose={() => setAdminOpen(false)} onUpdate={update}
+          onGoStart={() => { setAdminOpen(false); update({ screen: 'start' }); }}
           onCollectAll={() => { update({ collected: [...new Set([...state.collected, ...ALL_CODES])] }); showToast('📦 모든 단서를 확보했습니다'); }}
           onClearClues={() => { update({ collected: [...startingClues] }); showToast('🧹 단서를 비웠습니다'); }}
           onReset={() => { if (window.confirm('저장을 초기화할까요?')) { clearSave(); setState(defaultState()); setAdminOpen(false); } }} />
       )}
-    </div>
+    </>
   );
 }
 
 // ── 운영자(테스트) 모드 패널 — 방입장·단서 취득을 쉽게 ──
-function AdminPanel({ state, onClose, onUpdate, onCollectAll, onClearClues, onReset }) {
+function AdminPanel({ state, onClose, onUpdate, onCollectAll, onClearClues, onReset, onGoStart }) {
   return (
     <div className="s-modal-ov" onClick={onClose}>
       <div className="s-modal" onClick={(e) => e.stopPropagation()}>
@@ -515,7 +467,8 @@ function AdminPanel({ state, onClose, onUpdate, onCollectAll, onClearClues, onRe
             <button className="s-btn sm" onClick={onCollectAll}>📦 모든 단서 확보</button>
             <button className="s-btn sm ghost" onClick={onClearClues}>🧹 단서 비우기</button>
             <button className="s-btn sm ghost" onClick={() => onUpdate({ tutorialSeen: true, tutRecordDone: true, tutFinaleSeen: true })}>🎓 튜토리얼 스킵</button>
-            <button className="s-btn sm ghost" onClick={onReset}>♻ 저장 초기화</button>
+            <button className="s-btn sm ghost" onClick={onGoStart}>🏠 처음 화면으로</button>
+            <button className="s-btn sm ghost" onClick={onReset} style={{ gridColumn: '1 / -1' }}>♻ 저장 초기화</button>
           </div>
           <p style={{ fontSize: '.76rem', color: 'var(--muted)', marginTop: 12, lineHeight: 1.6 }}>
             테스트 편의 기능입니다. ‘전 구역 개방’을 켜면 진행도와 무관하게 모든 장소에 바로 들어가고, ‘모든 단서 확보’로 사건 기록을 가득 채워 확인할 수 있어요.
@@ -528,19 +481,8 @@ function AdminPanel({ state, onClose, onUpdate, onCollectAll, onClearClues, onRe
 
 // 채점 — caseKey.answers 대비 role/method/motive 일치 카운트
 function scoreCase(casefile) {
-  const ans = caseKey.answers;
-  let total = 0; const max = Object.keys(ans).length * 3;
-  const per = {};
-  for (const [id, a] of Object.entries(ans)) {
-    const g = casefile[id] || {};
-    const rc = g.role === a.role, mc = g.method === a.method, oc = g.motive === a.motive;
-    per[id] = { role: rc, method: mc, motive: oc };
-    total += (rc ? 1 : 0) + (mc ? 1 : 0) + (oc ? 1 : 0);
-  }
-  const culpritRight = casefile.S4?.role === '진범';
-  const pct = total / max;
-  const grade = pct >= 0.9 ? '명탐정' : pct >= 0.7 ? '유능한 수사관' : pct >= 0.4 ? '견습 수사관' : '재수사가 필요합니다';
-  return { total, max, per, culpritRight, grade };
+  const pick = casefile?.culprit || null;   // 범인 한 명만 지목
+  return { culpritRight: pick === 'S4', pick }; // S4 = 박희원(진범)
 }
 
 // ── 장소 카드 ─────────────────────────────────────────────────────────────
@@ -596,12 +538,12 @@ function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {
   );
 }
 
-function HallNav({ locations, stage, collectedSet, recommendPerson, onEnter, onToast }) {
+function HallNav({ locations, stage, collectedSet, recommendPerson, admin, stageLabel, progressText, canAccuse, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
   const [view, setView] = useState('main'); // main | pastor | floor1 | lab
   const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
   const pastor = locations.rooms.find((l) => l.person === '목사');
   const tool = (id) => locations.all.find((l) => l.id === id);
-  const cctv = tool('LOC-CCTV'), phone = tool('LOC-PHONE'), lab = tool('LOC-LAB'), common = tool('LOC-COMMON');
+  const cctv = tool('LOC-CCTV'), phone = tool('LOC-PHONE'), lab = tool('LOC-LAB');
 
   const subOf = (loc, isCrime) => {
     if (loc.stage > stage) return isCrime ? '통제 중' : loc.stage === 2 ? '사건 후 개방' : '2차 개방';
@@ -620,48 +562,59 @@ function HallNav({ locations, stage, collectedSet, recommendPerson, onEnter, onT
     : '건물 밖 — 감식 의뢰실';
 
   return (
-    <>
-      <div className="hall-stage">
-        <HallBg name={view} />
+    <div className="aa-fs">
+      <div className="hall-fit">
+          <HallBg name={view} />
 
-        {view === 'main' && HALL_DOORS.map((d) => {
-          const loc = roomByPerson(d.person);
-          if (!loc) return null;
-          return <HallHot key={d.person} x={d.x} y={d.y} icon="🚪" label={loc.label}
-            sub={subOf(loc, false)} locked={loc.stage > stage}
-            recommend={recommendPerson === d.person} onClick={() => enter(loc, false)} />;
-        })}
-
-        {view === 'pastor' && pastor && (
-          <HallHot x={50} y={50} icon="⚰️" tone="crime" label={pastor.label}
-            sub={subOf(pastor, true)} locked={pastor.stage > stage} onClick={() => enter(pastor, true)} />
-        )}
-
-        {view === 'floor1' && <>
-          {cctv && <HallHot x={47} y={52} icon="📹" label={cctv.label} sub={subOf(cctv)} locked={cctv.stage > stage} onClick={() => enter(cctv)} />}
-          {phone && <HallHot x={63} y={52} icon="📱" label={phone.label} sub={subOf(phone)} locked={phone.stage > stage} onClick={() => enter(phone)} />}
-          {common && <HallHot x={13} y={62} icon="🚶" label={common.label} sub={subOf(common)} locked={common.stage > stage} onClick={() => enter(common)} />}
-        </>}
-
-        {view === 'lab' && lab && (
-          <HallHot x={43} y={56} icon="🔬" label={lab.label} sub={subOf(lab)} locked={lab.stage > stage} onClick={() => enter(lab)} />
-        )}
-
-        <div className="hall-nav-row">
-          {view === 'main' ? <>
-            <button className="hall-arrow" onClick={() => setView('floor1')}>◀ 왼쪽 · 1층</button>
-            <button className="hall-arrow" onClick={() => setView('pastor')}>오른쪽 · 목사님 방 ▶</button>
-          </> : view === 'floor1' ? <>
-            <button className="hall-arrow" onClick={() => setView('main')}>◀ 복도로</button>
-            {lab && <button className="hall-arrow" onClick={() => setView('lab')}>감식 의뢰실 ▶</button>}
-          </> : <>
-            <button className="hall-arrow" onClick={() => setView(view === 'lab' ? 'floor1' : 'main')}>◀ {view === 'lab' ? '1층으로' : '복도로'}</button>
-            <span />
+          {view === 'main' && HALL_DOORS.map((d) => {
+            const loc = roomByPerson(d.person);
+            if (!loc) return null;
+            return <HallHot key={d.person} x={d.x} y={d.y} icon="🚪" label={loc.label}
+              sub={subOf(loc, false)} locked={loc.stage > stage}
+              recommend={recommendPerson === d.person} onClick={() => enter(loc, false)} />;
+          })}
+          {view === 'pastor' && pastor && (
+            <HallHot x={50} y={50} icon="⚰️" tone="crime" label={pastor.label}
+              sub={subOf(pastor, true)} locked={pastor.stage > stage} onClick={() => enter(pastor, true)} />
+          )}
+          {view === 'floor1' && <>
+            {cctv && <HallHot x={47} y={52} icon="📹" label={cctv.label} sub={subOf(cctv)} locked={cctv.stage > stage} onClick={() => enter(cctv)} />}
+            {phone && <HallHot x={63} y={52} icon="📱" label={phone.label} sub={subOf(phone)} locked={phone.stage > stage} onClick={() => enter(phone)} />}
           </>}
+          {view === 'lab' && lab && (
+            <HallHot x={43} y={56} icon="🔬" label={lab.label} sub={subOf(lab)} locked={lab.stage > stage} onClick={() => enter(lab)} />
+          )}
+      </div>
+
+      {/* 복도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
+      <div className="hall-hud">
+        <div className="hall-hud-chip"><b>🔎 {stageLabel}</b><span>{progressText}</span></div>
+        <div className="hall-hud-btns">
+          {admin && <span className="s-admin-chip">ADMIN</span>}
+          <button data-tut="record-btn" className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord}>📓</button>
+          <button className="hall-hud-btn" title="메뉴" onClick={onOpenMenu}>⚙</button>
         </div>
       </div>
+
       <div className="hall-here">📍 {here}</div>
-    </>
+
+      {canAccuse && view === 'main' && (
+        <button className="hall-accuse" onClick={onAccuse}>🔍 범인 지목하기</button>
+      )}
+
+      <div className="hall-nav-row">
+        {view === 'main' ? <>
+          <button className="hall-arrow" onClick={() => setView('floor1')}>◀ 왼쪽 · 1층</button>
+          <button className="hall-arrow" onClick={() => setView('pastor')}>오른쪽 · 목사님 방 ▶</button>
+        </> : view === 'floor1' ? <>
+          <button className="hall-arrow" onClick={() => setView('main')}>◀ 복도로</button>
+          {lab && <button className="hall-arrow" onClick={() => setView('lab')}>감식 의뢰실 ▶</button>}
+        </> : <>
+          <button className="hall-arrow" onClick={() => setView(view === 'lab' ? 'floor1' : 'main')}>◀ {view === 'lab' ? '1층으로' : '복도로'}</button>
+          <span />
+        </>}
+      </div>
+    </div>
   );
 }
 
@@ -1194,64 +1147,47 @@ function CaseRecord({ clues, onOpen, notes, onNotes }) {
   );
 }
 
-// ── 사건 파일(최종 제출) ───────────────────────────────────────────────────
-function CaseFileView({ state, stageLocked, stageLabel, onSet, onSubmit }) {
-  const submitted = state.submitted && state.result;
-  const per = state.result?.per || {};
-  const filledAll = suspects.every((s) => { const g = state.casefile?.[s.id]; return g?.role && g?.method && g?.motive; });
+// ── 전체 화면 시트 오버레이(수첩·범인 지목 공용) ──
+function SheetOverlay({ title, onClose, children }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <div className="s-sheet">
+      <div className="s-sheet-head">
+        <button className="s-sheet-back" onClick={onClose} aria-label="닫기">←</button>
+        <div className="s-sheet-title">{title}</div>
+      </div>
+      <div className="s-sheet-body">{children}</div>
+    </div>
+  );
+}
+
+// ── 사건 파일(최종 제출) — 범인 한 명만 지목 ──
+function CaseFileView({ state, onPick, onSubmit }) {
+  const pick = state.casefile?.culprit || null;
   return (
     <>
-      <div className="s-section-t">사건 파일 — 인물별로 판정하세요</div>
-      <p style={{ color: 'var(--muted)', fontSize: '.84rem', marginTop: 0 }}>각 용의자의 <b>역할·한 일·동기</b>를 고르세요. 제출하면 채점되고 전말이 공개됩니다.</p>
-      {suspects.map((s) => {
-        const g = state.casefile?.[s.id] || {};
-        const v = per[s.id];
-        const cls = submitted ? (v && v.role && v.method && v.motive ? ' correct' : ' wrong') : '';
-        return (
-          <div key={s.id} className={`s-cf-row${cls}`}>
-            <div className="s-cf-name">{s.name} <span className="s-tag">{s.occupation}</span></div>
-            <div className="s-cf-field">
-              <label>역할</label>
-              <select value={g.role || ''} disabled={submitted} onChange={(e) => onSet(s.id, 'role', e.target.value)}>
-                <option value="">선택…</option>
-                {caseKey.roles.map((r) => (<option key={r} value={r}>{r}</option>))}
-              </select>
-            </div>
-            <div className="s-cf-field">
-              <label>한 일(결정적 행위)</label>
-              <select value={g.method || ''} disabled={submitted} onChange={(e) => onSet(s.id, 'method', e.target.value)}>
-                <option value="">선택…</option>
-                {caseKey.methods.map((m) => (<option key={m.id} value={m.id}>{m.label}</option>))}
-              </select>
-            </div>
-            <div className="s-cf-field">
-              <label>동기</label>
-              <select value={g.motive || ''} disabled={submitted} onChange={(e) => onSet(s.id, 'motive', e.target.value)}>
-                <option value="">선택…</option>
-                {caseKey.motives.map((m) => (<option key={m.id} value={m.id}>{m.label}</option>))}
-              </select>
-            </div>
-            {submitted && v && (
-              <div className="s-verdict">
-                <span className={v.role ? 'c' : 'w'}>{v.role ? '✓' : '✗'} 역할</span>{' · '}
-                <span className={v.method ? 'c' : 'w'}>{v.method ? '✓' : '✗'} 행위</span>{' · '}
-                <span className={v.motive ? 'c' : 'w'}>{v.motive ? '✓' : '✗'} 동기</span>
-              </div>
-            )}
-          </div>
-        );
-      })}
-      {!submitted && (
-        <div style={{ textAlign: 'center', margin: '18px 0' }}>
-          {stageLocked ? (
-            <div style={{ color: 'var(--muted)', fontSize: '.85rem', lineHeight: 1.7 }}>🔒 2부(전면 공개)까지 조사를 마쳐야 제출할 수 있습니다.<br />현재 단계: <b>{stageLabel}</b></div>
-          ) : (
-            <button className="s-btn" disabled={!filledAll} style={!filledAll ? { opacity: 0.5 } : {}} onClick={onSubmit}>
-              {filledAll ? '사건 파일 제출 →' : '모든 인물을 채워주세요'}
-            </button>
-          )}
-        </div>
-      )}
+      <p style={{ color: 'var(--muted)', lineHeight: 1.7, margin: '0 0 14px' }}>
+        모은 단서와 심문을 근거로, 이 사건의 <b style={{ color: 'var(--text)' }}>범인</b>을 한 명 지목하세요.
+        제출하면 사건이 종결되고 전말이 공개됩니다.
+      </p>
+      <div className="s-accuse-list">
+        {suspects.map((s) => (
+          <button key={s.id} className={`s-accuse-row${pick === s.id ? ' on' : ''}`} onClick={() => onPick(s.id)}>
+            <Avatar person={s.name} image={s.image} size={44} />
+            <div className="ar-body"><div className="ar-name">{s.name}</div><div className="ar-occ">{s.occupation}</div></div>
+            <span className="ar-radio">{pick === s.id ? '◉' : '○'}</span>
+          </button>
+        ))}
+      </div>
+      <div style={{ textAlign: 'center', margin: '20px 0 4px' }}>
+        <button className="s-btn" disabled={!pick} style={!pick ? { opacity: 0.5 } : {}} onClick={onSubmit}>
+          {pick ? '사건 파일 제출 →' : '범인을 지목하세요'}
+        </button>
+      </div>
     </>
   );
 }

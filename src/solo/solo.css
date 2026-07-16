@@ -343,7 +343,7 @@ button { font-family: inherit; }
 
 /* ── T자 복도 네비게이션 (실사 배경 + 핫스팟) ── */
 .hall-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #0b0d12; box-shadow: 0 6px 18px #0007; }
-.hall-here { text-align: center; font-size: .78rem; color: var(--muted); letter-spacing: .04em; margin: 8px 4px 2px; }
+.hall-here { position: absolute; left: 50%; bottom: 54px; transform: translateX(-50%); z-index: 8; text-align: center; font-size: .74rem; color: #cfcabb; letter-spacing: .04em; background: #0b0d12ad; border: 1px solid #ffffff14; padding: 4px 12px; border-radius: 999px; white-space: nowrap; pointer-events: none; }
 
 /* 방문/시설 핫스팟 — 배경 그림 위 % 좌표 */
 .hall-hot { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; padding: 0; cursor: pointer; z-index: 6; transition: transform .12s; }
@@ -459,3 +459,39 @@ button { font-family: inherit; }
 .cctv-flash.ok { background: rgba(92,184,92,.15); border: 1px solid rgba(92,184,92,.5); color: #aee5b0; }
 .cctv-flash.no { background: rgba(217,83,79,.15); border: 1px solid rgba(217,83,79,.5); color: #f0b3b0; }
 .cctv-help { margin: 12px 0 0; font-size: .74rem; color: #9aa4b4; text-align: center; }
+
+/* 허브 복도 — 전체 이미지가 잘림 없이 보이는 contain 박스(프레임 없음, 6개 방문 모두 표시) */
+.hall-fit { position: absolute; inset: 0; margin: auto; width: min(100%, calc(100dvh * 16 / 9)); aspect-ratio: 16 / 9; max-height: 100%; }
+
+/* ── 몰입형 허브(복도) HUD — 상단 좌: 단계칩 / 우: 수첩·메뉴 ── */
+.hall-hud { position: absolute; top: 0; left: 0; right: 0; z-index: 8; display: flex; align-items: flex-start; justify-content: space-between; padding: 10px 12px; gap: 8px; pointer-events: none; }
+.hall-hud-chip { pointer-events: auto; background: #0b0d12c2; border: 1px solid #ffffff1f; border-radius: 12px; padding: 7px 12px; backdrop-filter: blur(4px); max-width: 62vw; }
+.hall-hud-chip b { display: block; color: var(--gold); font-size: .82rem; }
+.hall-hud-chip span { display: block; color: var(--muted); font-size: .7rem; margin-top: 2px; }
+.hall-hud-btns { pointer-events: auto; display: flex; align-items: center; gap: 8px; }
+.hall-hud-btn { width: 42px; height: 42px; border-radius: 50%; background: #0b0d12cc; border: 1px solid var(--gold); color: var(--text); font-size: 1.15rem; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 3px 10px #0008; transition: transform .1s, background .1s; }
+.hall-hud-btn:hover { background: #241f14; transform: translateY(-2px); }
+.hall-hud-btn:active { transform: scale(.94); }
+.hall-hud .s-admin-chip { pointer-events: none; align-self: center; }
+
+/* 범인 지목 버튼(최종 단계) */
+.hall-accuse { position: absolute; left: 50%; bottom: 92px; transform: translateX(-50%); z-index: 8; background: var(--danger); color: #fff; border: none; border-radius: 999px; padding: 11px 22px; font-weight: 800; font-size: .92rem; cursor: pointer; box-shadow: 0 4px 16px #0009; animation: recbob 1.6s ease-in-out infinite; }
+.hall-accuse:active { transform: translateX(-50%) scale(.96); }
+
+/* ── 전체화면 시트(수첩·범인 지목) ── */
+.s-sheet { position: fixed; inset: 0; z-index: 40; background: var(--ink); display: flex; flex-direction: column; }
+.s-sheet-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(11,13,18,.96); backdrop-filter: blur(6px); }
+.s-sheet-back { background: none; border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 12px; font-size: 1rem; cursor: pointer; }
+.s-sheet-title { font-weight: 800; }
+.s-sheet-body { flex: 1; overflow-y: auto; padding: 16px 16px 40px; max-width: 860px; width: 100%; margin: 0 auto; }
+
+/* 범인 지목 리스트 */
+.s-accuse-list { display: flex; flex-direction: column; gap: 8px; }
+.s-accuse-row { display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 14px; cursor: pointer; color: var(--text); text-align: left; transition: border-color .12s, background .12s; }
+.s-accuse-row:hover { border-color: var(--gold); }
+.s-accuse-row.on { border-color: var(--danger); background: #2a1416; }
+.s-accuse-row .ar-body { flex: 1; }
+.s-accuse-row .ar-name { font-weight: 800; }
+.s-accuse-row .ar-occ { font-size: .76rem; color: var(--muted); margin-top: 2px; }
+.s-accuse-row .ar-radio { font-size: 1.2rem; color: var(--muted); }
+.s-accuse-row.on .ar-radio { color: var(--danger); }
