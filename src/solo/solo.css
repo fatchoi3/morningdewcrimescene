@@ -412,3 +412,50 @@ button { font-family: inherit; }
 
 /* 토스트 */
 .s-toast { position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%); background: #14371a; border: 1px solid var(--ok); color: #dfffd0; padding: 10px 16px; border-radius: 10px; z-index: 60; font-weight: 700; max-width: 92vw; text-align: center; }
+
+/* ── CCTV 열람대(실사 CCTV형: 2F 평면도 + 이동 마커) — QR앱 styles.css에서 이식 ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); overflow-y: auto; animation: fadeIn .18s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-close { position: absolute; top: 16px; right: 16px; background: #222834; border: 1px solid #3c4554; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; color: #e6e9ef; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: background .12s ease; }
+.modal-close:hover { background: rgba(74,144,226,.45); color: #fff; }
+.cctv-modal { position: relative; width: 100%; max-width: 460px; background: #161a21; border: 1px solid #333b48; border-radius: 18px; padding: 18px; box-shadow: 0 30px 80px rgba(0,0,0,.55); animation: slideUp .2s ease; }
+.cctv-titlebar { color: #e6e9ef; font-weight: 700; font-size: 1.05rem; margin-bottom: 12px; letter-spacing: .02em; }
+.cctv-timebar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.cctv-time { border: 1px solid #333b48; background: #222834; color: #9aa4b4; border-radius: 8px; padding: 6px 10px; font-size: .78rem; font-family: monospace; cursor: pointer; transition: background .12s ease, color .12s ease; }
+.cctv-time.active { background: #4a90e2; border-color: #4a90e2; color: #fff; }
+.cctv-screen { position: relative; background: radial-gradient(circle at 50% 40%, #1c2733 0%, #0b0f14 100%); border: 1px solid #2a3340; border-radius: 10px; padding: 14px; min-height: 240px; overflow: hidden; }
+.cctv-osd { position: absolute; left: 12px; right: 12px; display: flex; justify-content: space-between; font-family: monospace; font-size: .72rem; color: #7fe0a0; text-shadow: 0 0 6px rgba(127,224,160,.4); pointer-events: none; }
+.cctv-osd-top { top: 10px; } .cctv-osd-bottom { bottom: 10px; }
+.cctv-rec { color: #ff5e57; animation: cctv-blink 1.2s steps(1) infinite; }
+@keyframes cctv-blink { 50% { opacity: .2; } }
+.cctv-scanlines { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0px, rgba(255,255,255,.03) 1px, transparent 2px, transparent 4px); }
+.cctv-map { position: relative; z-index: 1; width: 100%; height: auto; display: block; }
+.cctv-room rect, .cctv-room { fill: #18202b; stroke: #45566a; stroke-width: 1.5; }
+.cctv-room--victim { fill: #241d2b; stroke: #6a5570; }
+.cctv-hall { fill: #10161e; stroke: #3a4858; stroke-width: 1.2; }
+.cctv-door rect { fill: #2b3543; stroke: #55657a; stroke-width: 1; }
+.cctv-room-label text { fill: #c3cdda; font-size: 12px; font-weight: 700; text-anchor: middle; }
+.cctv-map-note { fill: #8a98aa; font-size: 10px; text-anchor: middle; }
+.cctv-wall { fill: url(#cctvWall); stroke: #4a5a6e; stroke-width: 1; }
+.cctv-wall-label { fill: #7d8a9c; font-size: 9px; font-weight: 700; text-anchor: middle; }
+.cctv-map-cam { fill: #e6e9ef; font-size: 9px; font-weight: 700; text-anchor: middle; }
+.cctv-marker { cursor: pointer; } .cctv-marker.got { cursor: default; }
+.cctv-marker-dot { fill: #4a90e2; stroke: #fff; stroke-width: 1.5; }
+.cctv-marker.got .cctv-marker-dot { fill: #5cb85c; }
+.cctv-marker-glyph { fill: #fff; font-size: 11px; font-weight: 700; text-anchor: middle; }
+.cctv-marker-label { fill: #e6e9ef; font-size: 10px; font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: #0b0f14; stroke-width: 2.5px; }
+.cctv-marker-ping { fill: rgba(74,144,226,.35); transform-origin: center; animation: cctv-ping 1.6s ease-out infinite; }
+@keyframes cctv-ping { 0% { transform: scale(.6); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
+.cctv-scene-desc { color: #cdd6e2; font-size: .86rem; line-height: 1.55; margin: 12px 2px 0; }
+.cctv-minutebar { margin-top: 10px; margin-bottom: 4px; padding-top: 10px; border-top: 1px dashed #333b48; }
+.cctv-clue-panel { margin-top: 12px; background: #1a2330; border: 1px solid #33506e; border-left: 3px solid #3aa0e6; border-radius: 8px; padding: 12px 14px; }
+.cctv-clue-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-weight: 700; color: #e6edf6; font-size: .92rem; }
+.cctv-clue-code { font-family: monospace; color: #3aa0e6; }
+.cctv-clue-person { font-size: .7rem; font-weight: 700; background: #2a3340; color: #9fc7e6; border-radius: 9px; padding: 1px 8px; }
+.cctv-clue-x { margin-left: auto; background: none; border: none; color: #8a98aa; cursor: pointer; font-size: .9rem; }
+.cctv-clue-detail { margin: 8px 0 0; font-size: .85rem; line-height: 1.6; color: #c8d2de; }
+.cctv-flash { margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: .85rem; line-height: 1.45; }
+.cctv-flash.ok { background: rgba(92,184,92,.15); border: 1px solid rgba(92,184,92,.5); color: #aee5b0; }
+.cctv-flash.no { background: rgba(217,83,79,.15); border: 1px solid rgba(217,83,79,.5); color: #f0b3b0; }
+.cctv-help { margin: 12px 0 0; font-size: .74rem; color: #9aa4b4; text-align: center; }

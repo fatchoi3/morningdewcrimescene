@@ -3,6 +3,7 @@ import { soloContent } from './soloContent.js';
 import { visibleStatements, pressOf, presentOn, relatedCodes, introOf } from './interrogation.js';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { SceneBg, Avatar, StandingFigure, BriefingArt, EndingArt, HallBg } from './art.jsx';
+import CctvModal from '../components/CctvModal.jsx';
 import { DialogueBox, CommandBar } from './vn.jsx';
 
 const { briefing, suspects, victim, locations, caseKey, provider, clueIcon, getClue, crimeSceneCodes, suspectIds, gamsikCodes, gamsikReady, startingClues } = soloContent;
@@ -906,26 +907,12 @@ function ClueModal({ code, collectedSet, difficulty, onClose, onCollect, onOpen 
     );
   }
 
-  // CCTV형
-  if (c.cctv) {
+  // CCTV형 — 실제 CCTV 열람대(2F 평면도 + 시간대별 인물 동선 마커, 목사방 쪽으로 사라짐)
+  if (c.cctv?.timeline) {
     return (
-      <Shell title={<>{c.title}{tag}</>} onClose={onClose}>
-        {c.detail && <p className="s-detail" style={{ marginBottom: 10 }}>{c.detail}</p>}
-        {(c.cctv.timeline || []).map((t, i) => (
-          <div className="s-tl-row" key={i}>
-            <div className="s-tl-t">{t.time || t.label || ''}</div>
-            <div style={{ flex: 1 }}>
-              <div>{t.desc || t.caption || t.note || ''}</div>
-              {(t.people || []).filter((p) => p.unlocks).map((p, j) => (
-                <button key={j} className="s-person-btn" disabled={collectedSet.has(p.unlocks)}
-                  onClick={() => onCollect(p.unlocks)}>
-                  {collectedSet.has(p.unlocks) ? '✓ ' : '❓ '}{p.label || p.name || '인물 확인'}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </Shell>
+      <CctvModal item={c} evidence={[...collectedSet].map((cd) => ({ code: cd }))}
+        onCollect={(cd) => { const r = onCollect(cd); const ok = (r?.added || []).includes(cd) || collectedSet.has(cd); return { success: ok, message: ok ? `단서 확보! [${cd}]` : '확보하지 못했습니다.' }; }}
+        onClose={onClose} />
     );
   }
 

@@ -82,7 +82,8 @@ function buildLocations() {
     if (pageUnlockCodes.has(c.code)) continue;         // 다른 단서 속에서 열리는 하위 단서(성경책 속 아이 그림 등)
     if (roomObjectCodes.has(c.code)) continue;         // 이미 방에 배치됨
     if (c.type === '특수') continue;                    // 자동 해금(수첩에 등장)
-    if (cctvSet.has(c.code) || c.cctv) { cctv.push(c.code); continue; }
+    if (c.cctv) { cctv.push(c.code); continue; }        // CCTV 열람대(공용대·뷰어) = 방 핫스팟 1개
+    if (cctvSet.has(c.code)) continue;                   // CCTV로 확보되는 하위 단서는 방에 안 뿌림(열람대에서 확보)
     if (c.phone) { phones.push(c.code); continue; }
     if (c.type === '감식') { gamsik.push(c.code); continue; }
     // 방 없는 보통/기타 → 인물 방이 있으면 그 방에, 없으면 공용 현장
