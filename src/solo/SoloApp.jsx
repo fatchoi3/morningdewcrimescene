@@ -127,8 +127,7 @@ const ROOM_HOTSPOTS = {
     'PEDR-58': { x: 31, y: 55, s: 0.95 },
     'KTGF-02': { x: 28, y: 43, s: 0.95 },
     'WORR-03': { x: 74, y: 53, s: 0.85 },
-    'LWNR-86': { x: 33, y: 20, s: 0.85 },
-    'DZPL-78': { x: 88, y: 47, s: 0.85 },
+    'DZPL-78': { x: 88, y: 47, s: 0.85 }, // 성경책(펼치면 아이 그림 LWNR-86 확보)
   },
   'ROOM-EJ': {
     'VUDC-50': { x: 31, y: 53, s: 0.95 },
@@ -341,7 +340,7 @@ export default function SoloApp() {
   // ── 메인(허브/장면/용의자) ────────────────────────────────────────────────
   const topH = sceneId ? (locations.all.find((l) => l.id === sceneId)?.label)
     : suspectId ? '용의자 심문'
-    : state.hubTab === 'notebook' ? '수사 수첩'
+    : state.hubTab === 'notebook' ? '사건 기록'
     : state.hubTab === 'casefile' ? '사건 파일'
     : '현장';
 
@@ -409,7 +408,8 @@ export default function SoloApp() {
             onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
             onBack={() => goHub()} />
         ) : state.hubTab === 'notebook' ? (
-          <NotebookView state={state} onNotes={(v) => update({ notes: v })} onOpen={(code) => setModalCode(code)} />
+          <CaseRecord clues={state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방')}
+            onOpen={(code) => setModalCode(code)} notes={state.notes} onNotes={(v) => update({ notes: v })} />
         ) : state.hubTab === 'casefile' ? (
           <CaseFileView state={state} stageLocked={state.difficulty !== 'guide' && stage < 3} stageLabel={STAGE_LABEL[stage]}
             onSet={(sid, field, val) => update({ casefile: { ...(state.casefile || {}), [sid]: { ...(state.casefile?.[sid] || {}), [field]: val } } })}
@@ -442,7 +442,7 @@ export default function SoloApp() {
 
       {/* 하단 탭바 */}
       <div className="s-tabs">
-        {[['places', '🗺️', '현장'], ['notebook', '📓', '수첩'], ['casefile', '📂', '사건파일']].map(([id, ic, nm]) => (
+        {[['places', '🗺️', '현장'], ['notebook', '📓', '사건기록'], ['casefile', '📂', '사건파일']].map(([id, ic, nm]) => (
           <button key={id} className={!sceneId && !suspectId && state.hubTab === id ? 'on' : ''} onClick={() => goHub(id)}>
             <span className="ti">{ic}</span>{nm}
           </button>
@@ -723,25 +723,15 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, o
 
       <CommandBar items={[
         { icon: '🔍', label: '조사한다', active: examine, onClick: () => setExamine((e) => !e) },
-        { icon: '📁', label: '법정기록', onClick: () => setRecord(true) },
+        { icon: '📓', label: '사건기록', onClick: () => setRecord(true) },
         { icon: '🚶', label: '이동한다', onClick: onBack },
       ]} />
 
       {record && (
         <div className="aa-record">
           <button className="aa-close" onClick={() => setRecord(false)}>✕</button>
-          <h3>법정기록 · 확보한 단서 ({collectedClues.length})</h3>
-          {collectedClues.length === 0
-            ? <p style={{ color: 'var(--muted)' }}>아직 확보한 단서가 없습니다. 현장을 조사하세요.</p>
-            : <div className="s-grid">
-                {collectedClues.map((c) => (
-                  <button key={c.code} className="s-card" onClick={() => { setRecord(false); onOpen(c.code); }}>
-                    <div className="ck">{clueIcon(c)}</div>
-                    <div className="cn" style={{ fontSize: '.85rem' }}>{c.title}</div>
-                    <div className="cm">{c.person}</div>
-                  </button>
-                ))}
-              </div>}
+          <h3>사건 기록</h3>
+          <CaseRecord clues={collectedClues} onOpen={(c) => { setRecord(false); onOpen(c); }} />
         </div>
       )}
     </div>
@@ -821,6 +811,11 @@ function ClueModal({ code, collectedSet, difficulty, onClose, onCollect, onOpen 
     return <PhoneModal code={code} clue={c} collectedSet={collectedSet} difficulty={difficulty} onClose={onClose} />;
   }
 
+  // 지갑형 — 항목을 눌러 내용물 확인
+  if (c.wallet) {
+    return <WalletModal clue={c} onClose={onClose} />;
+  }
+
   // 기본형(이미지 + 상세/설명)
   return (
     <Shell title={<>{c.title}{tag}{person}</>} onClose={onClose}>
@@ -828,6 +823,32 @@ function ClueModal({ code, collectedSet, difficulty, onClose, onCollect, onOpen 
       <div className="s-detail">{c.detail || c.description || '특별한 설명이 없습니다.'}</div>
       {Array.isArray(c.unlockedBy) && c.unlockedBy.length > 0 && (
         <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 10 }}>🔗 연관 단서를 모으면 새로운 사실이 드러날 수 있습니다.</p>
+      )}
+    </Shell>
+  );
+}
+
+// ── 지갑 모달 — 항목(사진·신분증 등)을 눌러 내용물 확인 ──
+function WalletModal({ clue, onClose }) {
+  const items = clue.wallet?.items || [];
+  const [sel, setSel] = useState(null);
+  const it = sel != null ? items[sel] : null;
+  return (
+    <Shell title={<>{clue.title}<span className="s-tag">지갑</span></>} onClose={onClose}>
+      <p className="s-detail" style={{ marginBottom: 10 }}>{clue.detail || '지갑 속 항목을 눌러 내용물을 확인하세요.'}</p>
+      <div className="s-wallet">
+        {items.map((item, i) => (
+          <button key={i} className={`s-wallet-item${sel === i ? ' on' : ''}`} onClick={() => setSel(sel === i ? null : i)}>
+            <span className="wi-ic">{item.icon || '📄'}</span>
+            <span className="wi-lb">{item.label}</span>
+          </button>
+        ))}
+      </div>
+      {it && (
+        <div className="s-wallet-detail">
+          {it.image && <img src={it.image} alt="" />}
+          <div className="s-detail">{it.detail || '특별한 점은 없어 보인다.'}</div>
+        </div>
       )}
     </Shell>
   );
@@ -940,31 +961,76 @@ function PhoneModal({ code, clue, difficulty, onClose }) {
 }
 
 // ── 수사 수첩 ──────────────────────────────────────────────────────────────
-function NotebookView({ state, onNotes, onOpen }) {
-  const clues = state.collected.map((code) => getClue(code)).filter(Boolean);
-  const byType = {};
-  clues.forEach((c) => { (byType[c.type || '보통'] ||= []).push(c); });
+// ── 인물 카드(피해자/용의자 프로필) ──
+function PersonCard({ p, role }) {
+  return (
+    <div className="s-person-card">
+      <Avatar person={p.name} image={p.image} size={56} />
+      <div className="pc-body">
+        <div className="pc-name">{p.name} <span className="s-tag">{p.occupation}</span>{role && <span className="s-tag danger">{role}</span>}</div>
+        <div className="pc-meta">{[p.age ? `${p.age}세` : '', p.gender, p.family].filter(Boolean).join(' · ')}</div>
+        <div className="pc-notes">{p.notes || p.detail || ''}</div>
+      </div>
+    </div>
+  );
+}
+function PeopleInfo() {
   return (
     <>
-      <div className="s-section-t">확보한 단서 ({clues.length})</div>
+      <div className="s-section-t">피해자</div>
+      <PersonCard p={victim} role="피해자" />
+      <div className="s-section-t">용의자 ({suspects.length})</div>
+      {suspects.map((s) => <PersonCard key={s.id} p={s} />)}
+    </>
+  );
+}
+// ── 단서 목록(인물별/유형별 전환) ──
+function ClueGroups({ clues, onOpen }) {
+  const [mode, setMode] = useState('person'); // person | type
+  const keyOf = (c) => (mode === 'person' ? (c.person || '공용') : (c.type || '보통'));
+  const groups = {};
+  clues.forEach((c) => { (groups[keyOf(c)] ||= []).push(c); });
+  return (
+    <>
+      <div className="s-seg">
+        <button className={mode === 'person' ? 'on' : ''} onClick={() => setMode('person')}>인물별</button>
+        <button className={mode === 'type' ? 'on' : ''} onClick={() => setMode('type')}>유형별</button>
+      </div>
       {clues.length === 0 && <p style={{ color: 'var(--muted)' }}>아직 단서가 없습니다. 현장을 조사하세요.</p>}
-      {Object.entries(byType).map(([t, list]) => (
-        <div key={t} style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: '.78rem', color: 'var(--muted)', margin: '6px 0' }}>{t} · {list.length}</div>
+      {Object.keys(groups).sort().map((g) => (
+        <div key={g} style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: '.78rem', color: 'var(--muted)', margin: '8px 2px 4px' }}>{g} · {groups[g].length}</div>
           <div className="s-grid">
-            {list.map((c) => (
+            {groups[g].map((c) => (
               <button key={c.code} className="s-card" onClick={() => onOpen(c.code)}>
                 <div className="ck">{clueIcon(c)}</div>
                 <div className="cn" style={{ fontSize: '.9rem' }}>{c.title}</div>
-                <div className="cm">{c.person}</div>
+                <div className="cm">{mode === 'person' ? (c.type || '보통') : (c.person || '공용')}</div>
               </button>
             ))}
           </div>
         </div>
       ))}
-      <div className="s-section-t">메모</div>
-      <textarea value={state.notes} onChange={(e) => onNotes(e.target.value)} placeholder="추리 메모를 자유롭게 적으세요…"
-        style={{ width: '100%', minHeight: 120, background: 'var(--panel)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: 10, padding: 12, fontFamily: 'inherit', fontSize: '.95rem' }} />
+    </>
+  );
+}
+// ── 사건 기록 — 단서 정보 / 인물 정보 / 메모 ──
+function CaseRecord({ clues, onOpen, notes, onNotes }) {
+  const [tab, setTab] = useState('clues'); // clues | people | notes
+  const hasNotes = typeof onNotes === 'function';
+  return (
+    <>
+      <div className="s-record-tabs">
+        <button className={tab === 'clues' ? 'on' : ''} onClick={() => setTab('clues')}>🔎 단서 정보 ({clues.length})</button>
+        <button className={tab === 'people' ? 'on' : ''} onClick={() => setTab('people')}>👥 인물 정보</button>
+        {hasNotes && <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>📝 메모</button>}
+      </div>
+      {tab === 'clues' && <ClueGroups clues={clues} onOpen={onOpen} />}
+      {tab === 'people' && <PeopleInfo />}
+      {tab === 'notes' && hasNotes && (
+        <textarea value={notes || ''} onChange={(e) => onNotes(e.target.value)} placeholder="추리 메모를 자유롭게 적으세요…"
+          style={{ width: '100%', minHeight: 160, marginTop: 8, background: 'var(--panel)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: 10, padding: 12, fontFamily: 'inherit', fontSize: '.95rem' }} />
+      )}
     </>
   );
 }

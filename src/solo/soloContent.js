@@ -26,6 +26,9 @@ const roomObjectCodes = new Set(
   roomEntries.flatMap((r) => (r.room?.objects || []).map((o) => (typeof o === 'string' ? o : o.code))),
 );
 
+// 다른 단서의 페이지를 펼치면 확보되는 하위 단서(예: 성경책 속 아이 그림) — 방 소품으로 따로 뿌리지 않는다.
+const pageUnlockCodes = new Set(all.flatMap((c) => (c.pages || []).map((p) => p.unlocks).filter(Boolean)));
+
 // 인물명 → 방 코드 (해당 인물 방에 소품 배치용)
 const personRoom = Object.fromEntries(roomEntries.map((r) => [r.person, r.code]));
 
@@ -76,6 +79,7 @@ function buildLocations() {
   for (const c of all) {
     if (META_CODES.has(c.code)) continue;
     if (c.type === '방') continue;
+    if (pageUnlockCodes.has(c.code)) continue;         // 다른 단서 속에서 열리는 하위 단서(성경책 속 아이 그림 등)
     if (roomObjectCodes.has(c.code)) continue;         // 이미 방에 배치됨
     if (c.type === '특수') continue;                    // 자동 해금(수첩에 등장)
     if (cctvSet.has(c.code) || c.cctv) { cctv.push(c.code); continue; }
