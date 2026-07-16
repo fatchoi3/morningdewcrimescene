@@ -548,7 +548,7 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, o
       {roomSuspect && onTalk && (
         <button className="s-figure" onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
           <span className="s-figure-tip">💬 이야기를 한다</span>
-          <StandingFigure sid={roomSuspect.id} person={roomSuspect.name} image={roomSuspect.image} height={150} fallbackSize={76} />
+          <StandingFigure sid={roomSuspect.id} person={roomSuspect.name} image={roomSuspect.image} height={240} fallbackSize={110} />
           <span className="s-figure-lab">{roomSuspect.name}</span>
         </button>
       )}
