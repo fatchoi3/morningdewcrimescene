@@ -81,6 +81,83 @@ const ANCHORS = {
 const anchorKind = (loc) => (loc.showBody || loc.person === '목사') ? 'crime' : (ANCHORS[loc.kind] ? loc.kind : 'room');
 const posFor = (loc, i) => { const a = ANCHORS[anchorKind(loc)]; return a[i % a.length]; };
 
+// 방별 단서 핫스팟 정밀 좌표 — 그림 속 실제 소품 위치(전체 이미지 기준 %). 없는 코드는 posFor 스캐터로 폴백.
+//   x,y = 이미지(16:9) 내 위치(%), s = 원근 배율. 그림에 소품이 없는 단서는 가구 위 등 자연스러운 위치에 배치.
+const ROOM_HOTSPOTS = {
+  'ROOM-JH': {
+    'VNTD-61': { x: 40, y: 52, s: 1 },    // 책상 위 등산코스 지도(서류)
+    'HPKM-53': { x: 52, y: 38, s: 0.95 }, // 검은 셰이커 텀블러
+    'TYQD-94': { x: 37, y: 42.5, s: 0.9 },// 왼쪽 반투명 통(단백질)
+    'OYJW-26': { x: 45.5, y: 44.5, s: 0.9 }, // 오른쪽 반투명 통(요힘빈)
+    'NDVA-68': { x: 15, y: 73, s: 0.95 }, // 바닥 등산화 옆
+    'EDEZ-28': { x: 48, y: 72, s: 0.9 },  // 책상 아래 수납상자
+    'NMFM-21': { x: 90, y: 58, s: 1 },    // 침대 발치 침구
+    'OIMO-99': { x: 60, y: 52, s: 0.85 }, // 책상 오른쪽
+    'YPYZ-13': { x: 63, y: 70, s: 0.85 }, // 침대 옆 바구니
+  },
+  'ROOM-SR': {
+    'NYBB-98': { x: 28, y: 40, s: 1 },
+    'LBPG-31': { x: 44, y: 50, s: 1 },
+    'GLUE-77': { x: 36, y: 47, s: 0.95 },
+    'OLUX-30': { x: 56, y: 22, s: 0.9 },
+    'SUIX-89': { x: 51, y: 41, s: 0.9 },
+    'BCZN-89': { x: 54, y: 50, s: 0.85 },
+    'UJVD-65': { x: 74, y: 56, s: 0.9 },
+  },
+  'ROOM-HW': {
+    'UTUW-73': { x: 32, y: 51, s: 0.9 },
+    'LUDP-77': { x: 42, y: 48, s: 0.85 },
+    'VJMU-45': { x: 27, y: 41, s: 1 },
+    'HTXI-85': { x: 54, y: 26, s: 0.9 },
+    'JAJZ-77': { x: 67, y: 46, s: 0.85 },
+    'MZKW-75': { x: 74, y: 56, s: 0.8 },
+  },
+  'ROOM-HJ': {
+    'BXNP-29': { x: 43, y: 39, s: 0.98 },
+    'IJRP-82': { x: 34, y: 50, s: 0.92 },
+    'KPVH-32': { x: 28, y: 42, s: 0.95 },
+    'LKUJ-60': { x: 57, y: 23, s: 0.95 },
+    'BUFL-52': { x: 62, y: 44, s: 0.85 },
+    'ESQN-14': { x: 73, y: 60, s: 0.9 },
+  },
+  'ROOM-GH': {
+    'NBZL-83': { x: 49, y: 58, s: 1 },
+    'AYMX-96': { x: 38, y: 52, s: 1 },
+    'ZNUS-26': { x: 57, y: 24, s: 0.9 },
+    'PEDR-58': { x: 31, y: 55, s: 0.95 },
+    'KTGF-02': { x: 28, y: 43, s: 0.95 },
+    'WORR-03': { x: 74, y: 53, s: 0.85 },
+    'LWNR-86': { x: 33, y: 20, s: 0.85 },
+    'DZPL-78': { x: 88, y: 47, s: 0.85 },
+  },
+  'ROOM-EJ': {
+    'VUDC-50': { x: 31, y: 53, s: 0.95 },
+    'MZVN-14': { x: 41, y: 48, s: 0.95 },
+    'UHRU-61': { x: 52, y: 45, s: 0.9 },
+    'ALLZ-85': { x: 56, y: 22, s: 1 },
+    'GYPV-39': { x: 11, y: 64, s: 1.05 },
+    'LWFJ-99': { x: 66, y: 53, s: 0.8 },
+    'IOVT-95': { x: 75, y: 41, s: 0.8 },
+    'PMIK-13': { x: 88, y: 47, s: 0.85 },
+  },
+  'ROOM-PS': { // 실측: 책상은 화면 좌하(표면 y53~71), 침대·시신은 우측(중심 ~74,60)
+    '__body__': { x: 74, y: 60, s: 1.15 }, // 시신 — 오른쪽 침대(담요 아래 형체)
+    'SAJL-88': { x: 34, y: 53, s: 1 },     // 책상 위 은색 텀블러
+    'TQPA-93': { x: 18, y: 61, s: 0.8 },   // 책상 왼쪽 작은 통
+    'IWND-38': { x: 52, y: 52, s: 0.78 },  // 책상 뒤 바구니의 서류(처방전)
+    'MEXF-73': { x: 46, y: 64, s: 1 },     // '설하정' 약통
+    'HODM-06': { x: 42, y: 71, s: 0.9 },   // 접시의 쏟아진 알약(작은 약통)
+    'GZYJ-12': { x: 58, y: 70, s: 0.85 },  // 책상 앞쪽 빈 곳(진단서 서류)
+    'AVLP-75': { x: 31, y: 72, s: 0.75 },  // 책상 위 펜 앞 바닥(단추)
+    'IHKX-61': { x: 90, y: 55, s: 1 },     // 침대 베개
+    'PRBO-03': { x: 24, y: 58, s: 0.9 },   // 책상 위 낡은 책들(일기장)
+    'HQIR-26': { x: 95, y: 64, s: 0.8 },   // 오른쪽 협탁(일정표)
+    'LTXB-98': { x: 70, y: 63, s: 0.9 },   // 시신 손 부근(손톱 밑 이물질)
+    'EUMM-81': { x: 78, y: 55, s: 0.9 },   // 시신 상체 옷깃
+  },
+};
+const hotspotFor = (loc, code, i) => ROOM_HOTSPOTS[loc.id]?.[code] || posFor(loc, i);
+
 const REVEAL = {
   order: ['S4', 'S5', 'S3', 'S6', 'S1', 'S2'],
   people: {
@@ -575,14 +652,24 @@ function EventVN({ onDone }) {
 function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, onTalk, onOpen, onLockedToast, onBack }) {
   const [examine, setExamine] = useState(true);
   const [record, setRecord] = useState(false);
+  const camRef = useRef(null);
+  const trackRef = useRef(null);
+  // 세로 화면: 트랙(방 이미지)이 뷰포트보다 넓으면 가운데로 스크롤 시작 — 좌우로 밀어 둘러본다
+  useEffect(() => {
+    const cam = camRef.current, tr = trackRef.current;
+    if (cam && tr) cam.scrollLeft = Math.max(0, (tr.offsetWidth - cam.clientWidth) / 2);
+  }, [location?.id]);
   if (!location) return null;
+  const pannable = examine; // 조사 중에는 좌우 둘러보기
+  const bodyPos = ROOM_HOTSPOTS[location.id]?.['__body__'] || { x: 50, y: 46, s: 1.1 };
   return (
     <div className="aa-fs">
-      <div className="aa-stage"><SceneBg location={location} /></div>
-      <div className="aa-loc-chip">🔦 {location.label}</div>
+      <div className="aa-cam" ref={camRef}>
+        <div className="aa-track" ref={trackRef}>
+          <SceneBg location={location} />
 
       {examine && location.showBody && (
-        <button className="s-zone body" style={{ left: '50%', top: '46%', '--s': 1.1 }} onClick={() => onOpen('__body__')} aria-label="시신 조사">
+        <button className="s-zone body" style={{ left: `${bodyPos.x}%`, top: `${bodyPos.y}%`, '--s': bodyPos.s }} onClick={() => onOpen('__body__')} aria-label="시신 조사">
           <span className="s-zone-ground" />
           <span className="s-zone-glow" />
           <span className="s-zone-lab">시신</span>
@@ -591,7 +678,7 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, o
       {examine && location.objects.map((code, i) => {
         const c = getClue(code); if (!c) return null;
         const have = collectedSet.has(code);
-        const p = posFor(location, i);
+        const p = hotspotFor(location, code, i);
         const isGamsik = c.type === '감식';
         const req = isGamsik && lab ? lab.requested(code) : false;
         const zoneLab = have ? c.title
@@ -617,6 +704,11 @@ function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, o
           </button>
         );
       })}
+        </div>
+      </div>
+
+      <div className="aa-loc-chip">🔦 {location.label}</div>
+      {pannable && <div className="aa-swipe-hint">← 밀어서 방을 둘러보기 →</div>}
 
       {roomSuspect && onTalk && (
         <button className="s-figure" onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
