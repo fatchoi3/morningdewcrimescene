@@ -431,12 +431,12 @@ function DoorCard({ loc, collectedSet, locked, isCrime, recommend, onClick }) {
 //   lab    : 감식 의뢰실
 // main.jpg 위 방문 위치(%): 좌벽 근→원, 우벽 근→원 (배경 16:9를 16:9 무대에 cover)
 const HALL_DOORS = [
-  { person: '최종현', x: 9, y: 60 },
-  { person: '이가현', x: 27.5, y: 57 },
-  { person: '윤은재', x: 38.5, y: 55 },
-  { person: '박희원', x: 61, y: 55 },
-  { person: '이현지', x: 71.5, y: 57 },
-  { person: '이사랑', x: 91, y: 60 },
+  { person: '최종현', x: 14, y: 58 },
+  { person: '이가현', x: 30, y: 55 },
+  { person: '윤은재', x: 38, y: 53 },
+  { person: '박희원', x: 62, y: 53 },
+  { person: '이현지', x: 70.5, y: 55 },
+  { person: '이사랑', x: 86.5, y: 58 },
 ];
 
 function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {
