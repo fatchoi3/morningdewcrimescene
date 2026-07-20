@@ -8,7 +8,7 @@
 import { useRef, useState } from 'react';
 import { briefing, victim, suspects } from '../content.js';
 import { DIFFS, isUiTap, REVEAL, TIMELINE } from '../lib/game.js';
-import { BriefingArt, EndingArt } from '../art.jsx';
+import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
 import { DialogueBox, CommandBar } from '../vn.jsx';
 
 // ── 시작 화면 — 난이도 선택 + 수사 시작/이어하기 ─────────────────────────────
@@ -56,6 +56,7 @@ export function BriefingVN({ onDone }) {
     <div className="aa-fs" onClick={(e) => { if (!isUiTap(e)) dlgRef.current?.tap(); }}>
       <div className="aa-stage"><BriefingArt fill /></div>
       <div className="aa-loc-chip">사건 브리핑 · {victim.name}({victim.age})</div>
+      <div className="aa-room-fig"><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }}
         hint={last ? '▶ 현장으로' : `${i + 1}/${beats.length} · 탭하여 다음`} />
@@ -84,6 +85,7 @@ export function EventVN({ onDone }) {
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 40% at 50% 30%, #c0585822, transparent 70%)', animation: 'aablink 2.2s ease-in-out infinite' }} />
       </div>
       <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 중간 사건 · 부검 소견</div>
+      <div className="aa-room-fig"><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }}
         hint={last ? '▶ 전면 조사 시작' : `${i + 1}/${beats.length} · 탭하여 다음`} />
