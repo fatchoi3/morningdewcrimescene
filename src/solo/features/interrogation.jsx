@@ -23,6 +23,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const [cutin, setCutin] = useState(null); // 모순! 컷인
   const [record, setRecord] = useState(false);
   const [shake, setShake] = useState(false);
+  const [speaking, setSpeaking] = useState(false); // 대사 타이핑 중 = 말하는 중(토크 모션)
   const [isTutorial] = useState(() => !tutorialSeen); // 이 심문이 첫(튜토리얼) 심문인가 — 화면 표시용
   const dlgRef = useRef(null); // 화면 아무 데나 탭 → 대사 넘김 위임
   // 첫 심문에 진입하면 코치마크 종료(이후 나가면 마무리 멘트) — 인트로를 안 넘겨도 확실히 처리
@@ -122,7 +123,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       </div>
 
       {/* 상반신 프레이밍 — 인물을 크게 그리고 하반신은 대사창 뒤로 잠기게(역전재판식) */}
-      <div className="aa-room-fig bust">
+      <div className={`aa-room-fig bust${speaking && speakerName ? ' talking' : ''}`}>
         {confessed && <div className="aa-court-tag">⚖️ 관여 자백</div>}
         <StandingFigure sid={sid} person={suspect.name} image={suspect.image} height={620} fallbackSize={160} />
       </div>
@@ -150,7 +151,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       )}
 
       <DialogueBox ref={dlgRef} location={dlgLoc} speaker={speakerName} text={dlgText}
-        onAdvance={(line || cur) ? advance : undefined} hint={dlgHint} />
+        onAdvance={(line || cur) ? advance : undefined} hint={dlgHint} onTyping={setSpeaking} />
 
       <CommandBar items={cur ? [
         { icon: '🔎', label: '캐묻는다', onClick: doPress },

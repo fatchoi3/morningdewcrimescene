@@ -6,22 +6,24 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-export const DialogueBox = forwardRef(function DialogueBox({ location, speaker, text, onAdvance, hint }, ref) {
+export const DialogueBox = forwardRef(function DialogueBox({ location, speaker, text, onAdvance, hint, onTyping }, ref) {
   const [shown, setShown] = useState('');
   const full = text || '';
   const doneRef = useRef(false);
   useEffect(() => {
     setShown(''); doneRef.current = false;
+    onTyping?.(true);                       // 타이핑 시작 → 화자 '말하는 중'
     let i = 0;
     const id = setInterval(() => {
       i += 1; setShown(full.slice(0, i));
-      if (i >= full.length) { doneRef.current = true; clearInterval(id); }
+      if (i >= full.length) { doneRef.current = true; onTyping?.(false); clearInterval(id); }
     }, 20);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); onTyping?.(false); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [full]);
   const done = shown.length >= full.length;
   const tap = () => {
-    if (!done) { setShown(full); doneRef.current = true; }
+    if (!done) { setShown(full); doneRef.current = true; onTyping?.(false); }  // 탭 즉시완성 → 말하기 종료
     else if (onAdvance) onAdvance();
   };
   useImperativeHandle(ref, () => ({ tap }));

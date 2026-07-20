@@ -50,15 +50,16 @@ export function BriefingVN({ onDone }) {
   ];
   const [i, setI] = useState(0);
   const dlgRef = useRef(null);
+  const [speaking, setSpeaking] = useState(false);
   const beat = beats[Math.min(i, beats.length - 1)];
   const last = i >= beats.length - 1;
   return (
     <div className="aa-fs" onClick={(e) => { if (!isUiTap(e)) dlgRef.current?.tap(); }}>
       <div className="aa-stage"><BriefingArt fill /></div>
       <div className="aa-loc-chip">사건 브리핑 · {victim.name}({victim.age})</div>
-      <div className="aa-room-fig"><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
+      <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
-        onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }}
+        onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
         hint={last ? '▶ 현장으로' : `${i + 1}/${beats.length} · 탭하여 다음`} />
       <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
     </div>
@@ -77,6 +78,7 @@ export function EventVN({ onDone }) {
   ];
   const [i, setI] = useState(0);
   const dlgRef = useRef(null);
+  const [speaking, setSpeaking] = useState(false);
   const beat = beats[Math.min(i, beats.length - 1)];
   const last = i >= beats.length - 1;
   return (
@@ -85,9 +87,9 @@ export function EventVN({ onDone }) {
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 40% at 50% 30%, #c0585822, transparent 70%)', animation: 'aablink 2.2s ease-in-out infinite' }} />
       </div>
       <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 중간 사건 · 부검 소견</div>
-      <div className="aa-room-fig"><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
+      <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
-        onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }}
+        onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
         hint={last ? '▶ 전면 조사 시작' : `${i + 1}/${beats.length} · 탭하여 다음`} />
       <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
     </div>
