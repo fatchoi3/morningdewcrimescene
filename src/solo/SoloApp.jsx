@@ -79,7 +79,11 @@ export default function SoloApp() {
     const kept = autos.filter((a) => !stripped.includes(a));
     update({ collected: [...set] });
     const c = getClue(code);
-    showToast(`단서 확보: ${c?.title || code}${kept.length ? ` (+특수 ${kept.length})` : ''}`);
+    const newSpecials = kept.filter((a) => a.code !== code && getClue(a.code)?.type === '특수');
+    const extra = newSpecials.length
+      ? ` · ⭐ 추리 단서 해금: ${newSpecials.map((a) => getClue(a.code)?.title || a.code).join(' · ')}`
+      : '';
+    showToast(`단서 확보: ${c?.title || code}${extra}`);
     return { added: [code, ...kept.map((a) => a.code)] };
   }
 
