@@ -9,22 +9,16 @@ import { Shell } from '../ui/overlays.jsx';
 import CctvModal from '../../components/CctvModal.jsx';
 
 // ── 단서 열람 모달 ─────────────────────────────────────────────────────────
-export function ClueModal({ code, collectedSet, difficulty, navCodes, onClose, onCollect, onOpen, onNav }) {
+export function ClueModal({ code, collectedSet, difficulty, onClose, onCollect, onOpen }) {
   const isBody = code === '__body__';
   const c = isBody ? null : getClue(code);
   const [page, setPage] = useState(0);
-  // 방 안 단서 순회(닫지 않고 이전/다음) — navCodes가 있으면 이전/다음 단서 버튼 활성
-  const navIdx = navCodes ? navCodes.indexOf(code) : -1;
-  const navProps = navIdx >= 0 ? {
-    onPrev: navIdx > 0 ? () => onNav(navCodes[navIdx - 1]) : undefined,
-    onNext: navIdx < navCodes.length - 1 ? () => onNav(navCodes[navIdx + 1]) : undefined,
-  } : {};
 
   // 열람 시 확보(신규면 수집 + 특수 연쇄)
   useEffect(() => { if (!isBody && !collectedSet.has(code)) onCollect(code); /* eslint-disable-next-line */ }, [code]);
 
   if (isBody) {
-    return <Shell title="시신" onClose={onClose} onPrev={navProps.onPrev} onNext={navProps.onNext}><p className="s-detail">침대 위에서 숨진 채 발견되었습니다. 얼굴에 눌린 자국 · 협심증 발작 직후 정황. 성분·접촉흔은 개별 감식으로 확인하세요.</p></Shell>;
+    return <Shell title="시신" onClose={onClose}><p className="s-detail">침대 위에서 숨진 채 발견되었습니다. 얼굴에 눌린 자국 · 협심증 발작 직후 정황. 성분·접촉흔은 개별 감식으로 확인하세요.</p></Shell>;
   }
   if (!c) return <Shell title="?" onClose={onClose}><p>단서를 찾을 수 없습니다.</p></Shell>;
 
@@ -36,7 +30,7 @@ export function ClueModal({ code, collectedSet, difficulty, navCodes, onClose, o
     const pg = c.pages[Math.min(page, c.pages.length - 1)];
     if (pg?.unlocks && !collectedSet.has(pg.unlocks)) onCollect(pg.unlocks);
     return (
-      <Shell title={<>{c.title}{tag}{person}</>} onClose={onClose} onPrev={navProps.onPrev} onNext={navProps.onNext}>
+      <Shell title={<>{c.title}{tag}{person}</>} onClose={onClose}>
         {pg.image && <img src={pg.image} alt="" />}
         <div style={{ fontWeight: 800, marginBottom: 6 }}>{pg.title}</div>
         <div className="s-detail">{pg.content}</div>
@@ -65,12 +59,12 @@ export function ClueModal({ code, collectedSet, difficulty, navCodes, onClose, o
 
   // 지갑형 — 항목을 눌러 내용물 확인
   if (c.wallet) {
-    return <WalletModal clue={c} onClose={onClose} navProps={navProps} />;
+    return <WalletModal clue={c} onClose={onClose} />;
   }
 
   // 기본형(이미지 + 상세/설명)
   return (
-    <Shell title={<>{c.title}{tag}{person}</>} onClose={onClose} onPrev={navProps.onPrev} onNext={navProps.onNext}>
+    <Shell title={<>{c.title}{tag}{person}</>} onClose={onClose}>
       {c.image && <img src={c.image} alt="" />}
       <div className="s-detail">{c.detail || c.description || '특별한 설명이 없습니다.'}</div>
       {Array.isArray(c.unlockedBy) && c.unlockedBy.length > 0 && (
@@ -81,12 +75,12 @@ export function ClueModal({ code, collectedSet, difficulty, navCodes, onClose, o
 }
 
 // ── 지갑 모달 — 항목(사진·신분증 등)을 눌러 내용물 확인 ──
-function WalletModal({ clue, onClose, navProps = {} }) {
+function WalletModal({ clue, onClose }) {
   const items = clue.wallet?.items || [];
   const [sel, setSel] = useState(null);
   const it = sel != null ? items[sel] : null;
   return (
-    <Shell title={<>{clue.title}<span className="s-tag">지갑</span></>} onClose={onClose} onPrev={navProps.onPrev} onNext={navProps.onNext}>
+    <Shell title={<>{clue.title}<span className="s-tag">지갑</span></>} onClose={onClose}>
       <p className="s-detail" style={{ marginBottom: 10 }}>{clue.detail || '지갑 속 항목을 눌러 내용물을 확인하세요.'}</p>
       <div className="s-wallet">
         {items.map((item, i) => (

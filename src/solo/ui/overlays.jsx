@@ -5,28 +5,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect } from 'react';
 
-export function Shell({ title, onClose, children, onPrev, onNext }) {
+export function Shell({ title, onClose, children }) {
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose();
-      else if (e.key === 'ArrowRight' && onNext) onNext();
-      else if (e.key === 'ArrowLeft' && onPrev) onPrev();
-    };
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose, onPrev, onNext]);
-  const hasNav = onPrev || onNext;
+  }, [onClose]);
   return (
     <div className="s-modal-ov" onClick={onClose}>
       <div className="s-modal" onClick={(e) => e.stopPropagation()}>
         <div className="s-modal-h"><div className="mt">{title}</div><button className="mx" onClick={onClose}>✕</button></div>
         <div className="s-modal-b">{children}</div>
-        {hasNav && (
-          <div className="s-modal-nav">
-            <button className="s-nav-btn" disabled={!onPrev} onClick={onPrev}>◀ 이전 단서</button>
-            <button className="s-nav-btn" disabled={!onNext} onClick={onNext}>다음 단서 ▶</button>
-          </div>
-        )}
       </div>
     </div>
   );
