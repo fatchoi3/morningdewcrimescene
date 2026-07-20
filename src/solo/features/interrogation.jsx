@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { getClue, clueIcon } from '../content.js';
 import { TRUST_MAX, isUiTap } from '../lib/game.js';
-import { visibleStatements, relatedCodes, introOf } from '../interrogation.js';
+import { visibleStatements, relatedCodes, introOf, clueTargetIn } from '../interrogation.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, CommandBar } from '../vn.jsx';
 
@@ -17,6 +17,7 @@ import { DialogueBox, CommandBar } from '../vn.jsx';
 //   ❗=새로 열린 질문 · ✅=모순을 밝힌 질문. 「이만 마친다」로 방에 복귀(반복 없음).
 export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onAsked, onPress, onPresent, onExit }) {
   const [curId, setCurId] = useState(null); // 지금 붙잡고 있는 질문(진술 id) — null = 질문 목록
+  const [askMode, setAskMode] = useState('q'); // 2차: 'q'=질문 목록 · 'clue'=단서로 묻는다
   // 대사창 오버라이드: { text, kind } — 진입 시 인사말(1차/2차 다름)부터
   const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
   const [picker, setPicker] = useState(false);
@@ -97,6 +98,22 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     }
   };
 
+  // 2차: 단서를 골라 '그 단서에 대해' 묻는다 → 그 단서가 반응하는(지금 보이는) 진술로 자동 대질
+  const askAboutClue = (code) => {
+    const tgt = clueTargetIn(statements, code);
+    if (!tgt) { setPicker(false); setLine({ text: '그 단서로는 지금 이 사람에게 딱히 물을 게 없어 보인다. 다른 질문을 먼저 풀거나 단서를 더 모으자.', kind: 'soft' }); return; }
+    setPicker(false);
+    setCurId(tgt.stId);
+    const r = onPresent(tgt.stId, code) || {};
+    if (r.result === 'contradict') {
+      setCutin('모순!');
+      setTimeout(() => setCutin((c) => (c === '모순!' ? null : c)), 1300);
+      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : ''), kind: 'break' });
+    } else {
+      setLine({ text: r.text || '', kind: 'soft' });
+    }
+  };
+
   const menuOpen = !line && !cur;
   const qLabel = (s) => s.q || (s.text.length > 18 ? s.text.slice(0, 18) + '…' : s.text);
 
@@ -134,7 +151,13 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {menuOpen && (
         <div className="aa-ask">
           <div className="aa-ask-h">🎙 무엇을 물어볼까{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
-          {statements.map((s) => {
+          {phase >= 2 && (
+            <div className="s-seg" style={{ margin: '0 0 8px' }}>
+              <button className={askMode === 'q' ? 'on' : ''} onClick={() => setAskMode('q')}>💬 질문</button>
+              <button className={askMode === 'clue' ? 'on' : ''} onClick={() => setAskMode('clue')}>📁 단서로 묻는다</button>
+            </div>
+          )}
+          {(phase < 2 || askMode === 'q') ? statements.map((s) => {
             const b = brokeOf(s.id);
             const isNew = s.hidden && !askedIds.includes(s.id) && !pressedIds.includes(s.id) && !b;
             const asked = askedIds.includes(s.id) || pressedIds.includes(s.id);
@@ -145,7 +168,19 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                 {mark}{qLabel(s)}
               </button>
             );
-          })}
+          }) : (
+            presentable.length === 0
+              ? <p style={{ color: 'var(--muted)', fontSize: '.85rem', padding: '4px 2px' }}>이 인물에게 물을 단서가 아직 없습니다. 방·현장·휴대폰을 더 조사하세요.</p>
+              : presentable.map((c) => {
+                  const tgt = clueTargetIn(statements, c.code);
+                  const done = tgt && tgt.kind === 'contradict' && brokeOf(tgt.stId);
+                  return (
+                    <button key={c.code} className={done ? 'done' : ''} onClick={() => askAboutClue(c.code)}>
+                      {done ? '✅ ' : '📁 '}“{c.title}” 에 대해 묻는다
+                    </button>
+                  );
+                })
+          )}
           <button className="end" onClick={onExit}>↩ 이만 마친다 — 방으로 돌아간다</button>
         </div>
       )}

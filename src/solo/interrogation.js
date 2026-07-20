@@ -374,6 +374,18 @@ export function pressOf(sid, stId) {
   return { text: s.press || '…(더 할 말이 없다.)', unlock: s.pressUnlock, grants: GRANTS[sid]?.[stId] };
 }
 
+/** 단서로 '질문'하면 반응할 (지금 보이는) 진술을 찾는다 — 모순(contradict) 우선, 없으면 반응(soft).
+ *  visibleStatements 결과만 대상으로 하므로 아직 안 열린 진술로 건너뛰지 않는다(추리 순서 보존). */
+export function clueTargetIn(statements, code) {
+  let soft = null;
+  for (const s of statements) {
+    const codes = s.contradict ? (s.contradict.codes || [s.contradict.code]) : [];
+    if (codes.includes(code)) return { stId: s.id, kind: 'contradict' };
+    if (!soft && s.soft && s.soft[code]) soft = { stId: s.id, kind: 'soft' };
+  }
+  return soft;
+}
+
 /** 증거 제시 → { result: 'contradict'|'soft'|'wrong', text, unlock?, confess? } */
 export function presentOn(sid, stId, code) {
   const s = stOf(sid, stId);
