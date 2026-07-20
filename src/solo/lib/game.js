@@ -13,9 +13,10 @@ export const SCENE_NEEDED = 3; // 단계 2→3: 목사방 현장 단서 이만�
 export const TRUST_MAX = 5;    // 신뢰도(HP)
 
 export function interrogatedCount(state) {
-  const pressed = state.pressed || {}, broke = state.broke || {};
-  // 추궁했거나(증언 눌러봄) 증거로 모순을 잡았으면 '심문함'으로 인정
-  return suspectIds.filter((id) => (pressed[id] || []).length >= 1 || (broke[id] || []).length >= 1).length;
+  const asked = state.askedQ || {}, pressed = state.pressed || {}, broke = state.broke || {};
+  // 질문을 하나라도 골라 들었으면(=대화함) 심문한 것으로 인정. 추궁/증거 모순도 물론 인정.
+  //   (예전엔 press/present만 인정 → 6명과 대화만 하면 단계가 안 열리는 '진행 불능 함정'이 있었음)
+  return suspectIds.filter((id) => (asked[id] || []).length >= 1 || (pressed[id] || []).length >= 1 || (broke[id] || []).length >= 1).length;
 }
 export function sceneClueCount(state) {
   const got = new Set(state.collected || []);

@@ -29,7 +29,7 @@ function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {
   );
 }
 
-export function HallNav({ locations, stage, collectedSet, recommendPerson, admin, stageLabel, progressText, canAccuse, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
+export function HallNav({ locations, stage, collectedSet, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
   const [view, setView] = useState('main'); // main | pastor | floor1 | lab
   const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
   const pastor = locations.rooms.find((l) => l.person === '목사');
@@ -79,7 +79,7 @@ export function HallNav({ locations, stage, collectedSet, recommendPerson, admin
 
       {/* 복도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
       <div className="hall-hud">
-        <div className="hall-hud-chip"><b>🔎 {stageLabel}</b><span>{progressText}</span></div>
+        <div className="hall-hud-chip"><b>🔎 {stageLabel}</b><span>{progressText}</span>{objective && <span className="hall-objective">🎯 {objective}</span>}</div>
         <div className="hall-hud-btns">
           {admin && <span className="s-admin-chip">ADMIN</span>}
           <button data-tut="record-btn" className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord}>📓</button>

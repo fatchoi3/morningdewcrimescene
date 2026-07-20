@@ -476,6 +476,7 @@ button { font-family: inherit; }
 .hall-hud-chip { pointer-events: auto; background: #0b0d12c2; border: 1px solid #ffffff1f; border-radius: 12px; padding: 7px 12px; backdrop-filter: blur(4px); max-width: 62vw; }
 .hall-hud-chip b { display: block; color: var(--gold); font-size: .82rem; }
 .hall-hud-chip span { display: block; color: var(--muted); font-size: .7rem; margin-top: 2px; }
+.hall-hud-chip span.hall-objective { color: #ffe9a8; font-size: .74rem; font-weight: 700; margin-top: 5px; padding-top: 5px; border-top: 1px solid #ffffff1f; }
 .hall-hud-btns { pointer-events: auto; display: flex; align-items: center; gap: 8px; }
 .hall-hud-btn { width: 42px; height: 42px; border-radius: 50%; background: #0b0d12cc; border: 1px solid var(--gold); color: var(--text); font-size: 1.15rem; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 3px 10px #0008; transition: transform .1s, background .1s; }
 .hall-hud-btn:hover { background: #241f14; transform: translateY(-2px); }

@@ -122,6 +122,10 @@ export default function SoloApp() {
     else if (sceneId === 'ROOM-JH' && jhExamined) coach = { sel: '.s-figure', text: '인물을 눌러 이야기를 시작하세요' };
   }
   const progressText = `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}` + (stage >= 2 ? ` · 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}` : '');
+  // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
+  const objective = stage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
+    : stage < 3 ? `목사님 방(현장)에서 단서 ${SCENE_NEEDED}개를 찾으면 2차 심문이 열립니다`
+    : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요';
   const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
 
   return (
@@ -177,7 +181,7 @@ export default function SoloApp() {
         ) : (
           <HallNav locations={locations} stage={stage} collectedSet={collectedSet}
             recommendPerson={!state.tutorialSeen && state.tutRecordDone ? '최종현' : null}
-            admin={state.admin} stageLabel={STAGE_LABEL[stage]} progressText={progressText} canAccuse={stage >= 3}
+            admin={state.admin} stageLabel={STAGE_LABEL[stage]} progressText={progressText} objective={objective} canAccuse={stage >= 3}
             onEnter={(id) => setSceneId(id)} onToast={showToast}
             onOpenRecord={() => { setRecordOpen(true); if (!state.tutorialSeen && !state.tutRecordDone) update({ tutRecordDone: true }); }}
             onOpenMenu={() => setAdminOpen(true)}
