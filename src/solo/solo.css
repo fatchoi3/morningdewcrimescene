@@ -32,7 +32,7 @@ button { font-family: inherit; }
 /* 시작 화면 — 실사 배경(/images/start.jpg) + 어둠 오버레이 */
 .s-start { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px; gap: 8px; position: relative; overflow: hidden; }
 .s-start::before { content: ''; position: absolute; inset: 0; background: url('/images/start.jpg') center/cover no-repeat; z-index: 0; }
-.s-start::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, #0b0d12d9 0%, #0b0d1299 42%, #0b0d12f2 100%); z-index: 0; }
+.s-start::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,13,18,.5) 0%, rgba(11,13,18,.24) 42%, rgba(11,13,18,.8) 100%); z-index: 0; }
 .s-start > * { position: relative; z-index: 1; }
 .s-start .s-title { text-shadow: 0 3px 18px #000, 0 1px 3px #000; }
 .s-eye { font-size: .72rem; letter-spacing: .3em; color: var(--muted); text-transform: uppercase; }
