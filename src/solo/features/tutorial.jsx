@@ -28,6 +28,7 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   const cx = rect.x + rect.w / 2;
   const half = Math.min(230, window.innerWidth * 0.44); // 말풍선 반폭 — 화면 밖으로 안 나가게 클램프
   const tipLeft = Math.min(Math.max(cx, half + 8), window.innerWidth - half - 8);
+  const capShift = tipLeft - cx; // 캡션만 화면 안으로 밀고, 화살표는 타깃 중심을 가리키게 유지
   return (
     <div className="tut-coach">
       {dim && <>
@@ -37,10 +38,10 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
         <div className="tut-mask" style={{ left: hx + hw, top: hy, width: `calc(100% - ${hx + hw}px)`, height: hh }} />
       </>}
       <div className="tut-ring" style={{ left: hx, top: hy, width: hw, height: hh }} />
-      <div className="tut-tip" style={{ left: tipLeft, top: below ? hy + hh + 6 : hy - 6, transform: below ? 'translate(-50%,0)' : 'translate(-50%,-100%)' }}>
+      <div className="tut-tip" style={{ left: cx, top: below ? hy + hh + 6 : hy - 6, transform: below ? 'translate(-50%,0)' : 'translate(-50%,-100%)' }}>
         {below
-          ? (<><div className="tut-arrow up" /><div className="tut-cap">{text}</div></>)
-          : (<><div className="tut-cap">{text}</div><div className="tut-arrow down" /></>)}
+          ? (<><div className="tut-arrow up" /><div className="tut-cap" style={{ transform: `translateX(${capShift}px)` }}>{text}</div></>)
+          : (<><div className="tut-cap" style={{ transform: `translateX(${capShift}px)` }}>{text}</div><div className="tut-arrow down" /></>)}
       </div>
       <button className="tut-skip" onClick={onSkip}>튜토리얼 건너뛰기 ✕</button>
     </div>

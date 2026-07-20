@@ -62,7 +62,7 @@ button { font-family: inherit; }
 .tut-arrow.up { border-bottom: 15px solid #ffe9a8; }
 .tut-arrow.down { border-top: 15px solid #ffe9a8; }
 .tut-cap { margin: 6px 0; background: #0b1220f2; color: #ffe9a8; border: 1px solid var(--gold); border-radius: 10px; padding: 8px 14px; font-size: .86rem; font-weight: 800; max-width: min(460px, 88vw); text-align: center; box-shadow: 0 4px 16px #000b; }
-.tut-skip { position: fixed; top: 12px; right: 12px; z-index: 62; pointer-events: auto; background: #000000b0; color: #cfcabb; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: .74rem; cursor: pointer; }
+.tut-skip { position: fixed; top: 12px; left: 12px; z-index: 62; pointer-events: auto; background: #000000b0; color: #cfcabb; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: .74rem; cursor: pointer; }
 @keyframes tutpulse { 0%, 100% { box-shadow: 0 0 0 3px #ffe9a855, 0 0 18px 4px #ffe9a655; } 50% { box-shadow: 0 0 0 5px #ffe9a880, 0 0 28px 7px #ffe9a690; } }
 @keyframes tutbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
 
