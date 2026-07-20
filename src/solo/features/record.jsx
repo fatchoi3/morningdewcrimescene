@@ -3,7 +3,7 @@
 //   CaseRecord가 진입점. 내부에서 ClueGroups·PeopleInfo(PersonCard)를 조립한다.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from 'react';
-import { victim, suspects, clueIcon } from '../content.js';
+import { victim, suspects } from '../content.js';
 import { Avatar } from '../art.jsx';
 
 // ── 인물 카드(피해자/용의자 프로필) ──
@@ -50,7 +50,6 @@ function ClueGroups({ clues, onOpen }) {
           <div className="s-grid">
             {groups[g].map((c) => (
               <button key={c.code} className="s-card" onClick={() => onOpen(c.code)}>
-                <div className="ck">{clueIcon(c)}</div>
                 <div className="cn" style={{ fontSize: '.9rem' }}>{c.title}</div>
                 <div className="cm">{mode === 'person' ? (c.type || '보통') : (c.person || '공용')}</div>
               </button>
@@ -69,9 +68,9 @@ export function CaseRecord({ clues, onOpen, notes, onNotes }) {
   return (
     <>
       <div className="s-record-tabs">
-        <button className={tab === 'clues' ? 'on' : ''} onClick={() => setTab('clues')}>🔎 단서 정보 ({clues.length})</button>
-        <button className={tab === 'people' ? 'on' : ''} onClick={() => setTab('people')}>👥 인물 정보</button>
-        {hasNotes && <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>📝 메모</button>}
+        <button className={tab === 'clues' ? 'on' : ''} onClick={() => setTab('clues')}>단서 정보 ({clues.length})</button>
+        <button className={tab === 'people' ? 'on' : ''} onClick={() => setTab('people')}>인물 정보</button>
+        {hasNotes && <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>메모</button>}
       </div>
       {tab === 'clues' && <ClueGroups clues={clues} onOpen={onOpen} />}
       {tab === 'people' && <PeopleInfo />}

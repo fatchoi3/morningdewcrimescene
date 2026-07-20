@@ -3,7 +3,6 @@
 //   main : 인물 방 6개 · 오른쪽→목사방 · 왼쪽→1층
 //   pastor : 복도 끝 목사님 방(현장) · floor1 : CCTV·소지품 · lab : 감식 의뢰실
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState } from 'react';
 import { stageHint } from '../lib/game.js';
 import { HallBg } from '../art.jsx';
 
@@ -29,8 +28,7 @@ function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {
   );
 }
 
-export function HallNav({ locations, stage, collectedSet, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
-  const [view, setView] = useState('main'); // main | pastor | floor1 | lab
+export function HallNav({ locations, stage, progressStage, collectedSet, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, view, onView, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
   const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
   const pastor = locations.rooms.find((l) => l.person === '목사');
   const tool = (id) => locations.all.find((l) => l.id === id);
@@ -64,6 +62,10 @@ export function HallNav({ locations, stage, collectedSet, recommendPerson, admin
               sub={subOf(loc, false)} locked={loc.stage > stage}
               recommend={recommendPerson === d.person} onClick={() => enter(loc, false)} />;
           })}
+          {view === 'main' && (
+            <button className="hall-cctv" style={{ left: '50%', top: '20%' }} aria-label="복도 CCTV"
+              onClick={() => onToast('복도 끝에 CCTV가 있다. 확인하려면 1층 CCTV 열람실로 가야겠다.')}>📹</button>
+          )}
           {view === 'pastor' && pastor && (
             <HallHot x={50} y={50} icon="⚰️" tone="crime" label={pastor.label}
               sub={subOf(pastor, true)} locked={pastor.stage > stage} onClick={() => enter(pastor, true)} />
@@ -95,13 +97,13 @@ export function HallNav({ locations, stage, collectedSet, recommendPerson, admin
 
       <div className="hall-nav-row">
         {view === 'main' ? <>
-          <button className="hall-arrow" onClick={() => setView('floor1')}>◀ 왼쪽 · 1층</button>
-          <button className="hall-arrow" onClick={() => setView('pastor')}>오른쪽 · 목사님 방 ▶</button>
+          <button className="hall-arrow" onClick={() => progressStage < 2 ? onToast('아직 그쪽에 갈 일은 없어 보인다. 먼저 인물들의 방을 둘러보고 이야기부터 나눠보자.') : onView('floor1')}>◀ 왼쪽 · 1층</button>
+          <button className="hall-arrow" onClick={() => progressStage < 2 ? onToast('아직 목사님 방에 갈 필요는 없다. 지금은 인물들부터 만나보자.') : onView('pastor')}>오른쪽 · 목사님 방 ▶</button>
         </> : view === 'floor1' ? <>
-          <button className="hall-arrow" onClick={() => setView('main')}>◀ 복도로</button>
-          {lab && <button className="hall-arrow" onClick={() => setView('lab')}>감식 의뢰실 ▶</button>}
+          <button className="hall-arrow" onClick={() => onView('main')}>◀ 복도로</button>
+          {lab && <button className="hall-arrow" onClick={() => onView('lab')}>감식 의뢰실 ▶</button>}
         </> : <>
-          <button className="hall-arrow" onClick={() => setView(view === 'lab' ? 'floor1' : 'main')}>◀ {view === 'lab' ? '1층으로' : '복도로'}</button>
+          <button className="hall-arrow" onClick={() => onView(view === 'lab' ? 'floor1' : 'main')}>◀ {view === 'lab' ? '1층으로' : '복도로'}</button>
           <span />
         </>}
       </div>

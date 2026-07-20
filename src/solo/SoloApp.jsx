@@ -30,6 +30,7 @@ export default function SoloApp() {
   const [sceneId, setSceneId] = useState(null);
   const [suspectId, setSuspectId] = useState(null);
   const [modalCode, setModalCode] = useState(null);
+  const [hubView, setHubView] = useState('main'); // 허브 뷰(main/floor1/pastor/lab) — 장면 진입 후 복귀 위치 보존
   const [toast, setToast] = useState(null);
 
   useEffect(() => { saveSave(state); }, [state]);
@@ -116,15 +117,16 @@ export default function SoloApp() {
   if (!state.tutorialSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && !adminOpen) {
     const jhObjs = locations.rooms.find((l) => l.id === 'ROOM-JH')?.objects || [];
     const jhExamined = jhObjs.some((c) => collectedSet.has(c));
-    if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기! 📓 수첩(사건 기록)에 사건 개요 등 기본 단서가 들어 있어요 — 눌러서 확인하세요' };
+    if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
     else if (!sceneId) coach = { sel: '[data-tut="door"]', text: '이제 종현방을 눌러 들어가세요' };
     else if (sceneId === 'ROOM-JH' && !jhExamined) coach = { sel: '.aa-track .s-zone', text: '빛나는 소품을 눌러 단서를 조사하세요' };
     else if (sceneId === 'ROOM-JH' && jhExamined) coach = { sel: '.s-figure', text: '인물을 눌러 이야기를 시작하세요' };
   }
-  const progressText = `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}` + (stage >= 2 ? ` · 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}` : '');
+  // 라벨·목표·단계표시는 '실제 진행도(progressStage)' 기준 — 가이드 모드가 단계를 3으로 올려도 1차엔 1차로 보이게
+  const progressText = `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}` + (progressStage >= 2 ? ` · 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}` : '');
   // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
-  const objective = stage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
-    : stage < 3 ? `목사님 방(현장)에서 단서 ${SCENE_NEEDED}개를 찾으면 2차 심문이 열립니다`
+  const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
+    : progressStage < 3 ? `목사님 방(현장)에서 단서 ${SCENE_NEEDED}개를 찾으면 2차 심문이 열립니다`
     : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요';
   const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
 
@@ -132,7 +134,7 @@ export default function SoloApp() {
     <>
       {suspectId ? (
           <CrossExamView key={suspectId} suspect={suspects.find((s) => s.id === suspectId)} state={state}
-            phase={stage >= 3 ? 2 : 1}
+            phase={progressStage >= 3 ? 2 : 1}
             tutorialSeen={!!state.tutorialSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
             onAsked={(stId) => { const a = { ...(state.askedQ || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), stId])]; update({ askedQ: a }); }}
             location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
@@ -179,17 +181,17 @@ export default function SoloApp() {
             onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
             onBack={() => goHub()} />
         ) : (
-          <HallNav locations={locations} stage={stage} collectedSet={collectedSet}
+          <HallNav locations={locations} stage={stage} progressStage={progressStage} collectedSet={collectedSet}
             recommendPerson={!state.tutorialSeen && state.tutRecordDone ? '최종현' : null}
-            admin={state.admin} stageLabel={STAGE_LABEL[stage]} progressText={progressText} objective={objective} canAccuse={stage >= 3}
-            onEnter={(id) => setSceneId(id)} onToast={showToast}
+            admin={state.admin} stageLabel={STAGE_LABEL[progressStage]} progressText={progressText} objective={objective} canAccuse={progressStage >= 3}
+            view={hubView} onView={setHubView} onEnter={(id) => setSceneId(id)} onToast={showToast}
             onOpenRecord={() => { setRecordOpen(true); if (!state.tutorialSeen && !state.tutRecordDone) update({ tutRecordDone: true }); }}
             onOpenMenu={() => setAdminOpen(true)}
             onAccuse={() => setCasefileOpen(true)} />
         )}
 
       {recordOpen && (
-        <SheetOverlay title={`📓 사건 기록 · 단서 ${recordClues.length}`} onClose={() => setRecordOpen(false)}>
+        <SheetOverlay title={`사건 기록 · 단서 ${recordClues.length}`} onClose={() => setRecordOpen(false)}>
           <CaseRecord clues={recordClues} onOpen={(code) => setModalCode(code)} notes={state.notes} onNotes={(v) => update({ notes: v })} />
         </SheetOverlay>
       )}
