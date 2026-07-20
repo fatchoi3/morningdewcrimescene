@@ -172,7 +172,7 @@ export default function SoloApp() {
               return r; // 자식이 컷인/대사창에 결과 표시
             }} />
         ) : sceneId ? (
-          <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet}
+          <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet} stage={stage}
             roomSuspect={suspects.find((s) => s.name === locations.all.find((l) => l.id === sceneId)?.person)}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             lab={{

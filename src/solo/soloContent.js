@@ -75,7 +75,7 @@ function buildLocations() {
     objects: (r.room?.objects || []).map((o) => (typeof o === 'string' ? o : o.code)).filter((code) => byCode[code]),
   }));
 
-  const cctv = [], phones = [], gamsik = [], common = [];
+  const cctv = [], gamsik = [], common = [];
   for (const c of all) {
     if (META_CODES.has(c.code)) continue;
     if (c.type === '방') continue;
@@ -84,9 +84,8 @@ function buildLocations() {
     if (c.type === '특수') continue;                    // 자동 해금(수첩에 등장)
     if (c.cctv) { cctv.push(c.code); continue; }        // CCTV 열람대(공용대·뷰어) = 방 핫스팟 1개
     if (cctvSet.has(c.code)) continue;                   // CCTV로 확보되는 하위 단서는 방에 안 뿌림(열람대에서 확보)
-    if (c.phone) { phones.push(c.code); continue; }
     if (c.type === '감식') { gamsik.push(c.code); continue; }
-    // 방 없는 보통/기타 → 인물 방이 있으면 그 방에, 없으면 공용 현장
+    // 휴대폰(c.phone)·방 없는 보통/기타 → 인물 방이 있으면 그 방에(폰은 2차 심문에 해금), 없으면 공용 현장
     const pr = personRoom[c.person];
     const room = rooms.find((r) => r.id === pr);
     if (room) room.objects.push(c.code); else common.push(c.code);
@@ -94,7 +93,6 @@ function buildLocations() {
 
   const tools = [];
   if (cctv.length) tools.push({ id: 'LOC-CCTV', kind: 'cctv', label: 'CCTV 열람실', stage: 2, bg: 'linear-gradient(160deg,#101820,#080c10)', objects: cctv });
-  if (phones.length) tools.push({ id: 'LOC-PHONE', kind: 'phone', label: '압수 소지품 (휴대폰)', stage: 2, bg: 'linear-gradient(160deg,#141824,#0a0c12)', objects: phones });
   if (gamsik.length) tools.push({ id: 'LOC-LAB', kind: 'lab', label: '감식 의뢰실', stage: 2, bg: 'linear-gradient(160deg,#0e1a1c,#070f10)', objects: gamsik });
   // 공용 현장(LOC-COMMON)은 폐지 — 방/시설에 안 속한 단서(사건 브리핑 등)는 시작 시 사건 기록에 기본 수록.
 

@@ -4,6 +4,7 @@
 //   pastor : 복도 끝 목사님 방(현장) · floor1 : CCTV·소지품 · lab : 감식 의뢰실
 // ─────────────────────────────────────────────────────────────────────────────
 import { stageHint } from '../lib/game.js';
+import { getClue } from '../content.js';
 import { HallBg } from '../art.jsx';
 
 // main.jpg 위 방문 위치(%): 좌벽 근→원, 우벽 근→원 (배경 16:9를 16:9 무대에 cover)
@@ -32,12 +33,14 @@ export function HallNav({ locations, stage, progressStage, collectedSet, recomme
   const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
   const pastor = locations.rooms.find((l) => l.person === '목사');
   const tool = (id) => locations.all.find((l) => l.id === id);
-  const cctv = tool('LOC-CCTV'), phone = tool('LOC-PHONE'), lab = tool('LOC-LAB');
+  const cctv = tool('LOC-CCTV'), lab = tool('LOC-LAB');
 
   const subOf = (loc, isCrime) => {
     if (loc.stage > stage) return isCrime ? '통제 중' : loc.stage === 2 ? '사건 후 개방' : '2차 개방';
     if (loc.kind !== 'room') return '열람';
-    const total = loc.objects.length, got = loc.objects.filter((c) => collectedSet.has(c)).length;
+    // 휴대폰은 2차 심문(stage 3)에 해금 — 그 전엔 방 탐색 진척도에서 제외
+    const reach = loc.objects.filter((c) => stage >= 3 || !getClue(c)?.phone);
+    const total = reach.length, got = reach.filter((c) => collectedSet.has(c)).length;
     return total > 0 && got === total ? '✓ 탐색완료' : `단서 ${got}/${total}`;
   };
   const enter = (loc, isCrime) => {
@@ -47,7 +50,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, recomme
   };
   const here = view === 'main' ? '숙소 2층 복도 — 인물들의 방'
     : view === 'pastor' ? '복도 끝 — 목사님 방 (사건 현장)'
-    : view === 'floor1' ? '1층 — CCTV 열람실 · 압수 소지품'
+    : view === 'floor1' ? '1층 — CCTV 열람실'
     : '건물 밖 — 감식 의뢰실';
 
   return (
@@ -70,10 +73,9 @@ export function HallNav({ locations, stage, progressStage, collectedSet, recomme
             <HallHot x={50} y={50} icon="⚰️" tone="crime" label={pastor.label}
               sub={subOf(pastor, true)} locked={pastor.stage > stage} onClick={() => enter(pastor, true)} />
           )}
-          {view === 'floor1' && <>
-            {cctv && <HallHot x={47} y={52} icon="📹" label={cctv.label} sub={subOf(cctv)} locked={cctv.stage > stage} onClick={() => enter(cctv)} />}
-            {phone && <HallHot x={63} y={52} icon="📱" label={phone.label} sub={subOf(phone)} locked={phone.stage > stage} onClick={() => enter(phone)} />}
-          </>}
+          {view === 'floor1' && cctv && (
+            <HallHot x={50} y={52} icon="📹" label={cctv.label} sub={subOf(cctv)} locked={cctv.stage > stage} onClick={() => enter(cctv)} />
+          )}
           {view === 'lab' && lab && (
             <HallHot x={43} y={56} icon="🔬" label={lab.label} sub={subOf(lab)} locked={lab.stage > stage} onClick={() => enter(lab)} />
           )}

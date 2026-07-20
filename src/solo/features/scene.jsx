@@ -10,7 +10,7 @@ import { DialogueBox, CommandBar } from '../vn.jsx';
 import { CaseRecord } from './record.jsx';
 
 // ── 장면(역전재판식 풀블리드: 조사/이야기/이동 + 사건기록) ────────────────────
-export function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, onTalk, onOpen, onLockedToast, onBack }) {
+export function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, stage = 1, onTalk, onOpen, onLockedToast, onBack }) {
   const [examine, setExamine] = useState(true);
   const [record, setRecord] = useState(false);
   const camRef = useRef(null);
@@ -38,6 +38,7 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
       )}
       {examine && location.objects.map((code, i) => {
         const c = getClue(code); if (!c) return null;
+        if (c.phone && stage < 3) return null;   // 휴대폰은 2차 심문(stage 3)에 해금 — 그 전엔 방에 안 보임
         const have = collectedSet.has(code);
         const p = hotspotFor(location, code, i);
         const isGamsik = c.type === '감식';
