@@ -99,8 +99,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, recomme
 
       <div className="hall-nav-row">
         {view === 'main' ? <>
-          <button className="hall-arrow" onClick={() => progressStage < 2 ? onToast('아직 그쪽에 갈 일은 없어 보인다. 먼저 인물들의 방을 둘러보고 이야기부터 나눠보자.') : onView('floor1')}>◀ 왼쪽 · 1층</button>
-          <button className="hall-arrow" onClick={() => progressStage < 2 ? onToast('아직 목사님 방에 갈 필요는 없다. 지금은 인물들부터 만나보자.') : onView('pastor')}>오른쪽 · 목사님 방 ▶</button>
+          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 그쪽에 갈 일은 없어 보인다. 먼저 인물들의 방을 둘러보고 이야기부터 나눠보자.') : onView('floor1')}>◀ 왼쪽 · 1층</button>
+          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 목사님 방에 갈 필요는 없다. 지금은 인물들부터 만나보자.') : onView('pastor')}>오른쪽 · 목사님 방 ▶</button>
         </> : view === 'floor1' ? <>
           <button className="hall-arrow" onClick={() => onView('main')}>◀ 복도로</button>
           {lab && <button className="hall-arrow" onClick={() => onView('lab')}>감식 의뢰실 ▶</button>}

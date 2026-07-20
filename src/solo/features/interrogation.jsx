@@ -104,6 +104,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     if (!tgt) { setPicker(false); setLine({ text: '그 단서로는 지금 이 사람에게 딱히 물을 게 없어 보인다. 다른 질문을 먼저 풀거나 단서를 더 모으자.', kind: 'soft' }); return; }
     setPicker(false);
     setCurId(tgt.stId);
+    // 이미 짚은 모순이면 조용히 재확인만(컷인·"새 질문/자백" 오정보 재출력 방지 — 질문 모드와 동작 통일)
+    const already = tgt.kind === 'contradict' && brokeOf(tgt.stId);
+    if (already) { setLine({ text: already.text + '\n(이미 짚은 모순이다.)', kind: 'break' }); return; }
     const r = onPresent(tgt.stId, code) || {};
     if (r.result === 'contradict') {
       setCutin('모순!');
