@@ -30,6 +30,7 @@ export default function SoloApp() {
   const [sceneId, setSceneId] = useState(null);
   const [suspectId, setSuspectId] = useState(null);
   const [modalCode, setModalCode] = useState(null);
+  const [modalList, setModalList] = useState(null); // 방 안 단서 순회용 코드 목록(이전/다음)
   const [toast, setToast] = useState(null);
 
   useEffect(() => { saveSave(state); }, [state]);
@@ -176,7 +177,7 @@ export default function SoloApp() {
               request: (code) => { update({ labReq: [...new Set([...(state.labReq || []), code])] }); showToast('🔬 감식 의뢰 접수 — 결과는 2차 심문이 열리면 도착합니다'); },
             }}
             onTalk={(id) => setSuspectId(id)}
-            onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
+            onOpen={(code, list) => { setModalCode(code); setModalList(list ?? null); }} onLockedToast={showToast}
             onBack={() => goHub()} />
         ) : (
           <HallNav locations={locations} stage={stage} collectedSet={collectedSet}
@@ -190,7 +191,7 @@ export default function SoloApp() {
 
       {recordOpen && (
         <SheetOverlay title={`📓 사건 기록 · 단서 ${recordClues.length}`} onClose={() => setRecordOpen(false)}>
-          <CaseRecord clues={recordClues} onOpen={(code) => setModalCode(code)} notes={state.notes} onNotes={(v) => update({ notes: v })} />
+          <CaseRecord clues={recordClues} onOpen={(code) => { setModalCode(code); setModalList(null); }} notes={state.notes} onNotes={(v) => update({ notes: v })} />
         </SheetOverlay>
       )}
       {casefileOpen && (
@@ -201,8 +202,9 @@ export default function SoloApp() {
       )}
 
       {modalCode && (
-        <ClueModal code={modalCode} collectedSet={collectedSet} difficulty={state.difficulty}
-          onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
+        <ClueModal code={modalCode} navCodes={modalList} collectedSet={collectedSet} difficulty={state.difficulty}
+          onClose={() => { setModalCode(null); setModalList(null); }} onCollect={collect}
+          onOpen={(c) => setModalCode(c)} onNav={(c) => setModalCode(c)} />
       )}
       {toast && <div className="s-toast">{toast}</div>}
       {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}

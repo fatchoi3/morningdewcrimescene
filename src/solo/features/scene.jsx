@@ -23,6 +23,11 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
   if (!location) return null;
   const pannable = examine; // 조사 중에는 좌우 둘러보기
   const bodyPos = ROOM_HOTSPOTS[location.id]?.['__body__'] || { x: 50, y: 46, s: 1.1 };
+  // 이전/다음 단서 순회 목록 — 모달로 열리는 소품만(감식 미확보는 의뢰 흐름이라 제외)
+  const navCodes = [
+    ...(location.showBody ? ['__body__'] : []),
+    ...location.objects.filter((cd) => { const cc = getClue(cd); return cc && !(cc.type === '감식' && !collectedSet.has(cd)); }),
+  ];
   return (
     <div className="aa-fs">
       <div className="aa-cam" ref={camRef}>
@@ -30,7 +35,7 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
           <SceneBg location={location} />
 
       {examine && location.showBody && (
-        <button className="s-zone body" style={{ left: `${bodyPos.x}%`, top: `${bodyPos.y}%`, '--s': bodyPos.s }} onClick={() => onOpen('__body__')} aria-label="시신 조사">
+        <button className="s-zone body" style={{ left: `${bodyPos.x}%`, top: `${bodyPos.y}%`, '--s': bodyPos.s }} onClick={() => onOpen('__body__', navCodes)} aria-label="시신 조사">
           <span className="s-zone-ground" />
           <span className="s-zone-glow" />
           <span className="s-zone-lab">시신</span>
@@ -52,11 +57,11 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
               if (isGamsik && !have) {
                 // 감식은 '의뢰 → 2차 심문 때 결과' 흐름 (2차 개방 후엔 즉시 결과)
                 if (!lab || !lab.ready(code)) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
-                if (lab.stage >= 3) { onOpen(code); return; }
+                if (lab.stage >= 3) { onOpen(code, navCodes); return; }
                 if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
                 lab.request(code); return;
               }
-              onOpen(code);
+              onOpen(code, navCodes);
             }}>
             <span className="s-zone-ground" />
             <span className="s-zone-glow" />

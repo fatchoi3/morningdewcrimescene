@@ -217,6 +217,10 @@ button { font-family: inherit; }
 .s-pw input { flex: 1; background: var(--ink); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 10px; font-size: 1rem; }
 
 /* 페이지 뷰어 */
+/* 단서 모달 하단 이전/다음 단서 순회 — 방에서 닫지 않고 소품 넘기기 */
+.s-modal-nav { display: flex; gap: 8px; padding: 10px 16px 14px; border-top: 1px solid var(--line); position: sticky; bottom: 0; background: var(--panel); }
+.s-modal-nav .s-nav-btn { flex: 1; background: var(--panel2); border: 1px solid var(--line); color: var(--text); border-radius: 9px; padding: 9px 10px; font-size: .86rem; font-weight: 700; cursor: pointer; }
+.s-modal-nav .s-nav-btn:disabled { opacity: .32; cursor: default; }
 .s-pager { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
 .s-pager button { background: var(--panel2); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 14px; cursor: pointer; }
 .s-pager button:disabled { opacity: .35; cursor: default; }
