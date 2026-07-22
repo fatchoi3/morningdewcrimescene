@@ -96,6 +96,34 @@ export function EventVN({ onDone }) {
   );
 }
 
+// ── 2차 사건 — 2차 심문 개시 직전, 정밀(2차) 부검 결과가 급히 도착 ──────────────
+export function EventVN2({ onDone }) {
+  const beats = [
+    { loc: '복도', text: '"잠깐, 수사관님!" — 젊은 형사가 서류 봉투를 들고 달려온다.' },
+    { loc: '2차 부검', text: '"국과수 정밀(2차) 부검 결과입니다. 방금 나왔어요. 이건 꼭 보셔야 합니다."' },
+    { loc: '2차 부검', text: '"베개에서 나온 솜·섬유가 피해자 기도에서도 검출됐습니다. 압박 방향과 힘까지 — 타살에 의한 질식사, 확정입니다."' },
+    { text: '「2차 부검」 소견이 사건 기록에 등록되었다. 이제 이 확정된 사인으로 용의자들을 다시 몰아붙일 수 있다.' },
+  ];
+  const [i, setI] = useState(0);
+  const dlgRef = useRef(null);
+  const [speaking, setSpeaking] = useState(false);
+  const beat = beats[Math.min(i, beats.length - 1)];
+  const last = i >= beats.length - 1;
+  return (
+    <div className="aa-fs" onClick={(e) => { if (!isUiTap(e)) dlgRef.current?.tap(); }}>
+      <div className="aa-stage" style={{ background: 'radial-gradient(120% 100% at 50% 0%, #2a1214 0%, #140a0c 55%, #07050a 100%)' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 40% at 50% 30%, #c0585822, transparent 70%)', animation: 'aablink 2.2s ease-in-out infinite' }} />
+      </div>
+      <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 2차 사건 · 정밀 부검</div>
+      <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
+      <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
+        onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
+        hint={last ? '▶ 2차 심문 시작' : `${i + 1}/${beats.length} · 탭하여 다음`} />
+      <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
+    </div>
+  );
+}
+
 // ── 엔딩 — 정/오답 + 사건 전말 + 그날의 진실(타임라인) ────────────────────────
 export function EndingScreen({ result, onNewCase }) {
   const r = result;

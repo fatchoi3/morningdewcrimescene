@@ -116,9 +116,9 @@ const DATA = {
       { id: 'sis', q: '이사랑 총무와는 어떤 사이죠?',
         text: '이사랑 총무요? 일 때문에 자주 붙어 있을 뿐이에요. 특별한 사이 아니에요.',
         press: '…오래 같이 일했으니 편하긴 하죠. 그 이상은 아니에요.',
-        contradict: { codes: ['BUFL-52', 'SIST-22'],
-          text: '❗모순 — 당신 다이어리엔 이사랑을 "동생"이라 적었고, 두 사람의 대화엔 동료 이상의 무게가 있습니다.',
-          unlock: 'sis2' } },
+        contradict: { codes: ['BUFL-52', 'HUOX-80', 'QIVS-92'],
+          text: '❗모순 — 당신 다이어리엔 이사랑을 "동생"이라 적었고, 두 휴대폰에 서로 지운 전날 밤 대화가 남아 있습니다. 동료 이상의 무게예요.',
+          unlock: 'sis2', grants: 'SIST-22' } },
       { id: 'sis2', hidden: true, q: '자매라는 걸 왜 숨겼죠?',
         text: '(긴 침묵) …네. 사랑이는 제 친동생이에요. 같은 교회 다니면서 남남처럼 군 건… 그래야 할 사정이 있었어요.',
         press: '부모님이 빚을 남기고 돌아가셨을 때, 제가 상속을 받으면 제 채권자들이 그 몫까지 가져가게 돼 있었어요. 그래서 법적으로만 포기했어요. 동생이 정리할 길을 터주려고요. 그 대신 월급에서 조금씩, 동생 몰래 갚아왔어요. …동생은 제가 발을 뺐다고 오해했고요. 그 오해가 풀린 게… 겨우 수련회 전날 밤이에요.' },
@@ -226,7 +226,6 @@ const DATA = {
         press: '…사실은, 그날 아침에 목사님이 부르셨어요. 통장에 찬조금 입금 기록이 없다고. 수련회 끝나면 재정을 점검하겠다고 하셨어요. …네, 무서웠어요. 사정이 좀 있거든요.',
         soft: {
           'SUIX-89': '(독촉장을 보고 얼굴이 하얘진다) …부모님이 남기고 간 빚이에요. 제 앞으로 다 넘어왔어요. 갚아도 갚아도 끝이 없었어요.',
-          'BCZN-89': '다이어리까지 보셨군요… 네, 돈 문제로 머리가 터질 것 같았어요. 그래도 사람을 어떻게 하겠다는 생각은…',
         } },
       { id: 'morning', q: '오전 행적을 말해주세요',
         text: '오전엔 행사 준비로 로비랑 제 방을 오갔어요. 다른 사람 방엔 안 갔어요.',
@@ -242,6 +241,9 @@ const DATA = {
       { id: 'room2', hidden: true, q: '종현의 방엔 왜 들어갔죠?',
         text: '(얼굴이 창백해진다) …종현이 방엔… 행사 물품을 빌리러 갔던 거예요. 테이프랑… 그런 거요.',
         press: '…빌린 건 도로 뒀어요. 그래서 손에 든 게 있었던 거고요. (목소리가 떨린다)',
+        soft: {
+          'BCZN-89': { text: '(당신 다이어리와 통의 "단백질" 라벨을 나란히 놓는다) 이 손글씨… 획이 똑같네요. 라벨을 쓴 게 당신이라는 뜻이죠. (얼굴이 굳는다) …그, 그건 제 글씨 맞아요. 근데 그게 뭐 어때서요.', grants: 'TUBE-22' },
+        },
         contradict: { codes: ['ODDM-57', 'TUBE-22'],
           text: '❗모순 — "단백질" 통에서 요힘빈이 검출됐고, 라벨의 글씨는 종현의 필체가 아닙니다. 라벨지·볼펜·풀, 그리고 파우치의 라벨 가루 — 당신이 바꿔 붙인 겁니다.',
           unlock: 'confess', confess: true } },
@@ -251,9 +253,9 @@ const DATA = {
       { id: 'sis', q: '이현지 회계와는 어떤 사이죠?',
         text: '이현지 회계님요? 일로 자주 엮일 뿐이에요. 별다른 사이 아니에요.',
         press: '…오래 봐서 편하긴 하죠. 그뿐이에요.',
-        contradict: { codes: ['SIST-22', 'BUFL-52'],
-          text: '❗모순 — 복원된 대화와 다이어리를 보면 두 사람은 동료 이상 — 자매의 무게가 실려 있습니다.',
-          unlock: 'sis2' } },
+        contradict: { codes: ['BUFL-52', 'QIVS-92', 'HUOX-80'],
+          text: '❗모순 — 두 휴대폰에 서로 지운 전날 밤 대화가 남아 있고, 현지 씨 다이어리엔 당신을 "동생"이라 적었습니다. 동료 이상 — 자매의 무게예요.',
+          unlock: 'sis2', grants: 'SIST-22' } },
       { id: 'sis2', hidden: true, q: '자매라는 걸 왜 숨겼죠?',
         text: '(한참 망설이다) …네. 현지 언니는 제 친언니예요. 같은 교회에서 남남처럼 지낸 건, 그래야 할 사정이 있었어요.',
         press: '전날 밤에야 알았어요. 언니가 몇 년을 몰래 제 빚을 갚아줬다는 걸요. 발 뺀 줄 알고 미워했는데… 그날 밤 처음으로 다 털어놓고 울었어요. 찬조금 얘기까지 전부요. 언니는 저를 지키려고만 했던 사람이에요. 언니한테는 아무 잘못 없어요.' },
@@ -292,12 +294,12 @@ const DATA = {
       { id: 'wipe', hidden: true, q: '무엇을 지운 겁니까?',
         text: '…네, 지웠어요. 목사님 폰은 지문으로 열렸고, 톡서랍 비밀번호는… 일기장에서 본 결혼기념일이었어요. 김민석 씨와의 험담 대화랑 제 항의 카톡을 지우고 신고했어요. 증거 인멸인 거 알아요. 근데 살인은 아니에요. 들어갔을 땐 이미 돌아가신 뒤였어요.',
         press: '그 대화가 공개되면… 제 사생활이 전부 드러나니까요. 지키고 싶은 게 있었어요. 목사님이 돌아가신 마당에 무슨 소용이냐 하시겠지만, 저한텐 남은 전부였어요. 증거를 지운 건 죄송해요. 하지만 살인은 아니에요. 살인범을 찾으신다면, 저 말고 다른 사람을 보세요.' },
-      { id: 'niece', needs: ['LWNR-86', 'KMRV-41', 'PEDR-58'], q: '그 아이는 누구죠?',
+      { id: 'niece', needs: ['LWNR-86', 'PEDR-58'], q: '그 아이는 누구죠?',
         text: '그 그림이요? …조카가 그려준 거예요. 언니네 애요.',
         press: '…애 얘기는 그만하죠.',
         contradict: { codes: ['LWNR-86', 'PEDR-58'],
           text: '❗모순 — 그림 속 아이는 당신을 "엄마"라고 부르고, 소아과 영수증의 보호자도 당신입니다.',
-          unlock: 'mom' } },
+          unlock: 'mom', grants: 'KMRV-41' } },
       { id: 'mom', hidden: true, q: '딸에 대해 말해주세요',
         text: '…제 딸이에요. 다섯 살. 이혼하고 혼자 키워요. 교회에서는 조카라고 해왔어요. …이런 곳에서 이혼에 애까지 있다고 하면 어떤 눈으로 보는지 아세요?',
         press: '약혼자가 있었어요. 같은 교회 김민석 씨요. 그런데 목사님이 그 사람한테 — 제 약혼자인 줄도 모르고 — "가현이는 애도 있고 곧 결혼한다더라"고 흘리셨어요. 그날로 파혼당했어요. …목사님이 원망스러웠냐고요? 네, 원망했어요. 죽도록요. 그래도 죽이진 않았어요.' },
@@ -392,8 +394,11 @@ export function presentOn(sid, stId, code) {
   if (!s) return { result: 'wrong', text: '' };
   const codes = s.contradict ? (s.contradict.codes || [s.contradict.code]) : [];
   if (codes.includes(code)) {
-    return { result: 'contradict', text: s.contradict.text, unlock: s.contradict.unlock, confess: !!s.contradict.confess };
+    return { result: 'contradict', text: s.contradict.text, unlock: s.contradict.unlock, confess: !!s.contradict.confess, grants: s.contradict.grants };
   }
-  if (s.soft && s.soft[code]) return { result: 'soft', text: s.soft[code] };
+  if (s.soft && s.soft[code]) {
+    const v = s.soft[code];
+    return typeof v === 'string' ? { result: 'soft', text: v } : { result: 'soft', text: v.text, grants: v.grants };
+  }
   return { result: 'wrong', text: '' };
 }

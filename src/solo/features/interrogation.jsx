@@ -78,6 +78,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     setLine({ text: (r.text || '…') + extra, kind: 'press' });
   };
 
+  const grantNote = (r) => (r.grants ? `\n⭐ 추리 단서 확보 — ${getClue(r.grants)?.title || r.grants}` : '');
+
   const doPresent = (code) => {
     if (!cur) return;
     setPicker(false);
@@ -85,9 +87,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     if (r.result === 'contradict') {
       setCutin('모순!');
       setTimeout(() => setCutin((c) => (c === '모순!' ? null : c)), 1300);
-      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : ''), kind: 'break' });
+      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
     } else if (r.result === 'soft') {
-      setLine({ text: r.text || '', kind: 'soft' });
+      setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
     } else {
       setShake(true); setTimeout(() => setShake(false), 480);
       const c = getClue(code);
@@ -111,9 +113,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     if (r.result === 'contradict') {
       setCutin('모순!');
       setTimeout(() => setCutin((c) => (c === '모순!' ? null : c)), 1300);
-      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : ''), kind: 'break' });
+      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
     } else {
-      setLine({ text: r.text || '', kind: 'soft' });
+      setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
     }
   };
 

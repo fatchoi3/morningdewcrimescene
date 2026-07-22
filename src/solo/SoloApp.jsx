@@ -20,7 +20,7 @@ import { CrossExamView } from './features/interrogation.jsx';
 import { ClueModal } from './features/clues.jsx';
 import { CaseRecord } from './features/record.jsx';
 import { CaseFileView } from './features/casefile.jsx';
-import { StartScreen, BriefingVN, EventVN, EndingScreen } from './features/intro.jsx';
+import { StartScreen, BriefingVN, EventVN, EventVN2, EndingScreen } from './features/intro.jsx';
 import { TutorialCoach, TutorialFinale } from './features/tutorial.jsx';
 import { AdminPanel } from './features/admin.jsx';
 import { SheetOverlay } from './ui/overlays.jsx';
@@ -115,6 +115,11 @@ export default function SoloApp() {
     return <EventVN onDone={() => update({ eventSeen: true })} />;
   }
 
+  // ── 2차 사건 — 모든 조사·1차 심문이 끝나(2차 개방) 정밀 부검 결과(LONS-62)가 도착 ──
+  if (state.eventSeen && !state.event2Seen && !state.admin && progressStage >= 3 && !suspectId && !sceneId) {
+    return <EventVN2 onDone={() => { collect('LONS-62'); update({ event2Seen: true }); }} />;
+  }
+
   // ── 메인(허브/장면/용의자) ────────────────────────────────────────────────
   // 튜토리얼 코치마크(첫 수사) — 수첩(사건 기록) → 종현방 문 → 소품 → 대화 순서로 유도
   let coach = null;
@@ -169,6 +174,7 @@ export default function SoloApp() {
                 if (t <= 0) { tr[suspectId] = TRUST_MAX; update({ trust: tr }); setSuspectId(null); showToast('⚠ 신뢰도가 바닥났습니다 — 잠시 정비 후 다시 심문하세요'); }
                 else { tr[suspectId] = t; update({ trust: tr }); }
               }
+              if (r.grants) collect(r.grants); // 추궁 성공으로 추리(특수) 단서 확보
               return r; // 자식이 컷인/대사창에 결과 표시
             }} />
         ) : sceneId ? (
