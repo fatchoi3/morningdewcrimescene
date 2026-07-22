@@ -160,7 +160,8 @@ export default function SoloApp() {
               return r; // 자식이 대사창에 결과 표시
             }}
             onPresent={(stId, code) => {
-              const r = presentOn(suspectId, stId, code);
+              const confessed = (state.broke?.[suspectId] || []).some((e) => e.confess);
+              const r = presentOn(suspectId, stId, code, confessed);
               if (r.result === 'contradict') {
                 const bk = { ...(state.broke || {}) };
                 const cur = bk[suspectId] || [];
