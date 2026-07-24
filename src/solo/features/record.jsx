@@ -31,27 +31,25 @@ function PeopleInfo() {
   );
 }
 
-// ── 단서 목록(인물별/유형별 전환) ──
+// ── 단서 목록(인물별 그룹 하나로 통합, 특수/감식은 카드 테두리로 구분) ──
 function ClueGroups({ clues, onOpen }) {
-  const [mode, setMode] = useState('person'); // person | type
-  const keyOf = (c) => (mode === 'person' ? (c.person || '공용') : (c.type || '보통'));
   const groups = {};
-  clues.forEach((c) => { (groups[keyOf(c)] ||= []).push(c); });
+  clues.forEach((c) => { (groups[c.person || '공용'] ||= []).push(c); });
+  const cardCls = (c) => 's-card' + (c.type === '특수' ? ' clue-special' : c.type === '감식' ? ' clue-gamsik' : '');
   return (
     <>
-      <div className="s-seg">
-        <button className={mode === 'person' ? 'on' : ''} onClick={() => setMode('person')}>인물별</button>
-        <button className={mode === 'type' ? 'on' : ''} onClick={() => setMode('type')}>유형별</button>
-      </div>
       {clues.length === 0 && <p style={{ color: 'var(--muted)' }}>아직 단서가 없습니다. 현장을 조사하세요.</p>}
+      {clues.length > 0 && (
+        <div className="s-clue-legend"><span className="clue-special">⭐ 특수(추리)</span><span className="clue-gamsik">🔬 감식</span></div>
+      )}
       {Object.keys(groups).sort().map((g) => (
         <div key={g} style={{ marginBottom: 12 }}>
           <div style={{ fontSize: '.78rem', color: 'var(--muted)', margin: '8px 2px 4px' }}>{g} · {groups[g].length}</div>
           <div className="s-grid">
             {groups[g].map((c) => (
-              <button key={c.code} className="s-card" onClick={() => onOpen(c.code)}>
+              <button key={c.code} className={cardCls(c)} onClick={() => onOpen(c.code)}>
                 <div className="cn" style={{ fontSize: '.9rem' }}>{c.title}</div>
-                <div className="cm">{mode === 'person' ? (c.type || '보통') : (c.person || '공용')}</div>
+                <div className="cm">{c.type || '보통'}</div>
               </button>
             ))}
           </div>

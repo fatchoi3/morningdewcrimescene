@@ -32,6 +32,7 @@ export default function SoloApp() {
   const [modalCode, setModalCode] = useState(null);
   const [hubView, setHubView] = useState('main'); // 허브 뷰(main/floor1/pastor/lab) — 장면 진입 후 복귀 위치 보존
   const [toast, setToast] = useState(null);
+  const [specialTut, setSpecialTut] = useState(null); // 첫 추리(특수) 단서 획득 안내
 
   useEffect(() => { saveSave(state); }, [state]);
 
@@ -84,6 +85,7 @@ export default function SoloApp() {
       ? ` · ⭐ 추리 단서 해금: ${newSpecials.map((a) => getClue(a.code)?.title || a.code).join(' · ')}`
       : '';
     showToast(`단서 확보: ${c?.title || code}${extra}`);
+    if (newSpecials.length && !state.specialTutSeen) { setSpecialTut(newSpecials[0]); update({ specialTutSeen: true }); } // 첫 추리 단서 안내
     return { added: [code, ...kept.map((a) => a.code)] };
   }
 
@@ -218,6 +220,19 @@ export default function SoloApp() {
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {toast && <div className="s-toast">{toast}</div>}
+      {specialTut && (
+        <div className="s-modal-ov" onClick={() => setSpecialTut(null)}>
+          <div className="s-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="s-modal-h"><div className="mt">⭐ 추리 단서를 얻었어요!</div><button className="mx" onClick={() => setSpecialTut(null)}>✕</button></div>
+            <div className="s-modal-b" style={{ lineHeight: 1.6 }}>
+              <p>단서들을 엮어 추리 단서 <b>「{specialTut.title}」</b>가 밝혀졌습니다.</p>
+              <p>이런 <b>추리 단서(⭐)</b>는 방에서 줍는 게 아니라, 관련 단서를 모으면 <b>자동으로 사건 기록에 등록</b>돼요.</p>
+              <p>화면 위쪽의 <b>📓 수첩(사건 기록)</b>을 눌러 확인하고, 심문에서 <b>「📁 단서로 묻는다」</b>로 활용하세요.</p>
+              <button className="s-btn" style={{ marginTop: 14 }} onClick={() => setSpecialTut(null)}>알겠어요</button>
+            </div>
+          </div>
+        </div>
+      )}
       {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (
         <TutorialFinale onClose={() => update({ tutFinaleSeen: true })} />
