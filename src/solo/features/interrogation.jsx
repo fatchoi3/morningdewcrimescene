@@ -49,23 +49,29 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const isRelated = (c) => c.type !== '증언' && (rel.has(c.code) || c.person === suspect?.name);
   const presentable = collectedClues.filter(isRelated);
 
+  // 질문 정렬: 새로 열린 질문(0) → 아직 안 한 질문(1) → 이미 물은 질문(2) → 모순 짚은 질문(3) 순으로 위→아래
+  const qRank = (s) => {
+    if (broke.find((e) => e.id === s.id)) return 3;
+    if (askedIds.includes(s.id) || pressedIds.includes(s.id)) return 2;
+    if (s.hidden) return 0;
+    return 1;
+  };
+  const sortedStatements = [...statements].sort((a, b) => qRank(a) - qRank(b));
+
   if (!suspect) return null;
 
   const toMenu = () => { setLine(null); setCurId(null); setPicker(false); };
 
-  // 대사 넘김: 인사말→(첫 심문이면 안내)→질문 목록 / 대답·반응을 읽고 나면 질문 목록
+  // 대사 넘김: 인사말→(첫 심문이면 안내). 대답·반응(press/break/soft/wrong)을 읽고 탭하면 라인만 닫아,
+  //   현재 질문(cur)이 있으면 그 답변 화면에 머문다 → 이어서 캐묻기/증거 가능(질문 목록으로 튀지 않음).
   const advance = () => {
-    if (line) {
-      if (line.kind === 'intro' && !tutorialSeen) {
-        onTutorialSeen?.();
-        setLine({ kind: 'guide', text: '(수사 노트) 질문을 골라 이야기를 듣자.\n수상한 대답은 「🔎 캐묻는다」로 파고들고, 거짓이다 싶으면 「📁 이 말에 증거」로 단서를 들이대자.\n❗ 표시가 붙은 새 질문이 열리면 놓치지 말 것.' });
-        return;
-      }
-      if (line.kind === 'intro' || line.kind === 'guide') { setLine(null); return; }
-      toMenu();
+    if (!line) return;
+    if (line.kind === 'intro' && !tutorialSeen) {
+      onTutorialSeen?.();
+      setLine({ kind: 'guide', text: '(수사 노트) 질문을 골라 이야기를 듣자.\n수상한 대답은 「🔎 캐묻는다」로 파고들고, 거짓이다 싶으면 「📁 이 말에 증거」로 단서를 들이대자.\n❗ 표시가 붙은 새 질문이 열리면 놓치지 말 것.' });
       return;
     }
-    if (cur) toMenu();
+    setLine(null); // cur가 있으면 답변 화면 유지, 없으면(인트로/가이드/인물반응) 질문 목록으로
   };
 
   const doPress = () => {
@@ -132,7 +138,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다' : line.kind === 'guide' ? '수사 노트' : line.kind === 'intro' ? (phase >= 2 ? '2차 심문' : '심문 시작') : '캐묻는다')
     : cur ? (bk ? '✅ 밝혀낸 이야기' : `${suspect.name}의 대답`) : '질문 선택';
   const speakerName = (line && line.kind !== 'guide') || cur ? suspect.name : null;
-  const dlgHint = (line || cur) ? '탭하여 계속 ▶' : '';
+  const dlgHint = line ? '탭하여 계속 ▶' : cur ? '아래에서 「캐묻는다」·「이 말에 증거」로 이어가세요' : '';
 
   return (
     <div className={`aa-fs${shake ? ' aa-shake' : ''}`}
@@ -159,13 +165,11 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {menuOpen && (
         <div className="aa-ask">
           <div className="aa-ask-h">🎙 무엇을 물어볼까{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
-          {phase >= 2 && (
-            <div className="s-seg" style={{ margin: '0 0 8px' }}>
-              <button className={askMode === 'q' ? 'on' : ''} onClick={() => setAskMode('q')}>💬 질문</button>
-              <button className={askMode === 'clue' ? 'on' : ''} onClick={() => setAskMode('clue')}>📁 단서로 묻는다</button>
-            </div>
-          )}
-          {(phase < 2 || askMode === 'q') ? statements.map((s) => {
+          <div className="s-seg" style={{ margin: '0 0 8px' }}>
+            <button className={askMode === 'q' ? 'on' : ''} onClick={() => setAskMode('q')}>💬 질문</button>
+            <button className={askMode === 'clue' ? 'on' : ''} onClick={() => setAskMode('clue')}>📁 단서로 묻는다</button>
+          </div>
+          {askMode === 'q' ? sortedStatements.map((s) => {
             const b = brokeOf(s.id);
             const isNew = s.hidden && !askedIds.includes(s.id) && !pressedIds.includes(s.id) && !b;
             const asked = askedIds.includes(s.id) || pressedIds.includes(s.id);
@@ -194,7 +198,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       )}
 
       <DialogueBox ref={dlgRef} location={dlgLoc} speaker={speakerName} text={dlgText}
-        onAdvance={(line || cur) ? advance : undefined} hint={dlgHint} onTyping={setSpeaking} />
+        onAdvance={line ? advance : undefined} hint={dlgHint} onTyping={setSpeaking} />
 
       <CommandBar items={cur ? [
         { icon: '🔎', label: '캐묻는다', onClick: doPress },
