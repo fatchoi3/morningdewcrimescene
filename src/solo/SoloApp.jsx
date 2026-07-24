@@ -84,7 +84,10 @@ export default function SoloApp() {
     const extra = newSpecials.length
       ? ` · ⭐ 추리 단서 해금: ${newSpecials.map((a) => getClue(a.code)?.title || a.code).join(' · ')}`
       : '';
-    showToast(`단서 확보: ${c?.title || code}${extra}`);
+    // 이 단서(채취물)로 새로 '감식 의뢰 가능'해진 게 있으면 안내(감식 의뢰실로 유도)
+    const gamsikNow = [...gamsikCodes].filter((g) => !collectedSet.has(g) && !gamsikReady(g, state.collected) && gamsikReady(g, [...set]));
+    const gextra = gamsikNow.length ? ' · 🔬 감식 의뢰 가능(감식 의뢰실에서 맡기세요)' : '';
+    showToast(`단서 확보: ${c?.title || code}${extra}${gextra}`);
     if (newSpecials.length && !state.specialTutSeen) { setSpecialTut(newSpecials[0]); update({ specialTutSeen: true }); } // 첫 추리 단서 안내
     return { added: [code, ...kept.map((a) => a.code)] };
   }
