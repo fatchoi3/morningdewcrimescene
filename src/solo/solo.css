@@ -421,6 +421,16 @@ button { font-family: inherit; }
 .aa-room-fig.talking img { animation: talkbob .5s ease-in-out infinite; transform-origin: 50% 100%; }
 @media (prefers-reduced-motion: reduce) { .s-figure img, .aa-room-fig img, .aa-room-fig.talking img { animation: none; } }
 
+/* 배경 그림에 포함된 인물의 터치존 — 그 자리를 눌러 대화(떠 있는 컷아웃 대신) */
+.s-talkzone { position: absolute; transform: translate(-50%,-50%); width: 16%; height: 62%; background: none; border: none; padding: 0; cursor: pointer; z-index: 10; }
+.s-talkzone-ring { position: absolute; inset: 4% 0; border-radius: 16px; box-shadow: inset 0 0 0 2px #ffe9a800; transition: box-shadow .16s; }
+.s-talkzone:hover .s-talkzone-ring, .s-talkzone:focus-visible .s-talkzone-ring { box-shadow: inset 0 0 0 2px #ffe9a870, 0 0 26px #ffe9a83a; }
+.s-talkzone-glow { position: absolute; left: 50%; bottom: 1%; width: 78%; height: 8%; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse at 50% 50%, #00000066 0%, #00000000 72%); }
+.s-talkzone-tip { position: absolute; top: -4%; left: 50%; transform: translateX(-50%); background: #0b1220f2; color: #ffe9a8; border: 1px solid var(--gold); font-size: .76rem; font-weight: 800; padding: 4px 11px; border-radius: 9px; white-space: nowrap; pointer-events: none; animation: talktip 3.2s ease-in-out infinite; }
+@keyframes talktip { 0%, 100% { opacity: .55; transform: translateX(-50%) translateY(0); } 50% { opacity: 1; transform: translateX(-50%) translateY(-3px); } }
+.s-talkzone:hover .s-talkzone-tip, .s-talkzone:focus-visible .s-talkzone-tip { opacity: 1; animation: none; }
+@media (prefers-reduced-motion: reduce) { .s-talkzone-tip { animation: none; opacity: .8; } }
+
 /* 사건 파일(채점) */
 .s-cf-row { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
 .s-cf-name { font-weight: 800; margin-bottom: 8px; }

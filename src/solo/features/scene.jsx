@@ -27,6 +27,7 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
   const isLab = location.kind === 'lab'; // 감식 의뢰실 — 감식원에게 대화형으로 의뢰
   const pannable = examine && !isLab;
   const bodyPos = ROOM_HOTSPOTS[location.id]?.['__body__'] || { x: 50, y: 46, s: 1.1 };
+  const talkPos = ROOM_HOTSPOTS[location.id]?.['__talk__']; // 있으면 인물이 배경에 그려짐 → 터치존, 없으면 떠 있는 스탠딩
   return (
     <div className="aa-fs">
       <div className="aa-cam" ref={camRef}>
@@ -76,13 +77,21 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
       <div className="aa-loc-chip">🔦 {location.label}</div>
       {pannable && <div className="aa-swipe-hint">← 밀어서 방을 둘러보기 →</div>}
 
-      {roomSuspect && onTalk && (
+      {roomSuspect && onTalk && (talkPos ? (
+        // 인물이 배경 그림에 포함 — 그 자리를 눌러 대화(떠 있는 컷아웃 없음)
+        <button className="s-talkzone" style={{ left: `${talkPos.x}%`, top: `${talkPos.y}%` }}
+          onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
+          <span className="s-talkzone-ring" />
+          <span className="s-talkzone-glow" />
+          <span className="s-talkzone-tip">💬 {roomSuspect.name} — 이야기를 한다</span>
+        </button>
+      ) : (
         <button className="s-figure" onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
           <span className="s-figure-tip">💬 이야기를 한다</span>
           <StandingFigure sid={roomSuspect.id} person={roomSuspect.name} image={roomSuspect.image} height={240} fallbackSize={110} />
           <span className="s-figure-lab">{roomSuspect.name}</span>
         </button>
-      )}
+      ))}
 
       {isLab && (
         <div className="aa-ask">
