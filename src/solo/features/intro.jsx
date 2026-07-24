@@ -16,6 +16,16 @@ export function StartScreen({ difficulty, started, continueCount, onSetDifficult
   return (
     <div className="solo-wrap">
       <div className="s-start">
+        <div className="s-rain" aria-hidden="true">
+          {Array.from({ length: 24 }).map((_, i) => (
+            <span key={i} style={{
+              left: `${(i * 4.3 + (i % 5) * 3) % 100}%`,
+              height: `${9 + (i % 4) * 7}px`,
+              animationDuration: `${1.2 + (i % 6) * 0.32}s`,
+              animationDelay: `${(i % 8) * 0.45}s`,
+            }} />
+          ))}
+        </div>
         <div className="s-eye">Crime Scene · Solo</div>
         <div className="s-title">{briefing.title}</div>
         <div className="s-sub">{briefing.subtitle}</div>
