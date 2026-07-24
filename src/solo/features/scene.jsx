@@ -15,10 +15,13 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
   const [record, setRecord] = useState(false);
   const camRef = useRef(null);
   const trackRef = useRef(null);
-  // 세로 화면: 트랙(방 이미지)이 뷰포트보다 넓으면 가운데로 스크롤 시작 — 좌우로 밀어 둘러본다
+  // 트랙(방 이미지)이 뷰포트보다 크면 가운데로 스크롤 시작 — 밀어서 둘러본다(모바일은 상하좌우 2D 팬)
   useEffect(() => {
     const cam = camRef.current, tr = trackRef.current;
-    if (cam && tr) cam.scrollLeft = Math.max(0, (tr.offsetWidth - cam.clientWidth) / 2);
+    if (cam && tr) {
+      cam.scrollLeft = Math.max(0, (tr.offsetWidth - cam.clientWidth) / 2);
+      cam.scrollTop = Math.max(0, (tr.offsetHeight - cam.clientHeight) / 2);
+    }
   }, [location?.id]);
   if (!location) return null;
   const pannable = examine; // 조사 중에는 좌우 둘러보기

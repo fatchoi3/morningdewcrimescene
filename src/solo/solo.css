@@ -269,6 +269,11 @@ button { font-family: inherit; }
 .aa-cam::-webkit-scrollbar { height: 0; width: 0; }
 .aa-track { position: relative; height: 100%; aspect-ratio: 16 / 9; margin-inline: auto; }
 .aa-swipe-hint { position: absolute; left: 50%; top: 54px; transform: translateX(-50%); z-index: 6; background: #000000ba; color: #ffe9a8; font-size: .74rem; font-weight: 700; padding: 4px 13px; border-radius: 999px; pointer-events: none; opacity: 0; animation: swipehint 4s ease-in-out .3s 1 forwards; }
+/* 모바일: 배경을 화면보다 크게 잡아 일부만 보이고 상하좌우로 밀어(팬) 둘러보기 */
+@media (max-width: 640px) {
+  .aa-cam { overflow: auto; touch-action: pan-x pan-y; overscroll-behavior: contain; }
+  .aa-track { height: 122%; margin: 0; }
+}
 @keyframes swipehint { 0% { opacity: 0; } 12%, 68% { opacity: 1; } 100% { opacity: 0; } }
 .aa-loc-chip { position: absolute; top: 12px; left: 12px; z-index: 6; background: #000000b0; color: var(--gold); font-weight: 800; font-size: .82rem; padding: 5px 12px; border-radius: 8px; border: 1px solid #ffffff22; }
 .aa-close { position: absolute; top: 10px; right: 12px; z-index: 7; background: #000000b0; border: 1px solid var(--line); color: var(--text); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 1rem; }
