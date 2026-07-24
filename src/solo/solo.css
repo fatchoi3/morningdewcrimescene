@@ -224,6 +224,13 @@ button { font-family: inherit; }
 /* 감식 의뢰(분석 중) — 청록 강조 */
 .s-zone.req .s-zone-glow { background: radial-gradient(ellipse at 50% 45%, #6fd7e647 0%, #6fd7e600 68%); box-shadow: inset 0 0 0 2px #6fd7e6b3, 0 0 18px #6fd7e655; }
 .s-zone.req .s-zone-lab { color: #a8e6f0; }
+/* 물건 크기에 맞춘 상자형 핫스팟 — 인라인 width/height(%)가 크기를 정하고, 강조는 상자를 채운다 */
+.s-zone.boxed .s-zone-glow { inset: 0; border-radius: 9px; }
+/* 다각형(실루엣) 핫스팟 — 강조가 물건 외곽 모양을 그대로 따라간다(clip-path는 인라인) */
+.s-zone.poly .s-zone-glow { inset: 0; border-radius: 0; box-shadow: none; background: #ffe9a852; }
+.s-zone.poly.have .s-zone-glow { background: #57d08a52; box-shadow: none; }
+.s-zone.poly.body .s-zone-glow { background: #e07a7a60; box-shadow: none; }
+.s-zone.poly.req .s-zone-glow { background: #6fd7e652; box-shadow: none; }
 /* 터치 기기(호버 없음): 물건을 못 찾으니 아주 옅게 영역을 상시 표시해 탭으로 조사 */
 @media (hover: none) {
   .s-zone-glow { opacity: .32; }

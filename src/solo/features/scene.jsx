@@ -51,8 +51,14 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
         const zoneLab = have ? c.title
           : isGamsik && lab ? (req ? '🔬 분석 중…' : lab.ready(code) ? '🔬 감식 의뢰' : '채취물 필요')
           : '조사';
+        // 핫스팟: w/h가 있으면 물건 크기에 맞춘 상자, poly가 있으면 실루엣(clip-path)으로 모양 강조
+        const boxed = p.w != null;
+        const clip = p.poly ? `polygon(${p.poly.map((pt) => `${pt[0]}% ${pt[1]}%`).join(', ')})` : undefined;
+        const zStyle = boxed
+          ? { left: `${p.x}%`, top: `${p.y}%`, width: `${p.w}%`, height: `${p.h}%` }
+          : { left: `${p.x}%`, top: `${p.y}%`, '--s': p.s };
         return (
-          <button key={code} className={`s-zone${have ? ' have' : ''}${req && !have ? ' req' : ''}`} style={{ left: `${p.x}%`, top: `${p.y}%`, '--s': p.s }}
+          <button key={code} className={`s-zone${boxed ? ' boxed' : ''}${p.poly ? ' poly' : ''}${have ? ' have' : ''}${req && !have ? ' req' : ''}`} style={zStyle}
             aria-label={zoneLab}
             onClick={() => {
               if (isGamsik && !have) {
@@ -65,7 +71,7 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
               onOpen(code);
             }}>
             <span className="s-zone-ground" />
-            <span className="s-zone-glow" />
+            <span className="s-zone-glow" style={clip ? { clipPath: clip, WebkitClipPath: clip } : undefined} />
             {have && <span className="s-zone-check">✓</span>}
             <span className="s-zone-lab">{zoneLab}</span>
           </button>
