@@ -123,7 +123,7 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
       <DialogueBox location={isLab ? '감식 의뢰실' : location.label}
         text={isLab
           ? '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 결과는 2차 심문이 열릴 때 도착한다.'
-          : (examine ? ('그림 속 빛나는 곳을 눌러 조사하자.' + (roomSuspect ? ` ${roomSuspect.name}을(를) 누르면 이야기할 수 있다.` : '')) : '무엇을 할까?')} />
+          : (examine ? ('그림 속 물건에 마우스를 올리면(모바일은 탭) 조사할 수 있다.' + (roomSuspect ? ` ${roomSuspect.name}을(를) 누르면 이야기할 수 있다.` : '')) : '무엇을 할까?')} />
 
       <CommandBar items={(isLab ? [
         { icon: '📓', label: '사건기록', onClick: () => setRecord(true) },
