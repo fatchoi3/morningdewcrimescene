@@ -24,7 +24,8 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
     }
   }, [location?.id]);
   if (!location) return null;
-  const pannable = examine; // 조사 중에는 좌우 둘러보기
+  const isLab = location.kind === 'lab'; // 감식 의뢰실 — 감식원에게 대화형으로 의뢰
+  const pannable = examine && !isLab;
   const bodyPos = ROOM_HOTSPOTS[location.id]?.['__body__'] || { x: 50, y: 46, s: 1.1 };
   return (
     <div className="aa-fs">
@@ -39,7 +40,7 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
           <span className="s-zone-lab">시신</span>
         </button>
       )}
-      {examine && location.objects.map((code, i) => {
+      {examine && !isLab && location.objects.map((code, i) => {
         const c = getClue(code); if (!c) return null;
         if (c.phone && stage < 3) return null;   // 휴대폰은 2차 심문(stage 3)에 해금 — 그 전엔 방에 안 보임
         const have = collectedSet.has(code);
@@ -83,14 +84,46 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
         </button>
       )}
 
-      <DialogueBox location={location.label}
-        text={examine ? ('그림 속 빛나는 곳을 눌러 조사하자.' + (roomSuspect ? ` ${roomSuspect.name}을(를) 누르면 이야기할 수 있다.` : '')) : '무엇을 할까?'} />
+      {isLab && (
+        <div className="aa-ask">
+          <div className="aa-ask-h">🧑‍🔬 감식원 — 어떤 걸 분석해 드릴까요?</div>
+          {location.objects.map((code) => {
+            const c = getClue(code); if (!c) return null;
+            const have = collectedSet.has(code);
+            const req = lab?.requested(code);
+            const ready = lab?.ready(code);
+            const cls = have ? 'done' : (ready && !req) ? 'new' : req ? 'asked' : '';
+            const label = have ? `✅ ${c.title} — 결과 보기`
+              : req ? `🔬 ${c.title} — 분석 중…`
+              : ready ? `🔬 ${c.title} — 감식 의뢰`
+              : `🔒 ${c.title} — 채취물 필요`;
+            return (
+              <button key={code} className={cls} onClick={() => {
+                if (have) { onOpen(code); return; }
+                if (!ready) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
+                if (lab.stage >= 3) { onOpen(code); return; }
+                if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
+                lab.request(code);
+              }}>{label}</button>
+            );
+          })}
+          <button className="end" onClick={onBack}>↩ 나간다</button>
+        </div>
+      )}
 
-      <CommandBar items={[
+      <DialogueBox location={isLab ? '감식 의뢰실' : location.label}
+        text={isLab
+          ? '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 결과는 2차 심문이 열릴 때 도착한다.'
+          : (examine ? ('그림 속 빛나는 곳을 눌러 조사하자.' + (roomSuspect ? ` ${roomSuspect.name}을(를) 누르면 이야기할 수 있다.` : '')) : '무엇을 할까?')} />
+
+      <CommandBar items={(isLab ? [
+        { icon: '📓', label: '사건기록', onClick: () => setRecord(true) },
+        { icon: '🚶', label: '이동한다', onClick: onBack },
+      ] : [
         { icon: '🔍', label: '조사한다', active: examine, onClick: () => setExamine((e) => !e) },
         { icon: '📓', label: '사건기록', onClick: () => setRecord(true) },
         { icon: '🚶', label: '이동한다', onClick: onBack },
-      ]} />
+      ])} />
 
       {record && (
         <div className="aa-record">
