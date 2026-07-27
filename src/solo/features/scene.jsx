@@ -95,7 +95,8 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
 
       {roomSuspect && onTalk && (talkPos ? (
         // 인물이 배경 그림에 포함 — 그 자리를 눌러 대화(떠 있는 컷아웃 없음)
-        <button className="s-talkzone" style={{ left: `${talkPos.x}%`, top: `${talkPos.y}%` }}
+        <button className="s-talkzone"
+          style={{ left: `${talkPos.x}%`, top: `${talkPos.y}%`, ...(talkPos.w ? { width: `${talkPos.w}%`, height: `${talkPos.h}%` } : null) }}
           onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
           <span className="s-talkzone-ring" />
           <span className="s-talkzone-glow" />
