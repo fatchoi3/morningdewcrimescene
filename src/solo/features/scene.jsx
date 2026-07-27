@@ -35,11 +35,12 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
           <SceneBg location={location} />
 
       {examine && location.showBody && (
-        <button className="s-zone body" style={{ left: `${bodyPos.x}%`, top: `${bodyPos.y}%`, '--s': bodyPos.s }} onClick={() => onOpen('__body__')} aria-label="시신 조사">
-          <span className="s-zone-ground" />
-          <span className="s-zone-glow" />
+        <div className="s-zone-wrap" style={{ left: `${bodyPos.x}%`, top: `${bodyPos.y}%`, '--s': bodyPos.s }}>
+          <button className="s-zone body" onClick={() => onOpen('__body__')} aria-label="시신 조사">
+            <span className="s-zone-glow" />
+          </button>
           <span className="s-zone-lab">시신</span>
-        </button>
+        </div>
       )}
       {examine && !isLab && location.objects.map((code, i) => {
         const c = getClue(code); if (!c) return null;
@@ -51,30 +52,35 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
         const zoneLab = have ? c.title
           : isGamsik && lab ? (req ? '🔬 분석 중…' : lab.ready(code) ? '🔬 감식 의뢰' : '채취물 필요')
           : '조사';
-        // 핫스팟: w/h가 있으면 물건 크기에 맞춘 상자, poly가 있으면 실루엣(clip-path)으로 모양 강조
+        // 핫스팟: w/h가 있으면 물건 크기에 맞춘 상자, poly가 있으면 실루엣 모양.
+        //   poly는 버튼 자체를 clip-path로 잘라 '실루엣 안에서만' 클릭되게 한다 →
+        //   물건이 서로 붙어 있어도 클릭·표시 영역이 겹치지 않는다.
+        //   (이름표는 잘리면 안 되므로 래퍼의 형제로 두고 버튼 hover에 반응시킨다)
         const boxed = p.w != null;
         const clip = p.poly ? `polygon(${p.poly.map((pt) => `${pt[0]}% ${pt[1]}%`).join(', ')})` : undefined;
-        const zStyle = boxed
+        const wrapStyle = boxed
           ? { left: `${p.x}%`, top: `${p.y}%`, width: `${p.w}%`, height: `${p.h}%` }
           : { left: `${p.x}%`, top: `${p.y}%`, '--s': p.s };
+        const onPick = () => {
+          if (isGamsik && !have) {
+            // 감식은 '의뢰 → 2차 심문 때 결과' 흐름 (2차 개방 후엔 즉시 결과)
+            if (!lab || !lab.ready(code)) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
+            if (lab.stage >= 3) { onOpen(code); return; }
+            if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
+            lab.request(code); return;
+          }
+          onOpen(code);
+        };
         return (
-          <button key={code} className={`s-zone${boxed ? ' boxed' : ''}${p.poly ? ' poly' : ''}${have ? ' have' : ''}${req && !have ? ' req' : ''}`} style={zStyle}
-            aria-label={zoneLab}
-            onClick={() => {
-              if (isGamsik && !have) {
-                // 감식은 '의뢰 → 2차 심문 때 결과' 흐름 (2차 개방 후엔 즉시 결과)
-                if (!lab || !lab.ready(code)) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
-                if (lab.stage >= 3) { onOpen(code); return; }
-                if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
-                lab.request(code); return;
-              }
-              onOpen(code);
-            }}>
-            <span className="s-zone-ground" />
-            <span className="s-zone-glow" style={clip ? { clipPath: clip, WebkitClipPath: clip } : undefined} />
-            {have && <span className="s-zone-check">✓</span>}
+          <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle}>
+            <button className={`s-zone${boxed ? ' boxed' : ''}${p.poly ? ' poly' : ''}${have ? ' have' : ''}${req && !have ? ' req' : ''}`}
+              style={clip ? { clipPath: clip, WebkitClipPath: clip } : undefined}
+              aria-label={zoneLab} onClick={onPick}>
+              <span className="s-zone-glow" />
+              {have && <span className="s-zone-check">✓</span>}
+            </button>
             <span className="s-zone-lab">{zoneLab}</span>
-          </button>
+          </div>
         );
       })}
         </div>
