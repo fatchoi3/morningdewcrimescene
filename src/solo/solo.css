@@ -210,49 +210,52 @@ button { font-family: inherit; }
 .s-zone { position: absolute; inset: 0; background: none; border: none; padding: 0; cursor: pointer; pointer-events: auto; border-radius: 16px; }
 .s-zone-ground { display: none; }
 .s-zone::after { display: none; }
+
+/* ── 표시: '면'이 아니라 '테두리'만 빛난다 ──────────────────────────────────
+   SVG 외곽선이라 물건 실루엣을 그대로 따라가고, non-scaling-stroke 로
+   상자 비율이 어떻든 선 굵기가 일정하다. 버튼(클릭 판정) 밖에 있어서
+   clip-path 에 발광이 잘리지 않는다. */
+.s-zone-outline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none;
+  fill: none; stroke: #ffeec2; stroke-width: 2; stroke-linejoin: round;
+  filter: drop-shadow(0 0 3px #ffe0a0e6) drop-shadow(0 0 9px #ffd98a99);
+  opacity: .8; transition: opacity .14s, stroke .14s, filter .14s;
+  animation: zonebreath 3.4s ease-in-out infinite; }
+@keyframes zonebreath { 0%, 100% { opacity: .66; } 50% { opacity: 1; } }
+.s-zone:hover ~ .s-zone-outline, .s-zone:focus-visible ~ .s-zone-outline {
+  opacity: 1; animation: none; stroke: #fff8e6; stroke-width: 2.6;
+  filter: drop-shadow(0 0 5px #fff0c8) drop-shadow(0 0 16px #ffd98acc); }
+.s-zone:active ~ .s-zone-outline { stroke: #fffdf6; filter: drop-shadow(0 0 7px #fff6de) drop-shadow(0 0 22px #ffd76b); }
+/* 확보한 단서 — 초록 테두리(차분하게, 숨쉬기 없음) */
+.s-zone-outline.have { stroke: #9cf0c2; opacity: .5; animation: none; filter: drop-shadow(0 0 3px #7fe3abcc) drop-shadow(0 0 8px #57d08a80); }
+.s-zone.have:hover ~ .s-zone-outline { stroke: #d6ffe9; opacity: 1; filter: drop-shadow(0 0 5px #c8ffe0) drop-shadow(0 0 14px #7fe3abcc); }
+/* 시신 — 붉은 테두리 / 감식 의뢰 — 청록 테두리 */
+.s-zone-outline.body { stroke: #ffc2c2; filter: drop-shadow(0 0 3px #ff9d9de6) drop-shadow(0 0 9px #e07a7a99); }
+.s-zone.body:hover ~ .s-zone-outline { stroke: #ffe4e4; filter: drop-shadow(0 0 5px #ffd6d6) drop-shadow(0 0 16px #ff9d9dcc); }
+.s-zone-outline.req { stroke: #bff2fa; filter: drop-shadow(0 0 3px #93e6f4e6) drop-shadow(0 0 9px #6fd7e699); }
+.s-zone.req:hover ~ .s-zone-outline { stroke: #e4fbff; filter: drop-shadow(0 0 5px #dbf8fd) drop-shadow(0 0 16px #93e6f4cc); }
 /* 조사 가능 영역 — 화면이 어두우므로 '어두운 그림자'가 아니라 '따뜻한 빛'으로 표시한다.
    평소에도 은은히 빛나며 천천히 숨쉬어 "여기 누를 수 있어요"가 바로 읽히고, 호버 시 확 밝아진다. */
-.s-zone-glow { position: absolute; inset: 5%; border-radius: 13px; background: radial-gradient(ellipse at 50% 45%, #ffeeb866 0%, #ffe9a833 46%, #ffe9a800 74%); box-shadow: inset 0 0 0 2px #ffeec2, 0 0 18px #ffe0a07a, 0 0 42px #ffd98a3d; opacity: .72; transition: opacity .14s, box-shadow .14s; pointer-events: none; animation: zonebreath 3.4s ease-in-out infinite; }
-@keyframes zonebreath { 0%, 100% { opacity: .62; } 50% { opacity: .95; } }
-.s-zone:hover .s-zone-glow, .s-zone:focus-visible .s-zone-glow { opacity: 1; animation: none; box-shadow: inset 0 0 0 2.5px #fff6de, 0 0 26px #ffe6b0, 0 0 60px #ffd98a80; }
-.s-zone:active .s-zone-glow { background: radial-gradient(ellipse at 50% 45%, #fff0c68f 0%, #ffd76b47 48%, #ffd76b00 76%); box-shadow: inset 0 0 0 2.5px #fffaf0, 0 0 30px #ffe4a8, 0 0 66px #ffd76b99; }
 /* 이름표 — 버튼의 형제(래퍼 자식). clip-path에 잘리지 않도록 버튼 밖에 둔다 */
 .s-zone-lab { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); margin-bottom: 4px; font-size: .68rem; background: #000c; color: #ffe9a8; padding: 2px 8px; border-radius: 6px; white-space: nowrap; opacity: 0; transition: opacity .14s; pointer-events: none; }
 .s-zone:hover ~ .s-zone-lab, .s-zone:focus-visible ~ .s-zone-lab { opacity: 1; }
 /* 확보한 단서 — 초록 빛(이미 챙긴 것이라 새 단서보다 차분하게, 숨쉬기 없음) */
-.s-zone.have .s-zone-glow { background: radial-gradient(ellipse at 50% 45%, #7fe3ab3d 0%, #57d08a00 68%); box-shadow: inset 0 0 0 2px #9cf0c2, 0 0 14px #7fe3ab5c; opacity: .5; animation: none; }
-.s-zone.have:hover .s-zone-glow, .s-zone.have:focus-visible .s-zone-glow { opacity: 1; box-shadow: inset 0 0 0 2.5px #c8ffe0, 0 0 22px #9cf0c2b3; }
 .s-zone-check { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 1.1rem; font-weight: 800; color: #86e6ab; text-shadow: 0 1px 3px #000, 0 0 8px #000; opacity: 0; transition: opacity .14s; pointer-events: none; }
 .s-zone.have:hover .s-zone-check, .s-zone.have:focus-visible .s-zone-check { opacity: 1; }
 .s-zone.have ~ .s-zone-lab { color: #a6e6bd; }
 /* 시신 — 붉은 빛 */
-.s-zone.body .s-zone-glow { background: radial-gradient(ellipse at 50% 45%, #ff9d9d5c 0%, #e07a7a00 70%); box-shadow: inset 0 0 0 2px #ffc2c2, 0 0 20px #ff9d9d7a, 0 0 46px #e07a7a45; }
 .s-zone.body ~ .s-zone-lab { color: #f0b8b8; }
 /* 감식 의뢰(분석 중) — 청록 빛 */
-.s-zone.req .s-zone-glow { background: radial-gradient(ellipse at 50% 45%, #93e6f45c 0%, #6fd7e600 70%); box-shadow: inset 0 0 0 2px #bff2fa, 0 0 20px #93e6f47a, 0 0 46px #6fd7e645; }
 .s-zone.req ~ .s-zone-lab { color: #a8e6f0; }
 /* 물건 크기에 맞춘 상자형 핫스팟 — 인라인 width/height(%)가 크기를 정하고, 강조는 상자를 채운다 */
-.s-zone.boxed .s-zone-glow { inset: 0; border-radius: 9px; }
 /* 다각형(실루엣) 핫스팟 — 강조가 물건 외곽 모양을 그대로 따라간다(clip-path는 인라인).
    box-shadow는 clip-path에 잘려서 안 보이므로, 그림자는 drop-shadow 필터로 준다. */
 /*   실루엣은 '밝은 외곽 빛(drop-shadow)'으로 물체가 스스로 발광하는 느낌을 준다.
      어두운 그림자는 아주 옅게만 깔아 밝은 배경 위에서도 형태가 보이게 한다. */
-.s-zone.poly .s-zone-glow { inset: 0; border-radius: 0; box-shadow: none; background: #ffeeb866; filter: drop-shadow(0 0 5px #ffe0a0cc) drop-shadow(0 0 14px #ffd98a80) drop-shadow(0 1px 2px #00000073); transition: opacity .14s, background .14s, filter .14s; }
-.s-zone.poly:hover .s-zone-glow, .s-zone.poly:focus-visible .s-zone-glow { background: #fff3cfad; filter: drop-shadow(0 0 8px #fff0c8) drop-shadow(0 0 22px #ffd98ab3) drop-shadow(0 1px 2px #00000073); }
-.s-zone.poly.have .s-zone-glow { background: #9cf0c247; filter: drop-shadow(0 0 5px #7fe3ab99) drop-shadow(0 1px 2px #00000073); }
-.s-zone.poly.have:hover .s-zone-glow { background: #b8f7d47a; filter: drop-shadow(0 0 8px #c8ffe0) drop-shadow(0 0 20px #7fe3ab99) drop-shadow(0 1px 2px #00000073); }
-.s-zone.poly.body .s-zone-glow { background: #ff9d9d5c; filter: drop-shadow(0 0 5px #ff9d9dcc) drop-shadow(0 0 14px #e07a7a80) drop-shadow(0 1px 2px #00000073); }
-.s-zone.poly.body:hover .s-zone-glow { background: #ffc2c294; filter: drop-shadow(0 0 8px #ffd6d6) drop-shadow(0 0 22px #ff9d9db3) drop-shadow(0 1px 2px #00000073); }
-.s-zone.poly.req .s-zone-glow { background: #93e6f45c; filter: drop-shadow(0 0 5px #93e6f4cc) drop-shadow(0 0 14px #6fd7e680) drop-shadow(0 1px 2px #00000073); }
-.s-zone.poly.req:hover .s-zone-glow { background: #bff2fa94; filter: drop-shadow(0 0 8px #dbf8fd) drop-shadow(0 0 22px #93e6f4b3) drop-shadow(0 1px 2px #00000073); }
 /* 터치 기기(호버 없음)에선 더 밝게 — 호버로 찾을 수 없으니 */
 @media (hover: none) {
-  .s-zone-glow { opacity: .9; }
-  @keyframes zonebreath { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
 }
 /* 애니메이션을 꺼둔 사용자에겐 숨쉬기 대신 고정 밝기 */
 @media (prefers-reduced-motion: reduce) {
-  .s-zone-glow { animation: none; opacity: .85; }
 }
 
 /* 모달 */

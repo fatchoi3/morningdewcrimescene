@@ -40,9 +40,10 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
 
       {examine && location.showBody && (
         <div className="s-zone-wrap" style={{ left: `${bodyPos.x}%`, top: `${bodyPos.y}%`, '--s': bodyPos.s }}>
-          <button className="s-zone body" onClick={() => onOpen('__body__')} aria-label="시신 조사">
-            <span className="s-zone-glow" />
-          </button>
+          <button className="s-zone body" onClick={() => onOpen('__body__')} aria-label="시신 조사" />
+          <svg className="s-zone-outline body" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <rect x="2" y="2" width="96" height="96" rx="6" vectorEffect="non-scaling-stroke" />
+          </svg>
           <span className="s-zone-lab">시신</span>
         </div>
       )}
@@ -75,26 +76,28 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
           }
           onOpen(code);
         };
+        const tone = have ? ' have' : req ? ' req' : '';
         return (
           <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle}>
-            <button className={`s-zone${boxed ? ' boxed' : ''}${p.poly ? ' poly' : ''}${have ? ' have' : ''}${req && !have ? ' req' : ''}`}
+            {/* 클릭 판정 전용(투명). poly면 실루엣 안에서만 눌린다 */}
+            <button className={`s-zone${boxed ? ' boxed' : ''}${p.poly ? ' poly' : ''}${tone}`}
               style={clip ? { clipPath: clip, WebkitClipPath: clip } : undefined}
-              aria-label={zoneLab} onClick={onPick}>
-              <span className="s-zone-glow" />
-              {have && <span className="s-zone-check">✓</span>}
-            </button>
+              aria-label={zoneLab} onClick={onPick} />
+            {/* 표시 전용 — 면은 비우고 '테두리만' 빛낸다(버튼 밖이라 발광이 잘리지 않음) */}
+            <svg className={`s-zone-outline${tone}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              {p.poly
+                ? <polygon points={p.poly.map((pt) => `${pt[0]},${pt[1]}`).join(' ')} vectorEffect="non-scaling-stroke" />
+                : <rect x="2" y="2" width="96" height="96" rx="6" vectorEffect="non-scaling-stroke" />}
+            </svg>
+            {have && <span className="s-zone-check">✓</span>}
             <span className="s-zone-lab">{zoneLab}</span>
           </div>
         );
       })}
-        </div>
-      </div>
 
-      <div className="aa-loc-chip">🔦 {location.label}</div>
-      {pannable && <div className="aa-swipe-hint">← 밀어서 방을 둘러보기 →</div>}
-
-      {roomSuspect && onTalk && (talkPos ? (
-        // 인물이 배경 그림에 포함 — 그 자리를 눌러 대화(떠 있는 컷아웃 없음)
+      {/* 인물 터치존은 반드시 .aa-track(그림) 안에 둔다 —
+          밖에 두면 %좌표가 '그림'이 아니라 '화면' 기준이 되어 창 크기에 따라 인물에서 어긋난다. */}
+      {roomSuspect && onTalk && talkPos && (
         <button className="s-talkzone"
           style={{ left: `${talkPos.x}%`, top: `${talkPos.y}%`, ...(talkPos.w ? { width: `${talkPos.w}%`, height: `${talkPos.h}%` } : null) }}
           onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
@@ -102,13 +105,20 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
           <span className="s-talkzone-glow" />
           <span className="s-talkzone-tip">💬 {roomSuspect.name} — 이야기를 한다</span>
         </button>
-      ) : (
+      )}
+        </div>
+      </div>
+
+      <div className="aa-loc-chip">🔦 {location.label}</div>
+      {pannable && <div className="aa-swipe-hint">← 밀어서 방을 둘러보기 →</div>}
+
+      {roomSuspect && onTalk && !talkPos && (
         <button className="s-figure" onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
           <span className="s-figure-tip">💬 이야기를 한다</span>
           <StandingFigure sid={roomSuspect.id} person={roomSuspect.name} image={roomSuspect.image} height={240} fallbackSize={110} />
           <span className="s-figure-lab">{roomSuspect.name}</span>
         </button>
-      ))}
+      )}
 
       {isLab && (
         <div className="aa-ask">

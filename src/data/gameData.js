@@ -1,7 +1,7 @@
 import { cast, victimRecord, suspectRecords } from './cast.js';
 import { resolveTokens } from './tokens.js';
 
-﻿// 모든 청년부원의 성경책에 공통으로 들어가는 말씀 페이지(밑줄·포스트잇이 있는 흔한 성경책).
+// 모든 청년부원의 성경책에 공통으로 들어가는 말씀 페이지(밑줄·포스트잇이 있는 흔한 성경책).
 // 가현의 성경책(DZPL-78)만 여기에 아이의 그림 편지 한 장이 더 끼워져 있다.
 const BIBLE_PAGES = [
   {
