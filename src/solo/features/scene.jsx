@@ -13,10 +13,14 @@ import { CaseRecord } from './record.jsx';
 export function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, stage = 1, onTalk, onOpen, onLockedToast, onBack }) {
   const [examine, setExamine] = useState(true);
   const [record, setRecord] = useState(false);
+  // 배경 그림의 실제 비율. 트랙을 이 비율로 잡아야 핫스팟 %좌표가 그림과 정확히 일치한다
+  //   (16:9로 고정해두면 1376×768 같은 그림은 cover로 좌우가 잘려 좌표가 밀린다).
+  const [bgRatio, setBgRatio] = useState(16 / 9);
   const camRef = useRef(null);
   const trackRef = useRef(null);
   // 트랙(방 이미지)이 뷰포트보다 크면 가운데로 스크롤 시작 — 밀어서 둘러본다(모바일은 상하좌우 2D 팬)
   useEffect(() => {
+    setBgRatio(16 / 9); // 방을 옮기면 새 그림의 onLoad 가 다시 정확한 비율을 준다
     const cam = camRef.current, tr = trackRef.current;
     if (cam && tr) {
       cam.scrollLeft = Math.max(0, (tr.offsetWidth - cam.clientWidth) / 2);
@@ -31,8 +35,8 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
   return (
     <div className="aa-fs">
       <div className="aa-cam" ref={camRef}>
-        <div className="aa-track" ref={trackRef}>
-          <SceneBg location={location} />
+        <div className="aa-track" ref={trackRef} style={{ aspectRatio: String(bgRatio) }}>
+          <SceneBg location={location} onRatio={setBgRatio} />
 
       {examine && location.showBody && (
         <div className="s-zone-wrap" style={{ left: `${bodyPos.x}%`, top: `${bodyPos.y}%`, '--s': bodyPos.s }}>

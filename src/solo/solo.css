@@ -203,8 +203,9 @@ button { font-family: inherit; }
 /* 조사 존 — 배경 그림 위 '반짝임'(깊이 배율 --s, 제자리 점멸: 공중부양 X) */
 /* 단서 핫스팟 — 평소엔 배경 그림만 보이고, 물건 위에 마우스를 올리면(호버) 그 영역이 강조된다.
    빛나는 점을 겨냥해 누르는 게 아니라 '그림 속 물건 영역'을 눌러 조사하는 방식. */
-/* 래퍼: 위치·크기만 담당하고 클릭은 통과시킨다(안쪽 버튼만 클릭 대상) */
-.s-zone-wrap { position: absolute; transform: translate(-50%,-50%) scale(var(--s,1)); width: 92px; height: 92px; pointer-events: none; z-index: 7; }
+/* 래퍼: 위치·크기만 담당하고 클릭은 통과시킨다(안쪽 버튼만 클릭 대상).
+   크기는 %(그림 기준) — px로 잡으면 폰처럼 작은 화면에서 영역이 상대적으로 커진다. */
+.s-zone-wrap { position: absolute; transform: translate(-50%,-50%) scale(var(--s,1)); width: 6.7%; height: 12%; pointer-events: none; z-index: 7; }
 .s-zone-wrap.boxed { transform: translate(-50%,-50%); }
 .s-zone { position: absolute; inset: 0; background: none; border: none; padding: 0; cursor: pointer; pointer-events: auto; border-radius: 16px; }
 .s-zone-ground { display: none; }
