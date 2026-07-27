@@ -6,15 +6,17 @@
 import { stageHint } from '../lib/game.js';
 import { getClue } from '../content.js';
 import { HallBg } from '../art.jsx';
+import { cast } from '../../data/cast.js';
 
 // main.jpg 위 방문 위치(%): 좌벽 근→원, 우벽 근→원 (배경 16:9를 16:9 무대에 cover)
+// person 은 방 데이터와 맞춰야 하는 조회 키라 cast 에서 이름을 뽑는다.
 const HALL_DOORS = [
-  { person: '최종현', x: 14, y: 58 },
-  { person: '이가현', x: 30, y: 55 },
-  { person: '윤은재', x: 38, y: 53 },
-  { person: '박희원', x: 62, y: 53 },
-  { person: '이현지', x: 70.5, y: 55 },
-  { person: '이사랑', x: 86.5, y: 58 },
+  { person: cast.S1.name, x: 14, y: 58 },
+  { person: cast.S6.name, x: 30, y: 55 },
+  { person: cast.S2.name, x: 38, y: 53 },
+  { person: cast.S4.name, x: 62, y: 53 },
+  { person: cast.S3.name, x: 70.5, y: 55 },
+  { person: cast.S5.name, x: 86.5, y: 58 },
 ];
 
 function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {

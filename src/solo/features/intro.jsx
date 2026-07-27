@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState } from 'react';
 import { briefing, victim, suspects } from '../content.js';
+import { cast, t } from '../../data/cast.js';
 import { DIFFS, isUiTap, REVEAL, TIMELINE } from '../lib/game.js';
 import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
 import { DialogueBox, CommandBar } from '../vn.jsx';
@@ -79,7 +80,7 @@ export function BriefingVN({ onDone }) {
 // ── 중간 사건 — 1차 심문 완료 후 부검 소견 도착(살인 전환) 연출 ───────────────
 export function EventVN({ onDone }) {
   const beats = [
-    { loc: '무전', text: '"…수사관님, 국과수입니다. 김호치 목사 1차 부검 소견이 나왔습니다."' },
+    { loc: '무전', text: t('"…수사관님, 국과수입니다. {{victim.full}} 1차 부검 소견이 나왔습니다."') },
     { loc: '부검 소견', text: '"사인은 단순 심장 발작이 아닙니다. 코와 입 주변의 압박흔, 안면의 점상출혈 — 질식 소견입니다."' },
     { loc: '수사 전환', text: '단순 발작사가 아니다. 사건은 지금부로 살인 사건으로 전환된다.' },
     { text: '통제 중이던 목사님 방이 개방되었다. 압수했던 CCTV 원본과 관계자 휴대폰도 열람할 수 있다.' },
@@ -147,7 +148,7 @@ export function EndingScreen({ result, onNewCase }) {
           <div style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)', fontWeight: 800, marginTop: 6 }}>
             {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : `✗ 당신의 지목: ${suspects.find((s) => s.id === r.pick)?.name || '—'}`}
           </div>
-          <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>박희원</b> · 직접 사인 <b style={{ color: '#fff' }}>베개 질식</b></div>
+          <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>{cast.S4.name}</b> · 직접 사인 <b style={{ color: '#fff' }}>베개 질식</b></div>
         </div>
         <div className="s-reveal">
           <h2 style={{ textAlign: 'center' }}>사건의 전말</h2>

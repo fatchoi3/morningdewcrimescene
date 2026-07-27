@@ -6,18 +6,21 @@
 //   프롬프트는 docs/solo-art-prompts.md 참고.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from 'react';
+import { keyByPersonName } from '../data/cast.js';
+import { assetUrl } from '../data/assets.js';
 
 // 인물/방별 팔레트 (벽/바닥/포인트/따뜻한톤)
-const PAL = {
-  '최종현': { wall: '#26313f', floor: '#161d26', accent: '#4a7fb5', warm: '#c9a84c' },
-  '윤은재': { wall: '#2b2440', floor: '#1a1528', accent: '#8368bd', warm: '#c9a84c' },
-  '이현지': { wall: '#123430', floor: '#0c211d', accent: '#2fa384', warm: '#d8c98a' },
-  '박희원': { wall: '#34301b', floor: '#221f11', accent: '#c9a84c', warm: '#e0c877' },
-  '이사랑': { wall: '#341c28', floor: '#211119', accent: '#cf6f92', warm: '#e6b0c2' },
-  '이가현': { wall: '#221d3c', floor: '#151129', accent: '#7a70d6', warm: '#c9c1f0' },
+// 조회 키는 단서의 person(이름 문자열)이라, 이름은 cast 에서 뽑는다 — 캐스팅을 바꿔도 따라온다.
+const PAL = keyByPersonName({
+  S1: { wall: '#26313f', floor: '#161d26', accent: '#4a7fb5', warm: '#c9a84c' },
+  S2: { wall: '#2b2440', floor: '#1a1528', accent: '#8368bd', warm: '#c9a84c' },
+  S3: { wall: '#123430', floor: '#0c211d', accent: '#2fa384', warm: '#d8c98a' },
+  S4: { wall: '#34301b', floor: '#221f11', accent: '#c9a84c', warm: '#e0c877' },
+  S5: { wall: '#341c28', floor: '#211119', accent: '#cf6f92', warm: '#e6b0c2' },
+  S6: { wall: '#221d3c', floor: '#151129', accent: '#7a70d6', warm: '#c9c1f0' },
   '목사': { wall: '#2b1517', floor: '#190c0d', accent: '#c05a5a', warm: '#d89a6a' },
   _default: { wall: '#242a36', floor: '#151922', accent: '#5f7599', warm: '#c9a84c' },
-};
+});
 const palOf = (loc) => PAL[loc?.person] || PAL._default;
 
 // ── 공통 프레임: 벽 + 바닥(원근) + 걸레받이 ──
@@ -255,7 +258,9 @@ const COVER = { position: 'absolute', inset: 0, width: '100%', height: '100%', o
 // 후보 이미지들을 순서대로 시도, 다 실패하면 아무것도 안 그림(뒤 SVG가 보임).
 function HybridImg({ candidates, style, extra }) {
   const [i, setI] = useState(0);
-  const list = candidates.filter(Boolean);
+  // 후보 경로는 '/images/…' 루트 기준으로 적혀 있다. 하위 경로 배포(GitHub Pages
+  // 프로젝트 사이트 등)에서도 맞도록 여기서 한 번에 base 를 붙인다.
+  const list = candidates.filter(Boolean).map(assetUrl);
   if (i >= list.length) return null;
   return <img src={list[i]} alt="" style={style} onError={() => setI((n) => n + 1)} {...extra} />;
 }
@@ -313,7 +318,9 @@ export function Avatar({ person, image, size = 64 }) {
  *  없으면 머그샷(Avatar)으로 폴백. 심문·방 장면에서 인물이 서 있는 연출용. */
 export function StandingFigure({ sid, person, image, height = 260, fallbackSize = 120 }) {
   const [i, setI] = useState(0);
-  const candidates = sid ? [`/images/people/stand/${sid}.png`, `/images/people/stand/${sid}.webp`] : [];
+  const candidates = sid
+    ? [assetUrl(`/images/people/stand/${sid}.png`), assetUrl(`/images/people/stand/${sid}.webp`)]
+    : [];
   if (i < candidates.length) {
     return <img src={candidates[i]} alt="" onError={() => setI((n) => n + 1)}
       style={{ height, width: 'auto', maxWidth: '78vw', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 10px 18px #000c)' }} />;

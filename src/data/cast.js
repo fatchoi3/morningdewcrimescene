@@ -15,7 +15,7 @@
 //     실제 얼굴 사진은 git 에 커밋되지 않는다(README.txt 참고).
 //     파일이 없으면 앱이 이름 첫 글자 아바타로 대체한다.
 // ─────────────────────────────────────────────────────────────────────────────
-import { resolveTokens } from './tokens.js';
+import { resolveTokens, resolveString } from './tokens.js';
 import { readPack, applyPack } from './castPack.js';
 import { withAssetBase } from './assets.js';
 
@@ -149,6 +149,18 @@ function record(id) {
   const { short, role, full, theme, ...rest } = cast[id];
   return { id, ...rest };
 }
+
+// 문자열 하나를 지금 캐스팅으로 푼다 — JSX 안처럼 데이터 객체로 감쌀 수 없는 곳에서 쓴다.
+//   t('{{S1.short}}방을 눌러 들어가세요')  →  '종현방을 눌러 들어가세요'
+export const t = (s) => resolveString(s, cast);
+
+// 인물 id 로 적은 맵을 "이름을 키로 쓰는" 맵으로 바꾼다.
+//   { S1: x, 목사: y }  →  { '최종현': x, '목사': y }
+// 단서 데이터의 person 필드가 이름 문자열이라 조회 키도 이름이어야 하는데,
+// 그 이름을 소스에 직접 적으면 캐스팅을 바꿀 때 조용히 어긋난다. cast 에서 뽑아 쓴다.
+// (cast 에 없는 키 — '목사'·'공용'·'_default' 등 — 는 그대로 통과시킨다.)
+export const keyByPersonName = (map) =>
+  Object.fromEntries(Object.entries(map).map(([k, v]) => [cast[k]?.name ?? k, v]));
 
 // 피해자 레코드의 name 은 '김호치 목사' 형태를 쓴다(기존 표시·데이터 키와 동일).
 export const victimRecord = { ...record('victim'), name: cast.victim.full };

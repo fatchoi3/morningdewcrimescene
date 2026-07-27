@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { provider } from '../services/index.js';
 import { victim as _victim, suspects as _suspects } from '../data/gameData.js';
+import { keyByPersonName } from '../data/cast.js';
 import { TESTIMONY } from './interrogation.js';
 
 const all = provider.getAllClues();
@@ -33,15 +34,16 @@ const pageUnlockCodes = new Set(all.flatMap((c) => (c.pages || []).map((p) => p.
 const personRoom = Object.fromEntries(roomEntries.map((r) => [r.person, r.code]));
 
 // 방 배경 톤(스타일라이즈드) — 인물/피해자별 분위기
-const ROOM_BG = {
-  '최종현': 'linear-gradient(160deg,#1b2430,#0d141c)',
-  '윤은재': 'linear-gradient(160deg,#241b2e,#120d1a)',
-  '이현지': 'linear-gradient(160deg,#0f2422,#08140f)',
-  '박희원': 'linear-gradient(160deg,#2a2410,#14110a)',
-  '이사랑': 'linear-gradient(160deg,#2b1620,#160a10)',
-  '이가현': 'linear-gradient(160deg,#1a1730,#0c0a18)',
+// 조회 키가 단서의 person(이름)이라 cast 에서 뽑는다 — 캐스팅을 바꿔도 따라온다.
+const ROOM_BG = keyByPersonName({
+  S1: 'linear-gradient(160deg,#1b2430,#0d141c)',
+  S2: 'linear-gradient(160deg,#241b2e,#120d1a)',
+  S3: 'linear-gradient(160deg,#0f2422,#08140f)',
+  S4: 'linear-gradient(160deg,#2a2410,#14110a)',
+  S5: 'linear-gradient(160deg,#2b1620,#160a10)',
+  S6: 'linear-gradient(160deg,#1a1730,#0c0a18)',
   '목사': 'linear-gradient(160deg,#241012,#12080a)',
-};
+});
 
 const clueIcon = (c) => {
   if (!c) return '📦';

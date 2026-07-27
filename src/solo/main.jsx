@@ -12,7 +12,9 @@ createRoot(document.getElementById('solo-root')).render(
 // PWA 서비스워커 — 프로덕션에서만 등록(개발 HMR 방해 방지)
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+    // 하위 경로 배포에서도 맞도록 base 기준으로 등록한다(루트 배포면 그대로 '/sw.js').
+    const base = import.meta.env.BASE_URL || '/';
+    navigator.serviceWorker.register(`${base}sw.js`, { scope: base }).catch(() => {});
   });
 }
 

@@ -62,8 +62,7 @@ main 에 push 할 때마다 자동 배포하려면 Variables 에 `ENABLE_PAGES =
 
 - 주소는 `https://<계정>.github.io/<저장소>/` 형태이고, 하위 경로에서도 이미지가 깨지지 않게
   빌드가 자동으로 맞춥니다(`VITE_BASE`). 저장소 이름을 `<계정>.github.io` 로 하면 루트 주소가 됩니다.
-- ⚠️ **혼자 하는 추리(`/solo.html`)는 하위 경로 배포를 아직 지원하지 않습니다.**
-  경로가 코드에 고정된 곳이 남아 있어, solo 까지 쓰려면 루트 주소(사용자 사이트나 커스텀 도메인)로 배포하세요.
+- 혼자 하는 추리(`/solo.html`)도 하위 경로에서 동작합니다(서비스워커 등록 범위 포함).
 - ⚠️ 포크 저장소에서는 기존 `deploy.yml`(S3 배포)이 시크릿이 없어 실패합니다.
   Actions 탭에서 그 워크플로를 **Disable** 해 두세요.
 - ⚠️ 정답(`src/data/secrets.js`)은 저장소에 포함되어 있고 빌드 결과에도 들어갑니다.
@@ -77,6 +76,9 @@ main 에 push 할 때마다 자동 배포하려면 Variables 에 `ENABLE_PAGES =
    - 이름·나이·직책·사진 경로·색상의 **단일 원천**. 용의자 목록과 팔레트가 전부 여기서 파생됩니다.
    - 본문에서 인물을 가리킬 땐 이름을 직접 쓰지 말고 토큰을 쓰세요: `{{S5}}` `{{S5.short}}`
      `{{S5|과/와}}`(조사 자동). 규칙은 `src/data/tokens.js` 주석 참고.
+   - 이름을 **조회 키**로 써야 하는 곳(단서의 `person` 과 맞추는 팔레트·방 매핑 등)은
+     `keyByPersonName({ S1: … })` 로 적습니다. JSX 안처럼 감쌀 수 없는 곳은 `t('…{{S1}}…')`.
+   - 멀티플레이(`index.html`)와 솔로(`solo.html`)가 같은 cast 를 공유합니다.
 2. **설정** — `src/config/gameConfig.js`
    - `title` / `tagline` / `siteUrl` / `teams`(조 이름).
    - ⚠️ `personOrder`·`personColor`·`personBg` 는 이제 **cast 에서 파생**됩니다. 직접 고치지 마세요.

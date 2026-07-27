@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useState } from 'react';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
+import { cast, t } from '../data/cast.js';
 import {
   locations, suspects, getClue, provider, soloContent,
   gamsikCodes, gamsikReady, startingClues, suspectIds,
@@ -132,7 +133,7 @@ export default function SoloApp() {
     const jhObjs = locations.rooms.find((l) => l.id === 'ROOM-JH')?.objects || [];
     const jhExamined = jhObjs.some((c) => collectedSet.has(c));
     if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
-    else if (!sceneId) coach = { sel: '[data-tut="door"]', text: '이제 종현방을 눌러 들어가세요' };
+    else if (!sceneId) coach = { sel: '[data-tut="door"]', text: t('이제 {{S1.short}}방을 눌러 들어가세요') };
     else if (sceneId === 'ROOM-JH' && !jhExamined) coach = { sel: '.aa-track .s-zone', text: '빛나는 소품을 눌러 단서를 조사하세요' };
     else if (sceneId === 'ROOM-JH' && jhExamined) coach = { sel: '.s-figure', text: '인물을 눌러 이야기를 시작하세요' };
   }
@@ -198,7 +199,7 @@ export default function SoloApp() {
             onBack={() => goHub()} />
         ) : (
           <HallNav locations={locations} stage={stage} progressStage={progressStage} collectedSet={collectedSet}
-            recommendPerson={!state.tutorialSeen && state.tutRecordDone ? '최종현' : null}
+            recommendPerson={!state.tutorialSeen && state.tutRecordDone ? cast.S1.name : null}
             admin={state.admin} stageLabel={STAGE_LABEL[progressStage]} progressText={progressText} objective={objective} canAccuse={progressStage >= 3}
             view={hubView} onView={setHubView} onEnter={(id) => setSceneId(id)} onToast={showToast}
             onOpenRecord={() => { setRecordOpen(true); if (!state.tutorialSeen && !state.tutRecordDone) update({ tutRecordDone: true }); }}
