@@ -101,7 +101,8 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
         <button className="s-talkzone"
           style={{ left: `${talkPos.x}%`, top: `${talkPos.y}%`, ...(talkPos.w ? { width: `${talkPos.w}%`, height: `${talkPos.h}%` } : null) }}
           onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
-          <span className="s-talkzone-ring" />
+          {/* 인물은 테두리를 그리지 않는다 — 발밑 빛 + '이야기를 한다' 칩만으로 안내.
+              (그림 속 인물 위에 선을 얹으면 오히려 지저분해 보임) */}
           <span className="s-talkzone-glow" />
           <span className="s-talkzone-tip">💬 {roomSuspect.name} — 이야기를 한다</span>
         </button>
