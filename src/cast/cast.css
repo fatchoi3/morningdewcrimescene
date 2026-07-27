@@ -1,0 +1,106 @@
+/* 캐스팅 편집기 — 운영자 도구. 게임 화면(styles.css)과 독립적인 밝은 테마. */
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+  background: #f6f5f2;
+  color: #24211c;
+}
+
+.ce { max-width: 1200px; margin: 0 auto; padding: 24px 20px 64px; }
+
+.ce-top { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-start; }
+.ce-top h1 { margin: 0 0 4px; font-size: 22px; letter-spacing: -0.02em; }
+.ce-sub { margin: 0; color: #6b6760; font-size: 14px; }
+
+.ce-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ce-btn {
+  border: 1px solid #d6d1c7; background: #fff; color: #24211c;
+  padding: 8px 14px; border-radius: 8px; font-size: 14px; cursor: pointer;
+  font-family: inherit; line-height: 1.2;
+}
+.ce-btn:hover { background: #f0ede6; }
+.ce-primary { background: #24211c; color: #fff; border-color: #24211c; }
+.ce-primary:hover { background: #3a352d; }
+.ce-danger { color: #A32D2D; border-color: #e3c9c9; }
+.ce-danger:hover { background: #FDEAEA; }
+.ce-small { padding: 5px 10px; font-size: 13px; display: inline-block; }
+
+.ce-status {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
+  margin: 18px 0 0; padding: 10px 14px; border-radius: 8px;
+  background: #ece9e2; font-size: 14px;
+}
+.ce-meta { color: #6b6760; }
+.ce-error {
+  margin-top: 10px; padding: 10px 14px; border-radius: 8px;
+  background: #FDEAEA; color: #A32D2D; font-size: 14px;
+}
+.ce-style {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 12px; padding: 10px 14px; border-radius: 8px;
+  background: #fff; border: 1px solid #e2ded5; font-size: 13px;
+}
+.ce-style-label { font-weight: 600; margin-right: 2px; }
+.ce-chip {
+  border: 1px solid #d6d1c7; border-radius: 999px; padding: 5px 12px;
+  cursor: pointer; user-select: none; background: #fff;
+}
+.ce-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.ce-chip.is-on { background: #24211c; color: #fff; border-color: #24211c; }
+.ce-chip:has(input:disabled) { opacity: 0.5; cursor: default; }
+
+.ce-note { margin: 12px 0 0; color: #6b6760; font-size: 13px; line-height: 1.6; }
+.ce-note b { color: #24211c; }
+.ce-foot { margin-top: 28px; padding-top: 16px; border-top: 1px solid #e2ded5; }
+
+.ce-grid {
+  margin-top: 20px; display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+}
+
+.ce-card {
+  background: #fff; border: 1px solid #e2ded5; border-radius: 12px; padding: 16px;
+}
+.ce-card.is-dirty { border-color: #c9b98f; box-shadow: 0 0 0 3px #f6efdc; }
+.ce-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.ce-id { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.ce-dirty { font-size: 12px; color: #8a6d1f; }
+
+.ce-photo-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.ce-photo {
+  width: 84px; height: 84px; flex: 0 0 84px; border-radius: 10px; overflow: hidden;
+  border: 2px solid #d6d1c7; background: #f0ede6;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; font-weight: 700; color: #a9a396;
+}
+.ce-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ce-photo-side { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.ce-hint { font-size: 12px; color: #8d887e; }
+
+.ce-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ce-f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.ce-f > span { color: #6b6760; }
+.ce-f input, .ce-f textarea {
+  border: 1px solid #d6d1c7; border-radius: 7px; padding: 7px 9px;
+  font-family: inherit; font-size: 14px; color: inherit; background: #fff;
+  width: 100%; resize: vertical;
+}
+.ce-f input:focus, .ce-f textarea:focus { outline: 2px solid #c9b98f; outline-offset: -1px; }
+.ce-f input[type='color'] { padding: 2px; height: 34px; cursor: pointer; }
+.ce-wide { grid-column: 1 / -1; }
+.ce-narrow { grid-column: span 1; }
+
+.ce-preview {
+  margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #f6f5f2;
+  font-size: 13px;
+}
+.ce-preview > span { color: #8d887e; font-size: 12px; }
+.ce-preview p { margin: 4px 0 0; line-height: 1.6; }
+
+@media (max-width: 480px) {
+  .ce { padding: 16px 12px 48px; }
+  .ce-fields { grid-template-columns: 1fr; }
+  .ce-narrow { grid-column: 1 / -1; }
+}

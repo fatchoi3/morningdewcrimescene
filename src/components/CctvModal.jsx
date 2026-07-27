@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { evidenceMap } from '../data/gameData.js';
+import { provider } from '../services/index.js';
 
 /**
  * CctvModal
@@ -303,8 +303,8 @@ function CctvModal({ item, evidence = [], onCollect, onClose }) {
   const selectCut = (t) => { setCutTime(t.time); setFlash(null); setOpenClue(null); };
 
   const showClue = (code) => {
-    const clue = evidenceMap[code];
-    if (clue) setOpenClue({ code, ...clue });
+    const clue = provider.getClue(code);
+    if (clue) setOpenClue(clue);
   };
 
   const handlePick = (p) => {

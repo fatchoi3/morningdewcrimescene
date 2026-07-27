@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { provider } from '../services/index.js';
 
 /**
  * PhoneModal
@@ -79,16 +80,17 @@ function CallsApp({ app }) {
 
 /* 교단 수료증 진위 조회 — 발급번호를 입력하면 교단 DB 등록 여부를 조회한다.
  * 정답(수료증 사진의 발급번호)을 입력해야 '위조 의심' 판정이 드러난다. */
-function CertLookup({ lookup, onBack }) {
+function CertLookup({ lookup, ownerCode, onBack }) {
   const [val, setVal] = useState('');
   const [result, setResult] = useState(null);
   const [err, setErr] = useState('');
-  const norm = (s) => String(s).trim().replace(/\s/g, '').toUpperCase();
 
-  const submit = () => {
+  // 검증은 provider가 수행(정답·판정 결과는 로컬 secrets 또는 B단계에서 서버가 소유)
+  const submit = async () => {
     if (!val.trim()) { setErr('발급번호를 입력하세요.'); setResult(null); return; }
-    if (norm(val) === norm(lookup.answer)) {
-      setResult(lookup.result);
+    const { ok, result: r } = await provider.verifyLookup(ownerCode, val);
+    if (ok) {
+      setResult(r);
       setErr('');
     } else {
       setResult(null);
@@ -135,13 +137,13 @@ function CertLookup({ lookup, onBack }) {
 }
 
 /* 인터넷(브라우저) 앱 — 검색 기록 목록 → 검색 결과 페이지. app.lookup 있으면 진위조회 북마크 노출 */
-function BrowserApp({ app }) {
+function BrowserApp({ app, ownerCode }) {
   const [openIdx, setOpenIdx] = useState(null);
   const [lookupOpen, setLookupOpen] = useState(false);
   const searches = app.searches || [];
 
   if (lookupOpen && app.lookup) {
-    return <CertLookup lookup={app.lookup} onBack={() => setLookupOpen(false)} />;
+    return <CertLookup lookup={app.lookup} ownerCode={ownerCode} onBack={() => setLookupOpen(false)} />;
   }
 
   if (openIdx !== null) {
@@ -199,12 +201,12 @@ function MessagesApp({ app, variant, onView, ownerCode }) {
   const isKakao = variant === 'kakao';
   const chats = app.chats || [];
   const hasDeleted = chats.some((c) => c.deleted);
-  const needPw = !!app.recoverPassword;
+  const needPw = provider.isRecoverProtected(ownerCode); // 비번 필요 여부(정답은 provider가 소유)
 
-  const doRecover = () => {
-    if (needPw && pw.trim() !== String(app.recoverPassword)) {
-      setErr('비밀번호가 일치하지 않습니다.');
-      return;
+  const doRecover = async () => {
+    if (needPw) {
+      const ok = await provider.verifyRecover(ownerCode, pw);
+      if (!ok) { setErr('비밀번호가 일치하지 않습니다.'); return; }
     }
     setRecovered(true);
     setDrawer(false);
@@ -443,7 +445,7 @@ function PhoneModal({ item, onClose, onView }) {
                   <span className="phone-app-title">{current.name || APP_META[current.type]?.label}</span>
                 </div>
                 <div className="phone-app-body">
-                  {current.type === 'browser' && <BrowserApp app={current} />}
+                  {current.type === 'browser' && <BrowserApp app={current} ownerCode={item.code} />}
                   {current.type === 'kakao' && <MessagesApp app={current} variant="kakao" onView={onView} ownerCode={item.code} />}
                   {current.type === 'sms' && <MessagesApp app={current} variant="sms" />}
                   {current.type === 'photos' && <PhotosApp app={current} />}

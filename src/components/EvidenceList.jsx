@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import PhoneModal from './PhoneModal.jsx';
 import CctvModal from './CctvModal.jsx';
+import RoomModal from './RoomModal.jsx';
 import WalletModal from './WalletModal.jsx';
 import ScheduleModal from './ScheduleModal.jsx';
+import { provider } from '../services/index.js';
 
 /**
  * ImageLightbox
@@ -315,7 +317,8 @@ function HandwritingModal({ item, evidence = [], onClose }) {
 const MAX_GAMSIK_TRIES = 5; // 비밀번호 오답 허용 횟수 (초과 시 잠금)
 
 function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComplete, tries = 0, onWrong }) {
-  const [revealed, setRevealed] = useState(!item.password || !!tapDone[item.code]);
+  const protectedClue = provider.isGamsikProtected(item.code); // 비번 필요 여부(정답은 provider가 소유)
+  const [revealed, setRevealed] = useState(!protectedClue || !!tapDone[item.code]);
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
   const [attempts, setAttempts] = useState(tries); // 누적 오답 횟수 (재오픈 시 영속값에서 시작)
@@ -329,10 +332,12 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
   // 5회 이상 틀리면 운영자 모드 여부와 무관하게 잠금 (운영자는 잠금 화면의 '결과 공개' 버튼으로 해제 가능)
   const locked = attempts >= MAX_GAMSIK_TRIES;
 
-  const submit = () => {
+  const submit = async () => {
     if (locked) return;
     if (!pw.trim()) { setErr('비밀번호를 입력하세요.'); return; }  // 빈값은 오답으로 세지 않음
-    if (!item.password || pw.trim() === String(item.password)) {
+    // 검증은 provider가 수행(정답은 로컬 secrets 또는 B단계에서 서버가 소유)
+    const ok = await provider.verifyGamsik(item.code, pw);
+    if (ok) {
       setRevealed(true);
       setErr('');
       onTapComplete?.(item.code); // 공개 상태를 영구 저장 (초기화 전까지 유지)
@@ -369,7 +374,7 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
             </p>
             {adminMode && (
               <>
-                <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{item.password}</strong></p>
+                <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{provider.debugSecret(item.code)}</strong></p>
                 <button
                   type="button"
                   className="control-button"
@@ -384,8 +389,8 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
           <div className="gamsik-lock">
             <div className="gamsik-lock-icon">🔒</div>
             <p className="gamsik-lock-desc">운영자 전용 감식 결과입니다. 진행자에게 받은 비밀번호를 입력하세요.</p>
-            {adminMode && item.password && (
-              <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{item.password}</strong></p>
+            {adminMode && protectedClue && (
+              <p className="gamsik-lock-admin">🛠 운영자 모드 · 비밀번호: <strong>{provider.debugSecret(item.code)}</strong></p>
             )}
             <div className="gamsik-lock-form">
               <input
@@ -411,6 +416,7 @@ function GamsikModal({ item, onClose, adminMode = false, tapDone = {}, onTapComp
 
 // cctv > wallet > schedule > handwriting > 감식 > phone > pages > 기본 순으로 적절한 모달을 선택해 렌더링
 function EvidenceModal({ item, evidence, onCollect, onClose, tapDone, onTapComplete, adminMode, gamsikTries = {}, onGamsikWrong }) {
+  if (item.room) return <RoomModal item={item} evidence={evidence} onCollect={onCollect} onClose={onClose} />;
   if (item.cctv) return <CctvModal item={item} evidence={evidence} onCollect={onCollect} onClose={onClose} />;
   if (item.wallet) return <WalletModal item={item} onClose={onClose} />;
   if (item.schedule) return <ScheduleModal item={item} onClose={onClose} />;
@@ -438,6 +444,7 @@ function EvidenceList({ evidence, specialUnlockKey = 0, unlockKinds = { special:
   const cctvEvidence = evidence.filter((item) => cctvSet.has(item.code));
   const specialEvidence = evidence.filter((item) => item.type === '특수');
   const gamsikEvidence = evidence.filter((item) => item.type === '감식');
+  const roomEvidence = evidence.filter((item) => item.type === '방');
 
   // 특수 단서 해금 여부 확인.
   // unlockedBy에 적힌 선행 단서를 모두 보유하면 해금된다.
@@ -465,6 +472,7 @@ function EvidenceList({ evidence, specialUnlockKey = 0, unlockKinds = { special:
   const displayEvidence = filterType === 'normal' ? normalEvidence
     : filterType === 'cctv' ? cctvEvidence
     : filterType === 'special' ? specialEvidence
+    : filterType === 'room' ? roomEvidence
     : gamsikEvidence;
 
   // 인물 필터 칩 — 현재 탭에 존재하는 person만 노출(고정 순서)
@@ -521,6 +529,13 @@ function EvidenceList({ evidence, specialUnlockKey = 0, unlockKinds = { special:
         >
           감식 단서 ({gamsikEvidence.length})
         </button>
+        <button
+          type="button"
+          className={`tab-button ${filterType === 'room' ? 'active' : ''}`}
+          onClick={() => changeTab('room')}
+        >
+          방 ({roomEvidence.length})
+        </button>
       </div>
 
       {/* 인물별 필터 칩 (한 줄, 가로 스크롤) */}
@@ -568,12 +583,14 @@ function EvidenceList({ evidence, specialUnlockKey = 0, unlockKinds = { special:
               ? '아직 감식 단서가 없습니다. 성분·처방 분석은 관련 단서를 모으거나 진행자가 공개하면 확인됩니다.'
               : filterType === 'cctv'
               ? '아직 CCTV 단서가 없습니다. CCTV 열람대에서 인물을 확인해 확보하세요.'
+              : filterType === 'room'
+              ? '아직 방이 없습니다. 방 입구의 QR을 스캔하면 방을 둘러볼 수 있어요.'
               : '검색 결과가 없습니다.'}
           </p>
         )}
         {filtered.map((item) => {
           // 운영자 모드에선 이미 수집한 단서는 선행조건과 무관하게 항상 열람 가능
-          const unlocked = adminMode || filterType === 'normal' || filterType === 'cctv' || isSpecialUnlocked(item);
+          const unlocked = adminMode || filterType === 'normal' || filterType === 'cctv' || filterType === 'room' || isSpecialUnlocked(item);
 
           return (
             <div

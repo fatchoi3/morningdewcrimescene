@@ -1,26 +1,27 @@
-// 정본 데이터(src/data/gameData.js)를 직접 import 한다.
-// 이 파일이 단일 진실원천(single source of truth)이며,
-// 모든 운영 문서는 여기서 파생된다.
-import { evidenceMap, victim, suspects } from '../../src/data/gameData.js';
+// 정본 콘텐츠(src/data/gameData.js) + 비밀팩(secrets.js)을 합쳐 단일 진실원천을 만든다.
+// 앱은 비밀을 분리해 배포하지만, 문서 생성기(Node·미배포)는 감식 비번·복구 비번 등
+// 전체 데이터를 필요로 하므로 여기서 mergeSecrets로 다시 합친다.
+// 설정(사이트 URL·팔레트)은 gameConfig(앱/문서 공통 단일 설정)에서 가져온다.
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { evidenceMap as _publicMap, victim, suspects } from '../../src/data/gameData.js';
+import { mergeSecrets } from '../../src/data/mergeSecrets.js';
+import { gameConfig } from '../../src/config/gameConfig.js';
 
-export { evidenceMap, victim, suspects };
+// 실제 비밀팩(secrets.js)이 있으면 그것을, 없으면 템플릿(secrets.example.js)으로 폴백
+const _hasRealSecrets = existsSync(fileURLToPath(new URL('../../src/data/secrets.js', import.meta.url)));
+const secrets = (await import(_hasRealSecrets ? '../../src/data/secrets.js' : '../../src/data/secrets.example.js')).default;
+
+export const evidenceMap = mergeSecrets(_publicMap, secrets);
+export { victim, suspects };
 
 // 게임 접속 사이트 (참가자용 QR · PPT 표지에서 사용)
-export const SITE_URL = 'https://morningdewcrimescene.site';
+export const SITE_URL = gameConfig.siteUrl;
 
 // 용의자 표시 순서 + 색상 (앱/문서 공통 팔레트)
-export const PERSON_ORDER = ['박희원', '이사랑', '이현지', '최종현', '윤은재', '이가현', '목사', '공용'];
-
-export const PERSON_COLOR = {
-  '박희원': '#854F0B', '이사랑': '#A32D2D', '이현지': '#0F6E56',
-  '최종현': '#185FA5', '윤은재': '#444440', '이가현': '#534AB7',
-  '목사': '#6b6760', '공용': '#6b6760',
-};
-export const PERSON_BG = {
-  '박희원': '#FEF6E4', '이사랑': '#FDEAEA', '이현지': '#E8F8F2',
-  '최종현': '#EAF3FC', '윤은재': '#F0EFEC', '이가현': '#EEEDFE',
-  '목사': '#f0ede6', '공용': '#f0ede6',
-};
+export const PERSON_ORDER = gameConfig.personOrder;
+export const PERSON_COLOR = gameConfig.personColor;
+export const PERSON_BG = gameConfig.personBg;
 
 // 코드 → 항목 (code 필드를 주입)
 export const allClues = Object.entries(evidenceMap).map(([code, v]) => ({ code, ...v }));
