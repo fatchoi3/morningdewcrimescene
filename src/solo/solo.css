@@ -216,23 +216,23 @@ button { font-family: inherit; }
    상자 비율이 어떻든 선 굵기가 일정하다. 버튼(클릭 판정) 밖에 있어서
    clip-path 에 발광이 잘리지 않는다. */
 .s-zone-outline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none;
-  fill: none; stroke: #ffeec2; stroke-width: 2; stroke-linejoin: round;
-  filter: drop-shadow(0 0 3px #ffe0a0e6) drop-shadow(0 0 9px #ffd98a99);
-  opacity: .8; transition: opacity .14s, stroke .14s, filter .14s;
-  animation: zonebreath 3.4s ease-in-out infinite; }
-@keyframes zonebreath { 0%, 100% { opacity: .66; } 50% { opacity: 1; } }
+  fill: none; stroke: #f3dcae; stroke-width: 1.8; stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px #ffe0a08c) drop-shadow(0 0 6px #ffd98a52);
+  opacity: .58; transition: opacity .14s, stroke .14s, filter .14s;
+  animation: zonebreath 3.6s ease-in-out infinite; }
+@keyframes zonebreath { 0%, 100% { opacity: .46; } 50% { opacity: .72; } }
 .s-zone:hover ~ .s-zone-outline, .s-zone:focus-visible ~ .s-zone-outline {
-  opacity: 1; animation: none; stroke: #fff8e6; stroke-width: 2.6;
-  filter: drop-shadow(0 0 5px #fff0c8) drop-shadow(0 0 16px #ffd98acc); }
-.s-zone:active ~ .s-zone-outline { stroke: #fffdf6; filter: drop-shadow(0 0 7px #fff6de) drop-shadow(0 0 22px #ffd76b); }
+  opacity: 1; animation: none; stroke: #fff2d4; stroke-width: 2.4;
+  filter: drop-shadow(0 0 4px #ffeaba) drop-shadow(0 0 12px #ffd98a9e); }
+.s-zone:active ~ .s-zone-outline { stroke: #fffaf0; filter: drop-shadow(0 0 5px #fff2d4) drop-shadow(0 0 16px #ffd76bcc); }
 /* 확보한 단서 — 초록 테두리(차분하게, 숨쉬기 없음) */
-.s-zone-outline.have { stroke: #9cf0c2; opacity: .5; animation: none; filter: drop-shadow(0 0 3px #7fe3abcc) drop-shadow(0 0 8px #57d08a80); }
-.s-zone.have:hover ~ .s-zone-outline { stroke: #d6ffe9; opacity: 1; filter: drop-shadow(0 0 5px #c8ffe0) drop-shadow(0 0 14px #7fe3abcc); }
+.s-zone-outline.have { stroke: #8bdcaa; opacity: .38; animation: none; filter: drop-shadow(0 0 2px #7fe3ab8c) drop-shadow(0 0 6px #57d08a52); }
+.s-zone.have:hover ~ .s-zone-outline { stroke: #c8ffe0; opacity: 1; filter: drop-shadow(0 0 4px #b8f7d4) drop-shadow(0 0 11px #7fe3aba6); }
 /* 시신 — 붉은 테두리 / 감식 의뢰 — 청록 테두리 */
-.s-zone-outline.body { stroke: #ffc2c2; filter: drop-shadow(0 0 3px #ff9d9de6) drop-shadow(0 0 9px #e07a7a99); }
-.s-zone.body:hover ~ .s-zone-outline { stroke: #ffe4e4; filter: drop-shadow(0 0 5px #ffd6d6) drop-shadow(0 0 16px #ff9d9dcc); }
-.s-zone-outline.req { stroke: #bff2fa; filter: drop-shadow(0 0 3px #93e6f4e6) drop-shadow(0 0 9px #6fd7e699); }
-.s-zone.req:hover ~ .s-zone-outline { stroke: #e4fbff; filter: drop-shadow(0 0 5px #dbf8fd) drop-shadow(0 0 16px #93e6f4cc); }
+.s-zone-outline.body { stroke: #f0aeae; filter: drop-shadow(0 0 2px #ff9d9d8c) drop-shadow(0 0 6px #e07a7a5c); }
+.s-zone.body:hover ~ .s-zone-outline { stroke: #ffd6d6; filter: drop-shadow(0 0 4px #ffc2c2) drop-shadow(0 0 12px #ff9d9da6); }
+.s-zone-outline.req { stroke: #a8dfe9; filter: drop-shadow(0 0 2px #93e6f48c) drop-shadow(0 0 6px #6fd7e65c); }
+.s-zone.req:hover ~ .s-zone-outline { stroke: #dbf8fd; filter: drop-shadow(0 0 4px #bff2fa) drop-shadow(0 0 12px #93e6f4a6); }
 /* 조사 가능 영역 — 화면이 어두우므로 '어두운 그림자'가 아니라 '따뜻한 빛'으로 표시한다.
    평소에도 은은히 빛나며 천천히 숨쉬어 "여기 누를 수 있어요"가 바로 읽히고, 호버 시 확 밝아진다. */
 /* 이름표 — 버튼의 형제(래퍼 자식). clip-path에 잘리지 않도록 버튼 밖에 둔다 */
@@ -252,10 +252,13 @@ button { font-family: inherit; }
 /*   실루엣은 '밝은 외곽 빛(drop-shadow)'으로 물체가 스스로 발광하는 느낌을 준다.
      어두운 그림자는 아주 옅게만 깔아 밝은 배경 위에서도 형태가 보이게 한다. */
 /* 터치 기기(호버 없음)에선 더 밝게 — 호버로 찾을 수 없으니 */
+/* 터치 기기(호버 없음)에선 조금 더 또렷하게 — 호버로 찾을 수 없으니 */
 @media (hover: none) {
+  .s-zone-outline, .s-talkzone-outline { opacity: .74; stroke-width: 2; }
 }
 /* 애니메이션을 꺼둔 사용자에겐 숨쉬기 대신 고정 밝기 */
 @media (prefers-reduced-motion: reduce) {
+  .s-zone-outline { animation: none; opacity: .6; }
 }
 
 /* 모달 */
@@ -457,17 +460,26 @@ button { font-family: inherit; }
 /* 배경 그림에 포함된 인물의 터치존 — 그 자리를 눌러 대화(떠 있는 컷아웃 대신) */
 .s-talkzone { position: absolute; transform: translate(-50%,-50%); width: 16%; height: 62%; background: none; border: none; padding: 0; cursor: pointer; z-index: 10; }
 /*   인물도 평소에 은은히 빛나야 '말 걸 수 있다'는 게 보인다(호버해야만 보이면 알 수 없음). */
-/*   사각 테두리보다 '인물이 빛에 감싸인' 느낌이 자연스러워 위아래로 둥근 캡슐 형태로 준다. */
-.s-talkzone-ring { position: absolute; inset: 2% 0 6%; border-radius: 46% 46% 30% 30% / 22% 22% 8% 8%; box-shadow: inset 0 0 0 2px #ffeec27a, 0 0 22px #ffd98a3d; transition: box-shadow .16s; animation: talkbreath 3.4s ease-in-out infinite; }
+/*   인물도 단서와 같은 방식 — 실루엣 외곽선만 은은히 빛난다(poly 없으면 캡슐 폴백). */
+.s-talkzone-outline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none;
+  fill: none; stroke: #f3dcae; stroke-width: 1.8; stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px #ffe0a08c) drop-shadow(0 0 6px #ffd98a52);
+  opacity: .58; transition: opacity .14s, stroke .14s, filter .14s;
+  animation: zonebreath 3.6s ease-in-out infinite; }
+.s-talkzone:hover .s-talkzone-outline, .s-talkzone:focus-visible .s-talkzone-outline {
+  opacity: 1; animation: none; stroke: #fff2d4; stroke-width: 2.4;
+  filter: drop-shadow(0 0 4px #ffeaba) drop-shadow(0 0 12px #ffd98a9e); }
+/* poly가 없는 방을 위한 캡슐 폴백 */
+.s-talkzone-ring { position: absolute; inset: 2% 0 6%; border-radius: 46% 46% 30% 30% / 22% 22% 8% 8%; box-shadow: inset 0 0 0 1.8px #f3dcae66, 0 0 14px #ffd98a2b; transition: box-shadow .16s; animation: talkbreath 3.6s ease-in-out infinite; }
 @keyframes talkbreath {
-  0%, 100% { box-shadow: inset 0 0 0 2px #ffeec25c, 0 0 16px #ffd98a2e; }
-  50%      { box-shadow: inset 0 0 0 2px #ffeec2b3, 0 0 30px #ffd98a5c; }
+  0%, 100% { box-shadow: inset 0 0 0 1.8px #f3dcae47, 0 0 10px #ffd98a1f; }
+  50%      { box-shadow: inset 0 0 0 1.8px #f3dcae8c, 0 0 20px #ffd98a42; }
 }
-.s-talkzone:hover .s-talkzone-ring, .s-talkzone:focus-visible .s-talkzone-ring { animation: none; box-shadow: inset 0 0 0 2.5px #fff6de, 0 0 34px #ffe6b08c, inset 0 0 40px #ffe9a824; }
-/* 발밑 — 어두운 그림자 대신 따뜻한 스포트라이트로 인물이 떠 보이게 */
-.s-talkzone-glow { position: absolute; left: 50%; bottom: 0; width: 86%; height: 11%; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse at 50% 60%, #ffe6b073 0%, #ffd98a2e 45%, #ffd98a00 74%); transition: background .16s; }
-.s-talkzone:hover .s-talkzone-glow { background: radial-gradient(ellipse at 50% 60%, #fff0c9a6 0%, #ffd98a52 46%, #ffd98a00 76%); }
-@media (prefers-reduced-motion: reduce) { .s-talkzone-ring { animation: none; box-shadow: inset 0 0 0 2px #ffeec293, 0 0 24px #ffd98a4d; } }
+.s-talkzone:hover .s-talkzone-ring, .s-talkzone:focus-visible .s-talkzone-ring { animation: none; box-shadow: inset 0 0 0 2.2px #fff2d4, 0 0 26px #ffe6b066; }
+/* 발밑 — 은은한 따뜻한 스포트라이트(인물이 바닥에 서 있는 느낌) */
+.s-talkzone-glow { position: absolute; left: 50%; bottom: 0; width: 80%; height: 9%; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse at 50% 60%, #ffe6b042 0%, #ffd98a1a 45%, #ffd98a00 74%); transition: background .16s; }
+.s-talkzone:hover .s-talkzone-glow { background: radial-gradient(ellipse at 50% 60%, #fff0c975 0%, #ffd98a33 46%, #ffd98a00 76%); }
+@media (prefers-reduced-motion: reduce) { .s-talkzone-ring, .s-talkzone-outline { animation: none; opacity: .62; } }
 .s-talkzone-tip { position: absolute; top: -4%; left: 50%; transform: translateX(-50%); background: #0b1220f2; color: #ffe9a8; border: 1px solid var(--gold); font-size: .76rem; font-weight: 800; padding: 4px 11px; border-radius: 9px; white-space: nowrap; pointer-events: none; animation: talktip 3.2s ease-in-out infinite; }
 @keyframes talktip { 0%, 100% { opacity: .55; transform: translateX(-50%) translateY(0); } 50% { opacity: 1; transform: translateX(-50%) translateY(-3px); } }
 .s-talkzone:hover .s-talkzone-tip, .s-talkzone:focus-visible .s-talkzone-tip { opacity: 1; animation: none; }

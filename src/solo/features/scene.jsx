@@ -101,7 +101,12 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
         <button className="s-talkzone"
           style={{ left: `${talkPos.x}%`, top: `${talkPos.y}%`, ...(talkPos.w ? { width: `${talkPos.w}%`, height: `${talkPos.h}%` } : null) }}
           onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
-          <span className="s-talkzone-ring" />
+          {/* 인물도 사각 테두리가 아니라 실루엣을 딴다(방마다 poly 실측) */}
+          {talkPos.poly
+            ? <svg className="s-talkzone-outline" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <polygon points={talkPos.poly.map((pt) => `${pt[0]},${pt[1]}`).join(' ')} vectorEffect="non-scaling-stroke" />
+              </svg>
+            : <span className="s-talkzone-ring" />}
           <span className="s-talkzone-glow" />
           <span className="s-talkzone-tip">💬 {roomSuspect.name} — 이야기를 한다</span>
         </button>
