@@ -1,5 +1,6 @@
 import { cast, victimRecord, suspectRecords } from './cast.js';
 import { resolveTokens } from './tokens.js';
+import { withAssetBase } from './assets.js';
 
 // 모든 청년부원의 성경책에 공통으로 들어가는 말씀 페이지(밑줄·포스트잇이 있는 흔한 성경책).
 // 가현의 성경책(DZPL-78)만 여기에 아이의 그림 편지 한 장이 더 끼워져 있다.
@@ -114,12 +115,11 @@ const EUNJAE_BIBLE_PAGES = [
   }
 ];
 
-export const evidenceMap = resolveTokens({
+export const evidenceMap = withAssetBase(resolveTokens({
   'LSUX-91': {
     title: '게임 설명서',
     description: '게임의 기본 규칙과 플레이 방법이 담긴 설명서입니다.',
     detail: '',
-    image: '/images/clue-01.svg',
     type: '보통',
     person: '공용',
     pages: [
@@ -131,7 +131,7 @@ export const evidenceMap = resolveTokens({
       {
         title: '사건 개요',
         image: '/images/manual/case.svg',
-        content: '수련회 마지막 날, 샛별이슬 교회 청년부 담임 {{victim.bare}}(58) 목사님이 개인 방에서 숨진 채 발견되었습니다.\n\n목사님은 협심증 병력이 있었지만, 부검 결과 단순 발작사로 보기 어려운 정황이 드러났습니다.\n\n사건 당시 현장에 있던 청년부 임원 6명이 용의자입니다. 여러분은 수사팀이 되어 단서를 모으고 진실을 추리합니다.'
+        content: '수련회 마지막 날, 샛별이슬 교회 청년부 담임 {{victim}}({{victim.age}}) {{victim.role}}님이 개인 방에서 숨진 채 발견되었습니다.\n\n목사님은 협심증 병력이 있었지만, 부검 결과 단순 발작사로 보기 어려운 정황이 드러났습니다.\n\n사건 당시 현장에 있던 청년부 임원 6명이 용의자입니다. 여러분은 수사팀이 되어 단서를 모으고 진실을 추리합니다.'
       },
       {
         title: '게임 진행 순서',
@@ -223,7 +223,7 @@ export const evidenceMap = resolveTokens({
           meet: { x: 200, y: 141 },   // 복도 중앙에서 만나 함께 1층으로 — 마커 동시 출발·동시 통과
           people: [
             { look: '남성 — 1층 방향으로 나감 (등산 출발)', who: '{{S1}}', unlocks: 'CRTN-30', x: 120, y: 210, arrow: { from: { x: 102, y: 208 }, to: { x: 360, y: 240 } } },
-            { look: '목사 — {{S1.short|과/와}} 함께 1층 방향으로 나감', who: '{{victim}}', x: 348, y: 92, arrow: { from: { x: 355, y: 60 }, to: { x: 360, y: 240 } } }
+            { look: '목사 — {{S1.short|과/와}} 함께 1층 방향으로 나감', who: '{{victim.full}}', x: 348, y: 92, arrow: { from: { x: 355, y: 60 }, to: { x: 360, y: 240 } } }
           ]
         },
         {
@@ -290,7 +290,7 @@ export const evidenceMap = resolveTokens({
           meet: { x: 200, y: 141 },   // 1층에서 복도 중앙까지 함께 온 뒤 각자 방으로 갈라짐
           people: [
             { look: '남성 — 자기 방 방향으로 향함 (등산 복귀)', who: '{{S1}}', unlocks: 'CBAG-33', x: 120, y: 210, arrow: { from: { x: 360, y: 240 }, to: { x: 102, y: 208 } } },
-            { look: '목사 — {{S1.short|과/와}} 함께 돌아와 목사 방으로 향함', who: '{{victim}}', x: 348, y: 92, arrow: { from: { x: 360, y: 240 }, to: { x: 355, y: 60 } } }
+            { look: '목사 — {{S1.short|과/와}} 함께 돌아와 목사 방으로 향함', who: '{{victim.full}}', x: 348, y: 92, arrow: { from: { x: 360, y: 240 }, to: { x: 355, y: 60 } } }
           ]
         },
         {
@@ -429,7 +429,7 @@ export const evidenceMap = resolveTokens({
     person: '공용',
     reveal: '시작브리핑',
     pages: [
-      { title: '사건 현황 — 초동 정보', image: '/images/사건현장.png', content: '사망 장소: {{victim}}님 개인 방.\n사망 추정 시각: 수련회 마지막 날 오후 1시대(13시경).\n최초 신고자: {{S6}} 회장 — 13:31에 112로 신고.\n\n협심증 병력이 있었으나, 부검상 단순 발작사로 보기 어려운 정황이 있어 수사가 진행 중이다.' },
+      { title: '사건 현황 — 초동 정보', image: '/images/사건현장.png', content: '사망 장소: {{victim.full}}님 개인 방.\n사망 추정 시각: 수련회 마지막 날 오후 1시대(13시경).\n최초 신고자: {{S6}} 회장 — 13:31에 112로 신고.\n\n협심증 병력이 있었으나, 부검상 단순 발작사로 보기 어려운 정황이 있어 수사가 진행 중이다.' },
       { title: '1차 부검 소견', content: '사망 원인은 정확히 추측하긴 어렵지만, 협심증이 있던 목사가 발작을 일으킨 정황으로 보아 심정지로 추정된다.\n\n안구에 출혈이 발견되었고 손에 과하게 힘이 들어간 채 굳어 있다. 입가에서 약간의 딸기향이 느껴진다.' },
       { title: '목사님 방 위치·구조', image: '/images/방구조.jpg', content: '방 문에 작은 유리창이 있다.\n\n방 내부엔 CCTV가 없다. 단, 방 바깥 복도에는 CCTV가 있다. — 복도에서 누가·언제 움직였는지가 추리의 열쇠다.' },
       { title: '용의자가 6명인 이유', content: '수련회 숙소 2층(목사님 방이 있는 층)은 청년부 임원 6명만 사용했다. 일반 청년부원과 외부 참가자는 1층·별관에 묵었고, 사건 시간대(오후 1시 전후) 2층으로 올라온 외부인은 복도 CCTV에 단 한 명도 없다.\n\n또한 사건 전날부터 당일까지 목사님과 단독 접점이 있었던 인원도 정확히 이 여섯 명뿐이다 — 전날 개인 면담을 가진 다섯 명({{S5}}·{{S3}}·{{S4}}·{{S2}}·{{S6}})과, 평소 음료·등산을 전담해 목사님 방을 자주 드나든 {{S1}}.\n\n따라서 수사 대상은 이 여섯 명으로 한정된다.' },
@@ -477,7 +477,7 @@ export const evidenceMap = resolveTokens({
     type: '보통',
     person: '목사',
     phone: {
-      owner: '{{victim}}님의 핸드폰',
+      owner: '{{victim.full}}님의 핸드폰',
       apps: [
         {
           id: 'contacts',
@@ -770,7 +770,7 @@ export const evidenceMap = resolveTokens({
           type: 'contacts',
           name: '연락처',
           contacts: [
-            { name: '{{victim.short}}목사님🙏', who: '{{victim}}' },
+            { name: '{{victim.short}}목사님🙏', who: '{{victim.full}}' },
             { name: '{{S3.short}} 언니❤', who: '{{S3}}' },
             { name: '{{S1.short|이/}}', who: '{{S1}}' },
             { name: '{{S2.short}} 오빠', who: '{{S2}}' },
@@ -787,7 +787,7 @@ export const evidenceMap = resolveTokens({
               query: '요힘빈 심장 부작용',
               title: '요힘빈, 심장에 미치는 영향',
               snippet: '요힘빈은 교감신경을 자극해 심박수와 혈압을 끌어올립니다. 특히 협심증 등 심혈관 질환자에게는 흉통·발작을 유발할 수 있어 복용이 금기시됩니다.',
-              image: '/images/yohimbine.jpg'
+              image: '/images/요힘빈.jpg'
             },
             {
               query: '협심증 환자 요힘빈 위험',
@@ -807,7 +807,7 @@ export const evidenceMap = resolveTokens({
           name: '카카오톡',
           chats: [
             {
-              name: '{{victim}}님',
+              name: '{{victim.full}}님',
               messages: [
                 { from: 'them', text: '{{S5}} 총무님, 내일 재정 관련해서 잠깐 면담 가능할까요?', time: '이틀 전 오후 2:14' },
                 { from: 'me', text: '네 목사님, 시간 괜찮습니다.', time: '이틀 전 오후 2:20' },
@@ -1006,7 +1006,7 @@ export const evidenceMap = resolveTokens({
           type: 'contacts',
           name: '연락처',
           contacts: [
-            { name: '{{victim}}님', who: '{{victim}}' },
+            { name: '{{victim.full}}님', who: '{{victim.full}}' },
             { name: '{{S5.short|이/}} 누나', who: '{{S5}}' },
             { name: '{{S3.short}} 누나', who: '{{S3}}' },
             { name: '{{S2.short}} 형', who: '{{S2}}' },
@@ -1032,7 +1032,7 @@ export const evidenceMap = resolveTokens({
           name: '카카오톡',
           chats: [
             {
-              name: '{{victim}}님',
+              name: '{{victim.full}}님',
               messages: [
                 { from: 'them', text: '{{S1.short|아/야}}, 이번 청년부 재정 공지 좀 단톡에 올려줄래?', time: '오늘 오전 10:12' },
                 { from: 'me', text: '네 목사님! 바로 올릴게요', time: '오늘 오전 10:15' },
@@ -1056,7 +1056,7 @@ export const evidenceMap = resolveTokens({
           type: 'photos',
           name: '사진',
           photos: [
-            { caption: '', image: '/images/종현.jpg' },
+            { caption: '', image: '/images/여자친구.jpg' },
           ]
         }
       ]
@@ -1121,7 +1121,7 @@ export const evidenceMap = resolveTokens({
       options: [
         { who: '{{S5}}', requires: 'BCZN-89', correct: true, result: '라벨의 글씨와 필체가 일치한다. 라벨을 새로 쓴 사람은 {{S5}}으로 보인다. {{S5}}에게 직접 물어봐야겠다.' },
         { who: '{{S3}}', requires: 'BUFL-52', result: '글씨체가 다르다. 다만 {{S5.short|과/와}} {{S3.short|은/는}} 자매라 어딘가 닮은 구석이 있다.' },
-        { who: '{{victim}}', requires: 'PRBO-03', result: '필체가 전혀 다르다. 목사님의 단정한 글씨와는 거리가 멀다.' },
+        { who: '{{victim.full}}', requires: 'PRBO-03', result: '필체가 전혀 다르다. 목사님의 단정한 글씨와는 거리가 멀다.' },
         { who: '{{S1}}', requires: 'EDEZ-28', result: '{{S1.short}} 본인의 글씨와도 다르다. 역시 {{S1.short|이/}} 쓴 게 아니다.' },
         { who: '{{S2}}', requires: 'UHRU-61', result: '필압이 강한 {{S2.short}}의 글씨와는 다르다.' },
         { who: '{{S6}}', requires: 'AYMX-96', result: '또박또박한 {{S6.short}}의 글씨와는 다르다.' },
@@ -1176,7 +1176,7 @@ export const evidenceMap = resolveTokens({
           type: 'contacts',
           name: '연락처',
           contacts: [
-            { name: '{{victim}}님', who: '{{victim}}' },
+            { name: '{{victim.full}}님', who: '{{victim.full}}' },
             { name: '{{S5.short|이/}}❤', who: '{{S5}}' },
             { name: '{{S1}} 서기', who: '{{S1}}' },
             { name: '{{S2}} 팀장', who: '{{S2}}' },
@@ -1355,7 +1355,7 @@ export const evidenceMap = resolveTokens({
           type: 'contacts',
           name: '연락처',
           contacts: [
-            { name: '담임목사님', who: '{{victim}}' },
+            { name: '담임목사님', who: '{{victim.full}}' },
             { name: '{{S5}} 총무', who: '{{S5}}' },
             { name: '{{S3}} 회계', who: '{{S3}}' },
             { name: '{{S1}} 서기', who: '{{S1}}' },
@@ -1506,7 +1506,7 @@ export const evidenceMap = resolveTokens({
           type: 'contacts',
           name: '연락처',
           contacts: [
-            { name: '목사님', who: '{{victim}}' },
+            { name: '목사님', who: '{{victim.full}}' },
             { name: '{{S1.short|이/}}', who: '{{S1}}' },
             { name: '{{S5.short|이/}}', who: '{{S5}}' },
             { name: '{{S3.short}}', who: '{{S3}}' },
@@ -1557,7 +1557,7 @@ export const evidenceMap = resolveTokens({
     title: '운동화 흙',
     description: '{{S2.short}} 방에서 발견했다.',
     detail: '운동화에 흙이 많이 묻어 있다.',
-    image: '/images/은재운동화.jpg',
+    image: '/images/운동화.jpg',
     type: '보통',
     person: '{{S2}}'
   },
@@ -1695,7 +1695,7 @@ export const evidenceMap = resolveTokens({
           type: 'contacts',
           name: '연락처',
           contacts: [
-            { name: '{{victim}}', who: '{{victim}}' },
+            { name: '{{victim.full}}', who: '{{victim.full}}' },
             { name: '민석', who: '김민석' },
             { name: '{{S5.short}} 총무', who: '{{S5}}' },
             { name: '{{S3.short}} 회계', who: '{{S3}}' },
@@ -1882,7 +1882,7 @@ export const evidenceMap = resolveTokens({
       people: [],
     },
   },
-}, cast);
+}, cast));
 
 // 피해자
 export const victim = victimRecord;

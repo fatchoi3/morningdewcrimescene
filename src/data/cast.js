@@ -16,6 +16,8 @@
 //     파일이 없으면 앱이 이름 첫 글자 아바타로 대체한다.
 // ─────────────────────────────────────────────────────────────────────────────
 import { resolveTokens } from './tokens.js';
+import { readPack, applyPack } from './castPack.js';
+import { withAssetBase } from './assets.js';
 
 const VICTIM_NAME = '김호치';
 const VICTIM_ROLE = '목사';
@@ -30,8 +32,10 @@ export const personDisplayOrder = ['S4', 'S5', 'S3', 'S1', 'S2', 'S6'];
 //   앞쪽 필드(name…notes/detail)는 그대로 용의자·피해자 레코드가 된다. 순서 유지.
 //   뒤쪽 필드(short/bare/role/theme)는 토큰·색상 전용이라 레코드에서 제외된다.
 const castRaw = {
+  // 피해자는 이름과 직책을 따로 둔다. 본문의 '김호치 목사' 표기는 {{victim.full}} 로
+  // 두 값을 합쳐 만들기 때문에, 이름만 바꿔도 모든 표기가 함께 따라온다.
   victim: {
-    name: `${VICTIM_NAME} ${VICTIM_ROLE}`,
+    name: VICTIM_NAME,
     age: 58,
     gender: '남성',
     occupation: '샛별이슬 교회 청년부 담임 목사',
@@ -39,7 +43,6 @@ const castRaw = {
     family: '아내와 함께 거주, 장성한 자녀 둘은 분가했습니다.',
     hint: '피해자는 청년부를 이끄는 영향력 있는 목사님이었습니다.',
     detail: '청년부를 오래 이끌어 온 원칙주의자 목사님. 재정과 사역 자격 문제에 엄격해, 수련회를 앞두고 여러 임원과 개인 면담을 가졌습니다. 협심증 병력이 있었으며, 수련회 당일 개인 방에서 사망한 채 발견되었습니다.',
-    bare: VICTIM_NAME,
     short: '호치',
     role: VICTIM_ROLE,
     theme: { color: '#6b6760', bg: '#f0ede6' },
@@ -118,18 +121,37 @@ const castRaw = {
   },
 };
 
+// 운영자가 저장한 콘텐츠 팩(있으면)을 기본 캐스팅 위에 덮어쓴다.
+// 토큰 해석보다 먼저 해야 본문의 {{S5}} 가 바뀐 이름으로 풀린다.
+const castMerged = applyPack(castRaw, readPack());
+
+// '이름 직책' 합성 표기({{victim.full}})는 팩 적용 뒤에 만들어야 바뀐 이름을 반영한다.
+// '이름 직책' 합성 표기({{victim.full}})를 붙인 뒤 토큰을 해석한다.
+// 합성이 팩 적용 뒤에 일어나야 바뀐 이름이 반영된다.
+const withFull = (c) => ({
+  ...c,
+  victim: { ...c.victim, full: `${c.victim.name} ${c.victim.role}` },
+});
+
 // notes 안에서도 다른 인물을 토큰으로 참조하므로 한 번 해석해 둔다.
 // (name/short 자체에는 토큰이 없어 1회 통과로 충분하다.)
-export const cast = resolveTokens(castRaw, castRaw);
+const merged = withFull(castMerged);
+export const cast = withAssetBase(resolveTokens(merged, merged));
+
+// 팩을 적용하지 않은 원래 캐스팅 — 편집기가 "무엇이 바뀌었는지" 비교하는 기준.
+// 이 덕분에 팩에는 실제로 고친 항목만 담기고, 나머지는 저장소 기본값을 계속 따라간다.
+const defaults = withFull(castRaw);
+export const castDefaults = resolveTokens(defaults, defaults);
 
 // ── 레코드 파생 ──────────────────────────────────────────────────────────────
 // 토큰·색상 전용 필드를 떼어내 앱이 쓰는 인물 레코드 모양으로 만든다.
 function record(id) {
-  const { bare, short, role, theme, ...rest } = cast[id];
+  const { short, role, full, theme, ...rest } = cast[id];
   return { id, ...rest };
 }
 
-export const victimRecord = record('victim');
+// 피해자 레코드의 name 은 '김호치 목사' 형태를 쓴다(기존 표시·데이터 키와 동일).
+export const victimRecord = { ...record('victim'), name: cast.victim.full };
 export const suspectRecords = castOrder.map(record);
 
 export default cast;

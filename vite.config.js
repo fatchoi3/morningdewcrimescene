@@ -14,7 +14,13 @@ const secretsPath = demo
   ? resolvePath('./src/data/secrets.demo.js')
   : (existsSync(realSecrets) ? realSecrets : resolvePath('./src/data/secrets.example.js'));
 
+// 배포 위치. 도메인 루트면 '/' (기본), GitHub Pages 프로젝트 사이트처럼
+// 하위 경로에 놓이면 VITE_BASE='/저장소이름/' 을 주면 된다.
+// (Pages 워크플로가 configure-pages 의 base_path 를 그대로 넘겨준다.)
+const base = (process.env.VITE_BASE || '/').replace(/\/*$/, '/');
+
 export default defineConfig({
+  base,
   plugins: [react()],
   // 로컬 폰 테스트(ngrok 등 터널) 시 외부 호스트 접근 허용
   server: { host: true, allowedHosts: true },
@@ -24,12 +30,13 @@ export default defineConfig({
       '@secrets': secretsPath,
     },
   },
-  // 멀티페이지: 기존 QR 게임(index.html) + 솔로 추리게임(solo.html)
+  // 멀티페이지: QR 게임(index.html) + 솔로 추리게임(solo.html) + 운영자 캐스팅 편집(cast.html)
   build: {
     rollupOptions: {
       input: {
         main: resolvePath('./index.html'),
         solo: resolvePath('./solo.html'),
+        cast: resolvePath('./cast.html'),
       },
     },
   },
