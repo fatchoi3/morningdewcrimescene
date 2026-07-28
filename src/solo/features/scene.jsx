@@ -7,15 +7,13 @@ import { getClue } from '../content.js';
 import { ROOM_HOTSPOTS, hotspotFor } from '../lib/game.js';
 import { pendingQuestions } from '../lib/alerts.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
-import { DialogueBox, CommandBar } from '../vn.jsx';
-import { CaseRecord } from './record.jsx';
+import { DialogueBox, CommandBar, TopHud } from '../vn.jsx';
 
-// ── 장면(역전재판식 풀블리드: 조사/이야기/이동 + 사건기록) ────────────────────
-export function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, stage = 1, state, phase = 1, onTalk, onOpen, onLockedToast, onBack }) {
+// ── 장면(역전재판식 풀블리드: 조사/이야기 + 우측 상단 수첩) ────────────────────
+export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1, state, phase = 1, onTalk, onOpen, onLockedToast, onOpenRecord, onBack }) {
   // 이 인물에게 아직 안 물어본 질문 수 — 있으면 대화 영역에 알림 배지
   const talkPending = roomSuspect ? pendingQuestions(roomSuspect.id, state || {}, phase) : 0;
   const [examine, setExamine] = useState(true);
-  const [record, setRecord] = useState(false);
   // 배경 그림의 실제 비율. 트랙을 이 비율로 잡아야 핫스팟 %좌표가 그림과 정확히 일치한다
   //   (16:9로 고정해두면 1376×768 같은 그림은 cover로 좌우가 잘려 좌표가 밀린다).
   const [bgRatio, setBgRatio] = useState(16 / 9);
@@ -120,6 +118,9 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
       </div>
 
       <div className="aa-loc-chip">🔦 {location.label}</div>
+      <TopHud>
+        <button className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord}>📓</button>
+      </TopHud>
       {pannable && <div className="aa-swipe-hint">← 밀어서 방을 둘러보기 →</div>}
 
       {roomSuspect && onTalk && !talkPos && (
@@ -131,7 +132,7 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
       )}
 
       {isLab && (
-        <div className="aa-ask">
+        <div className="aa-ask low">
           <div className="aa-ask-h">🧑‍🔬 감식원 — 어떤 걸 분석해 드릴까요?</div>
           {location.objects.map((code) => {
             const c = getClue(code); if (!c) return null;
@@ -153,30 +154,21 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
               }}>{ready && !req && !have ? '❗ ' : ''}{label}</button>
             );
           })}
-          <button className="end" onClick={onBack}>↩ 나간다</button>
         </div>
       )}
 
-      <DialogueBox location={isLab ? '감식 의뢰실' : location.label}
+      {/* 나가기는 대사창 우측 하단으로 — 하단 바에는 '이 화면에서 할 행동'만 남긴다.
+          감식실은 남는 행동이 없어 바를 아예 띄우지 않고 대사창을 아래로 내린다(low). */}
+      <DialogueBox location={isLab ? '감식 의뢰실' : location.label} low={isLab}
+        actions={[{ label: '🚶 나가기', onClick: onBack }]}
         text={isLab
           ? '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 결과는 2차 심문이 열릴 때 도착한다.'
           : (examine ? ('그림 속 물건에 마우스를 올리면(모바일은 탭) 조사할 수 있다.' + (roomSuspect ? ` ${roomSuspect.name}을(를) 누르면 이야기할 수 있다.` : '')) : '무엇을 할까?')} />
 
-      <CommandBar items={(isLab ? [
-        { icon: '📓', label: '사건기록', onClick: () => setRecord(true) },
-        { icon: '🚶', label: '이동한다', onClick: onBack },
-      ] : [
-        { icon: '🔍', label: '조사한다', active: examine, onClick: () => setExamine((e) => !e) },
-        { icon: '📓', label: '사건기록', onClick: () => setRecord(true) },
-        { icon: '🚶', label: '이동한다', onClick: onBack },
-      ])} />
-
-      {record && (
-        <div className="aa-record">
-          <button className="aa-close" onClick={() => setRecord(false)}>✕</button>
-          <h3>사건 기록</h3>
-          <CaseRecord clues={collectedClues} onOpen={(c) => { setRecord(false); onOpen(c); }} />
-        </div>
+      {!isLab && (
+        <CommandBar items={[
+          { icon: '🔍', label: '조사한다', active: examine, onClick: () => setExamine((e) => !e) },
+        ]} />
       )}
     </div>
   );
