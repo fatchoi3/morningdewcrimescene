@@ -9,7 +9,7 @@ import { Shell } from '../ui/overlays.jsx';
 import CctvModal from '../../components/CctvModal.jsx';
 
 // ── 단서 열람 모달 ─────────────────────────────────────────────────────────
-export function ClueModal({ code, collectedSet, difficulty, onClose, onCollect, onOpen }) {
+export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
   const isBody = code === '__body__';
   const c = isBody ? null : getClue(code);
   const [page, setPage] = useState(0);
@@ -54,7 +54,7 @@ export function ClueModal({ code, collectedSet, difficulty, onClose, onCollect, 
 
   // 폰형
   if (c.phone) {
-    return <PhoneModal code={code} clue={c} collectedSet={collectedSet} difficulty={difficulty} onClose={onClose} />;
+    return <PhoneModal code={code} clue={c} collectedSet={collectedSet} onClose={onClose} />;
   }
 
   // 지갑형 — 항목을 눌러 내용물 확인
@@ -104,13 +104,14 @@ function WalletModal({ clue, onClose }) {
 const PHONE_APP_ICON = { contacts: '📇', kakao: '💬', sms: '✉️', calls: '📞', browser: '🌐', photos: '🖼️', gallery: '🖼️', messages: '✉️' };
 // 문자(sms)는 카톡과 같은 chats 구조라 대화 UI를 그대로 쓴다. 전화(calls)는 통화 기록.
 const isChatApp = (t) => t === 'kakao' || t === 'sms';
-function PhoneModal({ code, clue, difficulty, onClose }) {
+function PhoneModal({ code, clue, onClose }) {
   const apps = clue.phone.apps || [];
   const [appId, setAppId] = useState(null);   // null = 홈 화면
   const [chatIdx, setChatIdx] = useState(null); // 카톡: null = 대화 목록
   const [recovered, setRecovered] = useState(false);
   const [pw, setPw] = useState('');
   const [msg, setMsg] = useState('');
+  const [fails, setFails] = useState(0);  // 3번 틀리면 힌트 — 난이도로 미리 정하지 않고 막힌 사람만 돕는다
   const [lookup, setLookup] = useState('');
   const [lookupRes, setLookupRes] = useState(null);
   const [zoom, setZoom] = useState(null); // 사진 확대
@@ -119,7 +120,8 @@ function PhoneModal({ code, clue, difficulty, onClose }) {
 
   const tryRecover = async () => {
     const ok = await provider.verifyRecover(code, pw);
-    if (ok) { setRecovered(true); setMsg(''); } else setMsg('비밀번호가 맞지 않습니다.');
+    if (ok) { setRecovered(true); setMsg(''); setFails(0); }
+    else { setFails((n) => n + 1); setMsg('비밀번호가 맞지 않습니다.'); }
   };
   const tryLookup = async () => {
     const res = await provider.verifyLookup(code, lookup);
@@ -208,7 +210,7 @@ function PhoneModal({ code, clue, difficulty, onClose }) {
                   <div className="s-kk-recover">
                     <div className="kkr-lock">🔒 삭제된 대화</div>
                     <div className="kkr-desc">톡서랍 복구 비밀번호가 필요합니다.</div>
-                    {difficulty === 'guide' && <div className="kkr-hint">힌트: 상대의 생일 4자리(다이어리에서)</div>}
+                    {fails >= 3 && <div className="kkr-hint">힌트: 상대의 생일 4자리 — 다이어리를 찾아보세요</div>}
                     <div className="s-pw"><input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="복구 비밀번호 4자리" inputMode="numeric" /><button className="s-btn sm" onClick={tryRecover}>복구</button></div>
                     {msg && <div className="kkr-err">{msg}</div>}
                   </div>
