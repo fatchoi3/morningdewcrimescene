@@ -16,9 +16,13 @@ export const TRUST_MAX = 5;    // 신뢰도(HP)
 
 export function interrogatedCount(state) {
   const asked = state.askedQ || {}, pressed = state.pressed || {}, broke = state.broke || {};
-  // 질문을 하나라도 골라 들었으면(=대화함) 심문한 것으로 인정. 추궁/증거 모순도 물론 인정.
-  //   (예전엔 press/present만 인정 → 6명과 대화만 하면 단계가 안 열리는 '진행 불능 함정'이 있었음)
-  return suspectIds.filter((id) => (asked[id] || []).length >= 1 || (pressed[id] || []).length >= 1 || (broke[id] || []).length >= 1).length;
+  const topics = state.askedT || {}, clues = state.askedC || {};
+  // 무엇이든 하나라도 물어봤으면(=대화함) 심문한 것으로 인정 — 질문·화제·단서·추궁·모순 전부.
+  //   (press/present만 인정하던 때는 6명과 대화만 하면 단계가 안 열리는 '진행 불능 함정'이 있었다.
+  //    화제·단서만 물은 경로도 대화한 것이므로 같이 센다.)
+  const any = (m, id) => (m[id] || []).length >= 1;
+  return suspectIds.filter((id) => any(asked, id) || any(pressed, id) || any(broke, id)
+    || any(topics, id) || any(clues, id)).length;
 }
 export function sceneClueCount(state) {
   const got = new Set(state.collected || []);
