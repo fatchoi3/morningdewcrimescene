@@ -18,6 +18,7 @@ export function defaultState() {
     trust: {},                  // { S1: 5 } 인물별 신뢰도(HP) — 엉뚱한 증거 제시 시 감소
     pressed: {},                // { S1: [증언id] } — 추궁한 진술
     askedQ: {},                 // { S1: [증언id] } — 한 번이라도 골라 들은 질문(✔ 표시용)
+    askedC: {},                 // { S1: [단서코드] } — 질문지 「단서」 칸에서 이미 물어본 단서
     broke: {},                  // { S1: [{ id, text, confess }] } — 모순 잡은 진술
     stUnlocked: {},             // { S1: [증언id] } — 추궁/모순으로 열린 숨은 증언
     eventSeen: false,           // 중간 사건(부검 소견) 연출을 봤는가

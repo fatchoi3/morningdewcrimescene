@@ -491,6 +491,8 @@ const CLUE_REACT = resolveTokens({
     'AVLP-75': '단추는 전 못 봤어요. 근데 12시 42분에 {{S2.short}} 씨가 목사님이랑 실랑이하는 걸 봤거든요. 거기서 떨어진 거 아닐까요.',
     'EUMM-81': '옷깃이 그렇게 늘어났다면 실랑이 흔적이겠죠. 제가 봤을 때 {{S2.short}} 씨가 목사님 멱살 쪽을 잡고 있었어요. 저랑은 상관없는 일이에요.',
     'SAJL-88': '책상 위 텀블러요? 발견했을 때 있긴 했는데 전 손 안 댔어요. 그 안에 뭐가 들었는지도 몰라요.',
+    // 길잡이 단서('{{S6.short}}에게 딸이?')는 "직접 물어보자"고 안내한다 — 물었을 때 받는 말이 있어야 한다
+    'KMRV-41': '…{{S1.short}}한테 들으셨군요. 그 앤 눈치가 빨라서. (한숨) 네, 조카가 아니에요. 「딸에 대해 말해주세요」 — 그렇게 물으시면 다 말씀드릴게요.',
   },
 }, cast);
 const clueReactOf = (sid, code) => CLUE_REACT[sid]?.[code];
@@ -506,6 +508,13 @@ export function relatedCodes(sid) {
   }
   Object.keys(CLUE_REACT[sid] || {}).forEach((c) => set.add(c)); // 인물 단위 대질 반응 코드도 관련 단서로
   return set;
+}
+
+/** 지금 이 인물에게 그 단서로 '물어볼 말'이 있는가 — 질문지의 「단서」 칸에 올릴지 판단.
+ *  진술에 걸린 반응(모순·soft)이나 인물 단위 대질 반응이 하나라도 있어야 올린다 →
+ *  목록에 오른 단서는 반드시 무슨 말이든 듣게 된다(막다른 길 없음). */
+export function clueTalkable(sid, statements, code) {
+  return !!clueTargetIn(statements, code) || !!clueReactOf(sid, code);
 }
 
 /** 심문 인사말 — 2차(phase 2)면 재방문 멘트. */

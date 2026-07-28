@@ -6,16 +6,26 @@
 //   "남은 것"만 세고 "이미 한 것"은 세지 않는다 — 다 하면 배지가 사라져 진행도가 보인다.
 // ─────────────────────────────────────────────────────────────────────────────
 import { getClue, suspects } from '../content.js';
-import { visibleStatements } from '../interrogation.js';
+import { visibleStatements, clueTalkable } from '../interrogation.js';
 
 const sidOfPerson = (person) => suspects.find((s) => s.name === person)?.id || null;
 
-/** 인물에게 지금 물어볼 수 있는데 아직 안 물어본 질문 수. */
+/** 인물에게 지금 물어볼 수 있는데 아직 안 물어본 것 — 질문지의 「질문」 칸 + 「단서」 칸 둘 다. */
 export function pendingQuestions(sid, state, phase = 1) {
   if (!sid) return 0;
+  const collected = state.collected || [];
+  const open = visibleStatements(sid, collected, state.stUnlocked?.[sid] || [], phase);
   const asked = new Set(state.askedQ?.[sid] || []);
-  const open = visibleStatements(sid, state.collected || [], state.stUnlocked?.[sid] || [], phase);
-  return open.filter((s) => !asked.has(s.id)).length;
+  const q = open.filter((s) => !asked.has(s.id)).length;
+  // 단서 칸도 세야 '단서를 주웠으니 다시 가서 물어보라'는 신호가 방 문에 뜬다
+  const askedC = new Set(state.askedC?.[sid] || []);
+  const c = collected.filter((code) => {
+    if (askedC.has(code)) return false;
+    const cl = getClue(code);
+    if (!cl || cl.type === '증언' || cl.type === '방') return false;
+    return clueTalkable(sid, open, code);
+  }).length;
+  return q + c;
 }
 
 /** 방에서 지금 확보 가능한데 아직 안 챙긴 단서 수(휴대폰은 2차 심문 전엔 제외). */

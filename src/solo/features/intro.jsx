@@ -10,7 +10,7 @@ import { briefing, victim, suspects } from '../content.js';
 import { cast, t } from '../../data/cast.js';
 import { DIFFS, isUiTap, REVEAL, TIMELINE } from '../lib/game.js';
 import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
-import { DialogueBox, CommandBar } from '../vn.jsx';
+import { DialogueBox } from '../vn.jsx';
 
 // ── 시작 화면 — 난이도 선택 + 수사 시작/이어하기 ─────────────────────────────
 export function StartScreen({ difficulty, started, continueCount, onSetDifficulty, onStart, onContinue, onReset }) {
@@ -71,8 +71,8 @@ export function BriefingVN({ onDone }) {
       <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
+        actions={[{ label: '⏭ 건너뛰기', onClick: onDone }]}
         hint={last ? '▶ 현장으로' : `${i + 1}/${beats.length} · 탭하여 다음`} />
-      <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
     </div>
   );
 }
@@ -101,8 +101,8 @@ export function EventVN({ onDone }) {
       <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
+        actions={[{ label: '⏭ 건너뛰기', onClick: onDone }]}
         hint={last ? '▶ 전면 조사 시작' : `${i + 1}/${beats.length} · 탭하여 다음`} />
-      <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
     </div>
   );
 }
@@ -129,8 +129,8 @@ export function EventVN2({ onDone }) {
       <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
+        actions={[{ label: '⏭ 건너뛰기', onClick: onDone }]}
         hint={last ? '▶ 2차 심문 시작' : `${i + 1}/${beats.length} · 탭하여 다음`} />
-      <CommandBar items={[{ icon: '⏭', label: '건너뛰기', onClick: onDone }]} />
     </div>
   );
 }

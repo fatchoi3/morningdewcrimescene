@@ -199,7 +199,7 @@ export const TIMELINE = resolveTokens([
 ], cast);
 
 // 풀블리드 VN 화면: 버튼·시트·오버레이가 아닌 곳을 탭하면 대사 넘김(대사창 tap 위임)
-export const isUiTap = (e) => !!e.target.closest('button, .aa-cmd, .aa-ask, .aa-present, .aa-record, .aa-dialogue, .aa-hp, .s-modal');
+export const isUiTap = (e) => !!e.target.closest('button, .aa-ask, .aa-present, .aa-dialogue, .aa-hud, .aa-hp, .s-modal');
 
 // 채점 — 범인 한 명만 지목(S4 = 박희원, 진범)
 export function scoreCase(casefile) {
