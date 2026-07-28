@@ -168,6 +168,7 @@ export default function SoloApp() {
             tutorialSeen={!!state.tutorialSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
             onAsked={(stId) => { const a = { ...(state.askedQ || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), stId])]; update({ askedQ: a }); }}
             onAskedClue={(code) => { const a = { ...(state.askedC || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), code])]; update({ askedC: a }); }}
+            onAskedTopic={(tid) => { const a = { ...(state.askedT || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), tid])]; update({ askedT: a }); }}
             location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             onOpenRecord={() => setRecordOpen(true)}

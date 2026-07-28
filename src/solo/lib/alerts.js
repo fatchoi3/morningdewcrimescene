@@ -6,26 +6,28 @@
 //   "남은 것"만 세고 "이미 한 것"은 세지 않는다 — 다 하면 배지가 사라져 진행도가 보인다.
 // ─────────────────────────────────────────────────────────────────────────────
 import { getClue, suspects } from '../content.js';
-import { visibleStatements, clueTalkable } from '../interrogation.js';
+import { visibleStatements, visibleTopics, topicClues } from '../interrogation.js';
 
 const sidOfPerson = (person) => suspects.find((s) => s.name === person)?.id || null;
 
-/** 인물에게 지금 물어볼 수 있는데 아직 안 물어본 것 — 질문지의 「질문」 칸 + 「단서」 칸 둘 다. */
+/** 인물에게 지금 물어볼 수 있는데 아직 안 물어본 것 — 진술 질문 + 화제 + 화제 아래 단서 질문. */
 export function pendingQuestions(sid, state, phase = 1) {
   if (!sid) return 0;
   const collected = state.collected || [];
   const open = visibleStatements(sid, collected, state.stUnlocked?.[sid] || [], phase);
   const asked = new Set(state.askedQ?.[sid] || []);
-  const q = open.filter((s) => !asked.has(s.id)).length;
-  // 단서 칸도 세야 '단서를 주웠으니 다시 가서 물어보라'는 신호가 방 문에 뜬다
+  let n = open.filter((s) => !asked.has(s.id)).length;
+  // 화제와 그 아래 단서도 세야 '단서를 주웠으니 다시 가서 물어보라'는 신호가 방 문에 뜬다.
+  //   아직 안 꺼낸 화제는 1개로만 센다 — 꺼내야 그 아래가 열리므로.
+  const askedT = new Set(state.askedT?.[sid] || []);
   const askedC = new Set(state.askedC?.[sid] || []);
-  const c = collected.filter((code) => {
-    if (askedC.has(code)) return false;
-    const cl = getClue(code);
-    if (!cl || cl.type === '증언' || cl.type === '방') return false;
-    return clueTalkable(sid, open, code);
-  }).length;
-  return q + c;
+  for (const t of visibleTopics(sid, collected)) {
+    const inTopic = topicClues(sid, t, collected, open);
+    if (!inTopic.length) continue;                    // 이어질 게 없는 화제는 화면에도 안 뜬다
+    if (!askedT.has(t.id)) { n += 1; continue; }
+    n += inTopic.filter((code) => !askedC.has(code)).length;
+  }
+  return n;
 }
 
 /** 방에서 지금 확보 가능한데 아직 안 챙긴 단서 수(휴대폰은 2차 심문 전엔 제외). */
