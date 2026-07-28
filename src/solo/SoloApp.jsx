@@ -185,7 +185,7 @@ export default function SoloApp() {
               return r; // 자식이 컷인/대사창에 결과 표시
             }} />
         ) : sceneId ? (
-          <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet} stage={stage}
+          <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet} stage={stage} state={state} phase={progressStage >= 3 ? 2 : 1}
             roomSuspect={suspects.find((s) => s.name === locations.all.find((l) => l.id === sceneId)?.person)}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             lab={{
@@ -198,7 +198,7 @@ export default function SoloApp() {
             onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
             onBack={() => goHub()} />
         ) : (
-          <HallNav locations={locations} stage={stage} progressStage={progressStage} collectedSet={collectedSet}
+          <HallNav locations={locations} stage={stage} progressStage={progressStage} collectedSet={collectedSet} state={state}
             recommendPerson={!state.tutorialSeen && state.tutRecordDone ? cast.S1.name : null}
             admin={state.admin} stageLabel={STAGE_LABEL[progressStage]} progressText={progressText} objective={objective} canAccuse={progressStage >= 3}
             view={hubView} onView={setHubView} onEnter={(id) => setSceneId(id)} onToast={showToast}
