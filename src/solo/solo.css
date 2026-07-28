@@ -339,6 +339,7 @@ button { font-family: inherit; }
 
 /* 하단 대사창 */
 .aa-dialogue { position: absolute; left: 0; right: 0; bottom: 52px; z-index: 8; padding: 0 10px; cursor: pointer; }
+.aa-dialogue.low { bottom: 8px; }   /* 하단 커맨드바가 없는 화면(감식실 등) */
 .aa-loc { display: inline-block; background: #0d1a0dcc; color: #9fe08a; font-size: .74rem; font-weight: 700; padding: 3px 10px; border-radius: 8px 8px 0 0; border: 1px solid #2b5; border-bottom: none; }
 .aa-box { background: linear-gradient(180deg, #0b1220f2, #060a12f2); border: 2px solid #3a4a6a; border-radius: 10px; padding: 12px 16px; min-height: 74px; box-shadow: 0 6px 24px #000a; }
 .aa-speaker { color: var(--gold); font-weight: 800; font-size: .92rem; margin-bottom: 4px; }
@@ -346,6 +347,16 @@ button { font-family: inherit; }
 .aa-next { display: inline-block; margin-left: 8px; color: var(--gold); animation: aablink 1s steps(2) infinite; }
 @keyframes aablink { 50% { opacity: 0.2; } }
 .aa-hint { color: var(--muted); font-size: .76rem; margin-top: 6px; }
+/* 대사창 우측 하단 — '화면 이동'(다른 질문·나가기). 하단 바는 '행동'만 남긴다 */
+.aa-dlg-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.aa-dlg-act { background: #ffffff10; border: 1px solid #ffffff2e; color: #cdd3df; font-size: .76rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.aa-dlg-act:hover { background: #ffffff1e; color: #fff; border-color: #ffffff52; }
+.aa-dlg-act:active { transform: scale(.96); }
+
+/* 우측 상단 고정 HUD — 어느 화면에서나 같은 자리(복도와 동일) */
+.aa-hud { position: absolute; top: 12px; right: 12px; z-index: 9; display: flex; align-items: center; gap: 8px; }
+.aa-hud .aa-hp { position: static; }
+.aa-hud .hall-hud-btn { width: 38px; height: 38px; font-size: 1.05rem; }
 
 /* 하단 커맨드 바 */
 .aa-cmd { position: absolute; left: 0; right: 0; bottom: 0; z-index: 9; height: 48px; display: flex; background: linear-gradient(180deg, #10141ce6, #080b11f2); border-top: 1px solid #2a3346; }
@@ -389,6 +400,7 @@ button { font-family: inherit; }
 
 /* 질문 선택지 — 대사창 위에 뜨는 질문 목록(대화형 심문) */
 .aa-ask { position: absolute; left: 10px; right: 10px; bottom: 188px; z-index: 10; display: flex; flex-direction: column; gap: 6px; max-height: 44vh; overflow: auto; }
+.aa-ask.low { bottom: 150px; }      /* 대사창이 내려간 화면(.aa-dialogue.low)과 짝 */
 .aa-ask-h { font-size: .74rem; font-weight: 800; color: #cdd3df; background: #000000a8; border: 1px solid #ffffff22; border-radius: 8px; padding: 4px 10px; align-self: flex-start; }
 .aa-ask button { text-align: left; background: #0b1220ee; border: 1.5px solid #3a4a6a; color: #e8ecf4; border-radius: 10px; padding: 10px 14px; font-size: .92rem; font-weight: 600; cursor: pointer; }
 .aa-ask button:active { background: #16233a; }

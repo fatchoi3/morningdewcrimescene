@@ -154,6 +154,7 @@ export default function SoloApp() {
             onAsked={(stId) => { const a = { ...(state.askedQ || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), stId])]; update({ askedQ: a }); }}
             location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
+            onOpenRecord={() => setRecordOpen(true)}
             onExit={() => (sceneId ? setSuspectId(null) : goHub())}
             onPress={(stId) => {
               const r = pressOf(suspectId, stId);
@@ -165,7 +166,9 @@ export default function SoloApp() {
               if (r.grants) collect(r.grants); // 대화로 증언 단서 확보
               return r; // 자식이 대사창에 결과 표시
             }}
-            onPresent={(stId, code) => {
+            // silent=true: 「단서로 묻는다」로 고른 것 — 반응이 없어도 신뢰도를 깎지 않는다
+            //   (화면엔 '딱히 물을 게 없다'는 중립 문구만 뜨는데 몰래 깎이면 억울하게 쫓겨난다)
+            onPresent={(stId, code, silent = false) => {
               const confessed = (state.broke?.[suspectId] || []).some((e) => e.confess);
               const r = presentOn(suspectId, stId, code, confessed);
               if (r.result === 'contradict') {
@@ -175,7 +178,7 @@ export default function SoloApp() {
                 const patch = { broke: bk };
                 if (r.unlock) { const u = { ...(state.stUnlocked || {}) }; u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])]; patch.stUnlocked = u; }
                 update(patch);
-              } else if (r.result === 'wrong') {
+              } else if (r.result === 'wrong' && !silent) {
                 const tr = { ...(state.trust || {}) };
                 const t = Math.max(0, (tr[suspectId] ?? TRUST_MAX) - 1);
                 if (t <= 0) { tr[suspectId] = TRUST_MAX; update({ trust: tr }); setSuspectId(null); showToast('⚠ 신뢰도가 바닥났습니다 — 잠시 정비 후 다시 심문하세요'); }
@@ -187,7 +190,7 @@ export default function SoloApp() {
         ) : sceneId ? (
           <SceneView location={locations.all.find((l) => l.id === sceneId)} collectedSet={collectedSet} stage={stage} state={state} phase={progressStage >= 3 ? 2 : 1}
             roomSuspect={suspects.find((s) => s.name === locations.all.find((l) => l.id === sceneId)?.person)}
-            collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
+            onOpenRecord={() => setRecordOpen(true)}
             lab={{
               stage,
               requested: (code) => (state.labReq || []).includes(code),

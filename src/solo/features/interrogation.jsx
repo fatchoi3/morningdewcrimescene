@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // features/interrogation — 용의자 심문(방 안 대화형).
-//   질문을 골라 물으면 대답한다. 「캐묻는다」로 파고들고, 「이 말에 증거」로
-//   지금 그 대답에 단서를 들이대(모순!). ❗=새 질문 · ✅=모순 밝힌 질문.
+//   질문을 골라 물으면 대답한다. 대답을 한 번 더 탭하면 파고들고(캐묻기),
+//   「이 말에 증거」로 지금 그 대답에 단서를 들이댄다(모순!). ❗=새 질문 · ✅=모순 밝힌 질문.
 //   (증언/진술 데이터·판정 로직은 ../interrogation.js 를 참조)
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from 'react';
@@ -9,20 +9,21 @@ import { getClue, clueIcon } from '../content.js';
 import { TRUST_MAX, isUiTap } from '../lib/game.js';
 import { visibleStatements, relatedCodes, introOf, clueTargetIn } from '../interrogation.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
-import { DialogueBox, CommandBar } from '../vn.jsx';
+import { DialogueBox, CommandBar, TopHud } from '../vn.jsx';
 
 // ── 용의자 심문 (방 안 대화형 — 질문 선택 → 대답 → 캐묻기/그 말에 증거) ────────
-//   질문 목록에서 골라 물으면 인물이 대답한다. 수상하면 「캐묻는다」로 파고들고,
+//   질문 목록에서 골라 물으면 인물이 대답한다. 대답을 한 번 더 탭하면 더 파고들고,
 //   거짓이다 싶으면 「이 말에 증거」로 지금 그 대답에 단서를 들이댄다(모순!).
-//   ❗=새로 열린 질문 · ✅=모순을 밝힌 질문. 「이만 마친다」로 방에 복귀(반복 없음).
-export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onAsked, onPress, onPresent, onExit }) {
+//   ❗=새로 열린 질문 · ✅=모순을 밝힌 질문.
+//   화면 문법: 우측 상단=수첩(어느 화면이든 같은 자리) · 하단 바=이 화면에서 할 행동 ·
+//              대사창 우측 하단=화면 이동(다른 질문·나가기).
+export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onAsked, onPress, onPresent, onOpenRecord, onExit }) {
   const [curId, setCurId] = useState(null); // 지금 붙잡고 있는 질문(진술 id) — null = 질문 목록
   const [askMode, setAskMode] = useState('q'); // 2차: 'q'=질문 목록 · 'clue'=단서로 묻는다
   // 대사창 오버라이드: { text, kind } — 진입 시 인사말(1차/2차 다름)부터
   const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
   const [picker, setPicker] = useState(false);
   const [cutin, setCutin] = useState(null); // 모순! 컷인
-  const [record, setRecord] = useState(false);
   const [shake, setShake] = useState(false);
   const [speaking, setSpeaking] = useState(false); // 대사 타이핑 중 = 말하는 중(토크 모션)
   const [isTutorial] = useState(() => !tutorialSeen); // 이 심문이 첫(튜토리얼) 심문인가 — 화면 표시용
@@ -43,6 +44,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
   const cur = curId ? statements.find((s) => s.id === curId) : null;
   const bk = cur ? brokeOf(cur.id) : null;
+  // 「캐묻는다」는 버튼이 아니라 '한 번 더 탭' 이다 — 대답을 읽고 넘기면 파고든 말이 이어진다.
+  //   (전수 조사 결과 캐묻기로 열리는 질문은 하나도 없고 부수효과는 증언 단서 지급뿐이라,
+  //    버튼을 따로 둘 이유가 없다. 이미 캐물은 진술은 pressed 에 남아 두 번 재생되지 않는다.)
+  const canPress = !!cur?.press && !pressedIds.includes(cur.id);
 
   // 이 인물과 관련 있는 '증거'만 제시 목록에 노출(모순·반응 코드 + 인물 소속 단서, 증언은 제외)
   const rel = sid ? relatedCodes(sid) : new Set();
@@ -68,7 +73,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     if (!line) return;
     if (line.kind === 'intro' && !tutorialSeen) {
       onTutorialSeen?.();
-      setLine({ kind: 'guide', text: '(수사 노트) 질문을 골라 이야기를 듣자.\n수상한 대답은 「🔎 캐묻는다」로 파고들고, 거짓이다 싶으면 「📁 이 말에 증거」로 단서를 들이대자.\n❗ 표시가 붙은 새 질문이 열리면 놓치지 말 것.' });
+      setLine({ kind: 'guide', text: '(수사 노트) 질문을 골라 이야기를 듣자.\n대답을 한 번 더 탭하면 더 깊은 말을 들을 수 있고, 거짓이다 싶으면 「📁 이 말에 증거」로 단서를 들이대자.\n❗ 표시가 붙은 새 질문이 열리면 놓치지 말 것.' });
       return;
     }
     setLine(null); // cur가 있으면 답변 화면 유지, 없으면(인트로/가이드/인물반응) 질문 목록으로
@@ -112,11 +117,13 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     setPicker(false);
     const tgt = clueTargetIn(statements, code);
     const stId = tgt ? tgt.stId : null;
-    if (stId) setCurId(stId);
+    if (stId) { setCurId(stId); onAsked?.(stId); } // 이 경로로만 진행해도 심문한 것으로 집계되게
     // 이미 짚은 모순이면 조용히 재확인만(컷인·"새 질문/자백" 오정보 재출력 방지)
     const already = tgt && tgt.kind === 'contradict' && brokeOf(stId);
     if (already) { setLine({ text: already.text + '\n(이미 짚은 모순이다.)', kind: 'break' }); return; }
-    const r = onPresent(stId, code) || {};
+    // 목록에서 골라 '물어보는' 것뿐이므로 반응이 없어도 신뢰도를 깎지 않는다(silent).
+    //   신뢰도 차감은 대답에 대놓고 '들이대는' 「이 말에 증거」의 몫.
+    const r = onPresent(stId, code, true) || {};
     if (r.result === 'contradict') {
       setCutin('모순!');
       setTimeout(() => setCutin((c) => (c === '모순!' ? null : c)), 1300);
@@ -135,10 +142,14 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     : cur ? cur.text
     : (statements.length ? '무엇을 물어볼까. (아래에서 질문을 고르자)' : '…(지금은 물어볼 것이 없다. 단서를 모으거나 수사가 진행되면 질문이 생긴다.)');
   const dlgLoc = line
-    ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다' : line.kind === 'guide' ? '수사 노트' : line.kind === 'intro' ? (phase >= 2 ? '2차 심문' : '심문 시작') : '캐묻는다')
+    ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다'
+      : line.kind === 'guide' ? '수사 노트' : line.kind === 'intro' ? (phase >= 2 ? '2차 심문' : '심문 시작')
+      : line.kind === 'press' ? '더 캐묻는다' : `${suspect.name}의 대답`)   // soft = 증거에 대한 반응
     : cur ? (bk ? '✅ 밝혀낸 이야기' : `${suspect.name}의 대답`) : '질문 선택';
   const speakerName = (line && line.kind !== 'guide') || cur ? suspect.name : null;
-  const dlgHint = line ? '탭하여 계속 ▶' : cur ? '아래에서 「캐묻는다」·「이 말에 증거」로 이어가세요' : '';
+  const dlgHint = line ? '탭하여 계속 ▶'
+    : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : '「📁 이 말에 증거」로 들이대거나, 다른 질문으로')
+    : (statements.length ? '아래 목록에서 고르세요' : '');
 
   return (
     <div className={`aa-fs${shake ? ' aa-shake' : ''}`}
@@ -149,9 +160,12 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       </div>
       <div className="aa-loc-chip">⚖️ {location?.label ? `${location.label} · ` : ''}{suspect.name} {phase >= 2 ? '2차 심문' : '심문'}</div>
       {isTutorial && <div className="aa-tut-chip">📖 튜토리얼 — 처음이니 차근차근</div>}
-      <div className="aa-hp" title="신뢰도">
-        <span style={{ color: '#e8706e' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: .28 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
-      </div>
+      <TopHud>
+        <div className="aa-hp" title="신뢰도">
+          <span style={{ color: '#e8706e' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: .28 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
+        </div>
+        <button className="hall-hud-btn" title="수첩(사건 기록)" onClick={() => { setPicker(false); onOpenRecord?.(); }}>📓</button>
+      </TopHud>
 
       {/* 상반신 프레이밍 — 인물을 크게 그리고 하반신은 대사창 뒤로 잠기게(역전재판식) */}
       <div className={`aa-room-fig bust${speaking && speakerName ? ' talking' : ''}`}>
@@ -164,11 +178,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {/* 질문 선택지 — 대답/반응을 읽는 중엔 숨김. ✔=이미 들은 질문 */}
       {menuOpen && (
         <div className="aa-ask">
-          <div className="aa-ask-h">🎙 무엇을 물어볼까{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
-          <div className="s-seg" style={{ margin: '0 0 8px' }}>
-            <button className={askMode === 'q' ? 'on' : ''} onClick={() => setAskMode('q')}>💬 질문</button>
-            <button className={askMode === 'clue' ? 'on' : ''} onClick={() => setAskMode('clue')}>📁 단서로 묻는다</button>
-          </div>
+          <div className="aa-ask-h">🎙 {askMode === 'q' ? '무엇을 물어볼까' : '어떤 단서로 물어볼까'}{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
           {askMode === 'q' ? sortedStatements.map((s) => {
             const b = brokeOf(s.id);
             const isNew = s.hidden && !askedIds.includes(s.id) && !pressedIds.includes(s.id) && !b;
@@ -193,21 +203,24 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                   );
                 })
           )}
-          <button className="end" onClick={onExit}>↩ 이만 마친다 — 방으로 돌아간다</button>
         </div>
       )}
 
+      {/* 이동(다른 질문·나가기)은 대사창 우측 하단, 행동(캐묻기·증거)은 하단 바 */}
       <DialogueBox ref={dlgRef} location={dlgLoc} speaker={speakerName} text={dlgText}
-        onAdvance={line ? advance : undefined} hint={dlgHint} onTyping={setSpeaking} />
+        onAdvance={line ? advance : (canPress ? doPress : undefined)} hint={dlgHint} onTyping={setSpeaking}
+        actions={[
+          cur && { label: '↩ 다른 질문', onClick: toMenu },
+          { label: '🚪 나가기', onClick: onExit },
+        ]} />
 
       <CommandBar items={cur ? [
-        { icon: '🔎', label: '캐묻는다', onClick: doPress },
-        !bk && { icon: '📁', label: '이 말에 증거', active: picker, onClick: () => { setLine(null); setPicker((p) => !p); } },
-        { icon: '↩', label: '다른 질문', onClick: toMenu },
-        { icon: '📑', label: '사건기록', onClick: () => { setPicker(false); setRecord(true); } },
+        bk
+          ? { icon: '✅', label: '모순 확인됨', onClick: () => setLine({ text: bk.text + '\n(이미 짚은 모순이다.)', kind: 'break' }) }
+          : { icon: '📁', label: '이 말에 증거', active: picker, onClick: () => { setLine(null); setPicker((p) => !p); } },
       ] : [
-        { icon: '📑', label: '사건기록', onClick: () => setRecord(true) },
-        { icon: '↩', label: '돌아가기', onClick: onExit },
+        { icon: '💬', label: '질문', active: askMode === 'q', onClick: () => setAskMode('q') },
+        { icon: '📁', label: '단서로 묻는다', active: askMode === 'clue', onClick: () => setAskMode('clue') },
       ]} />
 
       {picker && cur && !bk && (
@@ -226,28 +239,6 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                     <div className="cm">{c.person}</div>
                   </button>
                 ))}
-              </div>}
-        </div>
-      )}
-
-      {record && (
-        <div className="aa-record">
-          <button className="aa-close" onClick={() => setRecord(false)}>✕</button>
-          <h3>사건 기록 · 이 인물에게 들이댈 증거 ({collectedClues.length})</h3>
-          {collectedClues.length === 0
-            ? <p style={{ color: 'var(--muted)' }}>아직 확보한 단서가 없습니다. 현장을 조사하거나 인물과 대화하세요.</p>
-            : <div className="s-grid">
-                {collectedClues.map((c) => {
-                  const relv = isRelated(c);
-                  return (
-                    <button key={c.code} className="s-card" style={relv ? { borderColor: 'var(--gold)' } : { opacity: .6 }}
-                      onClick={() => { if (relv) { setRecord(false); setPicker(true); } }}>
-                      <div className="ck">{clueIcon(c)}</div>
-                      <div className="cn" style={{ fontSize: '.82rem' }}>{c.title}</div>
-                      <div className="cm">{c.type === '증언' ? '증언' : relv ? '이 인물과 관련' : c.person}</div>
-                    </button>
-                  );
-                })}
               </div>}
         </div>
       )}
