@@ -201,6 +201,28 @@ button { font-family: inherit; }
 .s-scene { position: relative; border-radius: 14px; overflow: hidden; min-height: 320px; border: 1px solid var(--line); }
 .s-scene-hint { position: absolute; top: 10px; left: 12px; right: 12px; font-size: .8rem; color: #cfcabb; background: #0009; padding: 6px 10px; border-radius: 8px; }
 /* 조사 존 — 배경 그림 위 '반짝임'(깊이 배율 --s, 제자리 점멸: 공중부양 X) */
+/* ── 알림 배지(❗) — 웹앱 알림처럼 '여기 아직 할 일 있음'을 좌측 상단에 표시 ──────
+   갈 수 있는 곳(복도 방문)·대화 가능한 인물·새로 열린 조사거리에 붙는다.
+   부모에 position:relative 가 없어도 되도록, 붙는 쪽에서 위치를 잡는다. */
+.s-alert {
+  position: absolute; left: -6px; top: -6px; z-index: 12;
+  min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #ff6b6b, #e03131);
+  color: #fff; font-size: .72rem; font-weight: 900; line-height: 1;
+  border: 1.5px solid #fff0f0; border-radius: 999px;
+  box-shadow: 0 0 0 2px #00000059, 0 0 10px #ff6b6b8c;
+  pointer-events: none; animation: alertpop 2.2s ease-in-out infinite;
+}
+@keyframes alertpop {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px #00000059, 0 0 8px #ff6b6b73; }
+  50%      { transform: scale(1.14); box-shadow: 0 0 0 2px #00000059, 0 0 16px #ff6b6bcc; }
+}
+@media (prefers-reduced-motion: reduce) { .s-alert { animation: none; } }
+/* 방문·인물·핫스팟은 이미 absolute 라 기준점이 있고, 이동 화살표만 기준점을 준다 */
+.hall-arrow { position: relative; }
+.hall-arrow .s-alert { left: 4px; top: 4px; }
+
 /* 단서 핫스팟 — 평소엔 배경 그림만 보이고, 물건 위에 마우스를 올리면(호버) 그 영역이 강조된다.
    빛나는 점을 겨냥해 누르는 게 아니라 '그림 속 물건 영역'을 눌러 조사하는 방식. */
 /* 래퍼: 위치·크기만 담당하고 클릭은 통과시킨다(안쪽 버튼만 클릭 대상).

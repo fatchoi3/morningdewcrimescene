@@ -4,6 +4,7 @@
 //   pastor : 복도 끝 목사님 방(현장) · floor1 : CCTV·소지품 · lab : 감식 의뢰실
 // ─────────────────────────────────────────────────────────────────────────────
 import { stageHint } from '../lib/game.js';
+import { locationAlerts, alertReason } from '../lib/alerts.js';
 import { getClue } from '../content.js';
 import { HallBg } from '../art.jsx';
 import { cast } from '../../data/cast.js';
@@ -19,11 +20,13 @@ const HALL_DOORS = [
   { person: cast.S5.name, x: 86.5, y: 58 },
 ];
 
-function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {
+function HallHot({ x, y, icon, label, sub, locked, tone, recommend, alert, alertTitle, onClick }) {
   return (
     <button className={`hall-hot${locked ? ' locked' : ''}${tone ? ' ' + tone : ''}`}
       data-tut={recommend ? 'door' : undefined}
       style={{ left: `${x}%`, top: `${y}%` }} onClick={onClick}>
+      {/* 알림 배지 — 그 방에 아직 볼 것/물어볼 것이 남아 있을 때 */}
+      {!locked && alert > 0 && <span className="s-alert" title={alertTitle}>!</span>}
       <span className="hall-hot-ic">{locked ? '🔒' : icon}</span>
       <span className="hall-hot-plate">{label}</span>
       {sub && <span className="hall-hot-sub">{sub}</span>}
@@ -31,7 +34,9 @@ function HallHot({ x, y, icon, label, sub, locked, tone, recommend, onClick }) {
   );
 }
 
-export function HallNav({ locations, stage, progressStage, collectedSet, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, view, onView, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
+export function HallNav({ locations, stage, progressStage, collectedSet, state, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, view, onView, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
+  // 각 장소에 '남은 거리'가 있으면 알림 배지를 띄운다(복도에서 어디로 갈지 바로 보이게)
+  const alertsOf = (loc) => locationAlerts(loc, state || {}, stage, progressStage >= 3 ? 2 : 1);
   const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
   const pastor = locations.rooms.find((l) => l.person === '목사');
   const tool = (id) => locations.all.find((l) => l.id === id);
@@ -63,8 +68,10 @@ export function HallNav({ locations, stage, progressStage, collectedSet, recomme
           {view === 'main' && HALL_DOORS.map((d) => {
             const loc = roomByPerson(d.person);
             if (!loc) return null;
+            const a = alertsOf(loc);
             return <HallHot key={d.person} x={d.x} y={d.y} icon="🚪" label={loc.label}
               sub={subOf(loc, false)} locked={loc.stage > stage}
+              alert={a.total} alertTitle={`${loc.label} — ${alertReason(a)}`}
               recommend={recommendPerson === d.person} onClick={() => enter(loc, false)} />;
           })}
           {view === 'main' && (
@@ -73,13 +80,19 @@ export function HallNav({ locations, stage, progressStage, collectedSet, recomme
           )}
           {view === 'pastor' && pastor && (
             <HallHot x={50} y={50} icon="⚰️" tone="crime" label={pastor.label}
-              sub={subOf(pastor, true)} locked={pastor.stage > stage} onClick={() => enter(pastor, true)} />
+              sub={subOf(pastor, true)} locked={pastor.stage > stage}
+              alert={alertsOf(pastor).total} alertTitle={`${pastor.label} — ${alertReason(alertsOf(pastor))}`}
+              onClick={() => enter(pastor, true)} />
           )}
           {view === 'floor1' && cctv && (
-            <HallHot x={50} y={52} icon="📹" label={cctv.label} sub={subOf(cctv)} locked={cctv.stage > stage} onClick={() => enter(cctv)} />
+            <HallHot x={50} y={52} icon="📹" label={cctv.label} sub={subOf(cctv)} locked={cctv.stage > stage}
+              alert={alertsOf(cctv).total} alertTitle={`${cctv.label} — ${alertReason(alertsOf(cctv))}`}
+              onClick={() => enter(cctv)} />
           )}
           {view === 'lab' && lab && (
-            <HallHot x={43} y={56} icon="🔬" label={lab.label} sub={subOf(lab)} locked={lab.stage > stage} onClick={() => enter(lab)} />
+            <HallHot x={43} y={56} icon="🔬" label={lab.label} sub={subOf(lab)} locked={lab.stage > stage}
+              alert={alertsOf(lab).total} alertTitle={`${lab.label} — ${alertReason(alertsOf(lab))}`}
+              onClick={() => enter(lab)} />
           )}
       </div>
 
@@ -101,11 +114,14 @@ export function HallNav({ locations, stage, progressStage, collectedSet, recomme
 
       <div className="hall-nav-row">
         {view === 'main' ? <>
-          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 그쪽에 갈 일은 없어 보인다. 먼저 인물들의 방을 둘러보고 이야기부터 나눠보자.') : onView('floor1')}>◀ 왼쪽 · 1층</button>
-          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 목사님 방에 갈 필요는 없다. 지금은 인물들부터 만나보자.') : onView('pastor')}>오른쪽 · 목사님 방 ▶</button>
+          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 그쪽에 갈 일은 없어 보인다. 먼저 인물들의 방을 둘러보고 이야기부터 나눠보자.') : onView('floor1')}>
+            {(alertsOf(cctv).total + alertsOf(lab).total) > 0 && <span className="s-alert" title="1층 쪽에 볼 것이 남아 있다">!</span>}◀ 왼쪽 · 1층</button>
+          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 목사님 방에 갈 필요는 없다. 지금은 인물들부터 만나보자.') : onView('pastor')}>
+            {alertsOf(pastor).total > 0 && <span className="s-alert" title="목사님 방에 볼 것이 남아 있다">!</span>}오른쪽 · 목사님 방 ▶</button>
         </> : view === 'floor1' ? <>
           <button className="hall-arrow" onClick={() => onView('main')}>◀ 복도로</button>
-          {lab && <button className="hall-arrow" onClick={() => onView('lab')}>감식 의뢰실 ▶</button>}
+          {lab && <button className="hall-arrow" onClick={() => onView('lab')}>
+            {alertsOf(lab).total > 0 && <span className="s-alert" title="감식 의뢰실에 처리할 것이 있다">!</span>}감식 의뢰실 ▶</button>}
         </> : <>
           <button className="hall-arrow" onClick={() => onView(view === 'lab' ? 'floor1' : 'main')}>◀ {view === 'lab' ? '1층으로' : '복도로'}</button>
           <span />

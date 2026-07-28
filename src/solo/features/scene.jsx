@@ -5,12 +5,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { getClue } from '../content.js';
 import { ROOM_HOTSPOTS, hotspotFor } from '../lib/game.js';
+import { pendingQuestions } from '../lib/alerts.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, CommandBar } from '../vn.jsx';
 import { CaseRecord } from './record.jsx';
 
 // ── 장면(역전재판식 풀블리드: 조사/이야기/이동 + 사건기록) ────────────────────
-export function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, stage = 1, onTalk, onOpen, onLockedToast, onBack }) {
+export function SceneView({ location, collectedSet, roomSuspect, collectedClues, lab, stage = 1, state, phase = 1, onTalk, onOpen, onLockedToast, onBack }) {
+  // 이 인물에게 아직 안 물어본 질문 수 — 있으면 대화 영역에 알림 배지
+  const talkPending = roomSuspect ? pendingQuestions(roomSuspect.id, state || {}, phase) : 0;
   const [examine, setExamine] = useState(true);
   const [record, setRecord] = useState(false);
   // 배경 그림의 실제 비율. 트랙을 이 비율로 잡아야 핫스팟 %좌표가 그림과 정확히 일치한다
@@ -90,6 +93,11 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
                 : <rect x="2" y="2" width="96" height="96" rx="6" vectorEffect="non-scaling-stroke" />}
             </svg>
             {have && <span className="s-zone-check">✓</span>}
+            {/* 새로 할 수 있게 된 것에만 알림 — 감식 의뢰 가능, 2차에 열린 휴대폰.
+                안 챙긴 일반 단서까지 붙이면 방마다 느낌표 범벅이라 테두리로 충분하다. */}
+            {!have && ((isGamsik && lab?.ready(code) && !req) || (c.phone && stage >= 3)) && (
+              <span className="s-alert" title={isGamsik ? '감식 의뢰할 수 있다' : '휴대폰을 볼 수 있게 됐다'}>!</span>
+            )}
             <span className="s-zone-lab">{zoneLab}</span>
           </div>
         );
@@ -104,7 +112,8 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
           {/* 인물은 테두리를 그리지 않는다 — 발밑 빛 + '이야기를 한다' 칩만으로 안내.
               (그림 속 인물 위에 선을 얹으면 오히려 지저분해 보임) */}
           <span className="s-talkzone-glow" />
-          <span className="s-talkzone-tip">💬 {roomSuspect.name} — 이야기를 한다</span>
+          {talkPending > 0 && <span className="s-alert" title={`물어볼 것 ${talkPending}`}>!</span>}
+          <span className="s-talkzone-tip">💬 {roomSuspect.name} — 이야기를 한다{talkPending > 0 ? ` (${talkPending})` : ''}</span>
         </button>
       )}
         </div>
@@ -141,7 +150,7 @@ export function SceneView({ location, collectedSet, roomSuspect, collectedClues,
                 if (lab.stage >= 3) { onOpen(code); return; }
                 if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
                 lab.request(code);
-              }}>{label}</button>
+              }}>{ready && !req && !have ? '❗ ' : ''}{label}</button>
             );
           })}
           <button className="end" onClick={onBack}>↩ 나간다</button>
