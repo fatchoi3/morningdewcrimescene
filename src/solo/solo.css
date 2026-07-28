@@ -406,8 +406,9 @@ button { font-family: inherit; }
 /* 질문지 안 칸 나눔 — 「💬 질문」과 「📁 단서」 (하단 탭 대신 목록 안에서 구분) */
 .aa-ask-sec { font-size: .7rem; font-weight: 800; letter-spacing: .04em; color: #8b93a4; padding: 4px 2px 0; margin-top: 2px; border-top: 1px solid #ffffff14; }
 .aa-ask-sec:first-of-type { border-top: none; margin-top: 0; }
-/* 「단서」 칸 뒷줄 펼치기 — 2차엔 보유 단서가 많아 핵심이 스크롤 밖으로 밀린다 */
-.aa-ask-more { text-align: center !important; background: #00000090 !important; border-style: dashed !important; border-color: #ffffff30 !important; color: var(--muted) !important; font-weight: 700; font-size: .82rem !important; }
+/* 화제 아래로 이어지는 단서 질문 — 한 칸 들여써서 '이 화제에 딸린 것'임을 보인다 */
+.aa-ask button.sub { margin-left: 16px; font-size: .86rem; border-left-width: 3px; }
+.aa-ask button.sub::before { content: '└'; color: #6f7889; margin-right: 6px; }
 .aa-ask button { text-align: left; background: #0b1220ee; border: 1.5px solid #3a4a6a; color: #e8ecf4; border-radius: 10px; padding: 10px 14px; font-size: .92rem; font-weight: 600; cursor: pointer; }
 .aa-ask button:active { background: #16233a; }
 .aa-ask button.done { opacity: .72; border-color: #2b5a3a; }
