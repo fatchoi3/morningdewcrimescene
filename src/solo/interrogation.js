@@ -671,6 +671,28 @@ export function topicClues(sid, topic, collected, statements) {
   return (topic?.codes || []).filter((c) => have.has(c) && clueTalkable(sid, statements, c));
 }
 
+const needsOf = (s) => (Array.isArray(s.needs) ? s.needs : [s.needs]).filter(Boolean);
+
+/** 이 질문이 딸린 화제 — needs 코드가 여러 화제에 걸치면 '먼저 정의된' 화제 하나만 주인이 된다.
+ *  (한 질문이 두 화제에 동시에 뜨면 어느 쪽에서 물었는지 헷갈리고 목록만 길어진다) */
+export function topicOfStatement(sid, s) {
+  if (!s || s.hidden || !s.needs) return null;
+  const codes = needsOf(s);
+  return (TOPICS[sid] || []).find((t) => codes.some((c) => t.codes.includes(c))) || null;
+}
+
+/** 이 화제에 딸린 질문 — 단서로 열리는 질문(needs)은 그 단서가 속한 화제 밑으로 들어간다.
+ *  요힘빈 통을 주웠다고 「운동」 화제와 「요힘빈은 누구 겁니까?」가 나란히 뜨면 안 된다.
+ *  화제 하나만 뜨고, 파생 질문은 그 안에서 이어지게 한다. */
+export function topicStatements(sid, topic, statements) {
+  return (statements || []).filter((s) => topicOfStatement(sid, s)?.id === topic?.id);
+}
+
+/** 최상위에 남는 질문 — 기본 질문과, 모순으로 열린 질문(놓치면 안 되는 진전). */
+export function rootStatements(sid, statements) {
+  return (statements || []).filter((s) => !topicOfStatement(sid, s));
+}
+
 /** 지금 이 인물에게 그 단서로 '물어볼 말'이 있는가 — 질문지의 「단서」 칸에 올릴지 판단.
  *  진술에 걸린 반응(모순·soft)이나 인물 단위 대질 반응이 하나라도 있어야 올린다 →
  *  목록에 오른 단서는 반드시 무슨 말이든 듣게 된다(막다른 길 없음). */
