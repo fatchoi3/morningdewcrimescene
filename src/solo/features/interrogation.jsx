@@ -89,8 +89,11 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     return 1;
   };
   const byQ = (a, b) => qRank(a) - qRank(b);
-  // 최상위엔 기본 질문 + 모순으로 열린 질문만. 단서로 열리는 질문은 화제 안으로 들어간다.
-  const rootSts = (sid ? rootStatements(sid, statements) : []).sort(byQ);
+  // 최상위엔 기본 질문 + 모순으로 열린 질문. 단서로 열리는 질문은 화제 안으로 들어가는데,
+  //   그 화제가 아직 안 열려 있으면 최상위로 되돌린다 — 안 그러면 질문이 화면에서 증발한다
+  //   (이현지의 「이사랑과는 어떤 사이죠?」가 현지 방만 뒤진 경로에서 사라지던 문제).
+  const ownedByShownTopic = new Set(topics.flatMap((t) => stsOf(t).map((s) => s.id)));
+  const rootSts = statements.filter((s) => !ownedByShownTopic.has(s.id)).sort(byQ);
   // 단서 한 줄의 상태 — ❗아직 안 물음 · ✔물어봄 · ✅이걸로 모순을 짚음
   const cKey = (c) => {
     const tgt = clueTargetIn(statements, c.code);
@@ -177,11 +180,21 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     setPicker(false);
     const tgt = clueTargetIn(statements, code);
     const stId = tgt ? tgt.stId : null;
-    onAskedClue?.(code);                            // 질문지에서 ✔ 처리 · 방 알림(❗) 집계에 반영
-    if (stId) onAsked?.(stId);                      // 이 경로로만 진행해도 심문한 것으로 집계되게
     // 이미 짚은 모순이면 조용히 재확인만(컷인·"새 질문/자백" 오정보 재출력 방지)
     const already = tgt && tgt.kind === 'contradict' && brokeOf(stId);
-    if (already) { setLine({ text: already.text + '\n(이미 짚은 모순이다.)', kind: 'break' }); return; }
+    if (already) {
+      onAskedClue?.(code);
+      setLine({ text: already.text + '\n(이미 짚은 모순이다.)', kind: 'break' }); return;
+    }
+    // 아직 그 사람 입으로 못 들은 진술을 이 단서가 깨게 되어 있으면, 여기서 터뜨리지 않는다.
+    //   거짓말 원문을 듣기도 전에 반박이 먼저 나오면 추궁의 맛이 사라지고,
+    //   그 진술은 ✅로 닫혀 캐묻기로만 주는 증언까지 지나치게 된다.
+    if (tgt?.kind === 'contradict' && !askedIds.includes(stId) && !pressedIds.includes(stId)) {
+      const st = statements.find((s) => s.id === stId);
+      setLine({ kind: 'soft', text: `(이 단서를 들이대기 전에, 본인 입으로 하는 말을 먼저 들어야 한다.\n「${st?.q || '그 질문'}」을 물어본 다음 「📁 반박」으로 꺼내자.)` });
+      return;
+    }
+    onAskedClue?.(code);                            // 질문지에서 ✔ 처리 · 방 알림(❗) 집계에 반영
     // 목록에서 골라 '물어보는' 것뿐이므로 반응이 없어도 신뢰도를 깎지 않는다(silent).
     //   신뢰도 차감은 대답에 대놓고 '들이대는' 「이 말에 증거」의 몫.
     const r = onPresent(stId, code, true) || {};

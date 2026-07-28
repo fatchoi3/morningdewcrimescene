@@ -659,19 +659,25 @@ export function relatedCodes(sid) {
   return set;
 }
 
+const needsOf = (s) => (Array.isArray(s.needs) ? s.needs : [s.needs]).filter(Boolean);
+
 /** 이 인물에게 열려 있는 '화제' — 그 주제 단서를 하나라도 챙기면 질문지에 질문이 생긴다. */
 export function visibleTopics(sid, collected) {
   const have = new Set(collected || []);
   return (TOPICS[sid] || []).filter((t) => t.codes.some((c) => have.has(c)));
 }
 
-/** 그 화제로 이어서 물어볼 수 있는 단서 — 보유했고 반응이 있는 것만. */
+/** 그 화제로 이어서 물어볼 수 있는 단서 — 보유했고 반응이 있는 것만.
+ *  같은 화제의 질문을 여는 단서(needs)는 빼둔다 — 「졸피뎀 약통은 뭐죠?」 옆에
+ *  「'졸피뎀 약통'에 대해 묻는다」가 나란히 뜨면 같은 걸 두 번 묻는 셈이다. */
 export function topicClues(sid, topic, collected, statements) {
   const have = new Set(collected || []);
-  return (topic?.codes || []).filter((c) => have.has(c) && clueTalkable(sid, statements, c));
+  const viaQuestion = new Set(
+    topicStatements(sid, topic, statements).flatMap((s) => needsOf(s)),
+  );
+  return (topic?.codes || []).filter((c) => have.has(c) && !viaQuestion.has(c)
+    && clueTalkable(sid, statements, c));
 }
-
-const needsOf = (s) => (Array.isArray(s.needs) ? s.needs : [s.needs]).filter(Boolean);
 
 /** 이 질문이 딸린 화제 — needs 코드가 여러 화제에 걸치면 '먼저 정의된' 화제 하나만 주인이 된다.
  *  (한 질문이 두 화제에 동시에 뜨면 어느 쪽에서 물었는지 헷갈리고 목록만 길어진다) */
