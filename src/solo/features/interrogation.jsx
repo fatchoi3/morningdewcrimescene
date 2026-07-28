@@ -129,6 +129,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const doPresent = (code) => {
     if (!cur) return;
     setPicker(false);
+    onAskedClue?.(code);   // 반박으로 이미 써먹은 단서 — 질문지·방 배지에서도 '들어봤음'으로
     const r = onPresent(cur.id, code) || {};
     if (r.result === 'contradict') {
       setCutin('모순!');

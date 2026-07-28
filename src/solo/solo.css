@@ -153,6 +153,11 @@ button { font-family: inherit; }
 .pbr-res { color: var(--gold); margin-top: 9px; font-weight: 700; }
 .s-kk-row { width: 100%; display: flex; gap: 11px; align-items: center; background: none; border: none; border-bottom: 1px solid var(--line); padding: 11px 4px; cursor: pointer; text-align: left; color: var(--text); }
 .s-kk-row .kk-av { width: 42px; height: 42px; border-radius: 14px; background: #f7e14b; color: #3a3320; display: flex; align-items: center; justify-content: center; font-weight: 800; flex: none; }
+/* 통화 기록 — 누를 게 없는 목록이라 커서를 두지 않고, 방향별로 색만 구분 */
+.s-kk-row.call { cursor: default; }
+.s-kk-row.call .kk-av { background: #2b4a35; color: #a6e6bd; border-radius: 50%; }
+.s-kk-row.call.out .kk-av { background: #2b3b5a; color: #a8c8ff; }
+.s-kk-row.call.missed .kk-av { background: #4a2b2b; color: #ffb4b4; }
 .kk-body { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 2px; }
 .kk-name { font-weight: 700; display: flex; gap: 6px; align-items: center; }
 .kk-prev { color: var(--muted); font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -292,6 +297,9 @@ button { font-family: inherit; }
 .s-modal-h .mx { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
 .s-modal-b { padding: 16px; line-height: 1.75; }
 /* 공용 알림·확인·팝업(ui/dialog.jsx) — 브라우저 기본 alert/confirm 대체 */
+/* CCTV·휴대폰 모달(.modal-overlay z:1000) 위에 떠야 한다 — 그 아래 깔리면 안내가
+   보이지도 눌리지도 않은 채 '봤음' 처리만 되어 영영 다시 안 뜬다. */
+.s-dialog-ov { z-index: 1200; }
 .s-dialog { width: min(94vw, 420px); }
 .s-dialog-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 .s-dialog-btn { background: var(--gold); border: 1px solid var(--gold); color: #1a1508; font-weight: 800; font-size: .9rem; padding: 9px 18px; border-radius: 9px; cursor: pointer; }
@@ -546,7 +554,7 @@ button { font-family: inherit; }
 .s-reveal .role { font-size: .72rem; color: var(--muted); }
 
 /* 토스트 */
-.s-toast { position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%); background: #14371a; border: 1px solid var(--ok); color: #dfffd0; padding: 10px 16px; border-radius: 10px; z-index: 60; font-weight: 700; max-width: 92vw; text-align: center; }
+.s-toast { position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%); background: #14371a; border: 1px solid var(--ok); color: #dfffd0; padding: 10px 16px; border-radius: 10px; z-index: 1300; font-weight: 700; max-width: 92vw; text-align: center; }  /* CCTV·폰 모달 위 */
 
 /* ── CCTV 열람대(실사 CCTV형: 2F 평면도 + 이동 마커) — QR앱 styles.css에서 이식 ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); overflow-y: auto; animation: fadeIn .18s ease; }
