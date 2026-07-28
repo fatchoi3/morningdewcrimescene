@@ -291,6 +291,14 @@ button { font-family: inherit; }
 .s-modal-h .mt { font-weight: 800; flex: 1; }
 .s-modal-h .mx { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
 .s-modal-b { padding: 16px; line-height: 1.75; }
+/* 공용 알림·확인·팝업(ui/dialog.jsx) — 브라우저 기본 alert/confirm 대체 */
+.s-dialog { width: min(94vw, 420px); }
+.s-dialog-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.s-dialog-btn { background: var(--gold); border: 1px solid var(--gold); color: #1a1508; font-weight: 800; font-size: .9rem; padding: 9px 18px; border-radius: 9px; cursor: pointer; }
+.s-dialog-btn:active { transform: scale(.97); }
+.s-dialog-btn.ghost { background: none; border-color: var(--line); color: var(--muted); font-weight: 700; }
+.s-dialog-btn.ghost:hover { color: var(--text); border-color: #ffffff44; }
+.s-dialog-btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .s-modal-b img { max-width: 100%; border-radius: 10px; margin-bottom: 10px; }
 .s-tag { display: inline-block; font-size: .68rem; padding: 1px 8px; border-radius: 8px; margin-left: 6px; background: var(--panel2); color: var(--muted); }
 .s-detail { white-space: pre-wrap; }
@@ -338,8 +346,7 @@ button { font-family: inherit; }
 .aa-close { position: absolute; top: 10px; right: 12px; z-index: 7; background: #000000b0; border: 1px solid var(--line); color: var(--text); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 1rem; }
 
 /* 하단 대사창 */
-.aa-dialogue { position: absolute; left: 0; right: 0; bottom: 52px; z-index: 8; padding: 0 10px; cursor: pointer; }
-.aa-dialogue.low { bottom: 8px; }   /* 하단 커맨드바가 없는 화면(감식실 등) */
+.aa-dialogue { position: absolute; left: 0; right: 0; bottom: 8px; z-index: 8; padding: 0 10px; cursor: pointer; }
 .aa-loc { display: inline-block; background: #0d1a0dcc; color: #9fe08a; font-size: .74rem; font-weight: 700; padding: 3px 10px; border-radius: 8px 8px 0 0; border: 1px solid #2b5; border-bottom: none; }
 .aa-box { background: linear-gradient(180deg, #0b1220f2, #060a12f2); border: 2px solid #3a4a6a; border-radius: 10px; padding: 12px 16px; min-height: 74px; box-shadow: 0 6px 24px #000a; }
 .aa-speaker { color: var(--gold); font-weight: 800; font-size: .92rem; margin-bottom: 4px; }
@@ -347,24 +354,19 @@ button { font-family: inherit; }
 .aa-next { display: inline-block; margin-left: 8px; color: var(--gold); animation: aablink 1s steps(2) infinite; }
 @keyframes aablink { 50% { opacity: 0.2; } }
 .aa-hint { color: var(--muted); font-size: .76rem; margin-top: 6px; }
-/* 대사창 우측 하단 — '화면 이동'(다른 질문·나가기). 하단 바는 '행동'만 남긴다 */
+/* 대사창 우측 하단 — 이 화면에서 할 수 있는 것 전부(반박·다른 질문·나가기). 하단 바는 없다 */
 .aa-dlg-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .aa-dlg-act { background: #ffffff10; border: 1px solid #ffffff2e; color: #cdd3df; font-size: .76rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
 .aa-dlg-act:hover { background: #ffffff1e; color: #fff; border-color: #ffffff52; }
 .aa-dlg-act:active { transform: scale(.96); }
+/* 핵심 행동(반박) — 이동 버튼들과 구분되게 금색 */
+.aa-dlg-act.key { background: #241f14; border-color: var(--gold); color: #ffe9a8; margin-right: auto; }
+.aa-dlg-act.key:hover { background: #33290f; border-color: #ffdf9a; color: #fff6dd; }
 
 /* 우측 상단 고정 HUD — 어느 화면에서나 같은 자리(복도와 동일) */
 .aa-hud { position: absolute; top: 12px; right: 12px; z-index: 9; display: flex; align-items: center; gap: 8px; }
 .aa-hud .aa-hp { position: static; }
 .aa-hud .hall-hud-btn { width: 38px; height: 38px; font-size: 1.05rem; }
-
-/* 하단 커맨드 바 */
-.aa-cmd { position: absolute; left: 0; right: 0; bottom: 0; z-index: 9; height: 48px; display: flex; background: linear-gradient(180deg, #10141ce6, #080b11f2); border-top: 1px solid #2a3346; }
-.aa-cmd-btn { flex: 1; background: none; border: none; border-right: 1px solid #ffffff10; color: #cdd3df; font-size: .74rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
-.aa-cmd-btn:last-child { border-right: none; }
-.aa-cmd-btn:active { background: #ffffff12; }
-.aa-cmd-btn.on { color: var(--gold); background: #241f1466; }
-.aa-cmd-ic { font-size: 1.05rem; }
 
 /* 법정기록 오버레이 */
 .aa-record { position: absolute; inset: 0; z-index: 12; background: #060a12ee; padding: 46px 14px 60px; overflow: auto; }
@@ -399,9 +401,13 @@ button { font-family: inherit; }
 @keyframes aashake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
 
 /* 질문 선택지 — 대사창 위에 뜨는 질문 목록(대화형 심문) */
-.aa-ask { position: absolute; left: 10px; right: 10px; bottom: 188px; z-index: 10; display: flex; flex-direction: column; gap: 6px; max-height: 44vh; overflow: auto; }
-.aa-ask.low { bottom: 150px; }      /* 대사창이 내려간 화면(.aa-dialogue.low)과 짝 */
+.aa-ask { position: absolute; left: 10px; right: 10px; bottom: 150px; z-index: 10; display: flex; flex-direction: column; gap: 6px; max-height: 44vh; overflow: auto; }
 .aa-ask-h { font-size: .74rem; font-weight: 800; color: #cdd3df; background: #000000a8; border: 1px solid #ffffff22; border-radius: 8px; padding: 4px 10px; align-self: flex-start; }
+/* 질문지 안 칸 나눔 — 「💬 질문」과 「📁 단서」 (하단 탭 대신 목록 안에서 구분) */
+.aa-ask-sec { font-size: .7rem; font-weight: 800; letter-spacing: .04em; color: #8b93a4; padding: 4px 2px 0; margin-top: 2px; border-top: 1px solid #ffffff14; }
+.aa-ask-sec:first-of-type { border-top: none; margin-top: 0; }
+/* 「단서」 칸 뒷줄 펼치기 — 2차엔 보유 단서가 많아 핵심이 스크롤 밖으로 밀린다 */
+.aa-ask-more { text-align: center !important; background: #00000090 !important; border-style: dashed !important; border-color: #ffffff30 !important; color: var(--muted) !important; font-weight: 700; font-size: .82rem !important; }
 .aa-ask button { text-align: left; background: #0b1220ee; border: 1.5px solid #3a4a6a; color: #e8ecf4; border-radius: 10px; padding: 10px 14px; font-size: .92rem; font-weight: 600; cursor: pointer; }
 .aa-ask button:active { background: #16233a; }
 .aa-ask button.done { opacity: .72; border-color: #2b5a3a; }
@@ -414,7 +420,7 @@ button { font-family: inherit; }
 .s-tut-badge { display: inline-block; background: #12240f; color: #a6e6bd; border: 1px solid #2b5a3a; font-weight: 800; font-size: .68rem; padding: 1px 8px; border-radius: 8px; margin-right: 5px; }
 
 /* 증거 제시 시트(관련 단서만) */
-.aa-present { position: absolute; left: 0; right: 0; bottom: 48px; z-index: 11; max-height: 46vh; overflow: auto; background: linear-gradient(180deg, #0b1220f6, #060a12fb); border-top: 2px solid var(--gold); padding: 10px 12px 14px; box-shadow: 0 -8px 24px #000a; }
+.aa-present { position: absolute; left: 0; right: 0; bottom: 8px; z-index: 11; max-height: 46vh; overflow: auto; background: linear-gradient(180deg, #0b1220f6, #060a12fb); border-top: 2px solid var(--gold); padding: 10px 12px 14px; box-shadow: 0 -8px 24px #000a; }
 .aa-present-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: .82rem; color: #cdd3df; }
 .aa-present-h .aa-close { position: static; width: 28px; height: 28px; font-size: .9rem; }
 

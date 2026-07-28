@@ -25,15 +25,16 @@ import { StartScreen, BriefingVN, EventVN, EventVN2, EndingScreen } from './feat
 import { TutorialCoach, TutorialFinale } from './features/tutorial.jsx';
 import { AdminPanel } from './features/admin.jsx';
 import { SheetOverlay } from './ui/overlays.jsx';
+import { useDialog } from './ui/dialog.jsx';
 
 export default function SoloApp() {
+  const dlg = useDialog(); // 알림·확인·팝업 — window.alert/confirm 대신
   const [state, setState] = useState(() => loadSave() || defaultState());
   const [sceneId, setSceneId] = useState(null);
   const [suspectId, setSuspectId] = useState(null);
   const [modalCode, setModalCode] = useState(null);
   const [hubView, setHubView] = useState('main'); // 허브 뷰(main/floor1/pastor/lab) — 장면 진입 후 복귀 위치 보존
   const [toast, setToast] = useState(null);
-  const [specialTut, setSpecialTut] = useState(null); // 첫 추리(특수) 단서 획득 안내
 
   useEffect(() => { saveSave(state); }, [state]);
 
@@ -89,7 +90,21 @@ export default function SoloApp() {
     const gamsikNow = [...gamsikCodes].filter((g) => !collectedSet.has(g) && !gamsikReady(g, state.collected) && gamsikReady(g, [...set]));
     const gextra = gamsikNow.length ? ' · 🔬 감식 의뢰 가능(감식 의뢰실에서 맡기세요)' : '';
     showToast(`단서 확보: ${c?.title || code}${extra}${gextra}`);
-    if (newSpecials.length && !state.specialTutSeen) { setSpecialTut(newSpecials[0]); update({ specialTutSeen: true }); } // 첫 추리 단서 안내
+    // 첫 추리 단서 안내 — 공용 팝업으로
+    if (newSpecials.length && !state.specialTutSeen) {
+      const first = getClue(newSpecials[0].code);
+      update({ specialTutSeen: true });
+      dlg.popup({
+        title: '⭐ 추리 단서를 얻었어요!',
+        body: (
+          <>
+            <p>단서들을 엮어 추리 단서 <b>「{first?.title}」</b>가 밝혀졌습니다.</p>
+            <p>이런 <b>추리 단서(⭐)</b>는 방에서 줍는 게 아니라, 관련 단서를 모으면 <b>자동으로 사건 기록에 등록</b>돼요.</p>
+            <p>화면 오른쪽 위의 <b>📓 수첩(사건 기록)</b>에서 확인하고, 심문 질문지의 <b>「📁 단서」</b> 칸에서 물어보세요.</p>
+          </>
+        ),
+      });
+    }
     return { added: [code, ...kept.map((a) => a.code)] };
   }
 
@@ -152,6 +167,7 @@ export default function SoloApp() {
             phase={progressStage >= 3 ? 2 : 1}
             tutorialSeen={!!state.tutorialSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
             onAsked={(stId) => { const a = { ...(state.askedQ || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), stId])]; update({ askedQ: a }); }}
+            onAskedClue={(code) => { const a = { ...(state.askedC || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), code])]; update({ askedC: a }); }}
             location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             onOpenRecord={() => setRecordOpen(true)}
@@ -227,19 +243,6 @@ export default function SoloApp() {
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {toast && <div className="s-toast">{toast}</div>}
-      {specialTut && (
-        <div className="s-modal-ov" onClick={() => setSpecialTut(null)}>
-          <div className="s-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="s-modal-h"><div className="mt">⭐ 추리 단서를 얻었어요!</div><button className="mx" onClick={() => setSpecialTut(null)}>✕</button></div>
-            <div className="s-modal-b" style={{ lineHeight: 1.6 }}>
-              <p>단서들을 엮어 추리 단서 <b>「{specialTut.title}」</b>가 밝혀졌습니다.</p>
-              <p>이런 <b>추리 단서(⭐)</b>는 방에서 줍는 게 아니라, 관련 단서를 모으면 <b>자동으로 사건 기록에 등록</b>돼요.</p>
-              <p>화면 위쪽의 <b>📓 수첩(사건 기록)</b>을 눌러 확인하고, 심문에서 <b>「📁 단서로 묻는다」</b>로 활용하세요.</p>
-              <button className="s-btn" style={{ marginTop: 14 }} onClick={() => setSpecialTut(null)}>알겠어요</button>
-            </div>
-          </div>
-        </div>
-      )}
       {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (
         <TutorialFinale onClose={() => update({ tutFinaleSeen: true })} />
@@ -249,7 +252,10 @@ export default function SoloApp() {
           onGoStart={() => { setAdminOpen(false); update({ screen: 'start' }); }}
           onCollectAll={() => { update({ collected: [...new Set([...state.collected, ...ALL_CODES])] }); showToast('📦 모든 단서를 확보했습니다'); }}
           onClearClues={() => { update({ collected: [...startingClues] }); showToast('🧹 단서를 비웠습니다'); }}
-          onReset={() => { if (window.confirm('저장을 초기화할까요?')) { clearSave(); setState(defaultState()); setAdminOpen(false); } }} />
+          onReset={async () => {
+            const yes = await dlg.confirm({ title: '저장 초기화', body: '지금까지의 수사 기록이 모두 사라집니다. 계속할까요?', ok: '초기화', tone: 'danger' });
+            if (yes) { clearSave(); setState(defaultState()); setAdminOpen(false); }
+          }} />
       )}
     </>
   );
