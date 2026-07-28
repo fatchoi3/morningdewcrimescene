@@ -166,7 +166,38 @@ export const ROOM_HOTSPOTS = {
     'SIAH-72': { x: 50, y: 40, s: 1.25 },  // 책상 위 모니터 화면 — 누르면 CCTV 열람대(뷰어)
   },
 };
-export const hotspotFor = (loc, code, i) => ROOM_HOTSPOTS[loc.id]?.[code] || posFor(loc, i);
+// 좌표 없는 단서(주로 2차에 열리는 휴대폰)는 스캐터 앵커로 떨어지는데, 그 자리가 손으로
+//   매핑해 둔 소품 위일 수 있다. 폰은 objects 맨 뒤라 나중에 그려지고 z-index가 같아
+//   클릭을 가로채므로(현지방 졸피뎀 66%·목사방 처방전 71%), 겹침이 가장 적은 앵커를 고른다.
+const boxOf = (p) => (p.w != null
+  ? { x1: p.x - p.w / 2, x2: p.x + p.w / 2, y1: p.y - p.h / 2, y2: p.y + p.h / 2 }
+  : { x1: p.x - 3 * (p.s || 1), x2: p.x + 3 * (p.s || 1), y1: p.y - 3 * (p.s || 1), y2: p.y + 3 * (p.s || 1) });
+const overlap = (a, b) => Math.max(0, Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1))
+  * Math.max(0, Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1));
+
+const freeSpot = (loc, code) => {
+  const mapped = ROOM_HOTSPOTS[loc.id] || {};
+  const taken = (loc.objects || []).filter((c) => mapped[c]).map((c) => boxOf(mapped[c]));
+  const anchors = ANCHORS[anchorKind(loc)];
+  // 좌표 없는 코드들끼리도 겹치지 않게, objects 순서대로 앞선 것들이 잡은 앵커는 뺀다
+  const unmapped = (loc.objects || []).filter((c) => !mapped[c]);
+  const used = new Set();
+  let mine = anchors[0];
+  for (const c of unmapped) {
+    let best = null, bestScore = Infinity;
+    for (let k = 0; k < anchors.length; k++) {
+      if (used.has(k)) continue;
+      const score = taken.reduce((s, t) => s + overlap(boxOf(anchors[k]), t), 0);
+      if (score < bestScore) { bestScore = score; best = k; }
+    }
+    if (best == null) best = 0;
+    used.add(best);
+    if (c === code) { mine = anchors[best]; break; }
+  }
+  return mine;
+};
+
+export const hotspotFor = (loc, code, i) => ROOM_HOTSPOTS[loc.id]?.[code] || freeSpot(loc, code) || posFor(loc, i);
 
 export const REVEAL = resolveTokens({
   order: ['S4', 'S5', 'S3', 'S6', 'S1', 'S2'],

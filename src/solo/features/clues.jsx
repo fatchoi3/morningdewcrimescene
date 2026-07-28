@@ -101,7 +101,9 @@ function WalletModal({ clue, onClose }) {
 }
 
 // ── 폰 모달 — 실제 휴대폰 화면처럼(홈 → 앱 → 상세) ─────────────────────────────
-const PHONE_APP_ICON = { contacts: '📇', kakao: '💬', browser: '🌐', photos: '🖼️', gallery: '🖼️', messages: '✉️' };
+const PHONE_APP_ICON = { contacts: '📇', kakao: '💬', sms: '✉️', calls: '📞', browser: '🌐', photos: '🖼️', gallery: '🖼️', messages: '✉️' };
+// 문자(sms)는 카톡과 같은 chats 구조라 대화 UI를 그대로 쓴다. 전화(calls)는 통화 기록.
+const isChatApp = (t) => t === 'kakao' || t === 'sms';
 function PhoneModal({ code, clue, difficulty, onClose }) {
   const apps = clue.phone.apps || [];
   const [appId, setAppId] = useState(null);   // null = 홈 화면
@@ -123,7 +125,7 @@ function PhoneModal({ code, clue, difficulty, onClose }) {
     const res = await provider.verifyLookup(code, lookup);
     setLookupRes(res.ok ? (res.result || '조회 결과가 확인되었습니다.') : (app?.lookup?.notFound || '조회되지 않습니다.'));
   };
-  const back = () => { if (appId === 'kakao' && chatIdx != null) setChatIdx(null); else { setAppId(null); setChatIdx(null); } };
+  const back = () => { if (isChatApp(app?.type) && chatIdx != null) setChatIdx(null); else { setAppId(null); setChatIdx(null); } };
   const initial = (s) => (s || '?').replace(/\s.*$/, '').slice(0, 1);
 
   return (
@@ -147,7 +149,7 @@ function PhoneModal({ code, clue, difficulty, onClose }) {
           </div>
         ) : (
           <>
-            <div className="s-phone-appbar"><button className="pab-back" onClick={back} aria-label="뒤로">‹</button><span>{appId === 'kakao' && chatIdx != null ? (app.chats?.[chatIdx]?.name || app.name) : (app.name || app.type)}</span></div>
+            <div className="s-phone-appbar"><button className="pab-back" onClick={back} aria-label="뒤로">‹</button><span>{isChatApp(app.type) && chatIdx != null ? (app.chats?.[chatIdx]?.name || app.name) : (app.name || app.type)}</span></div>
             <div className="s-phone-screen">
 
               {app.type === 'contacts' && (app.contacts || []).map((ct, i) => (
@@ -181,7 +183,7 @@ function PhoneModal({ code, clue, difficulty, onClose }) {
                 </div>
               )}
 
-              {app.type === 'kakao' && chatIdx == null && (
+              {isChatApp(app.type) && chatIdx == null && (
                 <div className="s-kk-list">
                   {(app.chats || []).map((ch, i) => {
                     const locked = ch.deleted && recoverProtected && !recovered;
@@ -199,7 +201,7 @@ function PhoneModal({ code, clue, difficulty, onClose }) {
                 </div>
               )}
 
-              {app.type === 'kakao' && chatIdx != null && (() => {
+              {isChatApp(app.type) && chatIdx != null && (() => {
                 const ch = (app.chats || [])[chatIdx]; if (!ch) return null;
                 const locked = ch.deleted && recoverProtected && !recovered;
                 if (locked) return (
@@ -222,6 +224,25 @@ function PhoneModal({ code, clue, difficulty, onClose }) {
                   </div>
                 );
               })()}
+
+              {/* 전화 — 통화 기록(이가현 폰의 13:31 112 신고·약혼자 통화가 여기 있다) */}
+              {app.type === 'calls' && (
+                <div className="s-kk-list">
+                  {(app.calls || []).map((c, i) => {
+                    const dir = c.direction === 'out' ? { m: '↗', k: '발신' }
+                      : c.direction === 'missed' ? { m: '✖', k: '부재중' } : { m: '↙', k: '수신' };
+                    return (
+                      <div key={i} className={`s-kk-row call ${c.direction || 'in'}`}>
+                        <span className="kk-av">{dir.m}</span>
+                        <span className="kk-body">
+                          <span className="kk-name">{c.name}</span>
+                          <span className="kk-prev">{dir.k}{c.time ? ` · ${c.time}` : ''}{c.duration ? ` · ${c.duration}` : ''}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
             </div>
           </>

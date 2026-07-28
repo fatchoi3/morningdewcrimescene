@@ -5,7 +5,7 @@
 //     · 방 안: 인물에게 물어볼 게 남았는가(대화 버튼), 새로 열린 조사거리가 있는가
 //   "남은 것"만 세고 "이미 한 것"은 세지 않는다 — 다 하면 배지가 사라져 진행도가 보인다.
 // ─────────────────────────────────────────────────────────────────────────────
-import { getClue, suspects } from '../content.js';
+import { getClue, suspects, gamsikReady } from '../content.js';
 import { visibleStatements, visibleTopics, topicClues } from '../interrogation.js';
 
 const sidOfPerson = (person) => suspects.find((s) => s.name === person)?.id || null;
@@ -30,15 +30,20 @@ export function pendingQuestions(sid, state, phase = 1) {
   return n;
 }
 
-/** 방에서 지금 확보 가능한데 아직 안 챙긴 단서 수(휴대폰은 2차 심문 전엔 제외). */
+/** 방에서 '지금 당장 할 수 있는' 것만 센다 — 배지를 따라갔는데 할 게 없으면 안 되니까. */
 export function pendingClues(loc, state, stage = 1) {
   if (!loc?.objects) return 0;
   const got = new Set(state.collected || []);
+  const collected = state.collected || [];
+  const requested = new Set(state.labReq || []);
   return loc.objects.filter((code) => {
     if (got.has(code)) return false;
     const c = getClue(code);
     if (!c) return false;
-    if (c.phone && stage < 3) return false;   // 아직 폰은 못 봄
+    if (c.phone && stage < 3) return false;                     // 아직 폰은 못 봄
+    // 감식은 채취물이 있어야 의뢰할 수 있고, 이미 맡긴 건 기다리는 일뿐이다.
+    //   이걸 안 걸러 감식 의뢰실 배지가 '🔒 채취물 필요'뿐인데도 늘 켜져 있었다.
+    if (c.type === '감식') return !requested.has(code) && gamsikReady(code, collected);
     return true;
   }).length;
 }
