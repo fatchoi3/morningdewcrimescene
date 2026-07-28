@@ -43,16 +43,16 @@ export default function SoloApp() {
 
   const showToast = (t) => { setToast(t); setTimeout(() => setToast((cur) => (cur === t ? null : cur)), 2400); };
 
-  // 현재 수사 단계(가이드=전부 개방, 그 외=진행도 기반 자동 개방)
+  // 현재 수사 단계 — 진행도로만 열린다(1차 탐문 → 부검 소견 → 2차 심문).
+  //   난이도로 전 구역을 미리 열던 옵션은 없앴다: 1장인데 폰·CCTV가 열려 2막 구조가 무너졌다.
   const progressStage = computeStage(state); // 진행도 기반(이벤트·감식 배달 판정용)
-  const stage = (state.admin || state.difficulty === 'guide') ? 3 : progressStage; // 운영자 모드=전 구역 개방
+  const stage = state.admin ? 3 : progressStage; // 운영자(테스트) 모드만 전 구역 개방
   const [adminOpen, setAdminOpen] = useState(false);
   const [recordOpen, setRecordOpen] = useState(false);   // 수첩(사건 기록) 오버레이
   const [casefileOpen, setCasefileOpen] = useState(false); // 범인 지목 오버레이
   const ALL_CODES = useMemo(() => provider.getAllClues().map((c) => c.code), []);
   // 새 단계 개방 시 1회 배너 알림
   useEffect(() => {
-    if (state.difficulty === 'guide') return;
     if (stage > (state.stageSeen || 1)) { showToast(STAGE_BANNER[stage]); update({ stageSeen: stage }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
@@ -114,9 +114,8 @@ export default function SoloApp() {
   // ── 시작 ────────────────────────────────────────────────────────────────
   if (state.screen === 'start') {
     return (
-      <StartScreen difficulty={state.difficulty} started={state.started} continueCount={state.collected.length}
-        onSetDifficulty={(id) => update({ difficulty: id })}
-        onStart={() => { clearSave(); setState({ ...defaultState(), difficulty: state.difficulty, started: true, screen: 'briefing', collected: [...startingClues] }); }}
+      <StartScreen started={state.started} continueCount={state.collected.length}
+        onStart={() => { clearSave(); setState({ ...defaultState(), started: true, screen: 'briefing', collected: [...startingClues] }); }}
         onContinue={() => goHub()}
         onReset={() => { clearSave(); setState(defaultState()); }} />
     );
@@ -241,7 +240,7 @@ export default function SoloApp() {
       )}
 
       {modalCode && (
-        <ClueModal code={modalCode} collectedSet={collectedSet} difficulty={state.difficulty}
+        <ClueModal code={modalCode} collectedSet={collectedSet}
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {toast && <div className="s-toast">{toast}</div>}

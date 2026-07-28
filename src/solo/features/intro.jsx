@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // features/intro — 게임 프레임 화면들.
-//   StartScreen : 시작(난이도 선택·수사 시작·이어하기)
+//   StartScreen : 시작(수사 시작·이어하기)
 //   BriefingVN  : 브리핑(역전재판식 VN 시퀀스)
 //   EventVN     : 중간 사건(1차 심문 완료 후 부검 소견 → 살인 전환)
 //   EndingScreen: 엔딩(정/오답 + 사건 전말 + 타임라인)
@@ -8,12 +8,12 @@
 import { useRef, useState } from 'react';
 import { briefing, victim, suspects } from '../content.js';
 import { cast, t } from '../../data/cast.js';
-import { DIFFS, isUiTap, REVEAL, TIMELINE } from '../lib/game.js';
+import { isUiTap, REVEAL, TIMELINE } from '../lib/game.js';
 import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
 import { DialogueBox } from '../vn.jsx';
 
-// ── 시작 화면 — 난이도 선택 + 수사 시작/이어하기 ─────────────────────────────
-export function StartScreen({ difficulty, started, continueCount, onSetDifficulty, onStart, onContinue, onReset }) {
+// ── 시작 화면 — 수사 시작 / 이어하기 ─────────────────────────────────────────
+export function StartScreen({ started, continueCount, onStart, onContinue, onReset }) {
   return (
     <div className="solo-wrap">
       <div className="s-start">
@@ -30,16 +30,7 @@ export function StartScreen({ difficulty, started, continueCount, onSetDifficult
         <div className="s-eye">Crime Scene · Solo</div>
         <div className="s-title">{briefing.title}</div>
         <div className="s-sub">{briefing.subtitle}</div>
-        <div className="s-section-t">난이도</div>
-        <div className="s-diff">
-          {DIFFS.map((d) => (
-            <button key={d.id} className={difficulty === d.id ? 'on' : ''} onClick={() => onSetDifficulty(d.id)}>
-              <div className="dname">{d.name}</div>
-              <div className="ddesc">{d.desc}</div>
-            </button>
-          ))}
-        </div>
-        {/* 새 수사 = 저장 초기화 후 시작(난이도만 유지) — 이어하기는 별도 버튼 */}
+        {/* 새 수사 = 저장 초기화 후 처음부터 — 이어하기는 별도 버튼 */}
         <button className="s-btn" onClick={onStart}>
           {started ? '새 수사 시작 (처음부터)' : '수사 시작'}
         </button>
