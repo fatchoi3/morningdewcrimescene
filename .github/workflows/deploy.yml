@@ -39,6 +39,24 @@ jobs:
           AWS_REGION: 'ap-northeast-2'
           SOURCE_DIR: 'dist'
 
+      # 보기 좋은 주소 — /solo-play 로도 솔로 게임이 열리게 한다.
+      #   solo.html 을 확장자 없는 'solo-play' 키로 한 번 더 올린다. 빌드 산출물의 자산 경로가
+      #   절대경로(/assets/…)라 어느 주소에서 열려도 그대로 동작한다.
+      #   (S3 REST 오리진 + OAC 라 디렉터리 index 가 자동으로 안 붙는다. 이 방식이면
+      #    CloudFront Function 없이 같은 주소를 만들 수 있다.)
+      #   위 sync 가 --delete 라 매 배포마다 지워졌다 다시 올라간다 — 순서가 중요하다.
+      - name: Pretty URL (/solo-play)
+        run: |
+          set -e
+          REGION=$(aws s3api get-bucket-location --bucket "$BUCKET" --query 'LocationConstraint' --output text)
+          [ "$REGION" = "None" ] && REGION=us-east-1
+          aws s3 cp dist/solo.html "s3://$BUCKET/solo-play" \
+            --content-type "text/html; charset=utf-8" --region "$REGION"
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
       - name: CloudFront Invalidation
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
