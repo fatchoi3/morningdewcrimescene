@@ -1,18 +1,21 @@
 // 스탠딩 1장 후처리 — 표정 변형본을 기존 스탠딩과 같은 규격으로 맞춘다.
 //   흰 배경 flood-fill 키잉(인물 내부 흰색은 보존) → 투명 여백 trim → 기준 높이로 리사이즈
-//   기준 높이를 S1.png(1128)과 맞추면 심문 화면에서 머리 위치가 튀지 않는다.
+//   → (--match 주면) 기준 그림과 캔버스 크기를 정확히 일치시킴.
+//   캔버스가 1px만 달라도 height 고정·width auto 로 그리는 심문 화면에서 인물이 미세하게 움직인다.
 //
-//   사용: node tools/keyout-stand.mjs <src.png> <출력파일명(stand/ 안)> [기준높이]
-//   예  : node tools/keyout-stand.mjs C:/Users/user/Downloads/Gemini_x.png S1_shock.png
+//   사용: node tools/keyout-stand.mjs <src.png> <출력파일명(stand/ 안)> [기준높이] [--match=S1.png]
+//   예  : node tools/keyout-stand.mjs C:/Users/user/Downloads/Gemini_x.png S1_shock.png 1128 --match=S1.png
 import sharp from 'sharp';
 import { join } from 'node:path';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 const STAND = join(ROOT, 'public', 'images', 'people', 'stand');
 
-const [src, outName, heightArg] = process.argv.slice(2);
+const argv = process.argv.slice(2);
+const matchArg = argv.find((a) => a.startsWith('--match='))?.split('=')[1];
+const [src, outName, heightArg] = argv.filter((a) => !a.startsWith('--'));
 if (!src || !outName) {
-  console.error('사용: node tools/keyout-stand.mjs <src.png> <출력파일명> [기준높이=1128]');
+  console.error('사용: node tools/keyout-stand.mjs <src.png> <출력파일명> [기준높이=1128] [--match=기준.png]');
   process.exit(1);
 }
 const H_OUT = Number(heightArg) || 1128;   // S1.png 기준
@@ -40,11 +43,25 @@ while (queue.length) {
 }
 
 const out = join(STAND, outName);
-const buf = await sharp(data, { raw: { width: W, height: H, channels: 4 } })
+let buf = await sharp(data, { raw: { width: W, height: H, channels: 4 } })
   .trim()                                   // 투명 여백 제거 — objectFit 레터박스 방지
   .resize({ height: H_OUT, withoutEnlargement: true })
   .png({ compressionLevel: 9 })
   .toBuffer();
+
+// 기준 그림과 캔버스를 정확히 맞춘다. 폭이 남으면 투명 여백을 좌우로 나눠 붙이고,
+//   넘치면 가운데를 기준으로 잘라낸다 — 인물은 어차피 캔버스 가운데에 있다.
+if (matchArg) {
+  const ref = await sharp(join(STAND, matchArg)).metadata();
+  const cur = await sharp(buf).metadata();
+  if (cur.width !== ref.width) {
+    const d = ref.width - cur.width;
+    buf = d > 0
+      ? await sharp(buf).extend({ left: d >> 1, right: d - (d >> 1), background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer()
+      : await sharp(buf).extract({ left: (-d) >> 1, top: 0, width: ref.width, height: cur.height }).png().toBuffer();
+    console.log(`  캔버스 폭 ${cur.width} → ${ref.width} (${matchArg} 기준)`);
+  }
+}
 await sharp(buf).toFile(out);
 const m = await sharp(out).metadata();
 console.log(`${outName}: ${m.width}x${m.height} (비율 ${(m.width / m.height).toFixed(4)})`);
