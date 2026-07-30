@@ -20,7 +20,18 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
     tick();
     return () => cancelAnimationFrame(raf);
   }, [targetSel]);
-  if (!rect || rect.w === 0) return null;
+  // 대상을 못 찾아도 안내를 지우지 않는다 — 예전엔 여기서 null 을 돌려줘 마스크까지 사라졌고,
+  //   그 순간 플레이어가 아무 데나 눌러 딴 길로 샜다(선택자가 바뀌면 조용히 이렇게 된다).
+  //   대신 화면을 살짝 덮고 할 일만 가운데 띄운다 — 클릭은 막지 않아 갇히지도 않는다.
+  if (!rect || rect.w === 0) {
+    return (
+      <div className="tut-coach">
+        <div className="tut-mask soft" style={{ inset: 0, width: '100%', height: '100%' }} />
+        <div className="tut-cap tut-cap-center">{text}</div>
+        <button className="tut-skip" onClick={onSkip}>튜토리얼 건너뛰기 ✕</button>
+      </div>
+    );
+  }
   const pad = 12;
   const hx = Math.max(0, rect.x - pad), hy = Math.max(0, rect.y - pad);
   const hw = rect.w + pad * 2, hh = rect.h + pad * 2;

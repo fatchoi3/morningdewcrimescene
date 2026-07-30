@@ -66,6 +66,9 @@ button { font-family: inherit; }
 /* 튜토리얼 코치마크 — 스포트라이트(구멍) + 4방향 마스크(클릭 차단) + 깜빡이는 화살표 */
 .tut-coach { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
 .tut-mask { position: fixed; background: rgba(3, 5, 9, 0.76); pointer-events: auto; }
+/* 가리킬 대상을 못 찾았을 때 — 안내는 유지하되 클릭은 막지 않는다(갇히면 안 되니까) */
+.tut-mask.soft { position: fixed; background: rgba(3, 5, 9, 0.5); pointer-events: none; }
+.tut-cap-center { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; }
 .tut-ring { position: fixed; border: 2px solid #ffe9a8; border-radius: 12px; pointer-events: none; animation: tutpulse 1.4s ease-in-out infinite; }
 .tut-tip { position: fixed; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 61; }
 .tut-arrow { width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; filter: drop-shadow(0 2px 4px #000a); animation: tutbob 0.9s ease-in-out infinite; }
