@@ -45,16 +45,25 @@ for (const [name, r] of marks) {
     + `   ${String(b.x0).padStart(4)}~${String(b.x1).padStart(4)}(${String(b.w).padStart(3)})`
     + `   ${dx >= 0 ? '+' : ''}${dx.toFixed(1)}   ${dw >= 0 ? '+' : ''}${dw}`);
 }
-let inter = 0, uni = 0;
-for (let y = NECK; y < Math.min(A.H, B.H); y++) {
-  for (let x = 0; x < Math.min(A.W, B.W); x++) {
-    const pa = A.data[(y * A.W + x) * 4 + 3] > 60, pb = B.data[(y * B.W + x) * 4 + 3] > 60;
-    if (pa && pb) inter++;
-    if (pa || pb) uni++;
+/** 목 아래 [y0,y1) 구간의 실루엣 IoU. */
+const iou = (y0, y1) => {
+  let inter = 0, uni = 0;
+  for (let y = y0; y < y1; y++) {
+    for (let x = 0; x < Math.min(A.W, B.W); x++) {
+      const pa = A.data[(y * A.W + x) * 4 + 3] > 60, pb = B.data[(y * B.W + x) * 4 + 3] > 60;
+      if (pa && pb) inter++;
+      if (pa || pb) uni++;
+    }
   }
-}
-console.log(`\n  목(y=${NECK}) 아래 실루엣 일치율(IoU) ${(inter / uni * 100).toFixed(1)}%`
+  return uni ? inter / uni * 100 : 100;
+};
+const H = Math.min(A.H, B.H);
+// 심문 화면(폰 세로)에서는 인물의 위쪽 57%만 보이고 하반신은 대사창에 가린다.
+//   전신 수치가 나빠도 발끝 차이면 실제로는 안 보이므로 두 값을 같이 낸다.
+const VIS = Math.round(H * 0.57);
+console.log(`\n  목(y=${NECK}) 아래 전신 IoU ${iou(NECK, H).toFixed(1)}%`
   + `   최대 중심차 ${worstDx.toFixed(1)}px   최대 폭차 ${worstDw}px`);
+console.log(`  심문 화면에 보이는 구간(y ${NECK}~${VIS}) IoU ${iou(NECK, VIS).toFixed(1)}%`);
 
 if (outPng) {
   const W = Math.min(A.W, B.W), H = Math.min(A.H, B.H);
