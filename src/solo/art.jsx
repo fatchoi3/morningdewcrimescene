@@ -317,18 +317,28 @@ export function Avatar({ person, image, size = 64 }) {
   return <AvatarSVG person={person} size={size} />;
 }
 
+// 없는 그림을 매번 다시 요청하지 않도록 기억한다(404 왕복 제거, 마운트가 바뀌어도 유지).
+const MISSING = new Set();
+
 /** 스탠딩 인물(배경 없는 전신/상반신) — /images/people/stand/<sid>.png|webp 있으면 사용,
- *  없으면 머그샷(Avatar)으로 폴백. 심문·방 장면에서 인물이 서 있는 연출용. */
-export function StandingFigure({ sid, person, image, height = 260, fallbackSize = 120 }) {
-  const [i, setI] = useState(0);
-  const candidates = sid
-    ? [assetUrl(`/images/people/stand/${sid}.png`), assetUrl(`/images/people/stand/${sid}.webp`)]
+ *  없으면 머그샷(Avatar)으로 폴백. 심문·방 장면에서 인물이 서 있는 연출용.
+ *  mood('shock'|'angry'…)를 주면 <sid>_<mood>.png 를 먼저 찾고, 없으면 조용히 기본 그림으로 돌아간다
+ *  — 표정을 다 그리지 않은 인물도 평소 얼굴로 나오면 되니 데이터가 앞서가도 안전하다.
+ *  폴백은 '몇 번째 후보'가 아니라 '아직 실패하지 않은 첫 후보'로 고른다 — 후보 목록이 표정에 따라
+ *  늘었다 줄었다 하는데 인덱스를 물고 있으면 한 칸씩 밀려 기본 그림을 건너뛴다(실제로 그랬다). */
+export function StandingFigure({ sid, person, image, height = 260, fallbackSize = 120, mood }) {
+  const [, bump] = useState(0);   // 실패 기록은 모듈 전역이라, 다시 그리라고 찔러줄 상태가 따로 필요하다
+  const urls = sid
+    ? [
+      ...(mood ? [`/images/people/stand/${sid}_${mood}.png`] : []),
+      `/images/people/stand/${sid}.png`,
+      `/images/people/stand/${sid}.webp`,
+    ].map(assetUrl)
     : [];
-  if (i < candidates.length) {
-    return <img src={candidates[i]} alt="" onError={() => setI((n) => n + 1)}
-      style={{ height, width: 'auto', maxWidth: '78vw', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 10px 18px #000c)' }} />;
-  }
-  return <Avatar person={person} image={image} size={fallbackSize} />;
+  const src = urls.find((u) => !MISSING.has(u));
+  if (!src) return <Avatar person={person} image={image} size={fallbackSize} />;
+  return <img key={src} src={src} alt="" onError={() => { MISSING.add(src); bump((n) => n + 1); }}
+    style={{ height, width: 'auto', maxWidth: '78vw', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 10px 18px #000c)' }} />;
 }
 
 // ── 브리핑 히어로 (실제 그림 /images/briefing.{jpg,png} 있으면 우선) ──
