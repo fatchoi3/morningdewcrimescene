@@ -18,7 +18,10 @@ if (!src || !outName) {
   console.error('사용: node tools/keyout-stand.mjs <src.png> <출력파일명> [기준높이=1128] [--match=기준.png]');
   process.exit(1);
 }
-const H_OUT = Number(heightArg) || 1128;   // S1.png 기준
+// --match 를 주면 그 그림의 높이·폭을 그대로 따른다. 기본 스탠딩은 인물마다 높이가 다르다
+//   (S1 1128, S2 1127 …) — 1128로 고정하면 미세하게 어긋난다.
+const refMeta = matchArg ? await sharp(join(STAND, matchArg)).metadata() : null;
+const H_OUT = refMeta?.height || Number(heightArg) || 1128;
 const NEAR_WHITE = 235;
 
 const { data, info } = await sharp(src).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -51,8 +54,8 @@ let buf = await sharp(data, { raw: { width: W, height: H, channels: 4 } })
 
 // 기준 그림과 캔버스를 정확히 맞춘다. 폭이 남으면 투명 여백을 좌우로 나눠 붙이고,
 //   넘치면 가운데를 기준으로 잘라낸다 — 인물은 어차피 캔버스 가운데에 있다.
-if (matchArg) {
-  const ref = await sharp(join(STAND, matchArg)).metadata();
+if (refMeta) {
+  const ref = refMeta;
   const cur = await sharp(buf).metadata();
   if (cur.width !== ref.width) {
     const d = ref.width - cur.width;
