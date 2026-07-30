@@ -153,8 +153,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     onAskedClue?.(code);   // 반박으로 이미 써먹은 단서 — 질문지·방 배지에서도 '들어봤음'으로
     const r = onPresent(cur.id, code) || {};
     if (r.result === 'contradict') {
-      setCutin('모순!');
-      setTimeout(() => setCutin((c) => (c === '모순!' ? null : c)), 1300);
+      // 컷인은 판정 선언이 아니라 '순간의 충격'이다 — 대사는 인물이 직접 하고, 여기선 임팩트만
+      setCutin('!!!');
+      setTimeout(() => setCutin((c) => (c === '!!!' ? null : c)), 1300);
       setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
     } else if (r.result === 'soft') {
       setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
@@ -204,8 +205,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     //   신뢰도 차감은 대답에 대놓고 '들이대는' 「이 말에 증거」의 몫.
     const r = onPresent(stId, code, true) || {};
     if (r.result === 'contradict') {
-      setCutin('모순!');
-      setTimeout(() => setCutin((c) => (c === '모순!' ? null : c)), 1300);
+      // 컷인은 판정 선언이 아니라 '순간의 충격'이다 — 대사는 인물이 직접 하고, 여기선 임팩트만
+      setCutin('!!!');
+      setTimeout(() => setCutin((c) => (c === '!!!' ? null : c)), 1300);
       setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
     } else if (r.result === 'soft') {
       setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
@@ -237,6 +239,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     : cur ? (bk ? '✅ 밝혀낸 이야기' : `${suspect.name}의 대답`)
     : openTopic ? '📁 이야기 중' : '질문 선택';
   const speakerName = (line && line.kind !== 'guide') || cur ? suspect.name : null;
+  // 표정 — 대사의 성격을 그림으로도 받는다(파일 없는 인물은 StandingFigure가 기본 얼굴로 폴백).
+  //   모순을 짚혔으면 당황, 엉뚱한 단서를 들이대면 억울해서 화를 낸다.
+  const mood = line?.kind === 'break' ? 'shock' : line?.kind === 'wrong' ? 'angry' : null;
   const dlgHint = line ? '탭하여 계속 ▶'
     : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : '거짓이다 싶으면 「📁 반박」')
     : openTopic ? (leftInTopic > 0 ? '위에서 고르거나 「↩ 다른 이야기」' : '「↩ 다른 이야기」로 돌아가세요')
@@ -261,7 +266,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {/* 상반신 프레이밍 — 인물을 크게 그리고 하반신은 대사창 뒤로 잠기게(역전재판식) */}
       <div className={`aa-room-fig bust${speaking && speakerName ? ' talking' : ''}`}>
         {confessed && <div className="aa-court-tag">⚖️ 관여 자백</div>}
-        <StandingFigure sid={sid} person={suspect.name} image={suspect.image} height={620} fallbackSize={160} />
+        <StandingFigure sid={sid} person={suspect.name} image={suspect.image} height={620} fallbackSize={160} mood={mood} />
       </div>
 
       {cutin && <div className="aa-cutin"><span>{cutin}</span></div>}
