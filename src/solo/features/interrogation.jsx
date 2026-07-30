@@ -12,6 +12,7 @@ import { TRUST_MAX, isUiTap } from '../lib/game.js';
 import { visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, TopHud } from '../vn.jsx';
+import { TutorialCoach } from './tutorial.jsx';
 
 // 단서로 묻는 한 줄. ❗=아직 안 물음 · ✔=물어봄 · ✅=이걸로 모순을 짚음
 function ClueAsk({ c, k, onPick }) {
@@ -34,7 +35,7 @@ function Ask({ s, k, label, onPick }) {
 // ── 용의자 심문 (방 안 대화형 — 질문/단서 고르기 → 대답 → 캐묻기/반박) ─────────
 //   화면 문법: 우측 상단=수첩(어느 화면이든 같은 자리) · 하단 바 없음 ·
 //              대사창 우측 하단=이 화면에서 할 것(반박·다른 질문·나가기).
-export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onAsked, onAskedClue, onAskedTopic, onPress, onPresent, onOpenRecord, onExit }) {
+export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onAsked, onAskedClue, onAskedTopic, onPress, onPresent, onOpenRecord, onExit, onSkipTutorial }) {
   const [curId, setCurId] = useState(null); // 지금 붙잡고 있는 질문(진술 id) — null = 질문 목록
   // 대사창 오버라이드: { text, kind } — 진입 시 인사말(1차/2차 다름)부터
   const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
@@ -45,8 +46,12 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const [speaking, setSpeaking] = useState(false); // 대사 타이핑 중 = 말하는 중(토크 모션)
   const [isTutorial] = useState(() => !tutorialSeen); // 이 심문이 첫(튜토리얼) 심문인가 — 화면 표시용
   const dlgRef = useRef(null); // 화면 아무 데나 탭 → 대사 넘김 위임
-  // 첫 심문에 진입하면 코치마크 종료(이후 나가면 마무리 멘트) — 인트로를 안 넘겨도 확실히 처리
-  useEffect(() => { if (!tutorialSeen) onTutorialSeen?.(); /* eslint-disable-next-line */ }, []);
+  // 예전엔 진입 즉시 튜토리얼을 끝내서, 심문 화면 전체가 '안내 없는 구간'이 됐다.
+  //   질문 하나를 끝까지 듣고 목록으로 돌아온 시점에 끝낸다 — 그때까지 코치마크가 이어진다.
+  useEffect(() => {
+    if (!tutorialSeen && (state.askedQ?.[suspect?.id] || []).length >= 1 && !line && !curId) onTutorialSeen?.();
+    /* eslint-disable-next-line */
+  }, [tutorialSeen, line, curId]);
 
   const sid = suspect?.id;
   const collected = state.collected || [];
@@ -118,7 +123,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const advance = () => {
     if (!line) return;
     if (line.kind === 'intro' && !tutorialSeen) {
-      onTutorialSeen?.();
+      // 안내만 띄우고 튜토리얼을 끝내지는 않는다 — 질문 하나를 들을 때까지 코치마크가 이어져야 한다
       setLine({ kind: 'guide', text: '(수사 노트) 질문지에서 골라 이야기를 듣자.\n대답을 한 번 더 탭하면 더 깊은 말이 나오고, 거짓이다 싶으면 「📁 반박」으로 단서를 들이대자.\n단서를 챙기면 그에 얽힌 이야깃거리가 질문지에 생긴다. ❗ 표시는 아직 안 물어본 것.' });
       return;
     }
@@ -241,7 +246,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     <div className={`aa-fs${shake ? ' aa-shake' : ''}`}
       onClick={(e) => { if (!isUiTap(e)) dlgRef.current?.tap(); }}>
       <div className="aa-stage">
-        {location ? <SceneBg location={location} />
+        {location ? <SceneBg location={location} fit="cover" />
           : <div className="aa-court" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 90% at 50% 0%, #1a2233 0%, #0a0e16 60%, #05070b 100%)' }} />}
       </div>
       <div className="aa-loc-chip">⚖️ {location?.label ? `${location.label} · ` : ''}{suspect.name} {phase >= 2 ? '2차 심문' : '심문'}</div>
@@ -313,6 +318,19 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
           !cur && openTopic && { label: '↩ 다른 이야기', onClick: () => { setLine(null); setOpenTopicId(null); } },
           { label: '🚪 나가기', onClick: onExit },
         ]} />
+
+      {/* 첫 심문 코치마크 — 심문 화면에도 '지금 할 것'이 계속 붙어 있게 한다.
+          대사 읽는 중 → 대사창 / 질문 고를 때 → 질문지 / 대답 화면 → 한 번 더 탭 or 돌아가기 */}
+      {!tutorialSeen && !picker && (
+        <TutorialCoach onSkip={onSkipTutorial}
+          {...(line
+            ? { targetSel: '.aa-dialogue', text: '대사창을 탭해 이야기를 넘기세요' }
+            : cur
+              ? (canPress
+                ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
+                : { targetSel: '.aa-dlg-actions', text: '「↩ 다른 질문」으로 질문지로 돌아가세요' })
+              : { targetSel: '.aa-ask', text: '질문지에서 하나를 골라 물어보세요' })} />
+      )}
 
       {picker && cur && !bk && (
         <div className="aa-present">

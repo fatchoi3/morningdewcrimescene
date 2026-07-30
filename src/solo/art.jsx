@@ -268,14 +268,17 @@ function HybridImg({ candidates, style, extra }) {
 const scenesFor = (id, image) => [image, `/images/scenes/${id}.jpg`, `/images/scenes/${id}.png`, `/images/scenes/${id}.webp`];
 
 /** 장면 배경 — 실제 그림(/images/scenes/<id>.{jpg,png,webp})이 있으면 우선, 없으면 SVG. */
-export function SceneBg({ location, onRatio }) {
+export function SceneBg({ location, onRatio, fit = 'fill' }) {
   // onRatio: 배경 그림의 실제 가로/세로 비를 알려준다. 트랙을 이 비율로 맞춰야
   //   핫스팟 %좌표가 그림 픽셀과 1:1로 대응한다(화면 크기가 달라도 어긋나지 않음).
+  // fit: 'fill' 은 핫스팟이 있는 방 화면 전용(좌표를 1:1로 맞추려면 늘려야 한다).
+  //   심문처럼 핫스팟이 없는 화면은 'cover' 로 써야 한다 — 폰 세로에서 fill 이면
+  //   16:9 그림이 4배 가까이 늘어나 벽 한 조각이 화면을 덮는다(종현방은 그게 파란 벽이었다).
   return (
     <>
       <SceneSVG location={location} />
       <HybridImg candidates={scenesFor(location.id, location.image)}
-        style={{ ...COVER, objectFit: 'fill', pointerEvents: 'none' }}
+        style={{ ...COVER, objectFit: fit, pointerEvents: 'none' }}
         extra={{ onLoad: (e) => { const { naturalWidth: w, naturalHeight: h } = e.target; if (w && h) onRatio?.(w / h); } }} />
       {/* 필름 톤 비네트 — SVG/실사 위에 공통으로 얹어 분위기 통일 */}
       <div style={{ ...COVER, pointerEvents: 'none', background: 'radial-gradient(125% 90% at 50% 40%, transparent 52%, #000000b0 100%)' }} />
