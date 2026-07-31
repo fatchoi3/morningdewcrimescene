@@ -328,7 +328,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
         {
           time: '13:13~18',
           location: '목사님 방 앞 복도',
-          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 사라졌다가, 2분 뒤 다시 나타나 숙소 쪽으로 빠르게 빠져나간다.',
+          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 사라졌다가, 5분 뒤 다시 나타나 숙소 쪽으로 빠르게 빠져나간다.',
           people: [
             { look: '여성 — 방으로 갔다가 5분쯤 뒤 숙소 쪽으로 빠르게 나옴', who: '{{S4}}', unlocks: 'PKIN-42', x: 298, y: 132, arrow: { from: { x: 290, y: 80 }, to: { x: 355, y: 60 }, round: true } }
           ]
@@ -336,7 +336,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
         {
           time: '13:20',
           location: '목사님 방 앞 복도',
-          scene: '한 인물이 자기 방 쪽에서 나타나 목사님 방 방향으로 사라진다. 어라 신고 시간이 언제더라..?',
+          scene: '한 인물이 자기 방 쪽에서 나타나 목사님 방 방향으로 사라진다. (신고 접수는 13:31 — 사이가 비어 있다)',
           people: [
             { look: '여성 — 자기 방 쪽에서 나타나 방 방향으로 사라짐', who: '{{S6}}', unlocks: 'DVCS-80', x: 325, y: 138, arrow: { from: { x: 197, y: 208 }, to: { x: 355, y: 60 } } }
           ]
@@ -408,7 +408,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'PKIN-42': { // 13:13~18 진입+퇴장 통합 컷 (코드 끝2자리≠시각, 코드 유지). 옛 PKUT-44는 이 컷에 흡수
     title: '[CCTV 장면] 13:13~18 {{S4}}',
     description: '',
-    detail: '13:13경 목사 방 방향으로 사라졌다 13:18경 다시 나타나 숙소 쪽으로 빠르게 빠져나감. 방 안에 약 5분간 머문 셈이다.',
+    detail: '13:13경 목사 방 방향으로 사라졌다 13:18경 다시 나타나 숙소 쪽으로 빠르게 빠져나감. 화면에서 사라져 있던 시간은 약 5분.',
     image: '',
     type: '보통',
     person: '{{S4}}'
@@ -447,7 +447,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'LONS-62': { // 2차 부검 — 중간 점검 단계에서 공개 (질식 확정)
     title: '2차 부검',
     description: '',
-    detail: '정밀 감식 결과: 코·입 주변 압박흔과 안면 점출혈 확인이 되었고 협심증 약인 설화정 성분이 발견된 것으로 보아 심장 발작은 사망의 직접 원인이 아닌 것 같음. 타인에 의한 질식사로 보입니다.',
+    detail: '정밀 감식 결과: 코·입 주변 압박흔과 안면 점출혈 확인. 베개에서 나온 솜·섬유가 피해자 기도에서도 검출됨. 협심증 약인 설하정 성분이 검출된 점으로 보아 심장 발작은 사망의 직접 원인이 아님. 압박 방향과 힘까지 특정 — 타인에 의한 질식사로 확정.',
     image: '',
     type: '특수',
     person: '목사',
@@ -456,7 +456,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'TQPA-93': { //
     title: '쉐이크 통',
     description: '목사님 책상 위에서 발견되었다.',
-    detail: '{{S1.short}}의 것으로 보이는 쉐이크 통이다.  내용물이 있다.',
+    detail: '{{S1.short}}의 것으로 보이는 쉐이크 통이다. 내용물이 있다.',
     image: '/images/쉐이크통.jpg',
     type: '보통',
     person: '목사'
@@ -665,7 +665,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'GTNV-09': { // 작은 약통(HODM-06) 발견 시 성분 감식이 이어서 해금
     title: '작은 약통 성분 감식',
     description: '',
-    detail: '감식 결과: 남은 알약에서 협심증 응급약 성분(니트로글리세린, GTN)이 검출되었다. 진짜 설하정이 맞다. ( 품에 지니고 있는 약으로 보인다.)',
+    detail: '감식 결과: 남은 알약에서 협심증 응급약 성분(니트로글리세린, GTN)이 검출되었다. 진짜 설하정이 맞다. (품에 지니고 있는 약으로 보인다.)',
     type: '감식',
     person: '목사',
     unlockedBy: ['HODM-06'],
@@ -706,7 +706,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'IHKX-61': { // 현장(목사 방) — 베개
     title: '베개',
     description: '목사님 방에서 발견되었다.',
-    detail: '목사님 배 위에 놓여 있었다. 일반적인 베개이다. 배게? 베개? 뭐가 맞는 표현이지?',
+    detail: '목사님 배 위에 놓여 있었다. 겉보기엔 특별할 것 없는 일반적인 베개다.',
     image: '/images/베개.png',
     type: '보통',
     person: '목사'
@@ -878,7 +878,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'HKVQ-36': { // 길잡이형 — 10:25 CCTV(NQBT-91) 확보 시 해금 → 이사랑 추궁 유도
     title: '{{S1.short}} 방엔 왜?',
     description: '',
-    detail: '10:25경 {{S5|이/가}} {{S1.short}}의 방에 들어갔다 나오는 모습이 CCTV에 찍혔다. 왜 들어갔는지 {{S5}}에게 물어봐야겠다.',
+    detail: '10:25경 {{S5|이/가}} {{S1.short}}의 방 방향으로 갔다가 손에 무언가를 들고 나오는 모습이 CCTV에 찍혔다. 무슨 일이었는지 {{S5}}에게 물어봐야겠다.',
     image: '/images/길잡이.svg',
     type: '특수',
     person: '{{S5}}',
@@ -1032,12 +1032,13 @@ export const evidenceMap = withAssetBase(resolveTokens({
           name: '카카오톡',
           chats: [
             {
+              // 10:00 등산 출발 뒤엔 둘이 함께 있으므로 톡이 성립하지 않는다 — 반드시 출발 전(09시대) 시각 유지
               name: '{{victim.full}}님',
               messages: [
-                { from: 'them', text: '{{S1.short|아/야}}, 이번 청년부 재정 공지 좀 단톡에 올려줄래?', time: '오늘 오전 10:12' },
-                { from: 'me', text: '네 목사님! 바로 올릴게요', time: '오늘 오전 10:15' },
-                { from: 'them', text: '항상 고맙다 ㅎㅎ 다음에 또 같이 등산 가자', time: '오늘 오전 10:16' },
-                { from: 'me', text: '좋아요! 제가 보충제 음료 챙겨갈게요 ㅋㅋ', time: '오늘 오전 10:18' }
+                { from: 'them', text: '{{S1.short|아/야}}, 이번 청년부 재정 공지 좀 단톡에 올려줄래?', time: '오늘 오전 9:12' },
+                { from: 'me', text: '네 목사님! 바로 올릴게요', time: '오늘 오전 9:15' },
+                { from: 'them', text: '항상 고맙다 ㅎㅎ 다음에 또 같이 등산 가자', time: '오늘 오전 9:16' },
+                { from: 'me', text: '좋아요! 제가 보충제 음료 챙겨갈게요 ㅋㅋ', time: '오늘 오전 9:18' }
               ]
             },
             {
@@ -1296,7 +1297,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'UTUW-73': { // 방 — 요일별 약통 (핵심)
     title: '요일별 약통',
     description: '{{S4.short}}의 책상 위에서 발견되었다.',
-    detail: '요일별(월·화·수·목·금·토)로 나뉜 약통. 칸을 열면 비타민C·루테인·오메가3 같은 영양제와 어디서 본적이 있는 알약이 섞여 있다.',
+    detail: '요일별(월·화·수·목·금·토)로 나뉜 약통. 칸을 열면 비타민C·루테인·오메가3 같은 영양제와 어디서 본 적이 있는 알약이 섞여 있다.',
     image: '/images/약통.jpg',
     type: '보통',
     person: '{{S4}}'
@@ -1784,7 +1785,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'DVCS-80': { // CCTV — 신고 지연 (코드 끝2자리≠시각, 코드 유지)
     title: '[CCTV 장면] 13:20 {{S6}}',
     description: '',
-    detail: '목사 방 내부는 안 보이지만, 복도 CCTV에 13:20경 {{S6.short|이/}} 방 쪽으로 향한 모습이 찍힘.',
+    detail: '목사 방 내부는 안 보이지만, 복도 CCTV에 13:20경 {{S6.short|이/}} 목사님 방 쪽으로 향한 모습이 찍힘.',
     image: '',
     type: '보통',
     person: '{{S6}}'

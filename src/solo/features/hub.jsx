@@ -3,6 +3,7 @@
 //   main : 인물 방 6개 · 오른쪽→목사방 · 왼쪽→1층
 //   pastor : 복도 끝 목사님 방(현장) · floor1 : CCTV·소지품 · lab : 감식 의뢰실
 // ─────────────────────────────────────────────────────────────────────────────
+import { useRef } from 'react';
 import { stageHint } from '../lib/game.js';
 import { locationAlerts, alertReason } from '../lib/alerts.js';
 import { getClue } from '../content.js';
@@ -34,7 +35,22 @@ function HallHot({ x, y, icon, label, sub, locked, tone, recommend, alert, alert
   );
 }
 
-export function HallNav({ locations, stage, progressStage, collectedSet, state, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, view, onView, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
+// ⚙ 운영자 메뉴 — 안에 '모든 단서 확보/비우기'가 있어 오탭 한 번이 곧 사고다.
+//   수첩(📓) 바로 옆 42px 자리에서 떼어내고, 꾹 눌러야(600ms) 열리게 한다.
+//   개발 빌드로 숨기지는 않는다 — 처음 화면·저장 초기화로 돌아가는 유일한 통로라서.
+function MenuButton({ onOpen }) {
+  const timer = useRef(null);
+  const cancel = () => { clearTimeout(timer.current); timer.current = null; };
+  return (
+    <button className="hall-hud-btn" title="운영자 메뉴 — 길게 누르세요" aria-label="운영자 메뉴 — 길게 누르세요"
+      style={{ marginLeft: 24, opacity: 0.5, userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'manipulation' }}
+      onPointerDown={() => { cancel(); timer.current = setTimeout(onOpen, 600); }}
+      onPointerUp={cancel} onPointerLeave={cancel} onPointerCancel={cancel}
+      onContextMenu={(e) => e.preventDefault()}>⚙</button>
+  );
+}
+
+export function HallNav({ locations, stage, progressStage, collectedSet, state, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, accuseReady, view, onView, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
   // 각 장소에 '남은 거리'가 있으면 알림 배지를 띄운다(복도에서 어디로 갈지 바로 보이게)
   const alertsOf = (loc) => locationAlerts(loc, state || {}, stage, progressStage >= 3 ? 2 : 1);
   const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
@@ -102,14 +118,17 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
         <div className="hall-hud-btns">
           {admin && <span className="s-admin-chip">ADMIN</span>}
           <button data-tut="record-btn" className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord}>📓</button>
-          <button className="hall-hud-btn" title="메뉴" onClick={onOpenMenu}>⚙</button>
+          <MenuButton onOpen={onOpenMenu} />
         </div>
       </div>
 
       <div className="hall-here">📍 {here}</div>
 
+      {/* 2차 심문이 어느 정도 쌓이기 전엔 까딱임을 멈춘다 — 3막 첫 순간부터 시선을 끌면
+          아직 아무것도 캐묻지 않은 채로 사건이 끝나 버린다 */}
       {canAccuse && view === 'main' && (
-        <button className="hall-accuse" onClick={onAccuse}>🔍 범인 지목하기</button>
+        <button className="hall-accuse" style={accuseReady ? undefined : { animation: 'none', opacity: 0.6 }}
+          onClick={onAccuse}>🔍 범인 지목하기</button>
       )}
 
       <div className="hall-nav-row">

@@ -5,10 +5,26 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from 'react';
 import { getClue } from '../content.js';
-import { ROOM_HOTSPOTS, hotspotFor } from '../lib/game.js';
+import { ROOM_HOTSPOTS, hitBoxFor, hotspotFor } from '../lib/game.js';
 import { pendingQuestions } from '../lib/alerts.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, TopHud } from '../vn.jsx';
+
+// 화면 밖에 남은 단서의 방향 표시 — 폰 세로에선 그림의 21%만 보여서, 안내가 없으면
+//   나머지를 통째로 지나친다. solo.css 는 이 파일 소관이 아니라 인라인으로 둔다.
+const DLG_COVER = 165; // 하단 대사창이 덮는 높이(px) — 그 아래는 보여도 못 누른다
+const EDGE_BASE = {
+  position: 'absolute', zIndex: 9, pointerEvents: 'none', whiteSpace: 'nowrap',
+  background: '#000000b8', color: '#ffe9a8', border: '1px solid #ffffff22',
+  borderRadius: 999, padding: '4px 10px', fontSize: '.72rem', fontWeight: 800,
+};
+const EDGE_POS = {
+  left: { left: 6, top: '46%', transform: 'translateY(-50%)' },
+  right: { right: 6, top: '46%', transform: 'translateY(-50%)' },
+  up: { top: 88, left: '50%', transform: 'translateX(-50%)' },
+  down: { bottom: DLG_COVER + 14, left: '50%', transform: 'translateX(-50%)' },
+};
+const EDGE_MARK = { left: '◀', right: '▶', up: '▲', down: '▼' };
 
 // ── 장면(역전재판식 풀블리드: 조사/이야기 + 우측 상단 수첩) ────────────────────
 export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1, state, phase = 1, onTalk, onOpen, onLockedToast, onOpenRecord, onBack }) {
@@ -19,6 +35,12 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   const [bgRatio, setBgRatio] = useState(16 / 9);
   const camRef = useRef(null);
   const trackRef = useRef(null);
+  // 지금 보고 있는 구간 — 남은 단서가 어느 쪽에 있는지 가장자리 화살표로 알리는 데 쓴다
+  const [cam, setCam] = useState(null);
+  const syncCam = () => {
+    const c = camRef.current, tr = trackRef.current;
+    if (c && tr) setCam({ l: c.scrollLeft, t: c.scrollTop, w: c.clientWidth, h: c.clientHeight, tw: tr.offsetWidth, th: tr.offsetHeight });
+  };
   // 트랙(방 이미지)이 뷰포트보다 크면 가운데로 스크롤 시작 — 밀어서 둘러본다(모바일은 상하좌우 2D 팬)
   useEffect(() => {
     setBgRatio(16 / 9); // 방을 옮기면 새 그림의 onLoad 가 다시 정확한 비율을 준다
@@ -28,14 +50,29 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       cam.scrollTop = Math.max(0, (tr.offsetHeight - cam.clientHeight) / 2);
     }
   }, [location?.id]);
+  useEffect(syncCam, [location?.id, bgRatio]); // 그림 비율이 도착하면 트랙 크기가 달라진다
   if (!location) return null;
   const isLab = location.kind === 'lab'; // 감식 의뢰실 — 감식원에게 대화형으로 의뢰
   const pannable = !isLab;
+  // 이 방에서 지금 보이는 단서와, 그중 아직 못 챙긴 것의 방향(화면 밖이면 화살표로 안내)
+  const shown = isLab ? [] : location.objects.filter((code) => {
+    const c = getClue(code);
+    return c && !(c.phone && stage < 3);
+  });
+  const missing = shown.filter((code) => !collectedSet.has(code));
+  const dirs = { left: 0, right: 0, up: 0, down: 0 };
+  if (cam?.tw) for (const code of missing) {
+    const p = hotspotFor(location, code, location.objects.indexOf(code));
+    const x = p.x / 100 * cam.tw, y = p.y / 100 * cam.th;
+    if (x < cam.l) dirs.left++; else if (x > cam.l + cam.w) dirs.right++;
+    if (y < cam.t) dirs.up++; else if (y > cam.t + cam.h - DLG_COVER) dirs.down++;
+  }
+  const offscreen = dirs.left + dirs.right + dirs.up + dirs.down;
   const bodyPos = ROOM_HOTSPOTS[location.id]?.['__body__'] || { x: 50, y: 46, s: 1.1 };
   const talkPos = ROOM_HOTSPOTS[location.id]?.['__talk__']; // 있으면 인물이 배경에 그려짐 → 터치존, 없으면 떠 있는 스탠딩
   return (
     <div className="aa-fs">
-      <div className="aa-cam" ref={camRef}>
+      <div className="aa-cam" ref={camRef} onScroll={syncCam}>
         <div className="aa-track" ref={trackRef} style={{ aspectRatio: String(bgRatio) }}>
           <SceneBg location={location} onRatio={setBgRatio} />
 
@@ -63,10 +100,20 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         //   물건이 서로 붙어 있어도 클릭·표시 영역이 겹치지 않는다.
         //   (이름표는 잘리면 안 되므로 래퍼의 형제로 두고 버튼 hover에 반응시킨다)
         const boxed = p.w != null;
-        const clip = p.poly ? `polygon(${p.poly.map((pt) => `${pt[0]}% ${pt[1]}%`).join(', ')})` : undefined;
-        const wrapStyle = boxed
-          ? { left: `${p.x}%`, top: `${p.y}%`, width: `${p.w}%`, height: `${p.h}%` }
-          : { left: `${p.x}%`, top: `${p.y}%`, '--s': p.s };
+        // 손가락 하한(44px) — 테두리(실루엣)는 그대로 두고 버튼만 바깥으로 넓힌다.
+        //   작은 물건은 clip 을 벗겨야 한다: 클립이 판정을 실루엣 안으로 더 깎기 때문.
+        const hit = hitBoxFor(location, code);
+        const clip = p.poly && hit.clip ? `polygon(${p.poly.map((pt) => `${pt[0]}% ${pt[1]}%`).join(', ')})` : undefined;
+        const btnStyle = {
+          ...(clip ? { clipPath: clip, WebkitClipPath: clip } : null),
+          ...(hit.x || hit.y ? { inset: `${-hit.y / p.h * 100}% ${-hit.x / p.w * 100}%` } : null),
+        };
+        const wrapStyle = {
+          left: `${p.x}%`, top: `${p.y}%`,
+          ...(boxed ? { width: `${p.w}%`, height: `${p.h}%` } : { '--s': p.s }),
+          // 몸의 상처(손등·손목)는 인물 터치존(z10) 위에 얹는다 — 그래야 그 부위를 직접 누른다
+          ...(p.onPerson ? { zIndex: 11 } : null),
+        };
         const onPick = () => {
           if (isGamsik && !have) {
             // 감식은 '의뢰 → 2차 심문 때 결과' 흐름 (2차 개방 후엔 즉시 결과)
@@ -82,7 +129,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
           <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle}>
             {/* 클릭 판정 전용(투명). poly면 실루엣 안에서만 눌린다 */}
             <button className={`s-zone${boxed ? ' boxed' : ''}${p.poly ? ' poly' : ''}${tone}`}
-              style={clip ? { clipPath: clip, WebkitClipPath: clip } : undefined}
+              style={btnStyle}
               aria-label={zoneLab} onClick={onPick} />
             {/* 표시 전용 — 면은 비우고 '테두리만' 빛낸다(버튼 밖이라 발광이 잘리지 않음) */}
             <svg className={`s-zone-outline${tone}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -117,11 +164,17 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         </div>
       </div>
 
-      <div className="aa-loc-chip">🔦 {location.label}</div>
+      {/* 방 안에서도 '몇 개 남았는지'가 보여야 한다 — 문패에만 있으면 방에 들어온 뒤엔 알 길이 없다 */}
+      <div className="aa-loc-chip">🔦 {location.label}{shown.length > 1 && ` · 단서 ${shown.length - missing.length}/${shown.length}`}</div>
       <TopHud>
         <button className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord}>📓</button>
       </TopHud>
-      {pannable && <div className="aa-swipe-hint">← 밀어서 방을 둘러보기 →</div>}
+      {/* 화면 밖에 남은 단서 방향 — 폰에선 그림의 21%만 보이므로 이게 없으면 그냥 지나친다 */}
+      {Object.entries(dirs).map(([d, n]) => n > 0 && (
+        <div key={d} style={{ ...EDGE_BASE, ...EDGE_POS[d] }}>{EDGE_MARK[d]} 단서 {n}</div>
+      ))}
+      {/* 아직 못 찾은 단서가 화면 밖에 있는 동안엔 스와이프 안내를 계속 되풀이한다 */}
+      {pannable && <div className="aa-swipe-hint" style={{ animationIterationCount: offscreen > 0 ? 'infinite' : 1 }}>← 밀어서 방을 둘러보기 →</div>}
 
       {roomSuspect && onTalk && !talkPos && (
         <button className="s-figure" onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>

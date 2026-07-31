@@ -51,6 +51,9 @@ export default function SoloApp() {
   const [recordOpen, setRecordOpen] = useState(false);   // 수첩(사건 기록) 오버레이
   const [casefileOpen, setCasefileOpen] = useState(false); // 범인 지목 오버레이
   const ALL_CODES = useMemo(() => provider.getAllClues().map((c) => c.code), []);
+  // 3막 진행도·제출 준비도의 분모 — 콘텐츠에서 세어 온다(숫자를 손으로 적으면 데이터가 늘 때 어긋난다)
+  const PHONE_CODES = useMemo(() => provider.getAllClues().filter((c) => c.phone).map((c) => c.code), []);
+  const SPECIAL_CODES = useMemo(() => provider.getAllClues().filter((c) => c.type === '특수').map((c) => c.code), []);
   // 새 단계 개방 시 1회 배너 알림
   useEffect(() => {
     if (stage > (state.stageSeen || 1)) { showToast(STAGE_BANNER[stage]); update({ stageSeen: stage }); }
@@ -162,7 +165,16 @@ export default function SoloApp() {
     else coach = { sel: '.s-talkzone, .s-figure', text: t('{{S1.short}}을 눌러 이야기를 시작하세요') };
   }
   // 라벨·목표·단계표시는 '실제 진행도(progressStage)' 기준 — 가이드 모드가 단계를 3으로 올려도 1차엔 1차로 보이게
-  const progressText = `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}` + (progressStage >= 2 ? ` · 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}` : '');
+  const p2Count = (state.p2Met || []).filter((id) => suspectIds.includes(id)).length;
+  const gamsikGot = [...gamsikCodes].filter((c) => collectedSet.has(c)).length;
+  const phoneGot = PHONE_CODES.filter((c) => collectedSet.has(c)).length;
+  const specialGot = SPECIAL_CODES.filter((c) => collectedSet.has(c)).length;
+  // 3막은 재는 축이 다르다 — 현장 단서는 이미 채워진 뒤라 그대로 두면 분자가 분모를 넘고(목사방 13개/3),
+  //   정작 남은 일(2차 심문·감식·폰)은 어디에도 안 보였다. 2막 표기도 목표치까지만 센다.
+  const progressText = progressStage >= 3
+    ? `2차 심문 ${p2Count}/${suspectIds.length} · 감식 ${gamsikGot}/${gamsikCodes.size} · 폰 ${phoneGot}/${PHONE_CODES.length}`
+    : `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}`
+      + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED}` : '');
   // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
     : progressStage < 3 ? `목사님 방(현장)에서 단서 ${SCENE_NEEDED}개를 찾으면 2차 심문이 열립니다`
@@ -208,7 +220,9 @@ export default function SoloApp() {
               } else if (r.result === 'wrong' && !silent) {
                 const tr = { ...(state.trust || {}) };
                 const t = Math.max(0, (tr[suspectId] ?? TRUST_MAX) - 1);
-                if (t <= 0) { tr[suspectId] = TRUST_MAX; update({ trust: tr }); setSuspectId(null); showToast('⚠ 신뢰도가 바닥났습니다 — 잠시 정비 후 다시 심문하세요'); }
+                // 문구에 없던 페널티를 암시하지 않는다 — 신뢰도는 여기서 곧바로 회복되고 쿨다운도 없어서,
+                //   '정비'라는 말이 있으면 하지 않아도 될 일을 찾아 헤매게 된다.
+                if (t <= 0) { tr[suspectId] = TRUST_MAX; update({ trust: tr }); setSuspectId(null); showToast('⚠ 신뢰를 잃어 심문이 중단되었습니다 — 다시 시도할 수 있습니다'); }
                 else { tr[suspectId] = t; update({ trust: tr }); }
               }
               if (r.grants) collect(r.grants); // 추궁 성공으로 추리(특수) 단서 확보
@@ -224,13 +238,21 @@ export default function SoloApp() {
               ready: (code) => gamsikReady(code, state.collected),
               request: (code) => { update({ labReq: [...new Set([...(state.labReq || []), code])] }); showToast('🔬 감식 의뢰 접수 — 결과는 2차 심문이 열리면 도착합니다'); },
             }}
-            onTalk={(id) => setSuspectId(id)}
+            // 3막 진행도는 '2차 심문을 몇 명과 했는가'로 잰다 — 열리는 질문 수가 인물마다 달라
+            //   물어본 질문 수로는 셀 수 없다. 여기(대화 시작)가 유일한 심문 진입점이다.
+            onTalk={(id) => {
+              setSuspectId(id);
+              if (progressStage >= 3 && !(state.p2Met || []).includes(id)) update({ p2Met: [...(state.p2Met || []), id] });
+            }}
             onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
             onBack={() => goHub()} />
         ) : (
           <HallNav locations={locations} stage={stage} progressStage={progressStage} collectedSet={collectedSet} state={state}
             recommendPerson={!state.tutorialSeen && state.tutRecordDone ? cast.S1.name : null}
-            admin={state.admin} stageLabel={STAGE_LABEL[progressStage]} progressText={progressText} objective={objective} canAccuse={progressStage >= 3}
+            admin={state.admin} stageLabel={STAGE_LABEL[progressStage]} progressText={progressText} objective={objective}
+            // 3막이 열리자마자(2차 심문 0회) 빨간 버튼이 까딱거리면 오탭 한 번에 수사가 끝난다 —
+            //   절반 이상 재심문하기 전까지는 있되 눈에 덜 띄게 둔다.
+            canAccuse={progressStage >= 3} accuseReady={p2Count >= Math.ceil(suspectIds.length / 2)}
             view={hubView} onView={setHubView} onEnter={(id) => setSceneId(id)} onToast={showToast}
             onOpenRecord={() => { setRecordOpen(true); if (!state.tutorialSeen && !state.tutRecordDone) update({ tutRecordDone: true }); }}
             onOpenMenu={() => setAdminOpen(true)}
@@ -245,7 +267,28 @@ export default function SoloApp() {
       {casefileOpen && (
         <SheetOverlay title="🔍 범인 지목" onClose={() => setCasefileOpen(false)}>
           <CaseFileView state={state} onPick={(sid) => update({ casefile: { culprit: sid } })}
-            onSubmit={() => { setCasefileOpen(false); update({ submitted: true, result: scoreCase(state.casefile || {}), screen: 'ending' }); }} />
+            // 제출은 되돌릴 수 없다(엔딩의 「새 사건」은 clearSave라 기록까지 사라진다) — 확인창에서
+            //   '얼마나 조사하고 지목하는지'를 숫자로 보여준 뒤 물어본다.
+            onSubmit={async () => {
+              const pickName = suspects.find((s) => s.id === state.casefile?.culprit)?.name || '';
+              const yes = await dlg.confirm({
+                title: '사건 파일 제출',
+                body: (
+                  <>
+                    <p><b>{pickName}</b> — 이 사람을 범인으로 지목합니다.</p>
+                    <p>제출하면 사건이 종결되고 전말이 공개됩니다. <b>수사로 돌아올 수 없습니다.</b></p>
+                    <p style={{ fontSize: '.82rem', color: 'var(--muted)', lineHeight: 1.7 }}>
+                      지금까지 — 2차 심문 {p2Count}/{suspectIds.length}명 · 추리 단서 ⭐ {specialGot}/{SPECIAL_CODES.length}
+                      {' · '}감식 {gamsikGot}/{gamsikCodes.size} · 폰 {phoneGot}/{PHONE_CODES.length}
+                    </p>
+                  </>
+                ),
+                ok: '제출한다', cancel: '더 조사한다', tone: 'danger',
+              });
+              if (!yes) return;
+              setCasefileOpen(false);
+              update({ submitted: true, result: scoreCase(state.casefile || {}), screen: 'ending' });
+            }} />
         </SheetOverlay>
       )}
 
@@ -261,8 +304,22 @@ export default function SoloApp() {
       {adminOpen && (
         <AdminPanel state={state} onClose={() => setAdminOpen(false)} onUpdate={update}
           onGoStart={() => { setAdminOpen(false); update({ screen: 'start' }); }}
-          onCollectAll={() => { update({ collected: [...new Set([...state.collected, ...ALL_CODES])] }); showToast('📦 모든 단서를 확보했습니다'); }}
-          onClearClues={() => { update({ collected: [...startingClues] }); showToast('🧹 단서를 비웠습니다'); }}
+          onCollectAll={async () => {
+            const yes = await dlg.confirm({ title: '모든 단서 확보', body: '모든 단서가 사건 기록에 들어옵니다. 찾을 것이 남지 않아 사건이 사실상 끝납니다. 계속할까요?', ok: '확보', tone: 'danger' });
+            if (!yes) return;
+            update({ collected: [...new Set([...state.collected, ...ALL_CODES])] }); showToast('📦 모든 단서를 확보했습니다');
+          }}
+          // 비우기는 단서만 지우는 게 아니다 — computeStage 가 매번 재계산이라 3막이 2막으로 되돌아가고,
+          //   중간 사건으로 받은 LONS-62 는 unlockedBy 가 비어 있어 event2Seen 을 함께 풀지 않으면 영영 못 받는다.
+          onClearClues={async () => {
+            const yes = await dlg.confirm({
+              title: '단서 비우기',
+              body: '확보한 단서를 모두 지웁니다. 진행 단계가 되돌아가고(3막 → 2막), 중간 사건으로 받은 단서는 그 사건을 다시 겪어야 돌아옵니다. 계속할까요?',
+              ok: '비우기', tone: 'danger',
+            });
+            if (!yes) return;
+            update({ collected: [...startingClues], event2Seen: false, p2Met: [] }); showToast('🧹 단서를 비웠습니다 — 진행 단계가 되돌아갑니다');
+          }}
           onReset={async () => {
             const yes = await dlg.confirm({ title: '저장 초기화', body: '지금까지의 수사 기록이 모두 사라집니다. 계속할까요?', ok: '초기화', tone: 'danger' });
             if (yes) { clearSave(); setState(defaultState()); setAdminOpen(false); }

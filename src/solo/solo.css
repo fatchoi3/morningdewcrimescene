@@ -265,7 +265,8 @@ button { font-family: inherit; }
 .s-zone:hover ~ .s-zone-lab, .s-zone:focus-visible ~ .s-zone-lab { opacity: 1; }
 /* 확보한 단서 — 초록 빛(이미 챙긴 것이라 새 단서보다 차분하게, 숨쉬기 없음) */
 .s-zone-check { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 1.1rem; font-weight: 800; color: #86e6ab; text-shadow: 0 1px 3px #000, 0 0 8px #000; opacity: 0; transition: opacity .14s; pointer-events: none; }
-.s-zone.have:hover .s-zone-check, .s-zone.have:focus-visible .s-zone-check { opacity: 1; }
+/* ✓ 는 버튼의 자식이 아니라 형제다(래퍼 자식) — 자손 결합자로 쓰면 마우스에서도 영영 안 뜬다 */
+.s-zone.have:hover ~ .s-zone-check, .s-zone.have:focus-visible ~ .s-zone-check { opacity: 1; }
 .s-zone.have ~ .s-zone-lab { color: #a6e6bd; }
 /* 시신 — 붉은 빛 */
 .s-zone.body ~ .s-zone-lab { color: #f0b8b8; }
@@ -281,6 +282,11 @@ button { font-family: inherit; }
 @media (hover: none) {
   .s-zone-outline { opacity: .74; stroke-width: 2; }
   .s-talkzone-glow { opacity: .95; }
+  /* 이름표·✓ 는 호버 전용이라 터치 기기엔 뜰 경로가 아예 없다 —
+     이미 챙긴 것만 상시 표시한다. 미획득까지 띄우면 이름표가 전부 '조사'라
+     방에 들어서는 순간 숨은 물건 위치가 다 드러나 '찾기'가 사라진다. */
+  .s-zone.have ~ .s-zone-lab { opacity: 1; }
+  .s-zone-check { opacity: 1; }
 }
 /* 애니메이션을 꺼둔 사용자에겐 숨쉬기 대신 고정 밝기 */
 @media (prefers-reduced-motion: reduce) {
@@ -288,16 +294,24 @@ button { font-family: inherit; }
 }
 
 /* 모달 */
-.s-modal-ov { position: fixed; inset: 0; background: #000b; display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 40; }
+/* 세로 가운데 정렬을 쓰지 않는다 — 내용 길이가 바뀔 때마다 모달 전체가 재중앙정렬되어
+   방금 누른 자리에서 버튼이 도망간다(일기장 쪽 넘김 28px, 지갑 항목 펼침 116px —
+   항목 높이 85px 보다 커서 같은 자리를 다시 눌러도 다른 항목이 눌린다).
+   위를 고정하고 여백만 남겨 손가락 위치가 유지되게 한다. */
+.s-modal-ov { position: fixed; inset: 0; background: #000b; display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px 16px; z-index: 40; }
 .s-modal { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; width: min(96vw, 560px); max-height: 88vh; overflow: auto; }
 .s-modal-h { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); }
 .s-modal-h .mt { font-weight: 800; flex: 1; }
-.s-modal-h .mx { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+.s-modal-h .mx { position: relative; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+/* 모든 단서 모달의 닫기 버튼이 실측 27.7x28px 라 손끝으로 겨냥이 안 된다.
+   보이는 ✕ 크기와 헤더 높이는 그대로 두고 히트박스만 44px 로 넓힌다(헤더 패딩 안이라 넘치지 않음). */
+.s-modal-h .mx::before { content: ''; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
 .s-modal-b { padding: 16px; line-height: 1.75; }
 /* 공용 알림·확인·팝업(ui/dialog.jsx) — 브라우저 기본 alert/confirm 대체 */
 /* CCTV·휴대폰 모달(.modal-overlay z:1000) 위에 떠야 한다 — 그 아래 깔리면 안내가
-   보이지도 눌리지도 않은 채 '봤음' 처리만 되어 영영 다시 안 뜬다. */
-.s-dialog-ov { z-index: 1200; }
+   보이지도 눌리지도 않은 채 '봤음' 처리만 되어 영영 다시 안 뜬다.
+   확인창만은 세로 가운데로 되돌린다 — 내용이 고정이라 버튼이 움직일 일이 없다. */
+.s-dialog-ov { z-index: 1200; align-items: center; padding: 16px; }
 .s-dialog { width: min(94vw, 420px); }
 .s-dialog-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 .s-dialog-btn { background: var(--gold); border: 1px solid var(--gold); color: #1a1508; font-weight: 800; font-size: .9rem; padding: 9px 18px; border-radius: 9px; cursor: pointer; }
@@ -313,8 +327,14 @@ button { font-family: inherit; }
 .s-pw input { flex: 1; background: var(--ink); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 10px; font-size: 1rem; }
 
 /* 페이지 뷰어 */
-.s-pager { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
-.s-pager button { background: var(--panel2); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 14px; cursor: pointer; }
+/* 본문이 화면보다 길어 모달이 스크롤될 때도 「이전/다음」은 바닥에 붙여 둔다 —
+   안 그러면 쪽을 넘기려고 매번 모달 안을 끝까지 내려야 한다. */
+.s-pager { display: flex; align-items: center; justify-content: space-between; margin-top: 10px;
+  position: sticky; bottom: -16px; padding: 6px 0 16px; margin-bottom: -16px; background: var(--panel); }
+.s-pager button { position: relative; background: var(--panel2); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 14px; cursor: pointer; }
+/* 실측 74x32px — 목사님 일기장은 톡서랍 비번(5쪽)까지 이 버튼을 네 번 정확히 눌러야 한다.
+   생김새는 그대로 두고 위아래로만 히트박스를 넓혀 44px 을 채운다(좌우는 이미 넉넉). */
+.s-pager button::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); }
 .s-pager button:disabled { opacity: .35; cursor: default; }
 
 /* CCTV 타임라인 */
@@ -338,13 +358,15 @@ button { font-family: inherit; }
 .aa-stage { position: absolute; inset: 0; }
 
 /* 장면 카메라 — 방 이미지를 세로 화면에서도 좌우로 밀어(스와이프) 둘러보며 소품을 클릭 */
-.aa-cam { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; z-index: 0; touch-action: pan-x; }
+/* 핀치 확대를 허용 목록에 넣어 둔다 — 작은 핫스팟은 확대해서 겨냥하는 우회로가 필요하다.
+   (solo.html viewport 의 user-scalable=no 가 풀려야 실제로 동작한다) */
+.aa-cam { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; z-index: 0; touch-action: pan-x pinch-zoom; }
 .aa-cam::-webkit-scrollbar { height: 0; width: 0; }
 .aa-track { position: relative; height: 100%; aspect-ratio: 16 / 9; margin-inline: auto; }
 .aa-swipe-hint { position: absolute; left: 50%; top: 54px; transform: translateX(-50%); z-index: 6; background: #000000ba; color: #ffe9a8; font-size: .74rem; font-weight: 700; padding: 4px 13px; border-radius: 999px; pointer-events: none; opacity: 0; animation: swipehint 4s ease-in-out .3s 1 forwards; }
 /* 모바일: 배경을 화면보다 크게 잡아 일부만 보이고 상하좌우로 밀어(팬) 둘러보기 */
 @media (max-width: 640px) {
-  .aa-cam { overflow: auto; touch-action: pan-x pan-y; overscroll-behavior: contain; }
+  .aa-cam { overflow: auto; touch-action: pan-x pan-y pinch-zoom; overscroll-behavior: contain; }
   .aa-track { height: 122%; margin: 0; }
 }
 @keyframes swipehint { 0% { opacity: 0; } 12%, 68% { opacity: 1; } 100% { opacity: 0; } }
@@ -362,7 +384,11 @@ button { font-family: inherit; }
 .aa-hint { color: var(--muted); font-size: .76rem; margin-top: 6px; }
 /* 대사창 우측 하단 — 이 화면에서 할 수 있는 것 전부(반박·다른 질문·나가기). 하단 바는 없다 */
 .aa-dlg-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
-.aa-dlg-act { background: #ffffff10; border: 1px solid #ffffff2e; color: #cdd3df; font-size: .76rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.aa-dlg-act { position: relative; background: #ffffff10; border: 1px solid #ffffff2e; color: #cdd3df; font-size: .76rem; font-weight: 700; padding: 9px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+/* 실측 30px — 이 화면에서 할 수 있는 게 전부 여기 모여 있는데 손끝보다 작다.
+   패딩으로 36px 까지만 키우고 나머지는 히트박스로 채운다. 줄바꿈되어 두 줄이 될 때
+   위아래가 서로 먹지 않도록 행 간격(6px)의 절반인 3px 까지만 넘긴다. */
+.aa-dlg-act::before { content: ''; position: absolute; inset: -3px 0; }
 .aa-dlg-act:hover { background: #ffffff1e; color: #fff; border-color: #ffffff52; }
 .aa-dlg-act:active { transform: scale(.96); }
 /* 핵심 행동(반박) — 이동 버튼들과 구분되게 금색 */
@@ -415,7 +441,9 @@ button { font-family: inherit; }
 /* 화제 아래로 이어지는 단서 질문 — 한 칸 들여써서 '이 화제에 딸린 것'임을 보인다 */
 .aa-ask button.sub { margin-left: 16px; font-size: .86rem; border-left-width: 3px; }
 .aa-ask button.sub::before { content: '└'; color: #6f7889; margin-right: 6px; }
-.aa-ask button { text-align: left; background: #0b1220ee; border: 1.5px solid #3a4a6a; color: #e8ecf4; border-radius: 10px; padding: 10px 14px; font-size: .92rem; font-weight: 600; cursor: pointer; }
+/* 실측 42px — 2px 모자라 손끝 기준(44px)에 걸린다. 패딩 1px 로 채우고,
+   글자가 작은 딸린 질문(.sub)까지 커버되게 min-height 로 바닥을 깐다 */
+.aa-ask button { text-align: left; background: #0b1220ee; border: 1.5px solid #3a4a6a; color: #e8ecf4; border-radius: 10px; padding: 11px 14px; min-height: 44px; font-size: .92rem; font-weight: 600; cursor: pointer; }
 .aa-ask button:active { background: #16233a; }
 .aa-ask button.done { opacity: .72; border-color: #2b5a3a; }
 .aa-ask button.new { border-color: var(--gold); color: #ffe9a8; }
@@ -427,7 +455,14 @@ button { font-family: inherit; }
 .s-tut-badge { display: inline-block; background: #12240f; color: #a6e6bd; border: 1px solid #2b5a3a; font-weight: 800; font-size: .68rem; padding: 1px 8px; border-radius: 8px; margin-right: 5px; }
 
 /* 증거 제시 시트(관련 단서만) */
-.aa-present { position: absolute; left: 0; right: 0; bottom: 8px; z-index: 11; max-height: 46vh; overflow: auto; background: linear-gradient(180deg, #0b1220f6, #060a12fb); border-top: 2px solid var(--gold); padding: 10px 12px 14px; box-shadow: 0 -8px 24px #000a; }
+/* 폰 세로 2열에 카드 21~30장이면 목록이 시트의 3~4배라 뭘 봤는지 놓친다 —
+   시트를 키우고(46vh→68vh) 카드도 낮춰 한 화면에 담기는 양을 두 배쯤으로 올린다. */
+.aa-present { position: absolute; left: 0; right: 0; bottom: 8px; z-index: 11; max-height: 68vh; overflow: auto; background: linear-gradient(180deg, #0b1220f6, #060a12fb); border-top: 2px solid var(--gold); padding: 10px 12px 14px; box-shadow: 0 -8px 24px #000a; }
+/* 제시 시트 안에서만 카드를 낮춘다 — 허브·수첩 카드는 지금 크기가 맞다 */
+.aa-present .s-card { padding: 9px 11px; }
+.aa-present .s-card .ck { font-size: 1.25rem; }
+.aa-present .s-card .cn { margin-top: 2px; }
+.aa-present .s-card .cm { font-size: .72rem; }
 .aa-present-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: .82rem; color: #cdd3df; }
 .aa-present-h .aa-close { position: static; width: 28px; height: 28px; font-size: .9rem; }
 
@@ -551,8 +586,9 @@ button { font-family: inherit; }
 .s-reveal h3 { border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-top: 22px; }
 .s-reveal .role { font-size: .72rem; color: var(--muted); }
 
-/* 토스트 */
-.s-toast { position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%); background: #14371a; border: 1px solid var(--ok); color: #dfffd0; padding: 10px 16px; border-radius: 10px; z-index: 1300; font-weight: 700; max-width: 92vw; text-align: center; }  /* CCTV·폰 모달 위 */
+/* 토스트 — 하단이면 2.4초 동안 대사창을 덮은 채 탭까지 삼킨다(캐묻기 타이핑 중에 뜬다).
+   위로 올려 대사창을 비우고, 겹치더라도 탭은 그대로 통과시킨다. */
+.s-toast { position: fixed; left: 50%; top: 64px; transform: translateX(-50%); background: #14371a; border: 1px solid var(--ok); color: #dfffd0; padding: 10px 16px; border-radius: 10px; z-index: 1300; font-weight: 700; max-width: 92vw; text-align: center; pointer-events: none; }  /* CCTV·폰 모달 위 */
 
 /* ── CCTV 열람대(실사 CCTV형: 2F 평면도 + 이동 마커) — QR앱 styles.css에서 이식 ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); overflow-y: auto; animation: fadeIn .18s ease; }
