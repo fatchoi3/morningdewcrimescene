@@ -587,8 +587,12 @@ button { font-family: inherit; }
 .s-reveal .role { font-size: .72rem; color: var(--muted); }
 
 /* 토스트 — 하단이면 2.4초 동안 대사창을 덮은 채 탭까지 삼킨다(캐묻기 타이핑 중에 뜬다).
-   위로 올려 대사창을 비우고, 겹치더라도 탭은 그대로 통과시킨다. */
-.s-toast { position: fixed; left: 50%; top: 64px; transform: translateX(-50%); background: #14371a; border: 1px solid var(--ok); color: #dfffd0; padding: 10px 16px; border-radius: 10px; z-index: 1300; font-weight: 700; max-width: 92vw; text-align: center; pointer-events: none; }  /* CCTV·폰 모달 위 */
+   위로 올렸는데 이번엔 상단이 겹겹이 쌓였다. 폰 세로(375x812) 실측 기준 상단 띠는 이렇게 나눈다:
+     12~50 방 이름칩(좌)·HUD(우) / 46~78 튜토리얼칩(심문)·스와이프 힌트(방) /
+     88~114 가장자리 화살표 / 120~ 토스트.  방에 들어서면 이 넷이 한꺼번에 뜬다.
+   가운데 정렬은 left:50%+transform 이 아니라 left/right:0+margin 으로 한다 — 전자는 폭이
+   화면 절반(187px)에 묶여 중간점검 안내가 6줄(127px)까지 늘어났다(92vw 는 닿지도 못했다). */
+.s-toast { position: fixed; left: 0; right: 0; margin: 0 auto; top: 120px; width: max-content; max-width: 92vw; background: #14371a; border: 1px solid var(--ok); color: #dfffd0; padding: 10px 16px; border-radius: 10px; z-index: 1300; font-weight: 700; text-align: center; pointer-events: none; }  /* CCTV·폰 모달 위 */
 
 /* ── CCTV 열람대(실사 CCTV형: 2F 평면도 + 이동 마커) — QR앱 styles.css에서 이식 ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); overflow-y: auto; animation: fadeIn .18s ease; }

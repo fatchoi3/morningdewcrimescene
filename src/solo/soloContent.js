@@ -77,7 +77,7 @@ function buildLocations() {
     objects: (r.room?.objects || []).map((o) => (typeof o === 'string' ? o : o.code)).filter((code) => byCode[code]),
   }));
 
-  const cctv = [], gamsik = [], common = [];
+  const cctv = [], cctvInner = [], gamsik = [], common = [];
   for (const c of all) {
     if (META_CODES.has(c.code)) continue;
     if (c.type === '방') continue;
@@ -85,7 +85,7 @@ function buildLocations() {
     if (roomObjectCodes.has(c.code)) continue;         // 이미 방에 배치됨
     if (c.type === '특수') continue;                    // 자동 해금(수첩에 등장)
     if (c.cctv) { cctv.push(c.code); continue; }        // CCTV 열람대(공용대·뷰어) = 방 핫스팟 1개
-    if (cctvSet.has(c.code)) continue;                   // CCTV로 확보되는 하위 단서는 방에 안 뿌림(열람대에서 확보)
+    if (cctvSet.has(c.code)) { cctvInner.push(c.code); continue; }  // CCTV로 확보되는 하위 단서 — 방에 안 뿌리고 inner 로만(아래)
     if (c.type === '감식') { gamsik.push(c.code); continue; }
     // 휴대폰(c.phone)·방 없는 보통/기타 → 인물 방이 있으면 그 방에(폰은 2차 심문에 해금), 없으면 공용 현장
     const pr = personRoom[c.person];
@@ -94,7 +94,10 @@ function buildLocations() {
   }
 
   const tools = [];
-  if (cctv.length) tools.push({ id: 'LOC-CCTV', kind: 'cctv', label: 'CCTV 열람실', stage: 2, bg: 'linear-gradient(160deg,#101820,#080c10)', objects: cctv });
+  // inner = 그 장소의 단서지만 방 화면에 핫스팟으로 뿌리지 않는 것(열람대 안에서 확보하는 CCTV 컷).
+  //   objects 에 넣으면 열람실 벽에 핫스팟이 16개 생기고, 빼면 열람대 하나로 '탐색완료'가 되어
+  //   2·3막 모순 대부분이 든 컷들을 다 본 것처럼 보인다 → 렌더는 objects, 진척·알림은 objects+inner.
+  if (cctv.length) tools.push({ id: 'LOC-CCTV', kind: 'cctv', label: 'CCTV 열람실', stage: 2, bg: 'linear-gradient(160deg,#101820,#080c10)', objects: cctv, inner: cctvInner });
   if (gamsik.length) tools.push({ id: 'LOC-LAB', kind: 'lab', label: '감식 의뢰실', stage: 2, bg: 'linear-gradient(160deg,#0e1a1c,#070f10)', objects: gamsik });
   // 공용 현장(LOC-COMMON)은 폐지 — 방/시설에 안 속한 단서(사건 브리핑 등)는 시작 시 사건 기록에 기본 수록.
 

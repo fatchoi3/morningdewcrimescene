@@ -97,8 +97,8 @@ export const ROOM_HOTSPOTS = {
     '__talk__': { x: 68.5, y: 51.5, w: 14, h: 87 }, // 최종현 — 배경 인물 — 터치로 대화(테두리 없이 발밑 빛으로 안내)
   },
   'ROOM-SR': { // 단서 사진↔배경 물체 대조로 재매핑(2026-07-27). x,y=중심%, w,h=크기%, poly=상자내 로컬%
-    'NYBB-98': { x: 21.5, y: 49.8, w: 5.1, h: 8.5, poly: [[20, 15], [46, 3], [99, 5], [99, 95], [70, 97], [14, 94], [4, 86], [1, 68], [6, 51], [10, 31]] }, // 책상 맨 왼쪽에 놓인 분홍 꽃무늬 지퍼 파우치. 단서 사진(파우치_여)과 형태·
-    'GLUE-77': { x: 25, y: 52.2, w: 1.8, h: 7, poly: [[22, 9], [37, 4], [63, 4], [78, 9], [78, 91], [67, 96], [33, 96], [22, 91]] }, // 파우치 오른쪽 앞에 서 있는 스틱형 풀 — 크림색 뚜껑 + 초록 몸통 + 아래쪽. 파우치 상자와 물려 있어 어느 쪽이 열릴지 복불복이었다 → 실제 풀 폭에 맞춰 오른쪽으로 붙였다
+    'NYBB-98': { x: 21.1, y: 49.8, w: 4.3, h: 8.5, poly: [[20, 15], [46, 3], [99, 5], [99, 95], [70, 97], [14, 94], [4, 86], [1, 68], [6, 51], [10, 31]] }, // 책상 맨 왼쪽에 놓인 분홍 꽃무늬 지퍼 파우치. 단서 사진(파우치_여)과 형태· — 오른쪽 끝(풀 뒤에 가려지는 부분)은 0.8% 덜어냈다. 풀이 44px을 채울 자리가 거기밖에 없었다
+    'GLUE-77': { x: 24.55, y: 52.2, w: 1.8, h: 7, poly: [[22, 9], [37, 4], [63, 4], [78, 9], [78, 91], [67, 96], [33, 96], [22, 91]] }, // 파우치 오른쪽 앞에 서 있는 스틱형 풀 — 크림색 뚜껑 + 초록 몸통 + 아래쪽. 그림 속 풀은 x24.1~25.0인데 상자가 0.45% 오른쪽으로 밀려 파우치·라벨지 사이에 끼여 있었다 → 풀 위로 되돌려 양옆에 0.4%씩 확장 여유를 냈다(폭 34→44px)
     'LBPG-31': { x: 31, y: 55.5, w: 10, h: 6.4, poly: [[1, 43], [38, 10], [59, 4], [97, 31], [99, 45], [81, 61], [44, 96]] }, // 책상 앞쪽에 비스듬히 놓인 흰 종이 + 분홍 격자 라벨 칸이 인쇄된 스티커 시트
     'SUIX-89': { x: 38.9, y: 52.4, w: 9.5, h: 7.9, poly: [[5, 28], [56, 5], [98, 46], [52, 95], [2, 41]] }, // 책상 한가운데 겹쳐 놓인 A4 서류 2~3장. 상단에 붉은 큰 제목 글씨, 본문
     'BCZN-89': { x: 51.4, y: 48.6, w: 8, h: 6.6 }, // 책상 오른쪽 책 더미 전체(맨 위 갈색 양장본 + 아래 초록·미색 표지)
@@ -228,35 +228,80 @@ const DIALOGUE_LIMIT_Y = 82;
 // 히트박스 — 보이는 실루엣(테두리 SVG)은 그대로 두고 '누르는 판정'만 44px까지 넓힌다.
 //   ① 44px 미달인 물건은 poly 클립을 벗긴다. 클립은 판정을 실루엣 안으로 더 깎아서,
 //      가뜩이나 작은 물건을 절반 폭으로 만들어 버린다(풀 35px → 20px).
-//   ② 넓히는 폭은 이웃(인물 터치존 포함)과의 간격 절반까지. 넓혔더니 옆 단서가 눌리는
+//   ② 넓히는 폭은 이웃(인물 터치존 포함)과의 간격까지. 넓혔더니 옆 단서가 눌리는
 //      새 오탭을 만들면 안 되므로, 한 축이라도 떨어져 있으면 그대로 두고 아니면 줄인다.
+//   ③ 네 방향을 따로 잡는다. 좌우(상하)를 똑같이 넓히면 이미 겹쳐 있던 이웃 쪽으로도 같이
+//      커져서 원래 겹침이 확장분만큼 깊어졌다(종현방 수납통↔책더미 0.8%→5.1%).
+//      막힌 쪽은 접고 반대쪽으로 몰아주면, 겹침을 그대로 둔 채 44px을 채울 수 있다.
 const HIT_CACHE = new Map();
+/** 폴리곤으로 깎고 나서도 44px 이 남는가 — poly 는 상자 안 로컬%라 그 실제 범위로 잰다. */
+const polyKeepsTouch = (p, l, r, t, b) => {
+  if (p.w == null) return true;                        // s형(고정 상자)은 애초에 클립이 없다
+  if (!p.poly?.length) return true;
+  const xs = p.poly.map((q) => q[0]), ys = p.poly.map((q) => q[1]);
+  const fx = (Math.max(...xs) - Math.min(...xs)) / 100, fy = (Math.max(...ys) - Math.min(...ys)) / 100;
+  return (p.w + l + r) / 100 * TRACK_PX.w * fx >= TOUCH_MIN
+    && (p.h + t + b) / 100 * TRACK_PX.h * fy >= TOUCH_MIN;
+};
+// 확장분 배분 — 44px은 '어느 쪽으로 넓혔나'가 아니라 총 폭의 문제라, 한쪽이 막히면 반대쪽이 대신 받는다
+const spread = (n, c1, c2) => {
+  const a = Math.min(n, c1), b = Math.min(n, c2);
+  return [Math.min(c1, a + (n - b)), Math.min(c2, b + (n - a))];
+};
 function buildHits(loc) {
   const mapped = ROOM_HOTSPOTS[loc.id] || {};
   const zones = [...(loc.objects || []), '__talk__', '__body__']
     .filter((c) => mapped[c]).map((c) => ({ c, p: mapped[c], b: boxOf(mapped[c]) }));
+  const need = {}, cap = {};
+  for (const z of zones) {
+    need[z.c] = {
+      x: z.p.w != null ? Math.max(0, (MIN_W - z.p.w) / 2) : 0,
+      y: z.p.w != null ? Math.max(0, (MIN_H - z.p.h) / 2) : 0,
+    };
+    cap[z.c] = { l: Infinity, r: Infinity, t: Infinity, b: Infinity };
+  }
+  const lim = (c, side, v) => { cap[c][side] = Math.min(cap[c][side], Math.max(0, v)); };
+  for (let i = 0; i < zones.length; i++) for (let j = i + 1; j < zones.length; j++) {
+    const a = zones[i], b = zones[j];
+    const gx = Math.max(b.b.x1 - a.b.x2, a.b.x1 - b.b.x2);   // 음수면 그 축으로 이미 겹친 깊이
+    const gy = Math.max(b.b.y1 - a.b.y2, a.b.y1 - b.b.y2);
+    if (gx < 0 && gy < 0) {
+      // 이미 겹친 쌍 — 겹침 자체는 좌표로 풀 문제지만, 확장이 그걸 더 키우게 두면 안 된다.
+      //   이웃 안쪽을 향한 면(넓히면 겹침이 깊어지는 면)만 막고, 바깥으로 나가는 면은 연다.
+      if (a.b.x1 > b.b.x1) lim(a.c, 'l', 0);
+      if (a.b.x2 < b.b.x2) lim(a.c, 'r', 0);
+      if (a.b.y1 > b.b.y1) lim(a.c, 't', 0);
+      if (a.b.y2 < b.b.y2) lim(a.c, 'b', 0);
+      if (b.b.x1 > a.b.x1) lim(b.c, 'l', 0);
+      if (b.b.x2 < a.b.x2) lim(b.c, 'r', 0);
+      if (b.b.y1 > a.b.y1) lim(b.c, 't', 0);
+      if (b.b.y2 < a.b.y2) lim(b.c, 'b', 0);
+      continue;
+    }
+    const sx = need[a.c].x + need[b.c].x, sy = need[a.c].y + need[b.c].y;
+    if ((gx >= 0 && gx >= sx) || (gy >= 0 && gy >= sy)) continue;  // 넓혀도 한 축은 떨어져 있다
+    // 두 축 다 먹히면 간격이 더 넉넉한 축만 남겨 딱 맞닿는 데까지 줄인다(새 겹침 0)
+    const rx = gx >= 0 && sx > 0 ? gx / sx : -1, ry = gy >= 0 && sy > 0 ? gy / sy : -1;
+    const useX = rx >= ry, k = useX ? 'x' : 'y';
+    const [as, bs] = useX ? (a.b.x2 <= b.b.x1 ? ['r', 'l'] : ['l', 'r'])
+      : (a.b.y2 <= b.b.y1 ? ['b', 't'] : ['t', 'b']);
+    lim(a.c, as, need[a.c][k] * (useX ? rx : ry));
+    lim(b.c, bs, need[b.c][k] * (useX ? rx : ry));
+  }
   const hits = {};
   for (const z of zones) {
-    const needX = z.p.w != null ? Math.max(0, (MIN_W - z.p.w) / 2) : 0;
-    const needY = z.p.w != null ? Math.max(0, (MIN_H - z.p.h) / 2) : 0;
-    hits[z.c] = { x: needX, y: needY, clip: !(needX || needY) };
-  }
-  for (const a of zones) for (const b of zones) {
-    if (a === b) continue;
-    const gx = Math.abs(a.p.x - b.p.x) - ((a.b.x2 - a.b.x1) + (b.b.x2 - b.b.x1)) / 2;
-    const gy = Math.abs(a.p.y - b.p.y) - ((a.b.y2 - a.b.y1) + (b.b.y2 - b.b.y1)) / 2;
-    if (gx < 0 && gy < 0) continue;                // 이미 겹친 쌍 — 좌표로 풀 문제라 여기선 손대지 않는다
-    const sx = hits[a.c].x + hits[b.c].x, sy = hits[a.c].y + hits[b.c].y;
-    if ((gx >= 0 && gx >= sx) || (gy >= 0 && gy >= sy)) continue;  // 넓혀도 한 축은 떨어져 있다
-    // 두 축 다 먹히면 간격이 더 넉넉한 축만 남겨 딱 맞닿는 데까지 줄인다(겹침 0)
-    const rx = gx >= 0 && sx > 0 ? gx / sx : -1, ry = gy >= 0 && sy > 0 ? gy / sy : -1;
-    if (rx < 0 && ry < 0) continue;
-    if (rx >= ry) { hits[a.c].x *= rx; hits[b.c].x *= rx; }
-    else { hits[a.c].y *= ry; hits[b.c].y *= ry; }
+    const [l, r] = spread(need[z.c].x, cap[z.c].l, cap[z.c].r);
+    const [t, b] = spread(need[z.c].y, cap[z.c].t, cap[z.c].b);
+    // 클립을 벗길지는 '클램프가 끝난 뒤' 최종 확장으로 정한다 — 클램프 전 수요로 정하던 때는
+    //   이웃에 막혀 0.1px만 넓히고도 폴리곤 클립을 통째로 잃었다(종현방 파우치 YPYZ-13).
+    //   상자 크기가 아니라 **폴리곤이 실제로 덮는 넓이**로 따져야 한다 — 상자가 딱 44px 이어도
+    //   폴리곤이 그 안을 깎으면 판정은 44px 아래로 떨어진다(YPYZ-13 은 세로 44→38.7px 이었다).
+    const grew = (l + r) / 100 * TRACK_PX.w >= 1 || (t + b) / 100 * TRACK_PX.h >= 1;
+    hits[z.c] = { l, r, t, b, clip: !grew && polyKeepsTouch(z.p, l, r, t, b) };
   }
   return hits;
 }
-const NO_HIT = { x: 0, y: 0, clip: true };
+const NO_HIT = { l: 0, r: 0, t: 0, b: 0, clip: true };
 export function hitBoxFor(loc, code) {
   let m = HIT_CACHE.get(loc.id);
   if (!m) { m = buildHits(loc); HIT_CACHE.set(loc.id, m); }

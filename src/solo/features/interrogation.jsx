@@ -54,7 +54,11 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
   const [picker, setPicker] = useState(false);
   const [pPerson, setPPerson] = useState(null); // 반박 시트 인물 필터 — null = 전체
+  const [peek, setPeek] = useState(null); // 반박 시트에서 길게 눌러 들춰 본 단서
   const [openTopicId, setOpenTopicId] = useState(null); // 지금 들어와 있는 화제 — null = 최상위 질문지
+  // 이번 방문에 캐물어 본 화제 — 세이브(askedT)에는 화제를 꺼냈는지만 남아 화제 press 는 여기서만 센다.
+  //   여담이라 다시 와서 또 들어도 손해가 없으니 세이브까지 늘릴 이유가 없다.
+  const [topicPressed, setTopicPressed] = useState([]);
   const [cutin, setCutin] = useState(null); // 모순! 컷인
   const [shake, setShake] = useState(false);
   const [speaking, setSpeaking] = useState(false); // 대사 타이핑 중 = 말하는 중(토크 모션)
@@ -62,6 +66,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const dlgRef = useRef(null); // 화면 아무 데나 탭 → 대사 넘김 위임
   const typedRef = useRef(new Set()); // 이미 한 번 흘러간 대사 — 되돌아왔을 때 처음부터 다시 치지 않는다
   const lastTextRef = useRef(null);
+  const peekRef = useRef({ t: null, fired: false, at: 0 }); // 길게 누르기 판정 — fired 면 뒤따라오는 click(=제시)을 삼킨다
   // 예전엔 진입 즉시 튜토리얼을 끝내서, 심문 화면 전체가 '안내 없는 구간'이 됐다.
   //   질문 하나를 끝까지 듣고 목록으로 돌아온 시점에 끝낸다 — 그때까지 코치마크가 이어진다.
   useEffect(() => {
@@ -138,7 +143,13 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     ? stsOf(openTopic).filter((s) => !askedIds.includes(s.id) && !pressedIds.includes(s.id)).length
       + cluesOf(openTopic).filter((c) => !cKey(c).asked && !cKey(c).done).length
     : 0;
+  // 「💬 더 캐묻는다」는 남은 개수에 안 세지만 아직 할 일이긴 하다 — 대사창 힌트와 '더 들을 것 없다'
+  //   안내가 서로 다른 말을 하지 않도록 같은 조건을 쓴다.
+  const topicHasMore = leftInTopic > 0
+    || !!(openTopic?.press && !topicPressed.includes(openTopic.id));
   const hasAsks = rootSts.length > 0 || topics.length > 0;
+  // 질문지가 떠 있는 동안 대사창에 나가는 글은 인물의 말이 아니라 화면 안내다 — 타이핑 판정에도 쓴다
+  const menuOpen = !line && !cur;
   const dlgText = line ? line.text
     : cur ? cur.text
     : openTopic ? (leftInTopic > 0
@@ -150,11 +161,13 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   여기서 tap() 한 번으로 타이핑을 끝내 준다(이미 읽은 대사는 어디서 다시 만나도 즉시 표시).
   //   lastTextRef 로 '진짜 바뀐 경우'만 거른다 — StrictMode 는 마운트 직후 effect 를 한 번 더 돌리는데,
   //   그때 첫 대사가 '이미 읽은 것'으로 오인되면 인사말이 타이핑 없이 튀어나온다.
+  //   화면 안내(menuOpen)는 typedRef 와 무관하게 늘 즉시 띄운다 — 「… 더 물어볼 게 N가지 남았다」는
+  //   N 이 줄 때마다 문자열이 달라져 '읽은 글'로 인식되지 못하고 목록에 돌아올 때마다 처음부터 쳤다.
   useEffect(() => {
-    if (dlgText !== lastTextRef.current && typedRef.current.has(dlgText)) dlgRef.current?.tap();
+    if (dlgText !== lastTextRef.current && (menuOpen || typedRef.current.has(dlgText))) dlgRef.current?.tap();
     lastTextRef.current = dlgText;
     typedRef.current.add(dlgText);
-  }, [dlgText]);
+  }, [dlgText, menuOpen]);
 
   if (!suspect) return null;
 
@@ -170,11 +183,6 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       // 안내만 띄우고 튜토리얼을 끝내지는 않는다 — 질문 하나를 들을 때까지 코치마크가 이어져야 한다
       setLine({ kind: 'guide', text: '(수사 노트) 질문지에서 골라 이야기를 듣자.\n대답을 한 번 더 탭하면 더 깊은 말이 나오고, 거짓이다 싶으면 「📁 반박」으로 단서를 들이대자.\n단서를 챙기면 그에 얽힌 이야깃거리가 질문지에 생긴다. ❗ 표시는 아직 안 물어본 것.' });
       return;
-    }
-    // 화제 대답을 읽고 넘기면 한 겹 더(press) — 그 다음 탭에 질문지로 돌아간다
-    if (line.kind === 'topic') {
-      const t = topics.find((x) => x.id === line.topicId);
-      if (t?.press) { setLine({ text: t.press, kind: 'topicPress', topicId: t.id }); return; }
     }
     setLine(null); // cur가 있으면 답변 화면 유지, 없으면(인트로/가이드/인물반응) 질문 목록으로
   };
@@ -220,14 +228,32 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     }
   };
 
-  // 화제로 들어간다 — 대답을 듣고 나면 그 화제 안의 질문 목록이 열린다.
+  // 반박 시트 카드엔 제목과 소유자뿐이라, 본문이 가물가물하면 시트를 닫고 📓 를 열었다 되돌아와야 했다.
+  //   길게 누르면 그 자리에서 본문만 들춰 본다(짧게 누르면 종전대로 그 단서를 들이댄다).
+  //   손가락이 밀려 시트가 스크롤되면 pointercancel 이 와서 판정이 취소된다.
+  const peekStart = (c) => {
+    clearTimeout(peekRef.current.t);
+    peekRef.current.fired = false;
+    peekRef.current.t = setTimeout(() => {
+      peekRef.current.fired = true; peekRef.current.at = Date.now(); setPeek(c);
+    }, 420);
+  };
+  const peekStop = () => clearTimeout(peekRef.current.t);
+  // 손을 떼는 순간 발생하는 click 은 카드가 아니라 그새 그 자리를 덮은 미리보기로 갈 수 있다 —
+  //   그대로 두면 길게 누르자마자 저 혼자 닫힌다. 열린 직후의 탭 한 번만 흘려보낸다.
+  const peekClose = () => { if (Date.now() - peekRef.current.at > 400) setPeek(null); };
+
+  // 화제로 들어간다 — 대답을 듣고 넘기면 곧장 그 화제의 질문 목록이 열린다.
+  //   예전엔 대답과 목록 사이에 화제 press 가 한 겹 더 끼어, TOPICS 32개가 전부 press 를 갖고 있는 탓에
+  //   화제 하나를 여는 데 예외 없이 3탭이 들었다(그중 32탭이 press 를 닫는 데만 쓰였다).
+  //   press 는 여담이라 목록의 「💬 더 캐묻는다」로 옮겨, 듣고 싶은 사람만 고르게 한다.
   const askTopic = (t) => {
     setPicker(false);
     setCurId(null);
     setOpenTopicId(t.id);
     if (askedTopics.includes(t.id)) return;         // 이미 들은 화제면 곧장 목록으로
     onAskedTopic?.(t.id);
-    setLine({ text: t.text, kind: 'topic', topicId: t.id });
+    setLine({ text: t.text, kind: 'topic' });
   };
 
   // 단서 하나를 짚어 묻는다 → 그 단서에 대한 반응만 듣고 끝난다.
@@ -268,7 +294,6 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     }
   };
 
-  const menuOpen = !line && !cur;
   const qLabel = (s) => s.q || (s.text.length > 18 ? s.text.slice(0, 18) + '…' : s.text);
 
   const dlgLoc = line
@@ -282,11 +307,14 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   // 표정 — 대사의 성격을 그림으로도 받는다(파일 없는 인물은 StandingFigure가 기본 얼굴로 폴백).
   //   모순을 짚혔으면 당황, 엉뚱한 단서를 들이대면 억울해서 화를 낸다.
   const mood = line?.kind === 'break' ? 'shock' : line?.kind === 'wrong' ? 'angry' : null;
-  // 넘길 곳이 없으면 대사창 탭이 「↩ 다른 질문」이 된다 — ▶ 도 없고 탭도 안 먹으면 막다른 길로 보인다
-  const dlgAdvance = line ? advance : cur ? (canPress ? doPress : toMenu) : undefined;
+  // 답변 화면에서 캐물 게 남았으면 탭이 「더 캐묻는다」다. 남지 않았으면 탭을 아예 죽인다 —
+  //   한때 여기서 질문지로 나가게 했더니, 화면 아무 데나 연타하는 VN 습관 그대로 답변을 읽자마자
+  //   질문지로 빠져 「📁 반박」을 통째로 지나쳤다(⏭ 도 '넘기기'가 아니라 '나가기'로 동작했다).
+  //   나가는 길은 액션행의 「↩ 다른 질문」 하나로 못 박고, 힌트가 그걸 가리킨다.
+  const dlgAdvance = line ? advance : (cur && canPress) ? doPress : undefined;
   const dlgHint = line ? '탭하여 계속 ▶'
-    : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : '거짓이다 싶으면 「📁 반박」 · 탭하면 질문지로 ▶')
-    : openTopic ? (leftInTopic > 0 ? '위에서 고르거나 「↩ 다른 이야기」' : '「↩ 다른 이야기」로 돌아가세요')
+    : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : '거짓이다 싶으면 「📁 반박」 · 「↩ 다른 질문」으로 나간다')
+    : openTopic ? (topicHasMore ? '위에서 고르거나 「↩ 다른 이야기」' : '「↩ 다른 이야기」로 돌아가세요')
     : (hasAsks ? '위 목록에서 질문이나 이야깃거리를 고르세요' : '');
 
   return (
@@ -345,7 +373,18 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
           {stsOf(openTopic).sort(byQ).map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} />)}
           {cluesOf(openTopic).sort((a, b) => cRank(a) - cRank(b))
             .map((c) => <ClueAsk key={c.code} c={c} k={cKey(c)} onPick={askAboutClue} />)}
-          {leftInTopic === 0 && (
+          {/* 화제를 꺼낸 대답에서 한 겹 더 — 수사에 진전을 주지 않는 여담이라 ❗를 달지 않고
+              맨 아래(급하지 않은 것) 자리에 둔다. 남은 개수(leftInTopic)에도 넣지 않는다 */}
+          {openTopic.press && (
+            <button className={topicPressed.includes(openTopic.id) ? 'asked' : ''}
+              onClick={() => {
+                setTopicPressed((p) => (p.includes(openTopic.id) ? p : [...p, openTopic.id]));
+                setLine({ text: openTopic.press, kind: 'topicPress' });
+              }}>
+              {topicPressed.includes(openTopic.id) ? '✔ ' : '💬 '}더 캐묻는다
+            </button>
+          )}
+          {!topicHasMore && (
             <p style={{ color: 'var(--muted)', fontSize: '.85rem', padding: '4px 2px' }}>
               이 이야기에서 더 들을 것은 없습니다.
             </p>
@@ -360,7 +399,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
         actions={[
           cur && (bk
             ? { label: '✅ 모순 확인됨', onClick: () => setLine({ text: `${bk.text}\n(이미 짚은 모순이다.)`, kind: 'break' }) }
-            : { label: picker ? '✕ 반박 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPicker((p) => !p); } }),
+            : { label: picker ? '✕ 반박 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPeek(null); setPicker((p) => !p); } }),
           cur && { label: openTopic ? '↩ 이 이야기로' : '↩ 다른 질문', onClick: toMenu },
           !cur && openTopic && { label: '↩ 다른 이야기', onClick: () => { setLine(null); setOpenTopicId(null); } },
           // 분량 대부분이 이 화면인데 20ms/자를 끊을 방법이 화면 탭뿐이었다 — 엄지 자리에도 둔다.
@@ -386,7 +425,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {picker && cur && !bk && (
         <div className="aa-present">
           <div className="aa-present-h">
-            <span>📁 반박할 증거를 고르세요 — “{cur.text.length > 22 ? cur.text.slice(0, 22) + '…' : cur.text}”</span>
+            <span>📁 반박할 증거를 고르세요 — “{cur.text.length > 22 ? cur.text.slice(0, 22) + '…' : cur.text}” <span style={{ color: 'var(--muted)' }}>(길게 누르면 본문)</span></span>
             <button className="aa-close" onClick={() => setPicker(false)}>✕</button>
           </div>
           {presentable.length === 0
@@ -406,7 +445,14 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                     const k = cKey(c);
                     return (
                       <button key={c.code} className="s-card" style={(k.done || k.asked) ? { opacity: .62 } : undefined}
-                        onClick={() => doPresent(c.code)}>
+                        onPointerDown={() => peekStart(c)} onPointerUp={peekStop}
+                        onPointerCancel={peekStop} onPointerLeave={peekStop}
+                        onContextMenu={(e) => e.preventDefault()}
+                        onClick={() => {
+                          // 길게 눌러 본문을 들춘 뒤 손을 떼면 click 이 따라온다 — 그걸로 증거가 나가면 안 된다
+                          if (peekRef.current.fired) { peekRef.current.fired = false; return; }
+                          doPresent(c.code);
+                        }}>
                         <div className="ck">{clueIcon(c)}</div>
                         <div className="cn" style={{ fontSize: '.82rem' }}>{k.done ? '✅ ' : k.asked ? '✔ ' : '❗ '}{c.title}</div>
                         <div className="cm">{c.person}</div>
@@ -415,6 +461,29 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                   })}
                 </div>
               </>}
+        </div>
+      )}
+
+      {/* 들춰 본 본문 — 시트와 같은 판(.aa-present)을 덮어써서 자리·생김새를 맞춘다.
+          전파를 끊어야 뒤의 전체화면 탭 위임이 대사를 넘기지 않는다 */}
+      {/* 화면 전체를 덮는 판 — 미리보기는 하단 시트라서, 이게 없으면 그 위 증거 카드가 그대로
+          눌려 「반박」이 나가 버리고(신뢰도 −1) 바깥을 누르면 캐묻기가 소모된다 */}
+      {picker && peek && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 12 }}
+          onClick={(e) => { e.stopPropagation(); peekClose(); }} />
+      )}
+      {picker && peek && (
+        <div className="aa-present" style={{ zIndex: 13 }} onClick={(e) => { e.stopPropagation(); peekClose(); }}>
+          <div className="aa-present-h">
+            <span>{clueIcon(peek)} {peek.title}{peek.person ? ` · ${peek.person}` : ''}</span>
+            <button className="aa-close" onClick={(e) => { e.stopPropagation(); setPeek(null); }}>✕</button>
+          </div>
+          <p style={{ color: '#cfcabb', fontSize: '.88rem', lineHeight: 1.75, whiteSpace: 'pre-wrap', margin: 0 }}>
+            {peek.detail || peek.desc || peek.description || '(내용은 📓 사건 기록에서 열어 봐야 한다.)'}
+          </p>
+          <p style={{ color: 'var(--muted)', fontSize: '.78rem', margin: '12px 0 0' }}>
+            탭하면 닫힙니다 · 들이대려면 카드를 짧게 누르세요
+          </p>
         </div>
       )}
     </div>

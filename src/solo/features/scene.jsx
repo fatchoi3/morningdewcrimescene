@@ -102,11 +102,14 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         const boxed = p.w != null;
         // 손가락 하한(44px) — 테두리(실루엣)는 그대로 두고 버튼만 바깥으로 넓힌다.
         //   작은 물건은 clip 을 벗겨야 한다: 클립이 판정을 실루엣 안으로 더 깎기 때문.
+        //   넓히는 폭은 네 방향이 다르다 — 이웃이 막은 쪽은 접고 반대쪽으로 몰아주기 때문(lib/game).
         const hit = hitBoxFor(location, code);
         const clip = p.poly && hit.clip ? `polygon(${p.poly.map((pt) => `${pt[0]}% ${pt[1]}%`).join(', ')})` : undefined;
         const btnStyle = {
           ...(clip ? { clipPath: clip, WebkitClipPath: clip } : null),
-          ...(hit.x || hit.y ? { inset: `${-hit.y / p.h * 100}% ${-hit.x / p.w * 100}%` } : null),
+          ...(hit.l || hit.r || hit.t || hit.b
+            ? { inset: `${-hit.t / p.h * 100}% ${-hit.r / p.w * 100}% ${-hit.b / p.h * 100}% ${-hit.l / p.w * 100}%` }
+            : null),
         };
         const wrapStyle = {
           left: `${p.x}%`, top: `${p.y}%`,

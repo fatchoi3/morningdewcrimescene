@@ -21,13 +21,26 @@ const HALL_DOORS = [
   { person: cast.S5.name, x: 86.5, y: 58 },
 ];
 
-function HallHot({ x, y, icon, label, sub, locked, tone, recommend, alert, alertTitle, onClick }) {
+// 모순이 남은 방만 붉게 — 잡담·주울 것만 남은 방은 호박색 '!'. solo.css 는 이 파일 소관이 아니라 인라인으로 둔다.
+//   .s-alert 의 붉은 후광·맥동까지 덮어써야 색 구분이 온전히 읽힌다(글자도 어둡게 — 흰 '!'는 대비가 없다).
+const ALERT_SOFT = {
+  background: 'linear-gradient(180deg,#e8c76b,#b8912c)', borderColor: '#fff7e2',
+  color: '#2a2114', boxShadow: '0 0 0 2px #00000059, 0 0 10px #e8c76b8c', animation: 'none',
+};
+
+function HallHot({ x, y, icon, label, sub, locked, tone, recommend, alert, alertKey = 0, alertTitle, onClick }) {
   return (
     <button className={`hall-hot${locked ? ' locked' : ''}${tone ? ' ' + tone : ''}`}
       data-tut={recommend ? 'door' : undefined}
       style={{ left: `${x}%`, top: `${y}%` }} onClick={onClick}>
-      {/* 알림 배지 — 그 방에 아직 볼 것/물어볼 것이 남아 있을 때 */}
-      {!locked && alert > 0 && <span className="s-alert" title={alertTitle}>!</span>}
+      {/* 알림 배지 — 그 방에 아직 볼 것/물어볼 것이 남아 있을 때.
+          모순이 남은 방은 그 개수를 붉게, 잡담·주울 것만 남은 방은 호박색 '!' —
+          잡담까지 합산한 한 덩어리 숫자로는 어디부터 갈지 고를 수가 없다. */}
+      {!locked && alert > 0 && (
+        <span className="s-alert" title={alertTitle} style={alertKey > 0 ? undefined : ALERT_SOFT}>
+          {alertKey > 0 ? alertKey : '!'}
+        </span>
+      )}
       <span className="hall-hot-ic">{locked ? '🔒' : icon}</span>
       <span className="hall-hot-plate">{label}</span>
       {sub && <span className="hall-hot-sub">{sub}</span>}
@@ -53,6 +66,8 @@ function MenuButton({ onOpen }) {
 export function HallNav({ locations, stage, progressStage, collectedSet, state, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, accuseReady, view, onView, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
   // 각 장소에 '남은 거리'가 있으면 알림 배지를 띄운다(복도에서 어디로 갈지 바로 보이게)
   const alertsOf = (loc) => locationAlerts(loc, state || {}, stage, progressStage >= 3 ? 2 : 1);
+  // 배지 관련 props 한 묶음 — 한 문패에 total·key·사유를 따로 계산하면 alertsOf 를 세 번 돈다
+  const alertProps = (loc) => { const a = alertsOf(loc); return { alert: a.total, alertKey: a.key, alertTitle: `${loc.label} — ${alertReason(a)}` }; };
   const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
   const pastor = locations.rooms.find((l) => l.person === '목사');
   const tool = (id) => locations.all.find((l) => l.id === id);
@@ -60,9 +75,12 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
 
   const subOf = (loc, isCrime) => {
     if (loc.stage > stage) return isCrime ? '통제 중' : loc.stage === 2 ? '사건 후 개방' : '2차 개방';
-    if (loc.kind !== 'room') return '열람';
+    // inner 가 있는 시설(CCTV 열람실)도 진척을 보여준다 — 열람대 하나만 세면 첫 진입에 '✓ 탐색완료'가
+    //   되는데, 정작 2·3막 모순 대부분은 그 안의 컷들이라 화면이 '다 봤다'고 거짓말을 하게 된다.
+    const counted = loc.kind === 'room' || loc.inner ? [...loc.objects, ...(loc.inner || [])] : null;
+    if (!counted) return '열람';
     // 휴대폰은 2차 심문(stage 3)에 해금 — 그 전엔 방 탐색 진척도에서 제외
-    const reach = loc.objects.filter((c) => stage >= 3 || !getClue(c)?.phone);
+    const reach = counted.filter((c) => stage >= 3 || !getClue(c)?.phone);
     const total = reach.length, got = reach.filter((c) => collectedSet.has(c)).length;
     return total > 0 && got === total ? '✓ 탐색완료' : `단서 ${got}/${total}`;
   };
@@ -84,10 +102,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
           {view === 'main' && HALL_DOORS.map((d) => {
             const loc = roomByPerson(d.person);
             if (!loc) return null;
-            const a = alertsOf(loc);
             return <HallHot key={d.person} x={d.x} y={d.y} icon="🚪" label={loc.label}
-              sub={subOf(loc, false)} locked={loc.stage > stage}
-              alert={a.total} alertTitle={`${loc.label} — ${alertReason(a)}`}
+              sub={subOf(loc, false)} locked={loc.stage > stage} {...alertProps(loc)}
               recommend={recommendPerson === d.person} onClick={() => enter(loc, false)} />;
           })}
           {view === 'main' && (
@@ -96,19 +112,16 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
           )}
           {view === 'pastor' && pastor && (
             <HallHot x={50} y={50} icon="⚰️" tone="crime" label={pastor.label}
-              sub={subOf(pastor, true)} locked={pastor.stage > stage}
-              alert={alertsOf(pastor).total} alertTitle={`${pastor.label} — ${alertReason(alertsOf(pastor))}`}
+              sub={subOf(pastor, true)} locked={pastor.stage > stage} {...alertProps(pastor)}
               onClick={() => enter(pastor, true)} />
           )}
           {view === 'floor1' && cctv && (
             <HallHot x={50} y={52} icon="📹" label={cctv.label} sub={subOf(cctv)} locked={cctv.stage > stage}
-              alert={alertsOf(cctv).total} alertTitle={`${cctv.label} — ${alertReason(alertsOf(cctv))}`}
-              onClick={() => enter(cctv)} />
+              {...alertProps(cctv)} onClick={() => enter(cctv)} />
           )}
           {view === 'lab' && lab && (
             <HallHot x={43} y={56} icon="🔬" label={lab.label} sub={subOf(lab)} locked={lab.stage > stage}
-              alert={alertsOf(lab).total} alertTitle={`${lab.label} — ${alertReason(alertsOf(lab))}`}
-              onClick={() => enter(lab)} />
+              {...alertProps(lab)} onClick={() => enter(lab)} />
           )}
       </div>
 
