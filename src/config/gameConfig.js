@@ -18,7 +18,10 @@ const themeBy = (pick) => Object.fromEntries([
 export const gameConfig = {
   title: '크라임씬 미스터리',
   tagline: '증거를 수집하여 범인을 밝혀보세요.',
-  siteUrl: 'https://morningdewcrimescene.site',
+  // 인쇄물(접속 QR)에 찍히는 주소. 청년부 도메인의 하위로 옮겼다 —
+  //   morningdewcrimescene.site 는 등록비가 따로 나가는데 dawndew.org 는 이미 있어서,
+  //   2027-04-13 만료일에 연장하지 않으면 그만큼이 그대로 빠진다.
+  siteUrl: 'https://crimescene.dawndew.org',
 
   // 역할 토큰: key = 구조 필터용(단서 데이터가 참조 — 바꾸지 말 것) / label = 화면 표시용
   roles: {

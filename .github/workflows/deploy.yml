@@ -57,10 +57,19 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      # 같은 S3 를 두 배포가 보고 있다(옛 morningdewcrimescene.site / 새 crimescene.dawndew.org).
+      #   하나만 비우면 다른 쪽은 옛 파일을 계속 내보낸다. 비어 있는 시크릿은 건너뛴다 —
+      #   옛 도메인을 접고 CLOUDFRONT_ID 를 지워도 워크플로가 깨지지 않게.
       - name: CloudFront Invalidation
         run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
+          set -e
+          for id in $CF_ID $CF_ID_2; do
+            echo "invalidating $id"
+            aws cloudfront create-invalidation --distribution-id "$id" --paths "/*" >/dev/null
+          done
         env:
+          CF_ID: ${{ secrets.CLOUDFRONT_ID }}
+          CF_ID_2: ${{ secrets.CLOUDFRONT_ID_2 }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: 'ap-northeast-2'
