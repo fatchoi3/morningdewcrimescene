@@ -399,14 +399,18 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
         actions={[
           cur && (bk
             ? { label: '✅ 모순 확인됨', onClick: () => setLine({ text: `${bk.text}\n(이미 짚은 모순이다.)`, kind: 'break' }) }
-            : { label: picker ? '✕ 반박 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPeek(null); setPicker((p) => !p); } }),
+            // 「✕ 취소」 — '반박'을 붙이면 이 상태에서만 폭이 22px 늘어 줄바꿈된다.
+            //   피커가 화면을 덮고 있어 무엇을 취소하는지는 이미 보인다.
+            : { label: picker ? '✕ 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPeek(null); setPicker((p) => !p); } }),
           cur && { label: openTopic ? '↩ 이 이야기로' : '↩ 다른 질문', onClick: toMenu },
           !cur && openTopic && { label: '↩ 다른 이야기', onClick: () => { setLine(null); setOpenTopicId(null); } },
           // 분량 대부분이 이 화면인데 20ms/자를 끊을 방법이 화면 탭뿐이었다 — 엄지 자리에도 둔다.
           //   (넘길 곳이 있을 때만 = 버튼이 타이핑 도중에 생겼다 사라지며 줄이 흔들리지 않게)
           dlgAdvance && { label: '⏭', onClick: () => dlgRef.current?.tap() },
           { label: '📓', onClick: () => { setPicker(false); onOpenRecord?.(); } },
-          { label: '🚪 나가기', onClick: onExit },
+          // 아이콘만 — 답변 화면에선 버튼이 5개라, 글자를 달면 375px 에서 두 줄로 넘어가
+          //   대사창이 42px 두꺼워진다. 심문마다 한 번 쓰는 버튼이라 ⏭·📓 처럼 아이콘으로 둔다.
+          { label: '🚪', onClick: onExit },
         ]} />
 
       {/* 첫 심문 코치마크 — 심문 화면에도 '지금 할 것'이 계속 붙어 있게 한다.
