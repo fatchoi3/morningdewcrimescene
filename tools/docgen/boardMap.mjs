@@ -17,6 +17,66 @@ export const MAP_ROOMS = [
   { id: 'EJ', x: 245, y: 172, w: 90, h: 73, label: '윤은재의 방', color: '#3a5f9f' },
 ];
 
+// 제미나이가 그린 평면도(1200x896) 위에서 각 방이 차지하는 자리 — 픽셀에서 벽선을 찾아 잰 값이다.
+//   그림은 1200x896 이지만 %로 두어야 인쇄 크기를 바꿔도 이름표가 따라간다.
+const ART = { w: 1200, h: 896 };
+const pct = (x, y) => ({ left: (x / ART.w * 100).toFixed(2) + '%', top: (y / ART.h * 100).toFixed(2) + '%' });
+export const ART_SPOTS = [
+  { id: 'SR', label: '이사랑의 방', color: '#a32d2d', ...pct(193, 235) },
+  { id: 'HJ', label: '이현지의 방', color: '#7a4f9f', ...pct(458, 235) },
+  { id: 'HW', label: '박희원의 방', color: '#8a5a2b', ...pct(708, 235) },
+  { id: 'PS', label: '목사님의 방', color: '#1f1f1f', ...pct(1002, 235) },
+  { id: 'JH', label: '최종현의 방', color: '#2f6f4f', ...pct(200, 675) },
+  { id: 'GH', label: '이가현의 방', color: '#b07d1a', ...pct(484, 675) },
+  { id: 'EJ', label: '윤은재의 방', color: '#3a5f9f', ...pct(779, 675) },
+];
+
+/** 제미나이 그림을 깔고 그 위에 이름표를 얹은 장소 판 HTML. 그림이 흐려도 글자는 벡터라 선명하다. */
+export function illustratedMapHTML(counts = {}, src = '../../../../public/images/board/2층평면.png') {
+  const chip = (s) => `<div class="spot" style="left:${s.left};top:${s.top}">
+    <div class="pin" style="background:${s.color}">${s.label}${counts[s.id] != null ? ` · ${counts[s.id]}장` : ''}</div>
+  </div>`;
+  const note = (x, y, text, color) => {
+    const p = pct(x, y);
+    return `<div class="spot" style="left:${p.left};top:${p.top}">
+      <div class="note" style="color:${color};border-color:${color}">${text}</div></div>`;
+  };
+  return `<div class="art">
+    <img src="${src}" alt="숙소 2층 평면">
+    ${ART_SPOTS.map(chip).join('')}
+    ${note(600, 448, '복 도', '#5b6472')}
+    ${note(114, 451, 'CCTV — 복도만 촬영', '#7b4fa0')}
+    ${note(1035, 700, '1층 계단', '#5b6472')}
+  </div>`;
+}
+
+// ── AI 그림 프롬프트 ─────────────────────────────────────────────────────────
+//   손으로 적으면 그림과 판의 방 위치가 어긋난다. 좌표에서 바로 문장을 만든다.
+//   글자는 빼라고 못박는다 — 한글은 이미지 모델이 거의 항상 뭉갠다. 이름표는 SVG 로 덧씌운다.
+//   제미나이 입력창은 줄바꿈이 곧 전송이라 반드시 한 줄이어야 한다.
+const NINTH = (r) => {
+  const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+  const col = cx < 150 ? 'left' : cx < 250 ? 'center' : 'right';
+  const row = cy < 110 ? 'top' : cy > 165 ? 'bottom' : 'middle';
+  return `${row}-${col}`;
+};
+export function boardMapPrompt() {
+  const rooms = MAP_ROOMS.filter((r) => !r.victim)
+    .map((r) => `a small bedroom at ${NINTH(r)}`).join(', ');
+  return [
+    'Top-down architectural floor plan illustration, straight bird eye view, of the second floor of a Korean church retreat lodge from the early 2000s.',
+    `Layout: ${rooms}.`,
+    'One larger corner room at the far top-right, set slightly higher than the others, is the pastor room.',
+    'A single wide horizontal corridor runs across the middle and connects every room; all doors open onto this corridor.',
+    'A stairwell going down is at the right end of the corridor.',
+    'One small wall-mounted security camera is at the left end of the corridor, aimed along the corridor only.',
+    'Each bedroom has a single bed, a desk, a wardrobe and a window on the outer wall.',
+    'Warm muted colors, soft natural light, clean flat vector illustration with subtle paper texture, thin dark outlines, tabletop board game map style.',
+    'Absolutely no text, no letters, no numbers, no labels anywhere in the image.',
+    'Wide landscape composition, 4:3, the whole floor fits inside the frame with a small margin.',
+  ].join(' ');
+}
+
 /**
  * 2층 전체 평면 장소 판 SVG.
  * counts: { 방id: 카드수 } — 각 방에 몇 장이 놓이는지 판에 찍어 준다.
@@ -32,11 +92,8 @@ export function boardMapSVG(counts = {}, { showCounts = true } = {}) {
             fill="${r.victim ? '#fdeaea' : '#faf8f4'}" stroke="${r.color}" stroke-width="1.6"/>
       <rect x="${r.x}" y="${r.y}" width="${r.w}" height="9" fill="${r.color}"/>
       <text x="${cx}" y="${r.y + 6.8}" text-anchor="middle" font-size="6.2" font-weight="700" fill="#fff">${r.label}</text>
-      <rect x="${r.x + 8}" y="${r.y + 18}" width="${r.w - 16}" height="${r.h - 30}" rx="2.5"
-            fill="none" stroke="${r.color}" stroke-width="0.9" stroke-dasharray="4 3" opacity="0.75"/>
-      <text x="${cx}" y="${r.y + r.h / 2 + 2}" text-anchor="middle" font-size="6" fill="${r.color}" opacity="0.85">단서 카드를 여기에</text>
-      ${showCounts && n != null ? `<text x="${cx}" y="${r.y + r.h - 6}" text-anchor="middle"
-        font-size="6.4" font-weight="700" fill="${r.color}">${n}장</text>` : ''}
+      ${showCounts && n != null ? `<text x="${cx}" y="${r.y + r.h / 2 + 3}" text-anchor="middle"
+        font-size="7.5" font-weight="700" fill="${r.color}" opacity="0.9">${n}장</text>` : ''}
     </g>`;
   };
 

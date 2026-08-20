@@ -5,7 +5,7 @@
 //   양면 인쇄를 쓰므로 뒷면 페이지는 행마다 좌우를 뒤집는다. 안 뒤집으면 제목과 내용이 어긋난다.
 import { allClues, suspects } from './loadData.mjs';
 import { BIBLE } from './bible.mjs';
-import { boardMapSVG } from './boardMap.mjs';
+import { boardMapSVG, illustratedMapHTML } from './boardMap.mjs';
 
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 // 인쇄용 이미지 경로 — 출력물이 output/html/ 에 놓이므로 저장소 루트까지 네 단계 올라간다.
@@ -87,9 +87,17 @@ const CSS = `
   .muted { color: #6b6760; font-size: 8.6pt; }
   ul { margin: 1mm 0 0 5mm; padding: 0; font-size: 9.5pt; line-height: 1.6; }
   .blank { display: inline-block; min-width: 40mm; border-bottom: 1px solid #888; }
-  /* 현장 전체도 — 카드를 올릴 판이라 인쇄 폭을 꽉 채운다 */
+  /* 현장 전체도 — 인쇄 폭을 꽉 채운다 */
   .map { margin: 4mm 0; }
   .map svg { width: 100%; height: auto; }
+  /* 그림 판 — 그림 위에 이름표를 얹는다. 그림 해상도가 낮아도 글자는 벡터라 선명하다. */
+  .art { position: relative; margin: 4mm 0; }
+  .art img { width: 100%; height: auto; display: block; border-radius: 2mm; }
+  .art .spot { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; }
+  .art .pin { color: #fff; font-size: 9pt; font-weight: 800; padding: 1.1mm 2.6mm;
+              border-radius: 1.4mm; box-shadow: 0 0.4mm 1.2mm #0006; }
+  .art .note { background: #fffffff2; font-size: 7.4pt; font-weight: 700;
+               padding: 0.7mm 1.8mm; border-radius: 1mm; border: 0.4mm solid; }
 `;
 const doc = (title, body) => `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
 <title>${esc(title)}</title><style>${CSS}</style></head><body>${body}</body></html>`;
@@ -191,12 +199,16 @@ function placeBoards() {
   const { bag, open } = buildPlaces();
   const counts = Object.fromEntries(Object.entries(bag).map(([k, v]) => [k, v.length]));
   // 첫 장이 실제로 탁자에 까는 판이다. 뒤따르는 장소별 페이지는 수납 목록(진행자용).
+  // 1면은 실제로 탁자에 까는 판(그림), 2면은 같은 배치의 도식판(흑백 인쇄·수정용 예비).
   const overview = `<div class="page mapPage"><h1>사건 현장 — 숙소 2층</h1>
-    <p class="muted">탁자 가운데에 까는 판이다. <b>A3 가로</b>로 뽑으면 카드가 그대로 올라간다.
-      방 위치와 복도는 CCTV 동선과 같은 좌표라 화면에서 본 것과 어긋나지 않는다.</p>
-    <div class="map">${boardMapSVG(counts)}</div>
+    <p class="muted">탁자 가운데에 까는 판이다. <b>A3 가로</b> 권장.
+      카드는 판 위에 올리지 않고 장소별로 옆에 쌓는다 — 판은 위치와 이동을 보는 용도다.</p>
+    ${illustratedMapHTML(counts)}
     <p class="muted">복도 끝 CCTV는 <b>복도만</b> 비춘다. 방문 앞은 사각이라
-      누가 방에 들어갔는지는 찍히지 않는다 — 이 사건의 전제다.</p></div>`;
+      누가 방에 들어갔는지는 찍히지 않는다 — 이 사건의 전제다.</p></div>
+    <div class="page mapPage"><h1>사건 현장 — 도식판 <span class="muted">(예비)</span></h1>
+    <p class="muted">그림 없이 흑백으로 뽑을 때 쓴다. 방 위치는 위 판과 같다.</p>
+    <div class="map">${boardMapSVG(counts)}</div></div>`;
   const body = overview + PLACES.map((p) => `<div class="page" style="border-top:8mm solid ${p.color}">
     <h1>${esc(p.name)}</h1>
     <p class="muted">개방 시점: <b>${esc(p.open)}</b> · 단서 ${bag[p.id].length}장</p>
