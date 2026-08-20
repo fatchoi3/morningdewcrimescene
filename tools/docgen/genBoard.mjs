@@ -98,6 +98,8 @@ const CSS = `
               border-radius: 1.4mm; box-shadow: 0 0.4mm 1.2mm #0006; }
   .art .note { background: #fffffff2; font-size: 7.4pt; font-weight: 700;
                padding: 0.7mm 1.8mm; border-radius: 1mm; border: 0.4mm solid; }
+  /* 촬영 범위 / 사각지대 띠 — 그림 위에 얹는다 */
+  .art .zone { position: absolute; border-radius: 1mm; pointer-events: none; }
 `;
 const doc = (title, body) => `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
 <title>${esc(title)}</title><style>${CSS}</style></head><body>${body}</body></html>`;

@@ -85,12 +85,20 @@ export function illustratedMapHTML(counts = {}, src = '../../../../public/images
     return `<div class="spot" style="left:${p.left};top:${p.top}">
       <div class="note" style="color:${color};border-color:${color}">${text}</div></div>`;
   };
+  // 촬영 범위와 사각지대를 판에 직접 그린다.
+  //   그림의 문 위치가 정본과 조금 달라도, 게임에 필요한 사실("목사님 방 앞은 안 찍힌다")은
+  //   이 두 개의 띠로 전달된다. 이게 사건 성립의 조건이라 판에서 먼저 읽혀야 한다.
+  const band = (x0, x1, y0, y1, style) => `<div class="zone" style="
+    left:${(x0 / ART.w * 100).toFixed(2)}%;top:${(y0 / ART.h * 100).toFixed(2)}%;
+    width:${((x1 - x0) / ART.w * 100).toFixed(2)}%;height:${((y1 - y0) / ART.h * 100).toFixed(2)}%;${style}"></div>`;
   return `<div class="art">
     <img src="${src}" alt="숙소 2층 평면">
+    ${band(100, 875, 391, 505, 'background:#a56ec826;border:0.5mm solid #8a5fae99')}
+    ${band(875, 1155, 391, 860, 'background:repeating-linear-gradient(45deg,#c9403a1f 0 3mm,#c9403a38 3mm 6mm);border:0.5mm dashed #c9403aaa')}
     ${ART_SPOTS.map(chip).join('')}
-    ${note(600, 448, '복 도', '#5b6472')}
-    ${note(114, 451, 'CCTV — 복도만 촬영', '#7b4fa0')}
-    ${note(1035, 700, '1층 계단', '#5b6472')}
+    ${note(470, 448, 'CCTV 촬영 범위 — 복도만', '#7b4fa0')}
+    ${note(1015, 430, '사각 — 목사님 방 문 앞', '#c9403a')}
+    ${note(1047, 760, '1층 계단', '#5b6472')}
   </div>`;
 }
 
