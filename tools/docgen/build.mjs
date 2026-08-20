@@ -12,6 +12,7 @@ import { genTruth } from './genTruth.mjs';
 import { genQRDocs } from './genQR.mjs';
 import { genResultSheet } from './genResult.mjs';
 import { genSlidesPptx } from './genSlides.mjs';
+import { genBoardDocs } from './genBoard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = join(__dirname, 'output');
@@ -28,6 +29,9 @@ function marginFor(name) {
   if (name.startsWith('QR_인쇄시트')) return M(8, 8, 8, 8);
   if (name.startsWith('QR_')) return M(14, 14, 16, 14);
   if (name.startsWith('결과제출지')) return M(8, 8, 8, 8);
+  // 카드 시트는 재단 여유가 없어야 63x88mm 가 그대로 나온다
+  if (name.startsWith('보드_단서카드')) return M(4, 4, 4, 4);
+  if (name.startsWith('보드_')) return M(12, 12, 14, 12);
   return M(14, 14, 14, 14);
 }
 
@@ -36,7 +40,7 @@ const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 async function main() {
   const htmlOnly = process.argv.includes('--html');
 
-  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth(), ...(await genQRDocs()), genResultSheet()];
+  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth(), ...(await genQRDocs()), genResultSheet(), ...genBoardDocs()];
 
   mkdirSync(HTML_DIR, { recursive: true });
   for (const d of docs) writeFileSync(join(HTML_DIR, d.filename), d.html, 'utf8');
