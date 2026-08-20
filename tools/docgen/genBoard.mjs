@@ -5,6 +5,7 @@
 //   양면 인쇄를 쓰므로 뒷면 페이지는 행마다 좌우를 뒤집는다. 안 뒤집으면 제목과 내용이 어긋난다.
 import { allClues, suspects } from './loadData.mjs';
 import { BIBLE } from './bible.mjs';
+import { boardMapSVG } from './boardMap.mjs';
 
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 // 인쇄용 이미지 경로 — 출력물이 output/html/ 에 놓이므로 저장소 루트까지 네 단계 올라간다.
@@ -73,6 +74,10 @@ const CSS = `
   .cface { align-items: center; justify-content: center; text-align: center; }
   .cface .ct { font-size: 13.5pt; margin: 3mm 0 0; }
   .cface .pl { font-size: 8pt; font-weight: 700; margin-top: 2mm; }
+  /* 뒷면 — 펼쳐 뒀을 때 보이는 면. 번호만 크게 둬서 멀리서도 집어낼 수 있게 한다. */
+  .cback { align-items: center; justify-content: center; text-align: center; }
+  .bnum { font-size: 20pt; font-weight: 800; letter-spacing: .06em; }
+  .bplace { font-size: 8.5pt; font-weight: 700; margin-top: 3mm; opacity: .75; }
   h1 { font-size: 19pt; margin: 0 0 3mm; }
   h2 { font-size: 13pt; margin: 6mm 0 2mm; padding-bottom: 1.2mm; border-bottom: 1.2px solid #14120f; }
   .page { padding: 10mm 12mm; page-break-after: always; }
@@ -82,6 +87,9 @@ const CSS = `
   .muted { color: #6b6760; font-size: 8.6pt; }
   ul { margin: 1mm 0 0 5mm; padding: 0; font-size: 9.5pt; line-height: 1.6; }
   .blank { display: inline-block; min-width: 40mm; border-bottom: 1px solid #888; }
+  /* 현장 전체도 — 카드를 올릴 판이라 인쇄 폭을 꽉 채운다 */
+  .map { margin: 4mm 0; }
+  .map svg { width: 100%; height: auto; }
 `;
 const doc = (title, body) => `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
 <title>${esc(title)}</title><style>${CSS}</style></head><body>${body}</body></html>`;
@@ -106,19 +114,18 @@ function clueCards() {
   for (const p of PLACES) {
     const list = bag[p.id];
     if (!list.length) continue;
-    const front = (c) => `<div class="card cface" style="border-color:${p.color}">
-      <span class="tag" style="background:${p.color}">${esc(p.name)}</span>
-      <div class="ct">${esc(c.title)}</div>
-      <div class="pl" style="color:${p.color}">${esc(c.type === '감식' ? '감식 결과' : c.person)}</div>
-      <div class="code">${esc(c.code)}</div></div>`;
-    const back = (c) => `<div class="card" style="border-color:${p.color}">
+    // 앞면 = 내용 전부(이름·그림·설명). 뒷면 = 번호만 — 펼쳐 둘 때 보이는 면이다.
+    const front = (c) => `<div class="card" style="border-color:${p.color}">
       <span class="tag" style="background:${p.color}">${esc(c.title)}</span>
       ${c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
       <div class="cd">${esc(c.detail || c.description || '')}</div>
       <div class="code">${esc(c.code)}</div></div>`;
+    const back = (c) => `<div class="card cback" style="border-color:${p.color};background:${p.color}12">
+      <div class="bnum" style="color:${p.color}">${esc(c.code)}</div>
+      <div class="bplace" style="color:${p.color}">${esc(p.name)}</div></div>`;
     body += `<div class="page"><h1>${esc(p.name)} — 단서 ${list.length}장</h1>
       <p class="muted">개방: ${esc(p.open)} · 테두리색으로 장소를 구분한다.
-      앞면(제목)만 펼쳐 두고, 가져간 사람이 뒷면을 읽는다.</p></div>`;
+      <b>뒷면(번호)이 보이게</b> 펼쳐 두고, 가져간 사람이 앞면을 읽는다.</p></div>`;
     body += paginate(list, front, back);
   }
   return { filename: '보드_단서카드.html', html: doc('보드게임 단서 카드', body) };
@@ -182,7 +189,15 @@ function openClues() {
 // ── 3. 장소 판 ───────────────────────────────────────────────────────────────
 function placeBoards() {
   const { bag, open } = buildPlaces();
-  const body = PLACES.map((p) => `<div class="page" style="border-top:8mm solid ${p.color}">
+  const counts = Object.fromEntries(Object.entries(bag).map(([k, v]) => [k, v.length]));
+  // 첫 장이 실제로 탁자에 까는 판이다. 뒤따르는 장소별 페이지는 수납 목록(진행자용).
+  const overview = `<div class="page mapPage"><h1>사건 현장 — 숙소 2층</h1>
+    <p class="muted">탁자 가운데에 까는 판이다. <b>A3 가로</b>로 뽑으면 카드가 그대로 올라간다.
+      방 위치와 복도는 CCTV 동선과 같은 좌표라 화면에서 본 것과 어긋나지 않는다.</p>
+    <div class="map">${boardMapSVG(counts)}</div>
+    <p class="muted">복도 끝 CCTV는 <b>복도만</b> 비춘다. 방문 앞은 사각이라
+      누가 방에 들어갔는지는 찍히지 않는다 — 이 사건의 전제다.</p></div>`;
+  const body = overview + PLACES.map((p) => `<div class="page" style="border-top:8mm solid ${p.color}">
     <h1>${esc(p.name)}</h1>
     <p class="muted">개방 시점: <b>${esc(p.open)}</b> · 단서 ${bag[p.id].length}장</p>
     <p>이 판 위에 아래 카드를 <b>제목이 보이게</b> 펼쳐 둔다. 방문한 사람이 2장을 가져간다.</p>
