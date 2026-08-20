@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { lint } from './loadData.mjs';
+import { lint, allClues, suspects, victim } from './loadData.mjs';
 import { genAllRefSheets } from './genRefSheets.mjs';
 import { genPlaceGuide } from './genPlace.mjs';
 import { genTruth } from './genTruth.mjs';
@@ -40,7 +40,7 @@ const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 async function main() {
   const htmlOnly = process.argv.includes('--html');
 
-  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth(), ...(await genQRDocs()), genResultSheet(), ...genBoardDocs()];
+  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth({ victim }), ...(await genQRDocs()), genResultSheet(), ...genBoardDocs({ allClues, suspects })];
 
   mkdirSync(HTML_DIR, { recursive: true });
   for (const d of docs) writeFileSync(join(HTML_DIR, d.filename), d.html, 'utf8');

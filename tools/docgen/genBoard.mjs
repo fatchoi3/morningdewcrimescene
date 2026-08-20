@@ -7,13 +7,15 @@
 //   번호 체계: 장소마다 글자 하나(A~G 방, V CCTV, L 감식, S 특수) + 그 안의 일련번호.
 //   판에는 번호만 찍혀 있고, 참가자는 "A3 볼게요" 하고 그 번호 카드를 집는다.
 //   조합은 표를 따로 두지 않고 카드에 적는다 — 카드가 스스로 "A6 도 있으면 S1 을 가져가라"고 말한다.
-import { allClues, suspects } from './loadData.mjs';
 import { BIBLE } from './bible.mjs';
 import { illustratedMapHTML, ART_ROOMS } from './boardMap.mjs';
 
+// 정본 데이터는 주입받는다 — Node(문서 생성기)는 loadData.mjs 가 fs 로 비밀팩을 찾아 넘기고,
+//   브라우저(웹 키트)는 @secrets 별칭으로 번들된 것을 넘긴다. loadData 를 직접 import 하면
+//   node:fs 가 딸려 들어와 브라우저 번들이 깨진다.
+let allClues = [], suspects = [], img = (p) => p;
+
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
-// 인쇄용 이미지 경로 — 출력물이 output/html/ 에 놓이므로 저장소 루트까지 네 단계 올라간다.
-const img = (p) => '../../../../public' + p;
 
 // 판 위 7개 방 + 판 밖 시설 2곳. 순서가 곧 카드 번호 순서다.
 const PLACES = [
@@ -285,6 +287,15 @@ function runSheets() {
   return { filename: '보드_진행물.html', html: doc('보드게임 진행 물품', body) };
 }
 
-export function genBoardDocs() {
+/**
+ * data: { allClues, suspects } — 정본
+ * opts.assetBase: 그림 경로 앞에 붙일 것. Node 는 출력물이 output/html/ 에 놓이므로
+ *   저장소 루트까지 네 단계 올라가야 하고, 브라우저는 사이트 루트라 그대로 쓴다.
+ */
+export function genBoardDocs(data, opts = {}) {
+  allClues = data.allClues;
+  suspects = data.suspects;
+  const base = opts.assetBase ?? '../../../../public';
+  img = (p) => base + p;
   return [charCards(), clueCards(), placeBoard(), runSheets()];
 }

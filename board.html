@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <link rel="icon" href="/favicon2.png" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 진상 해설서(정답)가 들어 있다. 참가자에게 노출될 이유가 없으므로 색인 차단. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <title>보드게임 인쇄물 — 새벽이슬 크라임씬</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 32px 20px 64px; background: #f6f3ec; color: #14120f;
+             font-family: 'Malgun Gothic', '맑은 고딕', system-ui, sans-serif; }
+      #board-root { max-width: 640px; margin: 0 auto; }
+      h1 { font-size: 1.6rem; margin: 0 0 6px; }
+      .sub { color: #6b6760; font-size: .92rem; margin: 0 0 22px; }
+      .how { background: #fffdf7; border: 1px solid #e2dccc; border-radius: 12px;
+             padding: 14px 18px; font-size: .88rem; line-height: 1.7; margin-bottom: 22px; }
+      .how ul { margin: 8px 0 0; padding-left: 18px; }
+      .how li { margin-bottom: 4px; }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+             background: #fff; border: 1px solid #e2dccc; border-radius: 12px;
+             padding: 14px 16px; margin-bottom: 10px; }
+      .row.spoil { border-color: #d8a5a5; background: #fdf6f6; }
+      .fn { font-weight: 800; font-size: .98rem; }
+      .nt { color: #6b6760; font-size: .82rem; margin-top: 3px; line-height: 1.5; }
+      button { background: #14120f; color: #fff; border: 0; border-radius: 9px;
+               padding: 10px 16px; font-size: .88rem; font-weight: 700; cursor: pointer;
+               white-space: nowrap; font-family: inherit; }
+      button:hover { background: #34302a; }
+      button:disabled { opacity: .55; cursor: default; }
+      .row.spoil button { background: #9a3b3b; }
+      .all { width: 100%; margin-top: 8px; padding: 14px; font-size: .95rem; }
+      .foot { color: #8a857c; font-size: .82rem; margin-top: 20px; }
+      code { background: #ece7dc; padding: 1px 5px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <div id="board-root"></div>
+    <script type="module" src="/src/board/main.js"></script>
+  </body>
+</html>

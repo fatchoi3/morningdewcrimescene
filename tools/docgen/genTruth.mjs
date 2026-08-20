@@ -1,8 +1,7 @@
 // 진상 해설서 — 게임 종료 후 공개용. 피해자+6인 시점 서사.
 // 정본 기준 피해자명 '김호치'. 단서 코드는 본문에 없음(순수 서사).
-import { victim } from './loadData.mjs';
-
-const V = victim?.name || '김호치 목사';
+// 피해자명은 주입받는다 — loadData 를 직접 import 하면 node:fs 가 딸려 와 브라우저에서 못 쓴다.
+let V = '김호치 목사';
 
 const TRUTH_CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
@@ -37,7 +36,8 @@ p{margin-bottom:14px}p strong{font-weight:700}
 .tl-x{font-size:10pt;line-height:1.65}.tl-x strong{font-weight:700}
 `;
 
-export function genTruth() {
+export function genTruth(data) {
+  V = data?.victim?.name || V;
   const body = `
 <div class="cover">
   <div class="ct">Crime Scene · Truth Reveal · 진상 해설서</div>
