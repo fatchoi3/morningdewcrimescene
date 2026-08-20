@@ -40,8 +40,8 @@ function buildBoard() {
   const bag = Object.fromEntries(PLACES.map((p) => [p.id, []]));
   const special = [], open = [];
   for (const c of allClues) {
-    // 방 입구 QR·게임 설명서·사건 브리핑은 카드가 아니다 — 앞의 둘은 앱판 전용이고,
-    //   브리핑은 시작할 때 진행자가 읽어 주는 것이라 누가 '가져가는' 물건이 아니다.
+    // 방 입구 QR·게임 설명서는 앱판 전용. 사건 브리핑은 카드가 아니라 시작 시트로 따로 뽑는다
+    //   — 누가 '가져가는' 물건이 아니라 시작할 때 전원이 돌려 읽는 물건이다.
     if (c.type === '방' || c.code === 'LSUX-91' || c.code === 'BRIF-00') continue;
     if (PUBLIC.has(c.code)) { open.push(c); continue; }
     if (c.type === '감식') { bag.LB.push(c); continue; }
@@ -108,6 +108,21 @@ const CSS = `
   th { background: #efeae0; font-weight: 800; }
   .muted { color: #6b6760; font-size: 8.6pt; }
   ul { margin: 1mm 0 0 5mm; padding: 0; font-size: 9.5pt; line-height: 1.6; }
+  /* 라운드 트랙 · 이벤트 카드 */
+  .track { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2mm; margin: 4mm 0 5mm; }
+  .tr { border: 1.2px solid #333; border-radius: 2mm; padding: 3mm 2mm; text-align: center; }
+  .trEv { background: #fdf3dc; border-color: #b8912c; border-width: 2px; }
+  .trN { font-size: 17pt; font-weight: 800; }
+  .trL { font-size: 7.4pt; color: #6b6760; margin-top: 1mm; }
+  .ev { border: 2px solid #b8912c; border-radius: 2mm; padding: 5mm 6mm; margin-bottom: 6mm; background: #fffdf6; }
+  .evHead { font-size: 9pt; font-weight: 800; color: #8a6d1f; }
+  .evNo { display: inline-block; background: #b8912c; color: #fff; border-radius: 50%;
+          width: 6mm; height: 6mm; line-height: 6mm; text-align: center; margin-right: 1.5mm; }
+  .evTitle { font-size: 15pt; font-weight: 800; margin: 2mm 0 2.5mm; }
+  .evBody { font-size: 10pt; line-height: 1.7; }
+  .evBody p { margin: 0 0 2mm; }
+  .evFold { margin-top: 4mm; text-align: center; font-size: 7.4pt; color: #a09880;
+            border-top: 1px dashed #c9bd9a; padding-top: 2mm; }
   /* 그림 판 */
   .art { position: relative; margin: 4mm 0; }
   .art img { width: 100%; height: auto; display: block; border-radius: 2mm; }
@@ -232,6 +247,44 @@ function placeBoard() {
   return { filename: '보드_장소판.html', html: doc('보드게임 장소 판', body) };
 }
 
+// ── 4. 진행 물품 — 시작 시트 · 라운드 트랙 · 이벤트 카드 ────────────────────
+//   진행자가 없으므로 진행자가 하던 일(브리핑 읽기·이벤트 열기)을 물건이 대신한다.
+function runSheets() {
+  const brief = allClues.find((c) => c.code === 'BRIF-00');
+  const pages = (brief?.pages || []).map((pg) =>
+    `<h2>${esc(pg.title)}</h2><p style="white-space:pre-wrap">${esc(pg.content)}</p>`).join('');
+  const ev = (n, when, title, body) => `<div class="ev">
+    <div class="evHead"><span class="evNo">${n}</span> ${esc(when)}</div>
+    <div class="evTitle">${esc(title)}</div><div class="evBody">${body}</div>
+    <div class="evFold">— 접어서 뒷면이 보이게 트랙 위에 둔다 —</div></div>`;
+  const body = `<div class="page"><h1>사건 브리핑 <span class="muted">— 시작할 때 함께 읽으세요</span></h1>
+    <p class="muted">인물 카드를 나눠 갖고 자기소개를 마친 뒤, 이 시트를 소리 내어 돌려 읽습니다.
+      한 사람이 한 절씩 읽으면 됩니다.</p>${pages}
+    <h2>그리고 규칙 하나</h2>
+    <p>여러분 중 <b>한 명이 범인</b>입니다. 범인도 남들과 똑같이 수사에 참여하고, 거짓말을 합니다.
+      나머지는 자기가 결백하다는 것만 알 뿐, 누가 범인인지는 모릅니다.</p></div>
+
+  <div class="page"><h1>라운드 트랙</h1>
+    <p class="muted">한 라운드가 끝날 때마다 말을 한 칸 옮깁니다.
+      <b>2·4라운드 칸에 이벤트 카드를 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
+    <div class="track">${[1,2,3,4,5,6].map((n) => `<div class="tr${n===2||n===4?' trEv':''}">
+      <div class="trN">${n}</div><div class="trL">${n===2?'이벤트 ①':n===4?'이벤트 ②':'조사 → 자유 조사'}</div></div>`).join('')}</div>
+    <p class="muted">6라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서를 폅니다.</p></div>
+
+  <div class="page"><h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
+    ${ev('①', '2라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
+      `<p>정밀 부검 결과가 왔습니다. <b>심정지가 아니라 질식사</b>입니다.
+        코·입 주변 압박흔과 안면 점상출혈, 그리고 기도에서 베개 솜·섬유가 검출됐습니다.</p>
+      <p><b>목사님의 방(D)이 열립니다.</b> D 더미를 탁자에 놓고,
+        「목사님 일정표」는 <b>앞면이 보이게</b> 그 옆에 펴 둡니다 — 이 한 장은 아무도 가져갈 수 없습니다.</p>`)}
+    ${ev('②', '4라운드가 끝나면 펼친다', '압수수색 영장 — 기록을 볼 수 있다',
+      `<p>영장이 발부됐습니다. 복도 CCTV 원본과 관계자 휴대폰을 열람할 수 있습니다.</p>
+      <p><b>CCTV 열람실(V)과 감식실(L)이 열립니다.</b> 두 더미를 탁자에 놓습니다.
+        지금까지 가져갔지만 못 읽던 <b>휴대폰 카드를 이제 읽을 수 있습니다.</b></p>`)}
+  </div>`;
+  return { filename: '보드_진행물.html', html: doc('보드게임 진행 물품', body) };
+}
+
 export function genBoardDocs() {
-  return [charCards(), clueCards(), placeBoard()];
+  return [charCards(), clueCards(), placeBoard(), runSheets()];
 }
