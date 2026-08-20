@@ -24,6 +24,12 @@ const PLACES = [
 ];
 const ROOM_OF = { 최종현: 'JH', 윤은재: 'EJ', 이현지: 'HJ', 박희원: 'HW', 이사랑: 'SR', 이가현: 'GH' };
 
+// 공개 단서 — 아무도 가져갈 수 없고 전원이 언제든 읽는다.
+//   독점 규칙에서 '그 한 장이 없으면 아무도 못 맞히는' 단서는 진범이 집어 숨기면 끝이다.
+//   목사님 일정표는 동기(20점)를 받치는 유일한 카드였다. 면담 5건과 각자의 반응만 적혀 있어
+//   정답을 흘리지도 않는다 — 오히려 진범 칸이 "평소와 같은 모습"이라 수사의 출발점으로 맞다.
+const PUBLIC = new Set(['HQIR-26']);
+
 // 앱의 방 배치와 같은 규칙(person + type)으로 가른다. 별도 표를 두면 정본과 어긋난다.
 function buildPlaces() {
   // CCTV 컷은 열람대 단서 안에 박혀 있다 — 하위 코드를 먼저 모아 두고 그 방으로 보낸다.
@@ -35,8 +41,10 @@ function buildPlaces() {
   }
   const bag = Object.fromEntries(PLACES.map((p) => [p.id, []]));
   const special = [];
+  const open = [];
   for (const c of allClues) {
     if (c.type === '방' || c.code === 'LSUX-91') continue;   // 방 입구 QR·게임 설명서는 앱판 전용
+    if (PUBLIC.has(c.code)) { open.push(c); continue; }
     if (c.type === '감식') { bag.LB.push(c); continue; }
     if (c.cctv?.timeline || cut.has(c.code)) { bag.CC.push(c); continue; }
     if (c.type === '특수') { special.push(c); continue; }    // 조합·추궁으로만 나오므로 장소가 없다
@@ -44,7 +52,7 @@ function buildPlaces() {
     const r = ROOM_OF[c.person];
     if (r) bag[r].push(c); else special.push(c);             // 공용(브리핑)은 진행자 보관
   }
-  return { bag, special };
+  return { bag, special, open };
 }
 
 // ── 공통 CSS ─────────────────────────────────────────────────────────────────
@@ -148,13 +156,38 @@ function charCards() {
   return { filename: '보드_인물카드.html', html: doc('보드게임 인물 카드', body) };
 }
 
+// ── 2-b. 공개 단서 ───────────────────────────────────────────────────────────
+//   장소 판 옆에 펴 두는 큰 시트. 카드가 아니라 게시물이라 A4 한 면을 그대로 쓴다.
+function openClues() {
+  const { open } = buildPlaces();
+  const body = open.map((c) => {
+    const rows = (c.schedule?.entries || [])
+      .map((e) => `<tr><td>${esc(e.time)}</td><td>${esc(e.person)}</td><td>${esc(e.title)}</td><td>${esc(e.content)}</td></tr>`).join('');
+    return `<div class="page" style="border-top:8mm solid #1f1f1f">
+      <h1>${esc(c.title)} <span class="muted">— 공개 단서</span></h1>
+      <p class="muted">목사님의 방이 열릴 때 장소 판 옆에 펴 둔다.
+        <b>아무도 가져갈 수 없고, 전원이 언제든 읽는다.</b></p>
+      ${c.image ? `<img src="${esc(img(c.image))}" alt="" style="max-width:100%;max-height:70mm;object-fit:contain">` : ''}
+      ${rows ? `<table><tr><th style="width:16%">시각</th><th style="width:20%">상대</th>
+        <th style="width:22%">내용</th><th>목격된 것</th></tr>${rows}</table>`
+        : `<p>${esc(c.detail || c.description || '')}</p>`}
+      <h2>이 단서가 여는 질문</h2>
+      <p>목사님은 사건 전날 다섯 명을 따로 불렀다. <b>무슨 이야기를 했는가?</b>
+        면담 내용은 이 표에 없다 — 당사자에게 직접 물어야 한다.</p>
+    </div>`;
+  }).join('');
+  return { filename: '보드_공개단서.html', html: doc('보드게임 공개 단서', body) };
+}
+
 // ── 3. 장소 판 ───────────────────────────────────────────────────────────────
 function placeBoards() {
-  const { bag } = buildPlaces();
+  const { bag, open } = buildPlaces();
   const body = PLACES.map((p) => `<div class="page" style="border-top:8mm solid ${p.color}">
     <h1>${esc(p.name)}</h1>
     <p class="muted">개방 시점: <b>${esc(p.open)}</b> · 단서 ${bag[p.id].length}장</p>
     <p>이 판 위에 아래 카드를 <b>제목이 보이게</b> 펼쳐 둔다. 방문한 사람이 2장을 가져간다.</p>
+    ${p.id === 'PS' && open.length ? `<p class="muted">이 방에는 공개 단서가 따로 있다 —
+      <b>${open.map((c) => esc(c.title)).join(', ')}</b>. 판 옆에 펴 두고 아무도 가져가지 않는다.</p>` : ''}
     <table><tr><th style="width:16%">코드</th><th>단서</th><th style="width:20%">귀속</th></tr>
       ${bag[p.id].map((c) => `<tr><td>${esc(c.code)}</td><td>${esc(c.title)}</td><td>${esc(c.person)}</td></tr>`).join('')}
     </table></div>`).join('');
@@ -233,5 +266,5 @@ function scoreKey() {
 }
 
 export function genBoardDocs() {
-  return [charCards(), clueCards(), placeBoards(), comboSheet(), answerSheet(), scoreKey()];
+  return [charCards(), clueCards(), openClues(), placeBoards(), comboSheet(), answerSheet(), scoreKey()];
 }
