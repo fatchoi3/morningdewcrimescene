@@ -236,7 +236,7 @@ function placeBoard() {
     <p class="muted">탁자 가운데에 까는 판이다. <b>A3 가로</b> 권장.
       카드는 판 위에 올리지 않고 장소별로 옆에 쌓는다. 방 안의 번호는 <b>고를 자리</b>이지
       물건이 놓인 위치가 아니다 — "A3 볼게요" 하고 그 번호 카드를 집으면 된다.</p>
-    ${illustratedMapHTML(counts)}
+    ${illustratedMapHTML(counts, img('/images/board/2층평면.png'))}
     <p class="muted">복도 끝 CCTV는 <b>복도만</b> 비춘다. 방문 앞은 사각이라
       누가 방에 들어갔는지는 찍히지 않는다 — 이 사건의 전제다.</p>
     <h2>판 밖 시설</h2>

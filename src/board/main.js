@@ -1,6 +1,7 @@
-// 보드게임 인쇄물 키트 — 주소만 열면 브라우저가 문서를 만들어 내려준다.
+// 보드게임 인쇄물 키트 — 주소만 열면 브라우저가 문서를 만들어 ZIP 으로 내려준다.
 //   정적 호스팅(S3+CloudFront)이라 서버가 없다. 문서 생성기가 순수 JS라 그대로 브라우저에서 돌린다.
 //   Node 판(npm run docs)과 같은 생성기·같은 정본을 쓰므로 결과물이 어긋나지 않는다.
+import JSZip from 'jszip';
 import { evidenceMap as publicMap, victim, suspects } from '../data/gameData.js';
 import { mergeSecrets } from '../data/mergeSecrets.js';
 import secrets from '@secrets';
@@ -14,56 +15,120 @@ const data = {
   allClues: Object.entries(evidenceMap).map(([code, v]) => ({ code, ...v })),
 };
 
-// 브라우저에서는 그림이 사이트 루트에 있다 — Node 판처럼 상대경로를 붙이면 안 된다.
-const docs = [
-  ...genBoardDocs(data, { assetBase: '' }),
-  { ...genTruth(data), spoiler: true },
-];
+// ZIP 안에서는 HTML 옆에 images/ 폴더가 놓인다 — 절대경로(/images/…)로 두면 압축을 풀어
+//   로컬에서 열었을 때 그림이 전부 깨진다. './images/…' 로 뽑아 폴더째 같이 넣는다.
+const docs = [...genBoardDocs(data, { assetBase: '.' }), genTruth(data)];
 
+// 인쇄 순서대로 번호를 붙인다 — 파일 목록만 봐도 뭘 먼저 뽑을지 알 수 있게.
+const ORDER = ['보드_진행물.html', '보드_장소판.html', '보드_단서카드.html', '보드_인물카드.html', '진상해설서.html'];
 const NOTE = {
   '보드_진행물.html': '시작 시트 · 라운드 트랙 · 이벤트 카드 2장',
-  '보드_장소판.html': '현장 판(방마다 번호 자리) + 공개 단서',
-  '보드_단서카드.html': '97장 — 앞면 내용·조합 안내 / 뒷면 번호. 양면 인쇄',
+  '보드_장소판.html': '현장 판(방마다 번호 자리) + 공개 단서. A3 가로 권장',
+  '보드_단서카드.html': '97장 — 앞면 내용·조합 안내 / 뒷면 번호. 양면·짧은 쪽 넘김',
   '보드_인물카드.html': '6인 × 공개 프로필 / 비밀 시나리오. 따로 나눠 줄 것',
   '진상해설서.html': '정답이 들어 있다. 봉투에 넣어 두고 끝나기 전엔 열지 말 것',
 };
+const sorted = ORDER.map((f) => docs.find((d) => d.filename === f)).filter(Boolean);
 
-const save = (d) => {
-  const url = URL.createObjectURL(new Blob([d.html], { type: 'text/html;charset=utf-8' }));
-  const a = document.createElement('a');
-  a.href = url; a.download = d.filename;
-  document.body.appendChild(a); a.click(); a.remove();
-  // 곧바로 해제하면 큰 파일이 저장되기 전에 끊긴다
-  setTimeout(() => URL.revokeObjectURL(url), 30_000);
-};
+const README = `새벽이슬 크라임씬 — 보드게임 인쇄물
+6명 · 진행자 없음 · 100~120분
+
+[인쇄 요령]
+- HTML 을 브라우저로 열고 Ctrl+P.
+- "배경 그래픽" 을 반드시 켜세요. 안 켜면 장소 색과 번호 배경이 사라집니다.
+- 03_보드_단서카드 는 양면·짧은 쪽 넘김으로 뽑으세요.
+  뒷면 페이지를 좌우 뒤집어 만들어 뒀기 때문에 그래야 번호와 내용이 맞습니다.
+- 02_보드_장소판 은 A3 가로를 권합니다. 나머지는 A4.
+
+[주의]
+- 05_진상해설서 에는 정답이 들어 있습니다. 봉투에 넣어 두고 끝나기 전엔 열지 마세요.
+- 04_보드_인물카드 는 각자에게 따로 나눠 주세요. 뒷면은 본인만 봅니다.
+
+[폴더]
+- images/ 는 카드 그림입니다. HTML 과 같은 자리에 두어야 그림이 나옵니다.
+`;
 
 const root = document.getElementById('board-root');
 root.innerHTML = `
   <h1>보드게임 인쇄물</h1>
   <p class="sub">「새벽이슬 크라임씬」 오프라인 보드게임판 — 6명 · 진행자 없음 · 100~120분</p>
+  <button class="all">전체 ZIP 내려받기</button>
+  <div class="prog" hidden><div class="bar"><i></i></div><div class="pmsg">준비 중…</div></div>
   <div class="how">
     <b>인쇄 요령</b>
     <ul>
-      <li>내려받은 파일을 브라우저로 열고 <b>Ctrl+P</b> → <b>배경 그래픽 켜기</b>.
+      <li>ZIP 을 풀고 HTML 을 브라우저로 열어 <b>Ctrl+P</b> → <b>배경 그래픽 켜기</b>.
         안 켜면 장소 색과 번호 배경이 사라진다.</li>
-      <li><b>보드_단서카드</b>는 <b>양면·짧은 쪽 넘김</b>. 뒷면을 좌우 뒤집어 만들어 뒀다.</li>
-      <li><b>보드_장소판</b>은 A3 가로 권장. 나머지는 A4.</li>
+      <li><b>단서카드</b>는 <b>양면·짧은 쪽 넘김</b>. 뒷면을 좌우 뒤집어 만들어 뒀다.</li>
+      <li><code>images/</code> 폴더는 HTML 과 같은 자리에 둘 것. 옮기면 그림이 깨진다.</li>
     </ul>
   </div>
-  <div class="list">${docs.map((d, i) => `
-    <div class="row${d.spoiler ? ' spoil' : ''}">
-      <div><div class="fn">${d.filename}</div><div class="nt">${NOTE[d.filename] || ''}</div></div>
-      <button data-i="${i}">내려받기</button>
+  <div class="list">${sorted.map((d, i) => `
+    <div class="row${d.filename === '진상해설서.html' ? ' spoil' : ''}">
+      <div><div class="fn">${String(i + 1).padStart(2, '0')}_${d.filename}</div>
+        <div class="nt">${NOTE[d.filename] || ''}</div></div>
+      <button class="one" data-i="${i}">개별</button>
     </div>`).join('')}</div>
-  <button class="all">전부 내려받기 (${docs.length}개)</button>
   <p class="foot">규칙은 저장소의 <code>docs/보드게임-룰북.md</code> 에 있다.</p>`;
 
-root.querySelectorAll('button[data-i]').forEach((b) => {
-  b.addEventListener('click', () => { save(docs[+b.dataset.i]); b.textContent = '내려받음 ✓'; });
+const prog = root.querySelector('.prog');
+const bar = root.querySelector('.bar i');
+const pmsg = root.querySelector('.pmsg');
+const setProg = (done, total, msg) => {
+  prog.hidden = false;
+  bar.style.width = total ? `${Math.round(done / total * 100)}%` : '0%';
+  pmsg.textContent = msg;
+};
+
+const saveBlob = (blob, name) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  // 곧바로 해제하면 큰 파일이 저장되기 전에 끊긴다
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+};
+
+// 개별 HTML 은 사이트에서 바로 열 것을 전제로 절대경로가 낫다 — ZIP 판과 달리 폴더가 없다.
+root.querySelectorAll('button.one').forEach((b) => {
+  b.addEventListener('click', () => {
+    const d = sorted[+b.dataset.i];
+    saveBlob(new Blob([d.html.replaceAll('"./images/', '"/images/')], { type: 'text/html;charset=utf-8' }), d.filename);
+    b.textContent = '받음 ✓';
+  });
 });
-// 한꺼번에 쏘면 브라우저가 뒤쪽을 막는다 — 간격을 두고 하나씩 내린다
+
 root.querySelector('.all').addEventListener('click', async (e) => {
-  e.target.disabled = true;
-  for (const d of docs) { save(d); await new Promise((r) => setTimeout(r, 700)); }
-  e.target.textContent = '전부 내려받음 ✓';
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  try {
+    const zip = new JSZip();
+    const folder = zip.folder('새벽이슬-크라임씬-보드게임');
+    folder.file('읽어보세요.txt', README);
+    sorted.forEach((d, i) => folder.file(`${String(i + 1).padStart(2, '0')}_${d.filename}`, d.html));
+
+    // 문서가 실제로 참조하는 그림만 모은다 — 정본 전체를 넣으면 쓰지도 않을 것까지 딸려 온다.
+    const want = new Set();
+    for (const d of sorted) for (const m of d.html.matchAll(/src="\.(\/images\/[^"]+)"/g)) want.add(m[1]);
+    const list = [...want];
+    let done = 0;
+    setProg(0, list.length, `그림 ${list.length}개 모으는 중…`);
+    for (const p of list) {
+      try {
+        const res = await fetch(p);
+        if (res.ok) folder.file('images' + p.slice('/images'.length), await res.blob());
+      } catch { /* 한 장 빠져도 나머지는 쓸 수 있게 넘어간다 */ }
+      setProg(++done, list.length, `그림 ${done}/${list.length}`);
+    }
+
+    setProg(1, 1, '압축하는 중…');
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' },
+      (m) => setProg(m.percent, 100, `압축 ${Math.round(m.percent)}%`));
+    saveBlob(blob, '새벽이슬-크라임씬-보드게임.zip');
+    setProg(1, 1, `완료 — ${(blob.size / 1024 / 1024).toFixed(1)}MB`);
+    btn.textContent = '내려받음 ✓';
+  } catch (err) {
+    setProg(0, 1, '실패: ' + err.message);
+    btn.disabled = false;
+  }
 });

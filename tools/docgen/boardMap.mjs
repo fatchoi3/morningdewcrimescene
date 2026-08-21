@@ -25,7 +25,7 @@ export const ART_ROOMS = [
  *   마커는 '단서가 거기 있다'는 표시가 아니라 '몇 번 카드를 집을지 고르는 자리'다 —
  *   그림 속 가구와 맞출 필요가 없고, 맞추려 들면 방마다 개수가 달라 배치가 깨진다.
  */
-export function illustratedMapHTML(counts = {}, src = '../../../../public/images/board/2층평면.png') {
+export function illustratedMapHTML(counts = {}, src) {
   const room = (r) => {
     const [x0, y0, x1, y1] = r.box;
     const n = counts[r.id] || 0;
