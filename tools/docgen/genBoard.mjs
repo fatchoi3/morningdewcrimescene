@@ -33,7 +33,10 @@ PLACES.find((p) => p.id === 'PS').open = '현장(D1~D10) 2라운드 종료 후 �
 const BOARD_UNLOCK = {
   'SIST-22': [['QIVS-92', '카카오톡'], ['HUOX-80', '카카오톡']],   // 자매의 교차 대화
   'DISC-11': [['LWUY-33', '카카오톡'], ['TCGA-87', '카카오톡']],   // 지워진 대화방
-  'TUBE-22': [['TUBE-12'], ['EDEZ-28', '7월 2일']],               // 라벨 위화감 + 종현 필적
+  // 필적 대조는 표본이 '아무 방에나' 있어야 한다. 종현 다이어리를 표본으로 쓰면 조합이 죽는다 —
+  //   앞 단계 TUBE-12 의 재료(통 두 개)가 둘 다 종현 방이라 종현이 1라운드에 가져가는 게
+  //   합리적인데, 그러면 자기 방이 닫힌 뒤라 표본을 영영 못 얻는다. 목사님 일기장은 누구나 간다.
+  'TUBE-22': [['TUBE-12'], ['PRBO-03']],                          // 라벨 위화감 + 필적 표본
   'KMRV-41': [['NBZL-83'], ['AYMX-96', '6월 30일']],              // 지갑 + 가현 일기
 };
 
@@ -66,13 +69,26 @@ function explode(c) {
     return c.phone.apps.map((a) => {
       const NL = '\n';
       let body = '';
+      // 필드 이름을 정본과 맞춘다. 어긋나면 조용히 빈 카드가 나온다 —
+      //   실제로 검색 기록(searches)이 x.q 를 찾다가 전부 '[object Object]' 로 찍혀,
+      //   요힘빈 검색 같은 결정적 물증이 인쇄물에서 통째로 빠져 있었다.
       if (a.chats) {
-        body = a.chats.map((ch) => `[${ch.name}]` + NL
+        body = a.chats.map((ch) => `[${ch.name}${ch.deleted ? ' · 삭제된 대화방(복구됨)' : ''}]` + NL
           + (ch.messages || []).map((mm) => `${mm.who ? mm.who + ': ' : ''}${mm.text || ''}`).join(NL)
         ).join(NL + NL);
-      } else if (a.searches) body = a.searches.map((x) => '· ' + (x.q || x.text || x)).join(NL);
-      else if (a.contacts) body = a.contacts.map((x) => `· ${x.name || ''} ${x.memo || x.number || ''}`).join(NL);
-      else if (a.photos) body = a.photos.map((x) => '· ' + (x.caption || x.title || '사진')).join(NL);
+      } else if (a.searches) {
+        // 검색어만으로는 '무엇을 알아냈는지'가 안 남는다. 결과 제목과 본문까지 실어야
+        //   카드 한 장이 그 사람이 읽은 것을 그대로 전한다.
+        body = a.searches.map((x) => [
+          '· ' + (x.query || x.title || ''),
+          x.title && x.query ? '  ' + x.title : '',
+          x.snippet ? '  ' + x.snippet : '',
+        ].filter(Boolean).join(NL)).join(NL + NL);
+      } else if (a.contacts) {
+        // 저장된 이름이 별명이면 그게 누구인지가 곧 관계다("종현이" → 최종현)
+        body = a.contacts.map((x) => `· ${x.name || ''}`
+          + (x.who && x.who !== x.name ? ` — ${x.who}` : '')).join(NL);
+      } else if (a.photos) body = a.photos.map((x) => '· ' + (x.caption || x.title || '사진')).join(NL);
       const nm = a.name || a.id;
       return one({ title: `${c.title} · ${nm}`, image: null, detail: body || '(비어 있다)', part: nm, locked: LOCK_TIER[nm] || 5 });
     });
