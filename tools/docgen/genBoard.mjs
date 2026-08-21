@@ -9,11 +9,12 @@
 //   조합은 표를 따로 두지 않고 카드에 적는다 — 카드가 스스로 "A6 도 있으면 S1 을 가져가라"고 말한다.
 import { BIBLE } from './bible.mjs';
 import { illustratedMapHTML, ART_ROOMS } from './boardMap.mjs';
+import QRCode from 'qrcode';
 
 // 정본 데이터는 주입받는다 — Node(문서 생성기)는 loadData.mjs 가 fs 로 비밀팩을 찾아 넘기고,
 //   브라우저(웹 키트)는 @secrets 별칭으로 번들된 것을 넘긴다. loadData 를 직접 import 하면
 //   node:fs 가 딸려 들어와 브라우저 번들이 깨진다.
-let allClues = [], suspects = [], img = (p) => p;
+let allClues = [], suspects = [], img = (p) => p, siteUrl = 'https://crimescene.dawndew.org';
 
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 
@@ -85,7 +86,9 @@ function buildBoard() {
   for (const c of allClues) {
     // 방 입구 QR·게임 설명서는 앱판 전용. 사건 브리핑은 카드가 아니라 시작 시트로 따로 뽑는다
     //   — 누가 '가져가는' 물건이 아니라 시작할 때 전원이 돌려 읽는 물건이다.
-    if (c.type === '방' || c.code === 'LSUX-91' || c.code === 'BRIF-00') continue;
+    // SIAH-72(CCTV 열람대)도 뺀다 — 앱에서 '화면 속 인물을 누르라'는 진입점이라 종이에는 누를 화면이
+    //   없다. 빼면 V 덱이 동선 16장으로 딱 떨어져, 그게 곧 사건 당일 타임라인이 된다.
+    if (c.type === '방' || c.code === 'LSUX-91' || c.code === 'BRIF-00' || c.code === 'SIAH-72') continue;
     if (PUBLIC.has(c.code)) { open.push(c); continue; }
     const units = explode(c);
     if (c.type === '감식') { bag.LB.push(...units); continue; }
@@ -149,6 +152,9 @@ const CSS = `
   .hint { margin-top: 1.4mm; padding-top: 1.2mm; border-top: 0.3mm dashed #b9a86a; }
   .hint div { font-size: 6.9pt; line-height: 1.45; color: #6b551a; }
   .lock { margin-top: 1.2mm; font-size: 6.9pt; font-weight: 700; color: #8a3b3b; }
+  .qr { text-align: center; margin-bottom: 1.4mm; }
+  .qr svg { width: 21mm; height: 21mm; }
+  .qrl { font-size: 6.2pt; color: #6b6760; margin-top: 0.6mm; }
   .cback { align-items: center; justify-content: center; text-align: center; }
   .bnum { font-size: 30pt; font-weight: 800; letter-spacing: .04em; }
   .bplace { font-size: 8.5pt; font-weight: 700; margin-top: 3mm; opacity: .8; }
@@ -207,6 +213,17 @@ function paginate(items, front, back) {
   return out;
 }
 
+// V 카드마다 다른 QR — 찍으면 그 컷 하나만 열린다.
+//   번호(V8)가 아니라 단서 코드(PKIN-42)를 담는다. 덱 번호가 바뀌어도 인쇄한 QR 이 살아 있게.
+let QR = {};
+async function buildQR(list) {
+  QR = {};
+  for (const c of list) {
+    QR[c.code] = await QRCode.toString(`${siteUrl}/cctv#${c.code}`,
+      { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
+  }
+}
+
 // ── 1. 단서 카드 ─────────────────────────────────────────────────────────────
 function clueCards() {
   const { bag, special, num, unitNum } = buildBoard();
@@ -223,7 +240,8 @@ function clueCards() {
     const front = (c) => `<div class="card" style="border-color:${meta.color}">
       <span class="no" style="background:${meta.color}">${esc(unitNum.get(c))}</span>
       <div class="ct">${esc(c.title)}</div>
-      ${c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
+      ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">찍으면 이 장면이 열린다</div></div>`
+        : c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
       <div class="cd">${esc(c.detail || c.description || '')}</div>
       ${c.locked ? '<div class="lock">🔒 압수수색 영장(이벤트 ②)이 나오기 전에는 읽을 수 없다</div>' : ''}
       ${meta.letter === 'S' && origin(c) ? `<div class="hint"><div>${esc(origin(c))}</div></div>` : ''}
@@ -352,10 +370,12 @@ function runSheets() {
  * opts.assetBase: 그림 경로 앞에 붙일 것. Node 는 출력물이 output/html/ 에 놓이므로
  *   저장소 루트까지 네 단계 올라가야 하고, 브라우저는 사이트 루트라 그대로 쓴다.
  */
-export function genBoardDocs(data, opts = {}) {
+export async function genBoardDocs(data, opts = {}) {
   allClues = data.allClues;
   suspects = data.suspects;
   const base = opts.assetBase ?? '../../../../public';
   img = (p) => base + p;
+  if (opts.siteUrl) siteUrl = opts.siteUrl;
+  await buildQR(buildBoard().bag.CC);        // V 카드 QR 을 먼저 만들어 둔다
   return [charCards(), clueCards(), placeBoard(), runSheets()];
 }

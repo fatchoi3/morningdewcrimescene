@@ -40,7 +40,7 @@ const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 async function main() {
   const htmlOnly = process.argv.includes('--html');
 
-  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth({ victim }), ...(await genQRDocs()), genResultSheet(), ...genBoardDocs({ allClues, suspects })];
+  const docs = [...genAllRefSheets(), genPlaceGuide(), genTruth({ victim }), ...(await genQRDocs()), genResultSheet(), ...(await genBoardDocs({ allClues, suspects }))];
 
   mkdirSync(HTML_DIR, { recursive: true });
   for (const d of docs) writeFileSync(join(HTML_DIR, d.filename), d.html, 'utf8');

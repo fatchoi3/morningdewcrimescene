@@ -45,7 +45,7 @@ jobs:
       #   (S3 REST 오리진 + OAC 라 디렉터리 index 가 자동으로 안 붙는다. 이 방식이면
       #    CloudFront Function 없이 같은 주소를 만들 수 있다.)
       #   위 sync 가 --delete 라 매 배포마다 지워졌다 다시 올라간다 — 순서가 중요하다.
-      - name: Pretty URL (/solo-play, /board-kit)
+      - name: Pretty URL (/solo-play, /board-kit, /cctv)
         run: |
           set -e
           REGION=$(aws s3api get-bucket-location --bucket "$BUCKET" --query 'LocationConstraint' --output text)

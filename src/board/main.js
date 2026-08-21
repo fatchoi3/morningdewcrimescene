@@ -17,18 +17,18 @@ const data = {
 
 // ZIP 안에서는 HTML 옆에 images/ 폴더가 놓인다 — 절대경로(/images/…)로 두면 압축을 풀어
 //   로컬에서 열었을 때 그림이 전부 깨진다. './images/…' 로 뽑아 폴더째 같이 넣는다.
-const docs = [...genBoardDocs(data, { assetBase: '.' }), genTruth(data)];
+let docs = [], sorted = [];
 
 // 인쇄 순서대로 번호를 붙인다 — 파일 목록만 봐도 뭘 먼저 뽑을지 알 수 있게.
 const ORDER = ['보드_진행물.html', '보드_장소판.html', '보드_단서카드.html', '보드_인물카드.html', '진상해설서.html'];
 const NOTE = {
   '보드_진행물.html': '시작 시트 · 라운드 트랙 · 이벤트 카드 2장',
   '보드_장소판.html': '현장 판(방마다 번호 자리) + 공개 단서. A3 가로 권장',
-  '보드_단서카드.html': '97장 — 앞면 내용·조합 안내 / 뒷면 번호. 양면·짧은 쪽 넘김',
+  '보드_단서카드.html': '147장 — 앞면 내용·조합 안내 / 뒷면 번호. V카드에는 CCTV QR. 양면·짧은 쪽 넘김',
   '보드_인물카드.html': '6인 × 공개 프로필 / 비밀 시나리오. 따로 나눠 줄 것',
   '진상해설서.html': '정답이 들어 있다. 봉투에 넣어 두고 끝나기 전엔 열지 말 것',
 };
-const sorted = ORDER.map((f) => docs.find((d) => d.filename === f)).filter(Boolean);
+
 
 const README = `새벽이슬 크라임씬 — 보드게임 인쇄물
 6명 · 진행자 없음 · 100~120분
@@ -49,7 +49,12 @@ const README = `새벽이슬 크라임씬 — 보드게임 인쇄물
 `;
 
 const root = document.getElementById('board-root');
-root.innerHTML = `
+
+// QR 생성이 비동기라 초기화를 함수로 감싼다(최상위 await 는 빌드 타깃이 막는다).
+async function init() {
+  docs = [...(await genBoardDocs(data, { assetBase: '.', siteUrl: location.origin })), genTruth(data)];
+  sorted = ORDER.map((f) => docs.find((d) => d.filename === f)).filter(Boolean);
+  root.innerHTML = `
   <h1>보드게임 인쇄물</h1>
   <p class="sub">「새벽이슬 크라임씬」 오프라인 보드게임판 — 6명 · 진행자 없음 · 100~120분</p>
   <button class="all">전체 ZIP 내려받기</button>
@@ -71,10 +76,10 @@ root.innerHTML = `
     </div>`).join('')}</div>
   <p class="foot">규칙은 저장소의 <code>docs/보드게임-룰북.md</code> 에 있다.</p>`;
 
-const prog = root.querySelector('.prog');
-const bar = root.querySelector('.bar i');
-const pmsg = root.querySelector('.pmsg');
-const setProg = (done, total, msg) => {
+  const prog = root.querySelector('.prog');
+  const bar = root.querySelector('.bar i');
+  const pmsg = root.querySelector('.pmsg');
+  const setProg = (done, total, msg) => {
   prog.hidden = false;
   bar.style.width = total ? `${Math.round(done / total * 100)}%` : '0%';
   pmsg.textContent = msg;
@@ -90,7 +95,7 @@ const saveBlob = (blob, name) => {
 };
 
 // 개별 HTML 은 사이트에서 바로 열 것을 전제로 절대경로가 낫다 — ZIP 판과 달리 폴더가 없다.
-root.querySelectorAll('button.one').forEach((b) => {
+  root.querySelectorAll('button.one').forEach((b) => {
   b.addEventListener('click', () => {
     const d = sorted[+b.dataset.i];
     saveBlob(new Blob([d.html.replaceAll('"./images/', '"/images/')], { type: 'text/html;charset=utf-8' }), d.filename);
@@ -98,7 +103,7 @@ root.querySelectorAll('button.one').forEach((b) => {
   });
 });
 
-root.querySelector('.all').addEventListener('click', async (e) => {
+  root.querySelector('.all').addEventListener('click', async (e) => {
   const btn = e.currentTarget;
   btn.disabled = true;
   try {
@@ -131,4 +136,9 @@ root.querySelector('.all').addEventListener('click', async (e) => {
     setProg(0, 1, '실패: ' + err.message);
     btn.disabled = false;
   }
+});
+}
+
+init().catch((e) => {
+  root.innerHTML = `<h1>인쇄물을 만들지 못했습니다</h1><p class="sub">${e.message}</p>`;
 });
