@@ -31,6 +31,47 @@ const ROOM_OF = { 최종현: 'JH', 윤은재: 'EJ', 이현지: 'HJ', 박희원: 
 //   동기(수료증 위조)를 받치는 카드가 이것뿐이라, 진범이 집어 숨기면 아무도 못 맞힌다.
 const PUBLIC = new Set(['HQIR-26']);
 
+// ── 구조형 단서 쪼개기 ───────────────────────────────────────────────────────
+//   다이어리·성경책·일기장은 쪽마다, 휴대폰은 앱마다, 지갑은 항목마다 한 장으로 나눈다.
+//   앱판은 화면 안에서 넘겨 보면 그만이지만 종이에서는 그럴 수 없다 — 안 쪼개면 카드에
+//   "화살표로 페이지를 넘기세요" 같은 조작 안내만 남고 정작 일기 본문·카톡 대화가 통째로 빠진다.
+const line = (a, b) => (b ? `${a}\n${b}` : a);
+function explode(c) {
+  const one = (extra) => ({ ...c, ...extra, src: c });
+  if (c.pages?.length) {
+    return c.pages.map((pg, i) => one({
+      title: `${c.title} · ${pg.title || i + 1}`,
+      image: pg.image || null,
+      detail: pg.content || '',
+      part: `${i + 1}/${c.pages.length}`,
+    }));
+  }
+  if (c.phone?.apps?.length) {
+    return c.phone.apps.map((a) => {
+      const NL = '\n';
+      let body = '';
+      if (a.chats) {
+        body = a.chats.map((ch) => `[${ch.name}]` + NL
+          + (ch.messages || []).map((mm) => `${mm.who ? mm.who + ': ' : ''}${mm.text || ''}`).join(NL)
+        ).join(NL + NL);
+      } else if (a.searches) body = a.searches.map((x) => '· ' + (x.q || x.text || x)).join(NL);
+      else if (a.contacts) body = a.contacts.map((x) => `· ${x.name || ''} ${x.memo || x.number || ''}`).join(NL);
+      else if (a.photos) body = a.photos.map((x) => '· ' + (x.caption || x.title || '사진')).join(NL);
+      return one({ title: `${c.title} · ${a.name || a.id}`, image: null, detail: body || '(비어 있다)', part: a.name || a.id, locked: true });
+    });
+  }
+  if (c.wallet?.items?.length) {
+    return c.wallet.items.map((it) => one({
+      title: `${c.title} · ${it.label}`, image: it.image || null,
+      detail: it.detail || '', part: it.label,
+    }));
+  }
+  if (c.handwriting?.options?.length) {
+    return [one({ detail: line(c.detail, '필적 대조 대상: ' + c.handwriting.options.map((o) => o.who).join(', ')) })];
+  }
+  return [one({})];
+}
+
 // ── 장소 배정 + 번호 부여 ────────────────────────────────────────────────────
 function buildBoard() {
   const cut = new Set();
@@ -46,19 +87,27 @@ function buildBoard() {
     //   — 누가 '가져가는' 물건이 아니라 시작할 때 전원이 돌려 읽는 물건이다.
     if (c.type === '방' || c.code === 'LSUX-91' || c.code === 'BRIF-00') continue;
     if (PUBLIC.has(c.code)) { open.push(c); continue; }
-    if (c.type === '감식') { bag.LB.push(c); continue; }
-    if (c.cctv?.timeline || cut.has(c.code)) { bag.CC.push(c); continue; }
-    if (c.type === '특수') { special.push(c); continue; }
-    if (c.person === '목사') { bag.PS.push(c); continue; }
+    const units = explode(c);
+    if (c.type === '감식') { bag.LB.push(...units); continue; }
+    if (c.cctv?.timeline || cut.has(c.code)) { bag.CC.push(...units); continue; }
+    if (c.type === '특수') { special.push(...units); continue; }
+    if (c.person === '목사') { bag.PS.push(...units); continue; }
     const r = ROOM_OF[c.person];
-    if (r) bag[r].push(c); else special.push(c);
+    if (r) bag[r].push(...units); else special.push(...units);
   }
   // 번호표 — 단서코드 → 판 번호(A1 …). 카드·판·조합 안내가 전부 이걸 쓴다.
-  const num = {};
-  for (const p of PLACES) bag[p.id].forEach((c, i) => { num[c.code] = `${p.letter}${i + 1}`; });
-  special.forEach((c, i) => { num[c.code] = `${SPECIAL.letter}${i + 1}`; });
+  // 번호는 쪼갠 장마다 붙는다. 조합 안내는 원본 단서 코드로 걸려 있으므로,
+  //   원본 → '그 단서의 첫 장' 번호로 잇는다(폰 카톡이 조합 조건이면 그 앱 카드를 가리켜야 한다).
+  const num = {}, unitNum = new Map();
+  const stamp = (list, letter) => list.forEach((u, i) => {
+    const n = `${letter}${i + 1}`;
+    unitNum.set(u, n);
+    if (!num[u.code]) num[u.code] = n;          // 첫 장이 그 단서의 대표 번호
+  });
+  for (const p of PLACES) stamp(bag[p.id], p.letter);
+  stamp(special, SPECIAL.letter);
   for (const c of open) num[c.code] = '공개';
-  return { bag, special, open, num };
+  return { bag, special, open, num, unitNum };
 }
 
 // ── 조합 안내 ────────────────────────────────────────────────────────────────
@@ -99,6 +148,7 @@ const CSS = `
   .cd { font-size: 7.4pt; line-height: 1.5; white-space: pre-wrap; flex: 1; }
   .hint { margin-top: 1.4mm; padding-top: 1.2mm; border-top: 0.3mm dashed #b9a86a; }
   .hint div { font-size: 6.9pt; line-height: 1.45; color: #6b551a; }
+  .lock { margin-top: 1.2mm; font-size: 6.9pt; font-weight: 700; color: #8a3b3b; }
   .cback { align-items: center; justify-content: center; text-align: center; }
   .bnum { font-size: 30pt; font-weight: 800; letter-spacing: .04em; }
   .bplace { font-size: 8.5pt; font-weight: 700; margin-top: 3mm; opacity: .8; }
@@ -159,19 +209,29 @@ function paginate(items, front, back) {
 
 // ── 1. 단서 카드 ─────────────────────────────────────────────────────────────
 function clueCards() {
-  const { bag, special, num } = buildBoard();
+  const { bag, special, num, unitNum } = buildBoard();
   const hints = buildHints(num);
+  // 조합 안내는 원본 단서에 걸려 있다 — 쪼갠 장 중 '첫 장'에만 붙여야 같은 줄이 여러 장에 반복되지 않는다.
+  const hintFor = (c) => (unitNum.get(c) === num[c.code] ? hints[c.code] : null);
+  // 특수 카드에는 '무엇 + 무엇으로 얻었는지'를 적는다. 나중에 남에게 근거로 보일 때 필요하다.
+  const origin = (c) => {
+    const src = c.src?.unlockedBy || c.unlockedBy || [];
+    const ns = src.map((k) => num[k]).filter(Boolean);
+    return ns.length ? `얻는 법 — ${ns.join(' + ')}` : null;
+  };
   const deck = (list, meta) => {
     const front = (c) => `<div class="card" style="border-color:${meta.color}">
-      <span class="no" style="background:${meta.color}">${esc(num[c.code])}</span>
+      <span class="no" style="background:${meta.color}">${esc(unitNum.get(c))}</span>
       <div class="ct">${esc(c.title)}</div>
       ${c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
       <div class="cd">${esc(c.detail || c.description || '')}</div>
-      ${hints[c.code] ? `<div class="hint">${hints[c.code].map((h) => `<div>${h}</div>`).join('')}</div>` : ''}
+      ${c.locked ? '<div class="lock">🔒 압수수색 영장(이벤트 ②)이 나오기 전에는 읽을 수 없다</div>' : ''}
+      ${meta.letter === 'S' && origin(c) ? `<div class="hint"><div>${esc(origin(c))}</div></div>` : ''}
+      ${hintFor(c) ? `<div class="hint">${hintFor(c).map((h) => `<div>${h}</div>`).join('')}</div>` : ''}
     </div>`;
     const back = (c) => `<div class="card cback" style="border-color:${meta.color};background:${meta.color}12">
-      <div class="bnum" style="color:${meta.color}">${esc(num[c.code])}</div>
-      <div class="bplace" style="color:${meta.color}">${esc(meta.name)}</div></div>`;
+      <div class="bnum" style="color:${meta.color}">${esc(unitNum.get(c))}</div>
+      <div class="bplace" style="color:${meta.color}">${esc(meta.name)}${c.locked ? ' 🔒' : ''}</div></div>`;
     return `<div class="page"><h1>${esc(meta.name)} — ${list.length}장
       <span class="muted">${meta.letter}1 ~ ${meta.letter}${list.length}</span></h1>
       <p class="muted">${esc(meta.open || '조건을 채우면 이 더미에서 가져간다')} ·
@@ -269,9 +329,9 @@ function runSheets() {
   <div class="page"><h1>라운드 트랙</h1>
     <p class="muted">한 라운드가 끝날 때마다 말을 한 칸 옮깁니다.
       <b>2·4라운드 칸에 이벤트 카드를 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
-    <div class="track">${[1,2,3,4,5,6].map((n) => `<div class="tr${n===2||n===4?' trEv':''}">
-      <div class="trN">${n}</div><div class="trL">${n===2?'이벤트 ①':n===4?'이벤트 ②':'조사 → 자유 조사'}</div></div>`).join('')}</div>
-    <p class="muted">6라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서를 폅니다.</p></div>
+    <div class="track">${[1,2,3,4,5,6,7].map((n) => `<div class="tr${n===2||n===4?' trEv':''}">
+      <div class="trN">${n}</div><div class="trL">${n===2?'이벤트 ①':n===4?'이벤트 ②':'조사 3장 → 토론 10분'}</div></div>`).join('')}</div>
+    <p class="muted">7라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.</p></div>
 
   <div class="page"><h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
     ${ev('①', '2라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
