@@ -24,7 +24,22 @@ const PLACES = [
   { id: 'CC', letter: 'V', name: 'CCTV 열람실', color: '#2b6b73', open: '4라운드 종료 후' },
   { id: 'LB', letter: 'L', name: '감식실', color: '#5a5a5a', open: '4라운드 종료 후 · 채취물 제출 전용' },
 ];
-PLACES.find((p) => p.id === 'PS').open = '2라운드 종료 후';
+PLACES.find((p) => p.id === 'PS').open = '현장(D1~D10) 2라운드 종료 후 · 기록(D11~) 3라운드 종료 후';
+
+// 앱에서는 이 특수 단서들이 '열람 흔적'(톡서랍 비밀번호 복구·필적 대조·심문)으로 열린다.
+//   보드에는 비밀번호도 심문도 없어 unlockedBy 가 비어 있고, 그래서 네 장이 영원히 더미에
+//   남아 있었다. 같은 조건을 카드 조합으로 옮긴다 — 앱 데이터는 건드리지 않는다.
+//   [코드, 그 단서의 어느 장인지] 로 적는다. 폰은 앱마다 한 장이라 '카카오톡' 장을 가리켜야 한다.
+const BOARD_UNLOCK = {
+  'SIST-22': [['QIVS-92', '카카오톡'], ['HUOX-80', '카카오톡']],   // 자매의 교차 대화
+  'DISC-11': [['LWUY-33', '카카오톡'], ['TCGA-87', '카카오톡']],   // 지워진 대화방
+  'TUBE-22': [['TUBE-12'], ['EDEZ-28', '7월 2일']],               // 라벨 위화감 + 종현 필적
+  'KMRV-41': [['NBZL-83'], ['AYMX-96', '6월 30일']],              // 지갑 + 가현 일기
+};
+
+// 휴대폰 잠금은 두 단계다. 25장이 한 라운드에 통째로 풀리면 그 라운드 토론이 낭독으로 다 날아간다.
+//   통신 기록(누구와 이어져 있었나)이 먼저, 대화 내용(무슨 말을 했나)이 나중에 열린다.
+const LOCK_TIER = { 연락처: 4, 인터넷: 4 };      // 나머지 앱(카카오톡·메시지·사진·전화)은 5라운드
 const SPECIAL = { letter: 'S', name: '특수 단서', color: '#8a6d1f' };
 const ROOM_OF = { 최종현: 'JH', 윤은재: 'EJ', 이현지: 'HJ', 박희원: 'HW', 이사랑: 'SR', 이가현: 'GH' };
 
@@ -58,7 +73,8 @@ function explode(c) {
       } else if (a.searches) body = a.searches.map((x) => '· ' + (x.q || x.text || x)).join(NL);
       else if (a.contacts) body = a.contacts.map((x) => `· ${x.name || ''} ${x.memo || x.number || ''}`).join(NL);
       else if (a.photos) body = a.photos.map((x) => '· ' + (x.caption || x.title || '사진')).join(NL);
-      return one({ title: `${c.title} · ${a.name || a.id}`, image: null, detail: body || '(비어 있다)', part: a.name || a.id, locked: true });
+      const nm = a.name || a.id;
+      return one({ title: `${c.title} · ${nm}`, image: null, detail: body || '(비어 있다)', part: nm, locked: LOCK_TIER[nm] || 5 });
     });
   }
   if (c.wallet?.items?.length) {
@@ -88,7 +104,10 @@ function buildBoard() {
     //   — 누가 '가져가는' 물건이 아니라 시작할 때 전원이 돌려 읽는 물건이다.
     // SIAH-72(CCTV 열람대)도 뺀다 — 앱에서 '화면 속 인물을 누르라'는 진입점이라 종이에는 누를 화면이
     //   없다. 빼면 V 덱이 동선 16장으로 딱 떨어져, 그게 곧 사건 당일 타임라인이 된다.
-    if (c.type === '방' || c.code === 'LSUX-91' || c.code === 'BRIF-00' || c.code === 'SIAH-72') continue;
+    // LONS-62(2차 부검)도 뺀다 — 이벤트 카드 ① 이 2라운드에 같은 내용을 전원에게 읽어 준다.
+    //   더미에 남겨 두면 조합 조건도 없어 아무도 못 가져가는데, 그 사이 이미 다 아는 내용이 된다.
+    if (c.type === '방' || c.code === 'LSUX-91' || c.code === 'BRIF-00'
+      || c.code === 'SIAH-72' || c.code === 'LONS-62') continue;
     if (PUBLIC.has(c.code)) { open.push(c); continue; }
     const units = explode(c);
     if (c.type === '감식') { bag.LB.push(...units); continue; }
@@ -101,36 +120,57 @@ function buildBoard() {
   // 번호표 — 단서코드 → 판 번호(A1 …). 카드·판·조합 안내가 전부 이걸 쓴다.
   // 번호는 쪼갠 장마다 붙는다. 조합 안내는 원본 단서 코드로 걸려 있으므로,
   //   원본 → '그 단서의 첫 장' 번호로 잇는다(폰 카톡이 조합 조건이면 그 앱 카드를 가리켜야 한다).
+  // 목사님 방 19장을 한 라운드에 통째로 열면 5명이 동시에 몰려 겹치고, 그 다음 라운드는 텅 빈다.
+  //   두 묶음으로 나눠 연속된 번호를 준다 — 앞쪽이 현장 물증, 뒤쪽이 기록물(일기장·휴대폰).
+  //   순서를 여기서 정해 두면 "D1~D10 은 3라운드, D11~ 은 4라운드" 로 규칙이 한 줄로 끝난다.
+  const isRecord = (u) => !!(u.src?.pages || u.src?.phone);
+  bag.PS = [...bag.PS.filter((u) => !isRecord(u)), ...bag.PS.filter(isRecord)];
+
   const num = {}, unitNum = new Map();
+  const partNum = {};                            // '코드|장이름' → 번호. 조합이 특정 장을 가리킬 때 쓴다
   const stamp = (list, letter) => list.forEach((u, i) => {
     const n = `${letter}${i + 1}`;
     unitNum.set(u, n);
+    if (u.part) partNum[`${u.code}|${u.part}`] = n;
     if (!num[u.code]) num[u.code] = n;          // 첫 장이 그 단서의 대표 번호
   });
   for (const p of PLACES) stamp(bag[p.id], p.letter);
   stamp(special, SPECIAL.letter);
   for (const c of open) num[c.code] = '공개';
-  return { bag, special, open, num, unitNum };
+  return { bag, special, open, num, unitNum, partNum };
 }
 
 // ── 조합 안내 ────────────────────────────────────────────────────────────────
 //   unlockedBy 를 뒤집어 "이 카드를 가진 사람에게 무엇을 알려줄지"로 바꾼다.
 //   감식(1개짜리)은 제출 안내, 특수(2개 이상)는 상대 카드 번호를 적어 준다.
-function buildHints(num) {
-  const hints = {};   // 단서코드 → [안내 문장]
-  const push = (code, s) => { (hints[code] = hints[code] || []).push(s); };
+function buildHints(num, partNum) {
+  // 번호(A3)로 키를 잡는다 — 단서코드로 잡으면 쪼갠 여러 장 중 '첫 장'에만 붙어서,
+  //   조합 조건이 카카오톡 장인데 안내가 연락처 장에 찍히는 일이 생긴다.
+  const hints = {};   // 판 번호 → [안내 문장]
+  const push = (n, s) => { if (n) (hints[n] = hints[n] || []).push(s); };
+  const at = ([code, part]) => (part && partNum[`${code}|${part}`]) || num[code];
   for (const t of allClues) {
     const src = t.unlockedBy || [];
     if (!src.length || !num[t.code]) continue;
     if (t.type === '감식' && src.length === 1) {
-      push(src[0], `🔬 감식실에 내면 → <b>${num[t.code]}</b> 를 받는다`);
+      push(num[src[0]], `🔬 감식실에 내면 → <b>${num[t.code]}</b> 를 받는다`);
       continue;
     }
     for (const s of src) {
       const others = src.filter((k) => k !== s).map((k) => num[k]).filter(Boolean);
       if (!others.length) continue;
-      push(s, `⭐ <b>${others.join(' + ')}</b> 도 함께 있으면 → 특수 <b>${num[t.code]}</b> 를 가져간다`);
+      push(num[s], `⭐ <b>${others.join(' + ')}</b> 도 함께 있으면 → 특수 <b>${num[t.code]}</b> 를 가져간다`);
     }
+  }
+  // 보드 전용 조합 — 앱의 열람 흔적 규칙(톡서랍 복구·필적 대조·심문)을 카드 조합으로 옮긴 것.
+  for (const [target, reqs] of Object.entries(BOARD_UNLOCK)) {
+    if (!num[target]) continue;                  // 덱에서 빠진 특수 카드는 건너뛴다
+    const ns = reqs.map(at);
+    if (ns.some((n) => !n)) continue;
+    ns.forEach((n, i) => {
+      const others = ns.filter((_, k) => k !== i);
+      push(n, `⭐ <b>${others.join(' + ')}</b> 도 함께 있으면 → 특수 <b>${num[target]}</b> 를 가져간다`);
+    });
   }
   return hints;
 }
@@ -226,16 +266,21 @@ async function buildQR(list) {
 
 // ── 1. 단서 카드 ─────────────────────────────────────────────────────────────
 function clueCards() {
-  const { bag, special, num, unitNum } = buildBoard();
-  const hints = buildHints(num);
-  // 조합 안내는 원본 단서에 걸려 있다 — 쪼갠 장 중 '첫 장'에만 붙여야 같은 줄이 여러 장에 반복되지 않는다.
-  const hintFor = (c) => (unitNum.get(c) === num[c.code] ? hints[c.code] : null);
+  const { bag, special, num, unitNum, partNum } = buildBoard();
+  const hints = buildHints(num, partNum);
+  // 안내는 번호로 걸려 있다 — 조합 조건이 가리키는 바로 그 장에만 찍힌다.
+  const hintFor = (c) => hints[unitNum.get(c)];
   // 특수 카드에는 '무엇 + 무엇으로 얻었는지'를 적는다. 나중에 남에게 근거로 보일 때 필요하다.
   const origin = (c) => {
-    const src = c.src?.unlockedBy || c.unlockedBy || [];
-    const ns = src.map((k) => num[k]).filter(Boolean);
-    return ns.length ? `얻는 법 — ${ns.join(' + ')}` : null;
+    const board = BOARD_UNLOCK[c.code];
+    const ns = board
+      ? board.map(([k, part]) => (part && partNum[`${k}|${part}`]) || num[k])
+      : (c.src?.unlockedBy || c.unlockedBy || []).map((k) => num[k]);
+    const ok = ns.filter(Boolean);
+    return ok.length ? `얻는 법 — ${ok.join(' + ')}` : null;
   };
+  // 자기 물건의 감식을 본인이 집으면 무료 방어권이 된다. 소유자가 참가자인 감식만 막는다.
+  const mine = (c) => (c.type === '감식' && ROOM_OF[c.person] ? c.person : null);
   const deck = (list, meta) => {
     const front = (c) => `<div class="card" style="border-color:${meta.color}">
       <span class="no" style="background:${meta.color}">${esc(unitNum.get(c))}</span>
@@ -243,13 +288,18 @@ function clueCards() {
       ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">찍으면 이 장면이 열린다</div></div>`
         : c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
       <div class="cd">${esc(c.detail || c.description || '')}</div>
-      ${c.locked ? '<div class="lock">🔒 압수수색 영장(이벤트 ②)이 나오기 전에는 읽을 수 없다</div>' : ''}
+      ${c.locked ? `<div class="lock">🔒 <b>${c.locked}라운드</b>부터 읽을 수 있다 (영장 ${c.locked === 4 ? '①' : '②'}).
+        가져가는 것은 지금도 되지만, 그때까지는 아무도 못 읽는다.<br>
+        <b>자기 휴대폰은 본인이 가져갈 수 없다.</b></div>` : ''}
+      ${mine(c) ? `<div class="lock">⚖ 이 감식은 <b>${esc(mine(c))}</b> 본인의 물건이다.
+        본인은 이 카드를 가져갈 수 없다 — 결과를 읽는 손과 결과가 걸린 목이 같으면
+        그 카드는 증거가 아니라 증언이 된다.</div>` : ''}
       ${meta.letter === 'S' && origin(c) ? `<div class="hint"><div>${esc(origin(c))}</div></div>` : ''}
       ${hintFor(c) ? `<div class="hint">${hintFor(c).map((h) => `<div>${h}</div>`).join('')}</div>` : ''}
     </div>`;
     const back = (c) => `<div class="card cback" style="border-color:${meta.color};background:${meta.color}12">
       <div class="bnum" style="color:${meta.color}">${esc(unitNum.get(c))}</div>
-      <div class="bplace" style="color:${meta.color}">${esc(meta.name)}${c.locked ? ' 🔒' : ''}</div></div>`;
+      <div class="bplace" style="color:${meta.color}">${esc(meta.name)}${c.locked ? ` 🔒${c.locked}` : ''}</div></div>`;
     return `<div class="page"><h1>${esc(meta.name)} — ${list.length}장
       <span class="muted">${meta.letter}1 ~ ${meta.letter}${list.length}</span></h1>
       <p class="muted">${esc(meta.open || '조건을 채우면 이 더미에서 가져간다')} ·
@@ -346,22 +396,60 @@ function runSheets() {
 
   <div class="page"><h1>라운드 트랙</h1>
     <p class="muted">한 라운드가 끝날 때마다 말을 한 칸 옮깁니다.
-      <b>2·4라운드 칸에 이벤트 카드를 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
-    <div class="track">${[1,2,3,4,5,6,7].map((n) => `<div class="tr${n===2||n===4?' trEv':''}">
-      <div class="trN">${n}</div><div class="trL">${n===2?'이벤트 ①':n===4?'이벤트 ②':'조사 3장 → 토론 10분'}</div></div>`).join('')}</div>
+      <b>2·3·4·6라운드 칸에 이벤트 카드를 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
+    <div class="track">${[1,2,3,4,5,6,7].map((n) => {
+      const ev = { 2: '이벤트 ①', 3: '이벤트 ②', 4: '이벤트 ③', 6: '이벤트 ④' }[n];
+      return `<div class="tr${ev ? ' trEv' : ''}">
+      <div class="trN">${n}</div><div class="trL">${ev || '조사 3장 → 토론 10분'}</div></div>`;
+    }).join('')}</div>
     <p class="muted">7라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.</p></div>
+
+  <div class="page"><h1>기본 규칙 <span class="muted">— 판 옆에 펴 두세요</span></h1>
+    <h2>한 라운드</h2>
+    <p>①<b>조사</b> — 순서대로 한 명씩, 열려 있는 장소 <b>하나</b>를 골라 그 장소의 남은 번호 중
+      <b>3장</b>을 가져갑니다. 가져간 번호는 남이 못 가집니다. 내용은 자기만 읽습니다.<br>
+      ②<b>토론 10분</b> — 카드를 <b>보여 주지 않고</b> 말로만 공유합니다. 거짓말해도 됩니다.<br>
+      ③<b>종료</b> — 트랙의 말을 한 칸 옮기고, 이벤트 칸이면 이벤트 카드를 펼칩니다.</p>
+    <h2>가져갈 수 없는 카드</h2>
+    <p>· <b>자기 방은 1라운드에만</b> 들어갈 수 있습니다. 2라운드부터는 자기 방에 못 들어갑니다.<br>
+      &nbsp;&nbsp;<span class="muted">자기한테 불리한 카드를 자기가 선점해 자기가 해명하는 것이
+      언제나 최선이 되면, 아무도 걸리지 않고 판이 멈춥니다.</span><br>
+      · <b>자기 휴대폰은 본인이 가져갈 수 없습니다.</b><br>
+      · <b>자기 물건의 감식 카드는 본인이 가져갈 수 없습니다.</b> 카드에 ⚖ 로 표시돼 있습니다.</p>
+    <h2>특수 단서</h2>
+    <p>카드에 적힌 조합(⭐)을 손에 다 모으면, 특수 더미에서 그 번호를 <b>말없이 가져갑니다.</b>
+      무엇으로 얻었는지는 특수 카드 앞면에 적혀 있습니다.</p>
+    <h2>감식</h2>
+    <p>🔬 표시가 있는 카드를 가진 사람은, 감식실이 열린 뒤 그 라운드의 조사로
+      <b>감식실에서 해당 번호를 가져갈</b> 수 있습니다.</p></div>
 
   <div class="page"><h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
     ${ev('①', '2라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
       `<p>정밀 부검 결과가 왔습니다. <b>심정지가 아니라 질식사</b>입니다.
         코·입 주변 압박흔과 안면 점상출혈, 그리고 기도에서 베개 솜·섬유가 검출됐습니다.</p>
-      <p><b>목사님의 방(D)이 열립니다.</b> D 더미를 탁자에 놓고,
+      <p><b>목사님의 방 — 현장(D1~D10)이 열립니다.</b> 그 열 장을 탁자에 놓고,
         「목사님 일정표」는 <b>앞면이 보이게</b> 그 옆에 펴 둡니다 — 이 한 장은 아무도 가져갈 수 없습니다.</p>`)}
-    ${ev('②', '4라운드가 끝나면 펼친다', '압수수색 영장 — 기록을 볼 수 있다',
-      `<p>영장이 발부됐습니다. 복도 CCTV 원본과 관계자 휴대폰을 열람할 수 있습니다.</p>
-      <p><b>CCTV 열람실(V)과 감식실(L)이 열립니다.</b> 두 더미를 탁자에 놓습니다.
-        지금까지 가져갔지만 못 읽던 <b>휴대폰 카드를 이제 읽을 수 있습니다.</b></p>`)}
+    ${ev('②', '3라운드가 끝나면 펼친다', '유품 반출 동의 · 통신 기록 영장',
+      `<p>유족이 유품 반출에 동의했고, 통신 기록 영장이 나왔습니다.</p>
+      <p><b>목사님의 방 — 기록(D11부터)이 열립니다.</b> 휴대폰과 일기장입니다.<br>
+        그리고 <b>🔒4 가 붙은 휴대폰 카드(연락처·인터넷)를 이제 읽을 수 있습니다.</b>
+        누구와 이어져 있었는지는 알 수 있지만, 무슨 말을 했는지는 아직 못 봅니다.</p>`)}
+    ${ev('③', '4라운드가 끝나면 펼친다', '압수수색 영장 — 대화 내용까지',
+      `<p>영장 범위가 넓어졌습니다. 복도 CCTV 원본과 대화 내용을 볼 수 있습니다.</p>
+      <p><b>CCTV 열람실(V)과 감식실(L)이 열립니다.</b> 두 더미를 탁자에 놓습니다.<br>
+        그리고 <b>🔒5 가 붙은 휴대폰 카드(카카오톡·메시지·사진·전화)를 이제 읽을 수 있습니다.</b></p>`)}
+    ${ev('④', '6라운드가 끝나면 펼친다', '대조 열람권 — 한 번은 실물을 보일 수 있다',
+      `<p>전원이 <b>대조 열람권 1장</b>을 받습니다. 이 종이를 잘라 한 사람당 한 장씩 가지세요.</p>
+      <p>7라운드와 최종 토론 동안 <b>딱 한 번</b>, 자기 카드 <b>한 장</b>을
+        <b>지정한 한 사람에게만</b> 실물로 보여 줄 수 있습니다. 쓰면 권리는 사라집니다.</p>
+      <p class="muted">마지막 라운드에 집는 카드는 아무도 확인할 수 없어서,
+        그대로 두면 "마지막에 말한 사람이 이긴다"가 됩니다. 이 한 장이 그걸 막습니다.</p>`)}
+    ${[1,2,3,4,5,6].map(() => `<div class="ev"><div class="evHead">
+      <span class="evNo">권</span> 대조 열람권</div>
+      <div class="evTitle">한 번만 — 카드 한 장을, 한 사람에게</div>
+      <div class="evBody"><p>쓴 뒤에는 이 종이를 탁자 가운데에 내려놓습니다.</p></div></div>`).join('')}
   </div>`;
+
   return { filename: '보드_진행물.html', html: doc('보드게임 진행 물품', body) };
 }
 
