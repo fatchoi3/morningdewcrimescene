@@ -175,7 +175,8 @@ function buildHints(num, partNum) {
     for (const s of src) {
       const others = src.filter((k) => k !== s).map((k) => num[k]).filter(Boolean);
       if (!others.length) continue;
-      push(num[s], `⭐ <b>${others.join(' + ')}</b> 도 함께 있으면 → 특수 <b>${num[t.code]}</b> 를 가져간다`);
+      push(num[s], `⭐ <b>${others.join(' + ')}</b> 와 함께 → 특수 <b>${num[t.code]}</b>. `
+        + `<span class="hnote">가진 사람이 달라도 된다 — 합의해서 탁자에 공개하면 함께 가져간다</span>`);
     }
   }
   // 보드 전용 조합 — 앱의 열람 흔적 규칙(톡서랍 복구·필적 대조·심문)을 카드 조합으로 옮긴 것.
@@ -185,7 +186,8 @@ function buildHints(num, partNum) {
     if (ns.some((n) => !n)) continue;
     ns.forEach((n, i) => {
       const others = ns.filter((_, k) => k !== i);
-      push(n, `⭐ <b>${others.join(' + ')}</b> 도 함께 있으면 → 특수 <b>${num[target]}</b> 를 가져간다`);
+      push(n, `⭐ <b>${others.join(' + ')}</b> 와 함께 → 특수 <b>${num[target]}</b>. `
+        + `<span class="hnote">가진 사람이 달라도 된다 — 합의해서 탁자에 공개하면 함께 가져간다</span>`);
     });
   }
   return hints;
@@ -207,6 +209,7 @@ const CSS = `
   .cd { font-size: 7.4pt; line-height: 1.5; white-space: pre-wrap; flex: 1; }
   .hint { margin-top: 1.4mm; padding-top: 1.2mm; border-top: 0.3mm dashed #b9a86a; }
   .hint div { font-size: 6.9pt; line-height: 1.45; color: #6b551a; }
+  .hnote { display: block; font-size: 6.1pt; color: #8a7a45; }
   .lock { margin-top: 1.2mm; font-size: 6.9pt; font-weight: 700; color: #8a3b3b; }
   .qr { text-align: center; margin-bottom: 1.4mm; }
   .qr svg { width: 21mm; height: 21mm; }
