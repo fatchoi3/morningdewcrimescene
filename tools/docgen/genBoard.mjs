@@ -58,6 +58,20 @@ const line = (a, b) => (b ? `${a}\n${b}` : a);
 function explode(c) {
   const one = (extra) => ({ ...c, ...extra, src: c });
   if (c.pages?.length) {
+    // 성경책은 쪽마다 나누지 않는다. 밑줄 친 구절 서너 장이 방마다 깔리면 정보량이 낮은
+    //   카드가 덱의 4분의 1을 먹고, 토론 10분이 낭독으로 새어 나간다. 표시된 자리를
+    //   한 장에 모아 두면 "이 사람이 무엇을 붙들고 있었나"는 그대로 읽힌다.
+    //   단 그림이 끼워진 쪽은 따로 남긴다 — 그건 구절이 아니라 물건이다.
+    if (/성경책/.test(c.title)) {
+      const plain = c.pages.filter((p) => !p.image);
+      const withImg = c.pages.filter((p) => p.image);
+      const merged = one({
+        detail: plain.map((p) => `[${p.title}]\n${p.content || ''}`).join('\n\n'),
+      });
+      return [merged, ...withImg.map((pg) => one({
+        title: `${c.title} · ${pg.title}`, image: pg.image, detail: pg.content || '', part: pg.title,
+      }))];
+    }
     return c.pages.map((pg, i) => one({
       title: `${c.title} · ${pg.title || i + 1}`,
       image: pg.image || null,
@@ -133,6 +147,22 @@ function buildBoard() {
     const r = ROOM_OF[c.person];
     if (r) bag[r].push(...units); else special.push(...units);
   }
+
+  // 파우치와 옷가지는 사람마다 두 장인데 둘 다 "여벌 옷과 양말" / "스킨·로션·쿠션" 뿐이다.
+  //   방마다 이런 카드가 둘씩 있으면 '3장 골라 가기'의 선택 압박이 희석된다. 한 장으로 합쳐
+  //   방마다 하나씩만 남긴다 — 아무것도 안 나오는 카드도 있어야 판이 팽팽해지므로 없애지는 않는다.
+  const isKit = (u) => /파우치|옷가지/.test(u.title);
+  for (const [, id] of Object.entries(ROOM_OF)) {
+    const kit = bag[id].filter(isKit);
+    if (kit.length < 2) continue;
+    const who = (kit[0].title.match(/^(\S+?)의/) || [, ''])[1];
+    const merged = {
+      ...kit[0],
+      title: `${who}의 소지품`,
+      detail: kit.map((u) => `· ${u.title.replace(/^\S+?의\s*/, '')} — ${u.detail || ''}`).join('\n'),
+    };
+    bag[id] = [merged, ...bag[id].filter((u) => !isKit(u))];
+  }
   // 번호표 — 단서코드 → 판 번호(A1 …). 카드·판·조합 안내가 전부 이걸 쓴다.
   // 번호는 쪼갠 장마다 붙는다. 조합 안내는 원본 단서 코드로 걸려 있으므로,
   //   원본 → '그 단서의 첫 장' 번호로 잇는다(폰 카톡이 조합 조건이면 그 앱 카드를 가리켜야 한다).
@@ -169,7 +199,8 @@ function buildHints(num, partNum) {
     const src = t.unlockedBy || [];
     if (!src.length || !num[t.code]) continue;
     if (t.type === '감식' && src.length === 1) {
-      push(num[src[0]], `🔬 감식실에 내면 → <b>${num[t.code]}</b> 를 받는다`);
+      push(num[src[0]], `🔬 감식실에 내면 → <b>${num[t.code]}</b>. `
+        + `<span class="hnote">내는 데 조사 행동을 쓰지 않는다. 결과는 낸 사람 아닌 이가 집어 낭독한다</span>`);
       continue;
     }
     for (const s of src) {
@@ -310,9 +341,8 @@ function clueCards() {
       ${c.locked ? `<div class="lock">🔒 <b>${c.locked}라운드</b>부터 읽을 수 있다 (영장 ${c.locked === 4 ? '①' : '②'}).
         가져가는 것은 지금도 되지만, 그때까지는 아무도 못 읽는다.<br>
         <b>자기 휴대폰은 본인이 가져갈 수 없다.</b></div>` : ''}
-      ${mine(c) ? `<div class="lock">⚖ 이 감식은 <b>${esc(mine(c))}</b> 본인의 물건이다.
-        본인은 이 카드를 가져갈 수 없다 — 결과를 읽는 손과 결과가 걸린 목이 같으면
-        그 카드는 증거가 아니라 증언이 된다.</div>` : ''}
+      ${mine(c) ? `<div class="lock">⚖ <b>${esc(mine(c))}</b> 본인의 물건에 대한 감식이다.
+        <b>${esc(mine(c))}</b> 은(는) 이 결과를 읽을 수 없다 — 다른 사람이 집어 소리 내어 읽는다.</div>` : ''}
       ${meta.letter === 'S' && origin(c) ? `<div class="hint"><div>${esc(origin(c))}</div></div>` : ''}
       ${hintFor(c) ? `<div class="hint">${hintFor(c).map((h) => `<div>${h}</div>`).join('')}</div>` : ''}
     </div>`;
@@ -415,32 +445,44 @@ function runSheets() {
 
   <div class="page"><h1>라운드 트랙</h1>
     <p class="muted">한 라운드가 끝날 때마다 말을 한 칸 옮깁니다.
-      <b>2·3·4·6라운드 칸에 이벤트 카드를 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
+      <b>2·3·4라운드 칸에 이벤트 카드를 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
     <div class="track">${[1,2,3,4,5,6,7].map((n) => {
-      const ev = { 2: '이벤트 ①', 3: '이벤트 ②', 4: '이벤트 ③', 6: '이벤트 ④' }[n];
+      const ev = { 2: '이벤트 ①', 3: '이벤트 ②', 4: '이벤트 ③' }[n];
       return `<div class="tr${ev ? ' trEv' : ''}">
-      <div class="trN">${n}</div><div class="trL">${ev || '조사 3장 → 토론 10분'}</div></div>`;
+      <div class="trN">${n}</div><div class="trL">${ev || '조사 2장 → 토론 10분'}</div></div>`;
     }).join('')}</div>
     <p class="muted">7라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.</p></div>
 
   <div class="page"><h1>기본 규칙 <span class="muted">— 판 옆에 펴 두세요</span></h1>
     <h2>한 라운드</h2>
     <p>①<b>조사</b> — 순서대로 한 명씩, 열려 있는 장소 <b>하나</b>를 골라 그 장소의 남은 번호 중
-      <b>3장</b>을 가져갑니다. 가져간 번호는 남이 못 가집니다. 내용은 자기만 읽습니다.<br>
+      <b>2장</b>을 가져갑니다. 가져간 번호는 남이 못 가집니다. 내용은 자기만 읽습니다.<br>
+      &nbsp;&nbsp;시작 플레이어는 <b>라운드마다 한 칸씩 돕니다.</b><br>
       ②<b>토론 10분</b> — 카드를 <b>보여 주지 않고</b> 말로만 공유합니다. 거짓말해도 됩니다.<br>
       ③<b>종료</b> — 트랙의 말을 한 칸 옮기고, 이벤트 칸이면 이벤트 카드를 펼칩니다.</p>
     <h2>가져갈 수 없는 카드</h2>
     <p>· <b>자기 방은 1라운드에만</b> 들어갈 수 있습니다. 2라운드부터는 자기 방에 못 들어갑니다.<br>
-      &nbsp;&nbsp;<span class="muted">자기한테 불리한 카드를 자기가 선점해 자기가 해명하는 것이
-      언제나 최선이 되면, 아무도 걸리지 않고 판이 멈춥니다.</span><br>
+      &nbsp;&nbsp;· 단 <b>1라운드에 자기 방에서 가져간 카드는 그 자리에서 소리 내어 읽습니다.</b>
+      집어서 묻어 두는 것은 안 됩니다. 읽고 나서도 카드는 본인이 갖습니다.<br>
+      &nbsp;&nbsp;<span class="muted">이 두 줄이 한 쌍입니다. 자기 방을 먼저 여는 것은 유리하지만,
+      그 대가로 자기 물건을 전원 앞에서 읽어야 합니다. 낭독 의무가 없으면 숨길 것이 있는 사람이
+      1라운드에 그것부터 집어 영영 묻어 버립니다.</span><br>
       · <b>자기 휴대폰은 본인이 가져갈 수 없습니다.</b><br>
-      · <b>자기 물건의 감식 카드는 본인이 가져갈 수 없습니다.</b> 카드에 ⚖ 로 표시돼 있습니다.</p>
+      <span class="muted">(감식은 아래를 따릅니다)</span></p>
     <h2>특수 단서</h2>
     <p>카드에 적힌 조합(⭐)을 손에 다 모으면, 특수 더미에서 그 번호를 <b>말없이 가져갑니다.</b>
       무엇으로 얻었는지는 특수 카드 앞면에 적혀 있습니다.</p>
-    <h2>감식</h2>
-    <p>🔬 표시가 있는 카드를 가진 사람은, 감식실이 열린 뒤 그 라운드의 조사로
-      <b>감식실에서 해당 번호를 가져갈</b> 수 있습니다.</p></div>
+    <h2>감식 — 낸 사람과 읽는 사람이 다르다</h2>
+    <p>🔬 표시가 있는 카드는 <b>채취물</b>입니다. 감식실이 열린 뒤부터,</p>
+    <p>1. 채취물을 가진 사람이 라운드 끝에 그 카드를 <b>앞면으로 감식실 옆에 내려놓습니다.</b>
+      <b>조사 행동을 쓰지 않습니다</b>(한 라운드에 한 장). 무엇을 냈는지는 전원이 봅니다.<br>
+      2. 다음 라운드 시작 때, <b>낸 사람이 아닌 다른 사람</b>이 그 결과 번호(L…)를 집어
+      <b>소리 내어 읽습니다.</b> 읽은 뒤 그 카드는 읽은 사람이 갖습니다.<br>
+      3. 낼 사람이 없으면 채취물을 <b>다른 사람에게 넘겨</b> 대신 내게 할 수 있습니다.
+      감식실에 내는 목적일 때만 카드를 넘길 수 있습니다.</p>
+    <p class="muted">결과를 읽는 손과 결과가 걸린 목이 같으면 그 카드는 증거가 아니라 증언이 됩니다.
+      그래서 낸 사람은 자기 결과를 못 읽습니다. 반대로 "내 물건이라 아예 못 낸다"고 해 두면
+      그 카드가 영영 잠기므로, 넘겨서 내는 길을 열어 둡니다.</p></div>
 
   <div class="page"><h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
     ${ev('①', '2라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
@@ -457,16 +499,6 @@ function runSheets() {
       `<p>영장 범위가 넓어졌습니다. 복도 CCTV 원본과 대화 내용을 볼 수 있습니다.</p>
       <p><b>CCTV 열람실(V)과 감식실(L)이 열립니다.</b> 두 더미를 탁자에 놓습니다.<br>
         그리고 <b>🔒5 가 붙은 휴대폰 카드(카카오톡·메시지·사진·전화)를 이제 읽을 수 있습니다.</b></p>`)}
-    ${ev('④', '6라운드가 끝나면 펼친다', '대조 열람권 — 한 번은 실물을 보일 수 있다',
-      `<p>전원이 <b>대조 열람권 1장</b>을 받습니다. 이 종이를 잘라 한 사람당 한 장씩 가지세요.</p>
-      <p>7라운드와 최종 토론 동안 <b>딱 한 번</b>, 자기 카드 <b>한 장</b>을
-        <b>지정한 한 사람에게만</b> 실물로 보여 줄 수 있습니다. 쓰면 권리는 사라집니다.</p>
-      <p class="muted">마지막 라운드에 집는 카드는 아무도 확인할 수 없어서,
-        그대로 두면 "마지막에 말한 사람이 이긴다"가 됩니다. 이 한 장이 그걸 막습니다.</p>`)}
-    ${[1,2,3,4,5,6].map(() => `<div class="ev"><div class="evHead">
-      <span class="evNo">권</span> 대조 열람권</div>
-      <div class="evTitle">한 번만 — 카드 한 장을, 한 사람에게</div>
-      <div class="evBody"><p>쓴 뒤에는 이 종이를 탁자 가운데에 내려놓습니다.</p></div></div>`).join('')}
   </div>`;
 
   return { filename: '보드_진행물.html', html: doc('보드게임 진행 물품', body) };
