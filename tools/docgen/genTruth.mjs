@@ -47,7 +47,8 @@ export function genTruth(data) {
   <div class="cinfo">
     피해자<span>${V} (58세) — 베개 질식사</span><br>
     직접 범인<span>박희원 (전도사) — 베개 질식</span><br>
-    공범·관련자<span>이사랑 · 이현지 · 이가현 · (무고: 최종현 · 윤은재)</span><br>
+    별개 범행<span>이사랑 · 이현지 · 이가현 — 서로 몰랐고 진범과도 공모하지 않았다</span><br>
+    무고<span>최종현 · 윤은재</span><br>
     구성<span>피해자 + 용의자 6인, 각 인물의 시점과 진실</span>
   </div>
   <div class="warn-cover">⚠ 이 문서는 게임의 모든 진상을 담고 있습니다. 게임 종료 후 참여자에게 공개하거나 낭독하는 용도입니다. 게임 전·중에는 운영자 외 절대 공개 금지.</div>
@@ -87,7 +88,7 @@ export function genTruth(data) {
 </div>
 
 <div class="ch">
-  <div class="eye" style="color:#A32D2D">공범</div>
+  <div class="eye" style="color:#0F6E56">독립 범행</div>
   <div class="cht">이사랑<span class="tag" style="background:#FDEAEA;color:#A32D2D">라벨 교체</span></div>
   <div class="role" style="color:#A32D2D">25세 · 청년부 총무 · 이현지의 동생</div>
   <p><strong>빚을 갚으려다 살인의 도화선이 되다.</strong> 부모가 빚을 남기고 세상을 떠났을 때, 언니 이현지가 <strong>상속을 포기</strong>하면서 빚은 동생 이사랑에게 집중됐다. 이사랑은 그 사정을 모른 채, 언니가 <strong>"빚 무서워 혼자 발 뺐다"</strong>고 오해하고 등을 돌렸다. 홀로 빚더미를 진 그녀는 대출마저 막히자, 결국 <strong>청년부 찬조금에 손을 댔다.</strong> 청년부 통장에는 그 돈이 들어온 적이 없었다.</p>
