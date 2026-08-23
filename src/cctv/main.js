@@ -36,6 +36,10 @@ const PLAN = `
   <polygon points="47,141 334,124 334,158" fill="#a56ec81f" stroke="#8a5fae66"/>
   <text x="360" y="200" text-anchor="middle" font-size="8" fill="#67788d">1층</text>`;
 
+// 주소의 해시만 바뀌면 모듈이 다시 안 돈다. QR 로 들어올 땐 새로 로드되지만,
+//   한 화면에서 다음 카드를 찍는 경우를 위해 다시 그린다.
+window.addEventListener('hashchange', () => location.reload());
+
 const root = document.getElementById('cctv-root');
 const code = decodeURIComponent(location.hash.replace(/^#/, '')).trim().toUpperCase();
 const hit = code && find(code);

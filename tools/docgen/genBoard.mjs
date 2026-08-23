@@ -46,6 +46,22 @@ const LOCK_TIER = { 연락처: 4, 인터넷: 4 };      // 나머지 앱(카카�
 const SPECIAL = { letter: 'S', name: '특수 단서', color: '#8a6d1f' };
 const ROOM_OF = { 최종현: 'JH', 윤은재: 'EJ', 이현지: 'HJ', 박희원: 'HW', 이사랑: 'SR', 이가현: 'GH' };
 
+// 잠금 카드 — 비밀번호를 넣어야 열리는 것들. 앱에서는 톡서랍을 복구하거나 진위조회를 하는
+//   상호작용인데, 종이에는 넣을 화면이 없다. QR 한 장으로 그 화면을 대신한다.
+//   카드가 아니라 게시물이다 — 아무도 가져가지 않고, 누구나 찍을 수 있다. 잠근 것은 카드가
+//   아니라 숫자이므로, 숫자를 아는 사람이 열지 말지·남에게 알려줄지를 정하게 된다.
+const QCARDS = [
+  { no: 'Q1', code: 'LWUY-33', title: '목사님 휴대폰 — 잠긴 대화방',
+    hint: '네 자리 숫자가 필요하다. 목사님은 잠글 것마다 같은 날짜를 쓴다고 어딘가에 적어 두었다.' },
+  { no: 'Q2', code: 'QIVS-92', title: '이사랑 휴대폰 — 잠긴 대화방',
+    hint: '네 자리 숫자가 필요하다. 사랑이 무엇을 기준으로 숫자를 정했는지는 다른 사람의 기록에 있다.' },
+  { no: 'Q3', code: 'HUOX-80', title: '이현지 휴대폰 — 잠긴 대화방',
+    hint: '네 자리 숫자가 필요하다. 현지가 무엇을 기준으로 숫자를 정했는지는 다른 사람의 기록에 있다.' },
+  { no: 'Q4', code: 'CERT', title: '교단 「수료증 진위조회」',
+    hint: '수료증에 적힌 발급번호를 넣으면 등록 여부가 나온다. 번호는 그 수료증을 찍은 사진에 있다.' },
+];
+const QCARD_NO = Object.fromEntries(QCARDS.map((q) => [q.code, q.no]));
+
 // 공개 단서 — 아무도 가져갈 수 없고 전원이 언제든 읽는다.
 //   동기(수료증 위조)를 받치는 카드가 이것뿐이라, 진범이 집어 숨기면 아무도 못 맞힌다.
 const PUBLIC = new Set(['HQIR-26']);
@@ -80,16 +96,35 @@ function explode(c) {
     }));
   }
   if (c.phone?.apps?.length) {
-    return c.phone.apps.map((a) => {
+    return c.phone.apps.flatMap((a) => {
       const NL = '\n';
       let body = '';
       // 필드 이름을 정본과 맞춘다. 어긋나면 조용히 빈 카드가 나온다 —
       //   실제로 검색 기록(searches)이 x.q 를 찾다가 전부 '[object Object]' 로 찍혀,
       //   요힘빈 검색 같은 결정적 물증이 인쇄물에서 통째로 빠져 있었다.
       if (a.chats) {
-        body = a.chats.map((ch) => `[${ch.name}${ch.deleted ? ' · 삭제된 대화방(복구됨)' : ''}]` + NL
+        // 삭제된 대화방은 카드에 싣지 않는다. 앱에서는 톡서랍 비밀번호를 찾아 복구해야 보이는
+        //   것인데, 종이에 그냥 인쇄하면 그 잠금이 통째로 사라진다. 잠긴 것은 Q 카드로 뽑고
+        //   여기에는 "잠긴 방이 있다"는 사실만 남긴다 — 그 사실 자체가 단서다.
+        const live = a.chats.filter((ch) => !ch.deleted);
+        const gone = a.chats.filter((ch) => ch.deleted);
+        body = live.map((ch) => `[${ch.name}]` + NL
           + (ch.messages || []).map((mm) => `${mm.who ? mm.who + ': ' : ''}${mm.text || ''}`).join(NL)
         ).join(NL + NL);
+        if (gone.length) {
+          body += (body ? NL + NL : '')
+            + `[잠긴 대화방 ${gone.length}개]` + NL
+            + `삭제된 흔적이 남아 있다. 복구하려면 네 자리 숫자가 필요하다.` + NL
+            + `→ 잠금 카드 ${QCARD_NO[c.code] || 'Q'} 의 QR 을 찍어 열어라.`;
+        }
+      } else if (a.photos) {
+        // 사진은 캡션만 적으면 정작 찍힌 내용이 빠진다. 수료증 발급번호처럼 그림에만 있는
+        //   정보가 있으므로 사진마다 한 장으로 나누고 그림을 싣는다.
+        return a.photos.map((ph) => one({
+          title: `${c.title} · 사진 — ${ph.caption || ph.title || ''}`,
+          image: ph.image || null, detail: ph.caption || ph.title || '',
+          part: `사진:${ph.caption || ph.title || ''}`, locked: 5,
+        }));
       } else if (a.searches) {
         // 검색어만으로는 '무엇을 알아냈는지'가 안 남는다. 결과 제목과 본문까지 실어야
         //   카드 한 장이 그 사람이 읽은 것을 그대로 전한다.
@@ -102,9 +137,9 @@ function explode(c) {
         // 저장된 이름이 별명이면 그게 누구인지가 곧 관계다("종현이" → 최종현)
         body = a.contacts.map((x) => `· ${x.name || ''}`
           + (x.who && x.who !== x.name ? ` — ${x.who}` : '')).join(NL);
-      } else if (a.photos) body = a.photos.map((x) => '· ' + (x.caption || x.title || '사진')).join(NL);
+      }
       const nm = a.name || a.id;
-      return one({ title: `${c.title} · ${nm}`, image: null, detail: body || '(비어 있다)', part: nm, locked: LOCK_TIER[nm] || 5 });
+      return [one({ title: `${c.title} · ${nm}`, image: null, detail: body || '(비어 있다)', part: nm, locked: LOCK_TIER[nm] || 5 })];
     });
   }
   if (c.wallet?.items?.length) {
@@ -312,6 +347,29 @@ async function buildQR(list) {
     QR[c.code] = await QRCode.toString(`${siteUrl}/cctv#${c.code}`,
       { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
   }
+  for (const q of QCARDS) {
+    QR[`Q:${q.code}`] = await QRCode.toString(`${siteUrl}/unlock#${q.code}`,
+      { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
+  }
+}
+
+// ── 잠금 카드 ────────────────────────────────────────────────────────────────
+//   가져가는 카드가 아니라 탁자에 펴 두는 게시물이다. QR 을 찍으면 숫자를 넣는 화면이 뜬다.
+function lockCards() {
+  const face = (q) => `<div class="card" style="border-color:#5a3f8a">
+    <span class="no" style="background:#5a3f8a">${q.no}</span>
+    <div class="ct">${esc(q.title)}</div>
+    <div class="qr">${QR[`Q:${q.code}`] || ''}<div class="qrl">찍으면 입력 화면이 열린다</div></div>
+    <div class="cd">${esc(q.hint)}</div>
+    <div class="hint"><div>이 카드는 <b>아무도 가져갈 수 없다.</b> 탁자에 펴 두고 누구나 찍는다.
+      잠긴 것은 카드가 아니라 <b>숫자</b>다.</div></div>
+  </div>`;
+  return `<div class="page"><h1>잠금 카드 — ${QCARDS.length}장
+      <span class="muted">Q1 ~ Q${QCARDS.length}</span></h1>
+    <p class="muted">앞면이 보이게 판 옆에 펴 둡니다. <b>가져가는 카드가 아닙니다.</b>
+      휴대폰 카메라로 QR 을 찍으면 숫자를 넣는 화면이 열리고, 맞는 숫자를 넣은 사람만 내용을 봅니다.<br>
+      숫자는 다른 단서 카드 안에 적혀 있습니다. 그 카드를 가진 사람이 알려 줄지 말지를 정합니다.</p>
+    <div class="sheet">${QCARDS.map(face).join('')}</div></div>`;
 }
 
 // ── 1. 단서 카드 ─────────────────────────────────────────────────────────────
@@ -358,6 +416,7 @@ function clueCards() {
   let body = '';
   for (const p of PLACES) if (bag[p.id].length) body += deck(bag[p.id], p);
   if (special.length) body += deck(special, SPECIAL);
+  body += lockCards();
   return { filename: '보드_단서카드.html', html: doc('보드게임 단서 카드', body) };
 }
 
