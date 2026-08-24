@@ -120,11 +120,15 @@ function explode(c) {
       } else if (a.photos) {
         // 사진은 캡션만 적으면 정작 찍힌 내용이 빠진다. 수료증 발급번호처럼 그림에만 있는
         //   정보가 있으므로 사진마다 한 장으로 나누고 그림을 싣는다.
-        return a.photos.map((ph) => one({
-          title: `${c.title} · 사진 — ${ph.caption || ph.title || ''}`,
-          image: ph.image || null, detail: ph.caption || ph.title || '',
-          part: `사진:${ph.caption || ph.title || ''}`, locked: 5,
-        }));
+        return a.photos.map((ph, i) => {
+          const cap = ph.caption || ph.title || '';
+          return one({
+            title: cap ? `${c.title} · 사진 — ${cap}` : `${c.title} · 사진${a.photos.length > 1 ? ' ' + (i + 1) : ''}`,
+            image: ph.image || null,
+            detail: cap || '(설명 없이 저장된 사진 한 장)',
+            part: `사진${i + 1}`, locked: 5,
+          });
+        });
       } else if (a.searches) {
         // 검색어만으로는 '무엇을 알아냈는지'가 안 남는다. 결과 제목과 본문까지 실어야
         //   카드 한 장이 그 사람이 읽은 것을 그대로 전한다.
@@ -133,6 +137,11 @@ function explode(c) {
           x.title && x.query ? '  ' + x.title : '',
           x.snippet ? '  ' + x.snippet : '',
         ].filter(Boolean).join(NL)).join(NL + NL);
+      } else if (a.calls) {
+        // 통화 기록이 통째로 빠져 있었다. 누구에게 언제 걸었고 연결이 됐는지가 그대로 알리바이다.
+        body = a.calls.map((x) => `· ${x.time || ''} ${x.name || ''}`
+          + ` — ${{ out: '발신', in: '수신', missed: '부재중' }[x.direction] || x.direction || ''}`
+          + (x.duration ? ` (${x.duration})` : '')).join(NL);
       } else if (a.contacts) {
         // 저장된 이름이 별명이면 그게 누구인지가 곧 관계다("종현이" → 최종현)
         body = a.contacts.map((x) => `· ${x.name || ''}`
@@ -154,8 +163,88 @@ function explode(c) {
   return [one({})];
 }
 
+// ── 카드에 안 들어가는 본문 나누기 ───────────────────────────────────────────
+//   카드는 63x88mm 이고 .card 가 overflow:hidden 이다. 넘치는 글은 잘려서 안 보이는데,
+//   잘렸다는 표시조차 안 난다 — 인쇄물만 보는 사람은 그런 줄도 모른다.
+//   실제로 카톡·성경책 카드 열넷이 넘치고 있었고, 그중 하나는 내용의 예순 몇 퍼센트가 사라졌다.
+//   앱은 스크롤하면 그만이지만 종이는 그럴 수 없으니, 넘칠 것 같으면 여러 장으로 나눈다.
+const CARD_MM = 81.6;                 // 88 - 위아래 패딩
+const LINE_MM = 3.9;                  // 본문 7.4pt · line-height 1.5
+const COLS = 21;                      // 한 줄에 들어가는 한글 글자 수
+const SM_LINE = 3.5, SM_COLS = 23;    // 작은 글씨(6.5pt) — 한 장에 3분의 1쯤 더 담긴다
+                                      //   브라우저 실측으로 맞춘 값이다. 넉넉히 잡는다 —
+                                      //   빠듯하게 맞추면 글꼴이 조금만 달라도 잘린다.
+const rowsOf = (s, w = COLS) => String(s || '').split('\n')
+  .reduce((a, l) => a + Math.max(1, Math.ceil(l.length / w)), 0);
+
+// 조합 안내가 붙게 될 단서들 — 감식의 채취물, 특수의 재료, 보드 전용 조합의 재료.
+let HINTED = new Set();
+function markHinted() {
+  HINTED = new Set();
+  for (const t of allClues) for (const k of (t.unlockedBy || [])) HINTED.add(k);
+  for (const reqs of Object.values(BOARD_UNLOCK)) for (const [k] of reqs) HINTED.add(k);
+}
+
+function splitLong(u) {
+  // 본문 말고 다른 것들이 먼저 먹는 높이
+  let fixed = 5.2 + Math.ceil((u.title || '').length / 19) * 4.9 + 3.2;
+  if (u.image) fixed += 28.4;
+  if (QR[u.code]) fixed += 31.4;
+  if (u.locked) fixed += 1.2 + Math.ceil(95 / 23) * 3.6;               // 잠금 문구(실측 4줄)
+  // 조합 안내(⭐·🔬)가 붙는 카드에만 그 자리를 비워 둔다. 번호는 나중에 정해지지만
+  //   '어느 단서에 붙는지'는 미리 알 수 있으므로, 그것만으로 자리를 잡으면 충분하다.
+  //   전부에 비워 두면 안 붙는 카드까지 쓸데없이 나뉘어 덱이 부푼다.
+  const room = CARD_MM - fixed - (HINTED.has(u.code) ? 15 : 0);
+  const budget = Math.floor(room / LINE_MM);
+  if (budget < 3) return [u];                                           // 그림·QR 카드는 원래 글이 짧다
+  const lines = String(u.detail || '').split('\n');
+  if (rowsOf(u.detail) <= budget) return [u];
+  // 나누기 전에 글씨를 한 단계 줄여 본다. 카드가 늘면 덱이 부풀고 정보가 흩어지므로,
+  //   한 장에 담을 수 있으면 담는 편이 낫다.
+  if (rowsOf(u.detail, SM_COLS) <= Math.floor(room / SM_LINE)) return [{ ...u, small: true }];
+
+  // 빈 줄을 경계로 본다 — 대화방 하나, 검색 결과 하나가 중간에 끊기지 않게.
+  const blocks = [];
+  let cur = [];
+  for (const l of lines) {
+    if (l.trim() === '' && cur.length) { blocks.push(cur); cur = []; continue; }
+    if (l.trim() !== '') cur.push(l);
+  }
+  if (cur.length) blocks.push(cur);
+
+  const pages = [];
+  let page = [], used = 0;
+  for (const b of blocks) {
+    const h = rowsOf(b.join('\n')) + 1;                                 // 블록 사이 빈 줄
+    if (used && used + h > budget) { pages.push(page); page = []; used = 0; }
+    if (h > budget) {                                                   // 블록 하나가 통째로 넘치면 줄 단위로 쪼갠다
+      let chunk = [], ch = 0;
+      for (const l of b) {
+        const lh = Math.max(1, Math.ceil(l.length / COLS));
+        if (ch && ch + lh > budget) { pages.push([...page, ...chunk]); page = []; chunk = []; ch = 0; used = 0; }
+        chunk.push(l); ch += lh;
+      }
+      page = [...page, ...chunk]; used += ch; continue;
+    }
+    page = page.concat(page.length ? [''] : [], b); used += h;
+  }
+  if (page.length) pages.push(page);
+  if (pages.length <= 1) return [u];
+
+  return pages.map((p, i) => ({
+    ...u,
+    small: true,
+    title: `${u.title} (${i + 1}/${pages.length})`,
+    detail: p.join('\n'),
+    image: i === 0 ? u.image : null,
+    // 조합 안내는 첫 장에만 붙어야 하므로 원래 part 를 첫 장이 물려받는다
+    part: i === 0 ? u.part : `${u.part || u.title}#${i + 1}`,
+  }));
+}
+
 // ── 장소 배정 + 번호 부여 ────────────────────────────────────────────────────
 function buildBoard() {
+  markHinted();
   const cut = new Set();
   for (const c of allClues) {
     for (const t of (c.cctv?.timeline || [])) {
@@ -174,7 +263,7 @@ function buildBoard() {
     if (c.type === '방' || c.code === 'LSUX-91' || c.code === 'BRIF-00'
       || c.code === 'SIAH-72' || c.code === 'LONS-62') continue;
     if (PUBLIC.has(c.code)) { open.push(c); continue; }
-    const units = explode(c);
+    const units = explode(c).flatMap(splitLong);
     if (c.type === '감식') { bag.LB.push(...units); continue; }
     if (c.cctv?.timeline || cut.has(c.code)) { bag.CC.push(...units); continue; }
     if (c.type === '특수') { special.push(...units); continue; }
@@ -395,7 +484,7 @@ function clueCards() {
       <div class="ct">${esc(c.title)}</div>
       ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">찍으면 이 장면이 열린다</div></div>`
         : c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
-      <div class="cd">${esc(c.detail || c.description || '')}</div>
+      <div class="cd${c.small ? ' sm' : ''}">${esc(c.detail || c.description || '')}</div>
       ${c.locked ? `<div class="lock">🔒 <b>${c.locked}라운드</b>부터 읽을 수 있다 (영장 ${c.locked === 4 ? '①' : '②'}).
         가져가는 것은 지금도 되지만, 그때까지는 아무도 못 읽는다.<br>
         <b>자기 휴대폰은 본인이 가져갈 수 없다.</b></div>` : ''}
