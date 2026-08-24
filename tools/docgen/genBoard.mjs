@@ -9,6 +9,7 @@
 //   조합은 표를 따로 두지 않고 카드에 적는다 — 카드가 스스로 "A6 도 있으면 S1 을 가져가라"고 말한다.
 import { BIBLE } from './bible.mjs';
 import { DATA as INTERROGATION } from '../../src/solo/interrogation.js';
+import { BOARD_SCRIPT } from './boardScript.mjs';
 import { illustratedMapHTML, ART_ROOMS } from './boardMap.mjs';
 import QRCode from 'qrcode';
 
@@ -533,7 +534,13 @@ function charCards() {
   //   "이렇게 물으면 이렇게 답한다"까지 손에 쥐여 준다. 시트에 정체와 금지 사항만 있으면
   //   연기가 사람마다 들쭉날쭉해지고, 그러면 같은 사건이 판마다 다른 게임이 된다.
   const SID = { 최종현: 'S1', 윤은재: 'S2', 이현지: 'S3', 박희원: 'S4', 이사랑: 'S5', 이가현: 'S6' };
-  const no = (code) => num[code] || '(덱에 없음)';
+  // 덱에서 뺀 것들은 보드에서 다른 물건이 대신한다 — 번호가 없다고 대사를 버리면 안 된다.
+  const OFF_DECK = {
+    'LONS-62': '이벤트 ①',        // 2차 부검 — 2라운드 끝에 전원이 함께 읽는다
+    'BRIF-00': '시작 시트',
+    'SIAH-72': 'V 더미',
+  };
+  const no = (code) => num[code] || OFF_DECK[code] || '(덱 밖)';
   const script = (name) => {
     const d = INTERROGATION[SID[name]];
     if (!d) return '';
@@ -561,6 +568,34 @@ function charCards() {
           게임이 멈춥니다 — 무너지는 것이 당신의 역할입니다.</p></div>` : ''}
     </div>`;
   };
+
+  // 보드에서만 벌어지는 상황 — 조사 선언, 남이 내 방을 여는 것, 감식 낭독, 지목.
+  //   앱에는 없는 국면이라 심문 정본만으로는 대응이 안 나온다.
+  const boardScript = (name) => {
+    const s = BOARD_SCRIPT[name];
+    if (!s) return '';
+    return `<div class="page">
+      <h1>${esc(name)} <span class="muted">— 이 상황에서는 이렇게 (본인만)</span></h1>
+      <h2>말투</h2><p>${s.tone}</p>
+      <h2>당신이 알고 있어서 자꾸 걸리는 것</h2>
+      <p class="muted">누구를 의심하라는 지시가 아닙니다. <b>당신이 아는 사실</b>일 뿐입니다 —
+        이걸 지키려다 보면 시선은 저절로 어디론가 향합니다. 그 방향은 당신이 정하세요.</p>
+      <table><tr><th style="width:34%">내가 아는 것</th><th>그래서 걸리는 것</th></tr>
+        ${s.watch.map(([a, b]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td></tr>`).join('')}</table>
+      <h2>상황별 대응</h2>
+      <table><tr><th style="width:30%">이런 상황이 오면</th><th>이렇게 합니다</th></tr>
+        ${s.moments.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${b}</td></tr>`).join('')}</table>
+      <h2>이 번호가 탁자에 나오면</h2>
+      <table><tr><th style="width:14%">번호</th><th>첫마디</th></tr>
+        ${Object.entries(s.onCard).map(([c, t]) =>
+          `<tr><td><b>${esc(no(c))}</b></td><td>${esc(t)}</td></tr>`).join('')}</table>
+      <div class="box"><div class="bl">모두에게 — 당신의 죄와 사인은 다릅니다</div>
+        <p>여섯 명 중 다섯 명에게 숨길 것이 있고, 그중 몇은 실제로 죄입니다. 그러나 목사님을
+          <b>죽인 것은 한 명뿐</b>입니다. 자기 죄가 드러났을 때 전부를 뒤집어쓰지 마세요 —
+          <b>인정할 것은 인정하고, 그것이 사인이 아님을 짚으세요.</b> 그래야 판이 "누가 무엇을
+          했나"에서 "무엇이 목사님을 죽였나"로 넘어갑니다.</p></div>
+    </div>`;
+  };
   const body = suspects.map((s) => {
     const b = BIBLE[s.name] || {};
     return `<div class="page">
@@ -585,7 +620,8 @@ function charCards() {
         <table><tr><th style="width:34%">상황</th><th>대응</th></tr>
         ${b.script.map(([q, a]) => `<tr><td>${esc(q)}</td><td>${a}</td></tr>`).join('')}</table>` : ''}
     </div>
-    ${script(s.name)}`;
+    ${script(s.name)}
+    ${boardScript(s.name)}`;
   }).join('');
   return { filename: '보드_인물카드.html', html: doc('보드게임 인물 카드', body) };
 }
