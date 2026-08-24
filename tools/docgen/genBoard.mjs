@@ -9,7 +9,7 @@
 //   조합은 표를 따로 두지 않고 카드에 적는다 — 카드가 스스로 "A6 도 있으면 S1 을 가져가라"고 말한다.
 import { BIBLE } from './bible.mjs';
 import { DATA as INTERROGATION } from '../../src/solo/interrogation.js';
-import { BOARD_SCRIPT } from './boardScript.mjs';
+import { BOARD_SCRIPT, DETECTIVE } from './boardScript.mjs';
 import { illustratedMapHTML, ART_ROOMS } from './boardMap.mjs';
 import QRCode from 'qrcode';
 
@@ -625,7 +625,49 @@ function charCards() {
     ${script(s.name)}
     ${boardScript(s.name)}`;
   }).join('');
-  return { filename: '보드_인물카드.html', html: doc('보드게임 인물 카드', body) };
+  return { filename: '보드_인물카드.html', html: doc('보드게임 인물 카드', body + detectiveCard(no)) };
+}
+
+// ── 7인 모드 · 형사 카드 ─────────────────────────────────────────────────────
+//   여섯이면 이 두 장을 빼고, 일곱이면 넣는다. 다른 인물과 같은 형식으로 뽑되
+//   비밀 시나리오가 없다 — 숨길 것이 없는 사람이라 뒷면이 필요 없다.
+function detectiveCard(no) {
+  const d = DETECTIVE;
+  const li = (a) => a.map((x) => `<li>${x}</li>`).join('');
+  return `<div class="page">
+    <h1>${esc(d.name)} 형사 <span class="muted">— 7인 모드 전용 · 공개 프로필</span></h1>
+    <p class="muted">여섯 명이 하면 이 두 장을 빼세요. 일곱 명이면 넣습니다.</p>
+    <table><tr><th style="width:22%">나이 · 성별</th><td>47세 · 남성</td></tr>
+      <tr><th>직책</th><td>관할서 강력팀 · 이 사건 담당</td></tr>
+      <tr><th>알려진 것</th><td>13시 31분 신고를 받고 온 담당 형사. 초동 수사를 마치고 관계자 여섯을 불러 모았다.</td></tr></table>
+    <div class="box"><div class="bl">형사는 용의자가 아닙니다</div>
+      <p>목사님을 죽인 사람은 나머지 여섯 안에 있습니다. <b>아무도 형사를 지목하지 않습니다.</b>
+        그 대신 형사는 <b>자기 방이 없습니다</b> — 처음부터 끝까지 아무 방이나 갈 수 있고,
+        1라운드에 자기 물건을 낭독할 것도 없습니다. 조사·토론·지목은 나머지와 똑같이 합니다.</p></div>
+    <h2>당신의 정체</h2><p>${d.identity}</p>
+    <h2>당신의 그날</h2>
+    <table><tr><th style="width:16%">시각</th><th>행동</th></tr>
+      ${d.timeline.map(([t, x]) => `<tr><td>${esc(t)}</td><td>${esc(x)}</td></tr>`).join('')}</table>
+    <h2>아는 것 / 모르는 것</h2><ul>${li(d.knows.map(esc))}</ul>
+    <h2>지켜야 할 것</h2><ul>${li(d.forbidden.map(esc))}</ul></div>
+
+  <div class="page">
+    <h1>${esc(d.name)} 형사 <span class="muted">— 이 상황에서는 이렇게</span></h1>
+    <h2>말투</h2><p>${esc(d.tone)}</p>
+    <h2>당신이 알고 있어서 자꾸 걸리는 것</h2>
+    <table><tr><th style="width:34%">내가 아는 것</th><th>그래서 걸리는 것</th></tr>
+      ${d.watch.map(([a, b]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td></tr>`).join('')}</table>
+    <h2>상황별 대응</h2>
+    <table><tr><th style="width:30%">이런 상황이 오면</th><th>이렇게 합니다</th></tr>
+      ${d.moments.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</table>
+    <h2>이 번호가 탁자에 나오면</h2>
+    <table><tr><th style="width:14%">번호</th><th>첫마디</th></tr>
+      ${Object.entries(d.onCard).map(([c, t]) => `<tr><td><b>${esc(no(c))}</b></td><td>${esc(t)}</td></tr>`).join('')}</table>
+    <div class="box"><div class="bl">결론을 대신 내려 주지 마세요</div>
+      <p>아무도 당신을 의심하지 않으니 마음껏 물을 수 있습니다. 그런데 그 편함으로 판을
+        정리해 버리면 <b>나머지 여섯이 구경꾼이 됩니다.</b> 묻고, 짚고, 기다리세요.
+        답은 저들의 입에서 나와야 합니다.</p></div>
+  </div>`;
 }
 
 // ── 3. 장소 판 + 공개 단서 ───────────────────────────────────────────────────
@@ -685,9 +727,12 @@ function runSheets() {
     <div class="track">${[1,2,3,4,5,6,7].map((n) => {
       const ev = { 2: '이벤트 ①', 3: '이벤트 ②', 4: '이벤트 ③' }[n];
       return `<div class="tr${ev ? ' trEv' : ''}">
-      <div class="trN">${n}</div><div class="trL">${ev || '조사 3장 → 토론 10분'}</div></div>`;
+      <div class="trN">${n}${n === 7 ? '<span style="font-size:7pt;font-weight:500"> 6인만</span>' : ''}</div><div class="trL">${ev || '조사 3장 → 토론 10분'}</div></div>`;
     }).join('')}</div>
-    <p class="muted">7라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.</p></div>
+    <p class="muted"><b>6인은 7칸을 다 씁니다. 7인은 6칸까지만 쓰고 6라운드에서 끝냅니다</b> —
+      사람이 하나 늘면 한 라운드에 세 장을 더 쓰므로 라운드를 하나 줄입니다. 이벤트 순서는 같습니다.</p>
+    <p class="muted">마지막 라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.<br>
+      <b>7인이면 형사도 한 표를 던집니다.</b> 다만 아무도 형사를 지목하지 않습니다.</p></div>
 
   <div class="page"><h1>기본 규칙 <span class="muted">— 판 옆에 펴 두세요</span></h1>
     <h2>한 라운드</h2>
