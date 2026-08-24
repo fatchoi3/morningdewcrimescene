@@ -24,9 +24,9 @@ const esc = (s) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<'
 const PLACES = [
   ...ART_ROOMS.map((r) => ({ id: r.id, letter: r.letter, name: r.label, color: r.color, open: '처음부터' })),
   { id: 'CC', letter: 'V', name: 'CCTV 열람실', color: '#2b6b73', open: '4라운드 종료 후' },
-  { id: 'LB', letter: 'L', name: '감식실', color: '#5a5a5a', open: '4라운드 종료 후 · 채취물 제출 전용' },
+  { id: 'LB', letter: 'L', name: '감식실', color: '#5a5a5a', open: '3라운드 종료 후 · 채취물 제출 전용' },
 ];
-PLACES.find((p) => p.id === 'PS').open = '현장(D1~D10) 2라운드 종료 후 · 기록(D11~) 3라운드 종료 후';
+PLACES.find((p) => p.id === 'PS').open = '현장(D1~D10) 1라운드 종료 후 · 기록(D11~) 2라운드 종료 후';
 
 // 앱에서는 이 특수 단서들이 '열람 흔적'(톡서랍 비밀번호 복구·필적 대조·심문)으로 열린다.
 //   보드에는 비밀번호도 심문도 없어 unlockedBy 가 비어 있고, 그래서 네 장이 영원히 더미에
@@ -45,7 +45,7 @@ const BOARD_UNLOCK = {
 // 휴대폰 잠금은 두 단계다. 통신 기록(누구와 이어져 있었나)이 먼저, 대화 내용(무슨 말을 했나)이
 //   나중에 열린다. 관계를 먼저 알고 내용을 나중에 아는 순서라야, 대화가 열릴 때 그게
 //   누구와의 대화인지가 이미 판에 깔려 있다. 반대로 열면 내용부터 쏟아져 관계가 묻힌다.
-const LOCK_TIER = { 연락처: 4, 인터넷: 4 };      // 나머지 앱(카카오톡·메시지·사진·전화)은 5라운드
+const LOCK_TIER = { 연락처: 3, 인터넷: 3 };      // 나머지 앱(카카오톡·메시지·사진·전화)은 4라운드
 const SPECIAL = { letter: 'S', name: '특수 단서', color: '#8a6d1f' };
 const ROOM_OF = { 최종현: 'JH', 윤은재: 'EJ', 이현지: 'HJ', 박희원: 'HW', 이사랑: 'SR', 이가현: 'GH' };
 
@@ -134,7 +134,7 @@ function explode(c) {
             title: cap ? `${c.title} · 사진 — ${cap}` : `${c.title} · 사진${a.photos.length > 1 ? ' ' + (i + 1) : ''}`,
             image: ph.image || null,
             detail: cap || '(설명 없이 저장된 사진 한 장)',
-            part: `사진${i + 1}`, locked: 5,
+            part: `사진${i + 1}`, locked: 4,
           });
         });
       } else if (a.searches) {
@@ -156,7 +156,7 @@ function explode(c) {
           + (x.who && x.who !== x.name ? ` — ${x.who}` : '')).join(NL);
       }
       const nm = a.name || a.id;
-      return [one({ title: `${c.title} · ${nm}`, image: null, detail: body || '(비어 있다)', part: nm, locked: LOCK_TIER[nm] || 5 })];
+      return [one({ title: `${c.title} · ${nm}`, image: null, detail: body || '(비어 있다)', part: nm, locked: LOCK_TIER[nm] || 4 })];
     });
   }
   if (c.wallet?.items?.length) {
@@ -502,7 +502,7 @@ function clueCards() {
       ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">찍으면 이 장면이 열린다</div></div>`
         : c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
       <div class="cd${c.small ? ' sm' : ''}">${esc(c.detail || c.description || '')}</div>
-      ${c.locked ? `<div class="lock">🔒 <b>${c.locked}라운드</b>부터 읽을 수 있다 (영장 ${c.locked === 4 ? '①' : '②'}).
+      ${c.locked ? `<div class="lock">🔒 <b>${c.locked}라운드</b>부터다 (영장 ${c.locked === 3 ? '②' : '③'}).
         가져가는 것은 지금도 되지만, 그때까지는 아무도 못 읽는다.<br>
         <b>자기 휴대폰은 본인이 가져갈 수 없다.</b></div>` : ''}
       ${mine(c) ? `<div class="lock">⚖ <b>${esc(mine(c))}</b> 본인의 물건에 대한 감식이다.
@@ -723,16 +723,17 @@ function runSheets() {
 
   <div class="page"><h1>라운드 트랙</h1>
     <p class="muted">한 라운드가 끝날 때마다 말을 한 칸 옮깁니다.
-      <b>2·3·4라운드 칸에 이벤트 카드를 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
-    <div class="track">${[1,2,3,4,5,6,7].map((n) => {
-      const ev = { 2: '이벤트 ①', 3: '이벤트 ②', 4: '이벤트 ③' }[n];
+      <b>1·2·3·4라운드 칸에 이벤트 카드를 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
+    <div class="track">${[1,2,3,4,5,6].map((n) => {
+      const ev = { 1: '이벤트 ①', 2: '이벤트 ②', 3: '이벤트 ③', 4: '이벤트 ④' }[n];
       return `<div class="tr${ev ? ' trEv' : ''}">
-      <div class="trN">${n}${n === 7 ? '<span style="font-size:7pt;font-weight:500"> 6인만</span>' : ''}</div><div class="trL">${ev || '조사 3장 → 토론 10분'}</div></div>`;
+      <div class="trN">${n}</div><div class="trL">${ev || '조사 3장 → 토론 10분'}</div></div>`;
     }).join('')}</div>
-    <p class="muted"><b>6인은 7칸을 다 씁니다. 7인은 6칸까지만 쓰고 6라운드에서 끝냅니다</b> —
-      사람이 하나 늘면 한 라운드에 세 장을 더 쓰므로 라운드를 하나 줄입니다. 이벤트 순서는 같습니다.</p>
-    <p class="muted">마지막 라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.<br>
-      <b>7인이면 형사도 한 표를 던집니다.</b> 다만 아무도 형사를 지목하지 않습니다.</p></div>
+    <p class="muted"><b>여섯이든 일곱이든 6라운드입니다.</b> 일곱이면 한 라운드에 조사가 일곱 번 돌아
+      전체 시간이 20~30분쯤 더 걸립니다.</p>
+    <p class="muted">6라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.<br>
+      <b>일곱이면 형사도 한 표를 던집니다.</b> 다만 아무도 형사를 지목하지 않습니다.</p></div>
+
 
   <div class="page"><h1>기본 규칙 <span class="muted">— 판 옆에 펴 두세요</span></h1>
     <h2>한 라운드</h2>
@@ -789,22 +790,26 @@ function runSheets() {
       다릅니다 — 이 판에서 사람이 속는 자리가 정확히 거기입니다.</p></div>
 
   <div class="page"><h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
-    ${ev('①', '2라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
+    ${ev('①', '1라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
       `<p>정밀 부검 결과가 왔습니다. <b>심정지가 아니라 질식사</b>입니다.
         코·입 주변 압박흔과 안면 점상출혈, 그리고 기도에서 베개 솜·섬유가 검출됐습니다.</p>
       <p><b>목사님의 방 — 현장(D1~D10)이 열립니다.</b> 그 열 장을 탁자에 놓고,
         「목사님 일정표」는 <b>앞면이 보이게</b> 그 옆에 펴 둡니다 — 이 한 장은 아무도 가져갈 수 없습니다.</p>`)}
-    ${ev('②', '3라운드가 끝나면 펼친다', '유품 반출 동의 · 통신 기록 영장',
+    ${ev('②', '2라운드가 끝나면 펼친다', '유품 반출 동의 · 통신 기록 영장',
       `<p>유족이 유품 반출에 동의했고, 통신 기록 영장이 나왔습니다.</p>
-      <p><b>목사님의 방 — 기록(D11부터)이 열립니다.</b> 휴대폰과 일기장입니다.<br>
-        그리고 <b>따로 빼 두었던 🔒4 카드(연락처·인터넷)를 각 방 더미에 섞어 넣습니다.</b>
-        이제부터 가져갈 수 있고, 가져가면 바로 읽습니다.<br>
+      <p><b>목사님의 방 — 기록(D11부터)이 열립니다.</b> 일기장과 휴대폰입니다.<br>
+        그리고 <b>따로 빼 두었던 🔒3 카드(연락처·인터넷)를 각 방 더미에 섞어 넣습니다.</b>
         누구와 이어져 있었는지는 알 수 있지만, 무슨 말을 했는지는 아직 못 봅니다.</p>`)}
-    ${ev('③', '4라운드가 끝나면 펼친다', '압수수색 영장 — 대화 내용까지',
-      `<p>영장 범위가 넓어졌습니다. 복도 CCTV 원본과 대화 내용을 볼 수 있습니다.</p>
-      <p><b>CCTV 열람실(V)과 감식실(L)이 열립니다.</b> 두 더미를 탁자에 놓습니다.<br>
-        그리고 <b>따로 빼 두었던 🔒5 카드(카카오톡·메시지·사진·전화)를 각 방 더미에 섞어 넣습니다.</b></p>`)}
+    ${ev('③', '3라운드가 끝나면 펼친다', '압수수색 영장 — 대화 내용까지',
+      `<p>영장 범위가 넓어졌습니다. 주고받은 말과 사진을 볼 수 있습니다.</p>
+      <p><b>따로 빼 두었던 🔒4 카드(카카오톡·메시지·사진·전화)를 각 방 더미에 섞어 넣습니다.</b><br>
+        그리고 <b>감식실(L)이 열립니다.</b> 이번 라운드 끝부터 채취물을 낼 수 있습니다.</p>`)}
+    ${ev('④', '4라운드가 끝나면 펼친다', '복도 CCTV 원본 확보',
+      `<p>숙소 2층 복도 CCTV 원본을 확보했습니다. 그날 누가 언제 움직였는지가 남아 있습니다.</p>
+      <p><b>CCTV 열람실(V)이 열립니다.</b> 더미를 탁자에 놓습니다.<br>
+        <span class="muted">방 안은 찍히지 않습니다. 복도만입니다.</span></p>`)}
   </div>`;
+
 
   return { filename: '보드_진행물.html', html: doc('보드게임 진행 물품', body) };
 }
