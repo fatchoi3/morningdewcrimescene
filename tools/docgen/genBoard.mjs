@@ -8,6 +8,7 @@
 //   판에는 번호만 찍혀 있고, 참가자는 "A3 볼게요" 하고 그 번호 카드를 집는다.
 //   조합은 표를 따로 두지 않고 카드에 적는다 — 카드가 스스로 "A6 도 있으면 S1 을 가져가라"고 말한다.
 import { BIBLE } from './bible.mjs';
+import { DATA as INTERROGATION } from '../../src/solo/interrogation.js';
 import { illustratedMapHTML, ART_ROOMS } from './boardMap.mjs';
 import QRCode from 'qrcode';
 
@@ -60,6 +61,11 @@ const QCARDS = [
     hint: '네 자리 숫자가 필요하다. 현지가 무엇을 기준으로 숫자를 정했는지는 다른 사람의 기록에 있다.' },
   { no: 'Q4', code: 'CERT', title: '교단 「수료증 진위조회」',
     hint: '수료증에 적힌 발급번호를 넣으면 등록 여부가 나온다. 번호는 그 수료증을 찍은 사진에 있다.' },
+  // 필적 대조는 '고르고 결과를 보는' 행위다. 일곱 결과를 카드에 다 인쇄하면 정답이 바로
+  //   보이고, 목록만 적으면 결과가 없어 아무것도 못 밝힌다 — 실제로 그래서 라벨을 누가
+  //   썼는지가 판마다 미해결로 끝났다. 고르는 화면을 QR 뒤에 둔다.
+  { no: 'Q5', code: 'HAND', title: '필적 대조',
+    hint: '통 라벨의 글씨를 누구의 것과 맞춰 볼지 고른다. 대조하려면 그 사람의 손글씨가 있는 카드가 필요하다.' },
 ];
 const QCARD_NO = Object.fromEntries(QCARDS.map((q) => [q.code, q.no]));
 
@@ -159,7 +165,14 @@ function explode(c) {
     }));
   }
   if (c.handwriting?.options?.length) {
-    return [one({ detail: line(c.detail, '필적 대조 대상: ' + c.handwriting.options.map((o) => o.who).join(', ')) })];
+    // 대조 결과를 카드에 다 실으면 일치하는 사람이 첫눈에 드러나 대조가 아니라 정답 공개가 된다.
+    //   반대로 이름만 나열하면 결과가 없어 아무것도 못 밝힌다 — 실제로 그래서 라벨을 누가
+    //   썼는지가 판마다 미해결로 끝났다. 고르는 화면은 Q5 QR 뒤에 둔다.
+    return [one({
+      detail: line(c.detail,
+        '대조할 수 있는 사람: ' + c.handwriting.options.map((o) => o.who).join(', ')
+        + '\n→ 잠금 카드 Q5 의 QR 을 찍어 한 사람씩 맞춰 본다. 결과는 찍은 사람만 본다.'),
+    })];
   }
   return [one({})];
 }
@@ -366,6 +379,8 @@ const CSS = `
   .hint { margin-top: 1.4mm; padding-top: 1.2mm; border-top: 0.3mm dashed #b9a86a; }
   .hint div { font-size: 6.9pt; line-height: 1.45; color: #6b551a; }
   .hnote { display: block; font-size: 6.1pt; color: #8a7a45; }
+  .press { margin-top: 1.2mm; padding-left: 2mm; border-left: 0.6mm solid #cdbf94;
+           font-size: 8.6pt; color: #5b5140; }
   .lock { margin-top: 1.2mm; font-size: 6.9pt; font-weight: 700; color: #8a3b3b; }
   .qr { text-align: center; margin-bottom: 1.4mm; }
   .qr svg { width: 21mm; height: 21mm; }
@@ -513,6 +528,39 @@ function clueCards() {
 // ── 2. 인물 카드 ─────────────────────────────────────────────────────────────
 function charCards() {
   const li = (a) => a.map((x) => `<li>${x}</li>`).join('');
+  const { num } = buildBoard();
+  // 앱은 화면이 대사를 주지만 종이에서는 사람이 직접 연기한다. 같은 정본에서 대본을 뽑아
+  //   "이렇게 물으면 이렇게 답한다"까지 손에 쥐여 준다. 시트에 정체와 금지 사항만 있으면
+  //   연기가 사람마다 들쭉날쭉해지고, 그러면 같은 사건이 판마다 다른 게임이 된다.
+  const SID = { 최종현: 'S1', 윤은재: 'S2', 이현지: 'S3', 박희원: 'S4', 이사랑: 'S5', 이가현: 'S6' };
+  const no = (code) => num[code] || '(덱에 없음)';
+  const script = (name) => {
+    const d = INTERROGATION[SID[name]];
+    if (!d) return '';
+    const st = d.statements || [];
+    const rows = st.map((x) => `<tr><td>${esc(x.q || '')}</td><td>${x.text || ''}
+      ${x.press ? `<div class="press"><b>더 캐물으면</b> ${x.press}</div>` : ''}</td></tr>`).join('');
+    // 단서를 들이댔을 때의 반응 — 모순이 아닌 것들
+    const soft = [];
+    for (const x of st) for (const [code, r] of Object.entries(x.soft || {})) soft.push([code, r]);
+    // 무너지는 지점 — 이 카드가 나오면 더는 버틸 수 없다
+    const hits = st.filter((x) => x.contradict).map((x) => x.contradict);
+    return `<div class="page">
+      <h1>${esc(name)} <span class="muted">— 대본 (본인만)</span></h1>
+      <p class="muted">외울 필요는 없습니다. 상황에 맞게 자기 말로 바꿔 말해도 되지만,
+        <b>사실관계는 아래를 벗어나지 마세요.</b> 여기 없는 질문은 시나리오에 맞게 지어내면 됩니다.</p>
+      <h2>이렇게 물으면 이렇게 답합니다</h2>
+      <table><tr><th style="width:31%">질문</th><th>대답</th></tr>${rows}</table>
+      ${soft.length ? `<h2>이 카드를 내밀면</h2>
+        <table><tr><th style="width:14%">번호</th><th>당신의 반응</th></tr>
+        ${soft.map(([c, r]) => `<tr><td><b>${esc(no(c))}</b></td><td>${r}</td></tr>`).join('')}</table>` : ''}
+      ${hits.length ? `<div class="box"><div class="bl">⚠ 여기서 무너집니다 — 버티지 마세요</div>
+        ${hits.map((h) => `<p><b>${(h.codes || []).map((c) => esc(no(c))).join(' 또는 ')}</b> 가 나오면:<br>
+          ${h.text || ''}${h.confess ? '<br><b>— 여기서 인정합니다.</b>' : ''}</p>`).join('')}
+        <p class="muted">이 카드들이 나오기 전까지는 위 대본대로 버팁니다. 나온 뒤에도 계속 우기면
+          게임이 멈춥니다 — 무너지는 것이 당신의 역할입니다.</p></div>` : ''}
+    </div>`;
+  };
   const body = suspects.map((s) => {
     const b = BIBLE[s.name] || {};
     return `<div class="page">
@@ -536,7 +584,8 @@ function charCards() {
       ${(b.script || []).length ? `<h2>추궁당할 때</h2>
         <table><tr><th style="width:34%">상황</th><th>대응</th></tr>
         ${b.script.map(([q, a]) => `<tr><td>${esc(q)}</td><td>${a}</td></tr>`).join('')}</table>` : ''}
-    </div>`;
+    </div>
+    ${script(s.name)}`;
   }).join('');
   return { filename: '보드_인물카드.html', html: doc('보드게임 인물 카드', body) };
 }
@@ -635,6 +684,19 @@ function runSheets() {
     <p class="muted">결과를 읽는 손과 결과가 걸린 목이 같으면 그 카드는 증거가 아니라 증언이 됩니다.
       그래서 낸 사람은 자기 결과를 못 읽습니다. 반대로 "내 물건이라 아예 못 낸다"고 해 두면
       그 카드가 영영 잠기므로, 넘겨서 내는 길을 열어 둡니다.</p></div>
+
+  <div class="page"><h1>사건 기록판 <span class="muted">— 판 가운데에 펴 두세요</span></h1>
+    <p class="muted">진행자가 없으니 판이 무엇을 확정했는지 아무도 기록하지 않습니다. 그러면 같은 질문이
+      네 번 반복되고, 시간표를 매 라운드 다시 계산하게 됩니다. <b>라운드가 끝날 때마다 한 줄씩</b>
+      채우세요. 한 사람이 맡지 말고 그 라운드 시작 플레이어가 적습니다.</p>
+    <table><tr><th style="width:8%">R</th><th style="width:46%">이번 라운드에 확정된 사실</th>
+      <th>답을 못 받은 질문 — 다음 토론 첫머리에 반드시 답한다</th></tr>
+      ${[1,2,3,4,5,6,7].map((n) => `<tr style="height:13mm"><td style="text-align:center;font-weight:800">${n}</td><td></td><td></td></tr>`).join('')}</table>
+    <h2>그날의 시간표 <span class="muted">— 밝혀진 것만 적습니다</span></h2>
+    <table><tr><th style="width:14%">시각</th><th style="width:20%">누가</th><th>무엇을 했나 · 근거 번호</th></tr>
+      ${Array.from({ length: 10 }).map(() => '<tr style="height:9mm"><td></td><td></td><td></td></tr>').join('')}</table>
+    <p class="muted">근거 번호를 꼭 같이 적으세요. "누가 그렇게 말했다"와 "어느 카드에 그렇게 적혀 있다"는
+      다릅니다 — 이 판에서 사람이 속는 자리가 정확히 거기입니다.</p></div>
 
   <div class="page"><h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
     ${ev('①', '2라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
