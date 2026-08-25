@@ -380,6 +380,7 @@ const CSS = `
   .hint { margin-top: 1.4mm; padding-top: 1.2mm; border-top: 0.3mm dashed #b9a86a; }
   .hint div { font-size: 6.9pt; line-height: 1.45; color: #6b551a; }
   .hnote { display: block; font-size: 6.1pt; color: #8a7a45; }
+  .cname { font-weight: 500; color: #6b6250; font-size: 9pt; }
   .press { margin-top: 1.2mm; padding-left: 2mm; border-left: 0.6mm solid #cdbf94;
            font-size: 8.6pt; color: #5b5140; }
   .lock { margin-top: 1.2mm; font-size: 6.9pt; font-weight: 700; color: #8a3b3b; }
@@ -541,6 +542,14 @@ function charCards() {
     'SIAH-72': 'V 더미',
   };
   const no = (code) => num[code] || OFF_DECK[code] || '(덱 밖)';
+  // 번호만 적으면 "S2 가 나오면" 이 무슨 카드인지 알 수가 없다. 카드 이름을 같이 적어
+  //   시트를 처음 읽는 사람도 무엇을 말하는지 바로 알게 한다.
+  const titleOfCode = Object.fromEntries(allClues.map((c) => [c.code, c.title || '']));
+  const OFF_TITLE = { 'LONS-62': '2차 부검 — 타살 확정', 'BRIF-00': '사건 브리핑', 'SIAH-72': 'CCTV 열람실' };
+  const named = (code) => {
+    const t = titleOfCode[code] || OFF_TITLE[code] || '';
+    return `<b>${esc(no(code))}</b>${t ? ` <span class="cname">${esc(t)}</span>` : ''}`;
+  };
   const script = (name) => {
     const d = INTERROGATION[SID[name]];
     if (!d) return '';
@@ -560,9 +569,9 @@ function charCards() {
       <table><tr><th style="width:31%">질문</th><th>대답</th></tr>${rows}</table>
       ${soft.length ? `<h2>이 카드를 내밀면</h2>
         <table><tr><th style="width:14%">번호</th><th>당신의 반응</th></tr>
-        ${soft.map(([c, r]) => `<tr><td><b>${esc(no(c))}</b></td><td>${r}</td></tr>`).join('')}</table>` : ''}
+        ${soft.map(([c, r]) => `<tr><td>${named(c)}</td><td>${r}</td></tr>`).join('')}</table>` : ''}
       ${hits.length ? `<div class="box"><div class="bl">⚠ 여기서 무너집니다 — 버티지 마세요</div>
-        ${hits.map((h) => `<p><b>${(h.codes || []).map((c) => esc(no(c))).join(' 또는 ')}</b> 가 나오면:<br>
+        ${hits.map((h) => `<p>${(h.codes || []).map(named).join(' 또는 ')} 가 나오면:<br>
           ${h.text || ''}${h.confess ? '<br><b>— 여기서 인정합니다.</b>' : ''}</p>`).join('')}
         <p class="muted">이 카드들이 나오기 전까지는 위 대본대로 버팁니다. 나온 뒤에도 계속 우기면
           게임이 멈춥니다 — 무너지는 것이 당신의 역할입니다.<br>
@@ -590,7 +599,7 @@ function charCards() {
       <h2>이 번호가 탁자에 나오면</h2>
       <table><tr><th style="width:14%">번호</th><th>첫마디</th></tr>
         ${Object.entries(s.onCard).map(([c, t]) =>
-          `<tr><td><b>${esc(no(c))}</b></td><td>${esc(t)}</td></tr>`).join('')}</table>
+          `<tr><td>${named(c)}</td><td>${esc(t)}</td></tr>`).join('')}</table>
       <div class="box"><div class="bl">모두에게 — 당신의 죄와 사인은 다릅니다</div>
         <p>여섯 명 중 다섯 명에게 숨길 것이 있고, 그중 몇은 실제로 죄입니다. 그러나 목사님을
           <b>죽인 것은 한 명뿐</b>입니다. 자기 죄가 드러났을 때 전부를 뒤집어쓰지 마세요 —
@@ -625,13 +634,13 @@ function charCards() {
     ${script(s.name)}
     ${boardScript(s.name)}`;
   }).join('');
-  return { filename: '보드_인물카드.html', html: doc('보드게임 인물 카드', body + detectiveCard(no)) };
+  return { filename: '보드_인물카드.html', html: doc('보드게임 인물 카드', body + detectiveCard(named)) };
 }
 
 // ── 7인 모드 · 형사 카드 ─────────────────────────────────────────────────────
 //   여섯이면 이 두 장을 빼고, 일곱이면 넣는다. 다른 인물과 같은 형식으로 뽑되
 //   비밀 시나리오가 없다 — 숨길 것이 없는 사람이라 뒷면이 필요 없다.
-function detectiveCard(no) {
+function detectiveCard(no) {   // no 는 이름까지 붙은 HTML 을 돌려준다
   const d = DETECTIVE;
   const li = (a) => a.map((x) => `<li>${x}</li>`).join('');
   return `<div class="page">
@@ -662,7 +671,7 @@ function detectiveCard(no) {
       ${d.moments.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</table>
     <h2>이 번호가 탁자에 나오면</h2>
     <table><tr><th style="width:14%">번호</th><th>첫마디</th></tr>
-      ${Object.entries(d.onCard).map(([c, t]) => `<tr><td><b>${esc(no(c))}</b></td><td>${esc(t)}</td></tr>`).join('')}</table>
+      ${Object.entries(d.onCard).map(([c, t]) => `<tr><td>${no(c)}</td><td>${esc(t)}</td></tr>`).join('')}</table>
     <div class="box"><div class="bl">결론을 대신 내려 주지 마세요</div>
       <p>아무도 당신을 의심하지 않으니 마음껏 물을 수 있습니다. 그런데 그 편함으로 판을
         정리해 버리면 <b>나머지 여섯이 구경꾼이 됩니다.</b> 묻고, 짚고, 기다리세요.
@@ -740,8 +749,10 @@ function runSheets() {
     <p>①<b>조사</b> — 순서대로 한 명씩, 열려 있는 장소 <b>하나</b>를 골라 그 장소의 남은 번호 중
       <b>3장</b>을 가져갑니다. 가져간 번호는 남이 못 가집니다. 내용은 자기만 읽습니다.<br>
       &nbsp;&nbsp;시작 플레이어는 <b>라운드마다 한 칸씩 돕니다.</b><br>
-      &nbsp;&nbsp;<b>가져오면 그 자리에서 자기 카드를 읽습니다.</b> 읽고 나서 토론에 들어갑니다 —
-      안 읽고 넘어가면 그 라운드 조사가 발언에 아무 영향을 못 줍니다.<br>
+      &nbsp;&nbsp;<b>가져오면 그 자리에서 읽습니다 — 소리 내지 말고 혼자서.</b> 남은 번호만 봅니다.<br>
+      &nbsp;&nbsp;<span class="muted">읽고 나서 토론에 들어갑니다. 안 읽고 넘어가면 그 라운드 조사가
+      발언에 아무 영향을 못 줍니다. 무엇을 읽었는지는 토론에서 <b>말하고 싶은 만큼만, 사실이든
+      거짓이든 자유롭게</b> 말합니다.</span><br>
       ②<b>토론 10분</b> — 카드를 <b>보여 주지 않고</b> 말로만 공유합니다. 거짓말해도 됩니다.<br>
       ③<b>종료</b> — 트랙의 말을 한 칸 옮기고, 이벤트 칸이면 이벤트 카드를 펼칩니다.</p>
     <h2>한 방에 세 명까지</h2>
