@@ -56,7 +56,9 @@ const QCARDS = [
     hint: '네 자리 숫자가 필요하다. 다영이 무엇을 기준으로 숫자를 정했는지는 다른 사람의 기록에 있다.' },
   { no: 'Q3', code: 'HUOX-80', title: '한소미 휴대폰 — 잠긴 대화방',
     hint: '네 자리 숫자가 필요하다. 소미가 무엇을 기준으로 숫자를 정했는지는 다른 사람의 기록에 있다.' },
-  { no: 'Q4', code: 'CERT', title: '교단 「수료증 진위조회」',
+  { no: 'Q4', code: 'YJWR-74', title: '서지안 휴대폰 — 잠긴 대화방',
+    hint: '네 자리 숫자가 필요하다. 지안이 무엇을 기준으로 숫자를 정했는지는 그가 감추고 싶어 하는 종이 한 장에 적혀 있다.' },
+  { no: 'Q5', code: 'CERT', title: '교단 「수료증 진위조회」',
     hint: '수료증에 적힌 발급번호를 넣으면 등록 여부가 나온다. 번호는 그 수료증을 찍은 사진에 있다.' },
 ];
 
@@ -67,7 +69,7 @@ const HAND_CARDS = () => {
   const at = (code) => allClues.find((c) => c.code === code);
   const opts = at('TUBE-22')?.handwriting?.options || [];
   return opts.map((o, i) => ({
-    no: `Q5-${i + 1}`, code: `HAND${i + 1}`, hand: true,
+    no: `Q6-${i + 1}`, code: `HAND${i + 1}`, hand: true,
     title: `필적 대조 — ${o.who}`,
     need: at(o.requires)?.title || `${o.who} 의 손글씨가 있는 카드`,
     hint: `통 라벨의 글씨를 ${o.who} 의 것과 맞춰 본다.`,
@@ -91,6 +93,9 @@ const line = (a, b) => (b ? `${a}\n${b}` : a);
 //   덱의 절반이 남의 신상으로 채워지고, 한 사람의 폰을 다 읽으려면 네 번을 뽑아야 했다.
 //   물건은 하나인데 카드만 늘어난 셈이다. 카드는 하나로 두고 속은 QR 뒤에 둔다 —
 //   폰을 손에 넣은 사람은 실제로 폰을 손에 넣은 것처럼 다 본다. 대신 그 폰은 그 사람 것이다.
+// 지워진 대화방이 실제로 있는 폰만 잠금 카드가 필요하다.
+const hasDeleted = (c) => (c.phone?.apps || [])
+  .some((a) => (a.chats || []).some((ch) => ch.deleted));
 const isScreen = (c) => !!(c.phone?.apps?.length
   || (c.pages?.length && /다이어리|일기장|성경책/.test(c.title)));
 
@@ -106,7 +111,7 @@ function explode(c) {
     const body = [
       phone ? '안에 든 것' : '표시된 자리',
       what,
-      phone ? '지워진 대화방은 잠금 카드로 따로 연다.' : '',
+      phone && hasDeleted(c) ? '지워진 대화방이 있다 — 잠금 카드로 따로 연다.' : '',
     ].filter(Boolean).join('\n');
     // 휴대폰은 3라운드부터 각 방에서 가져갈 수 있다. 다이어리·성경책은 처음부터.
     return [one({ screen: true, image: null, detail: body, locked: phone ? 3 : 0 })];
@@ -501,12 +506,13 @@ function lockCards() {
       ${q.hand ? `대조하려면 <b>${esc(q.need)}</b>가 손에 있어야 한다.` : '잠긴 것은 카드가 아니라 <b>숫자</b>다.'}</div></div>
   </div>`;
   return `<div class="page"><h1>잠금 카드 — ${allQ().length}장
-      <span class="muted">Q1 ~ Q${QCARDS.length} · 필적 대조 Q5-1 ~ Q5-${HANDS.length}</span></h1>
+      <span class="muted">Q1 ~ Q${QCARDS.length} · 필적 대조 Q6-1 ~ Q6-${HANDS.length}</span></h1>
     <p class="muted">앞면이 보이게 판 옆에 펴 둡니다. <b>가져가는 카드가 아닙니다.</b>
       휴대폰 카메라로 QR 을 찍으면 화면이 열리고, 그 사람만 내용을 봅니다.<br>
-      Q1~Q4 는 <b>숫자</b>를 넣어야 열립니다 — 숫자는 다른 단서 카드 안에 적혀 있고,
-      그 카드를 가진 사람이 알려 줄지 말지를 정합니다.<br>
-      <b>Q5-n 은 필적 대조입니다.</b> 통 라벨의 글씨를 그 사람의 것과 맞춰 봅니다 —
+      <b>Q1~Q5 는 숫자를 넣어야 열립니다.</b> Q1~Q4 는 지워진 카카오톡 대화방이고, Q5 는 수료증 조회입니다.
+      숫자는 <b>다른 단서 카드 안에 적혀 있습니다</b> — 그 카드를 손에 넣은 사람이 알려 줄지 말지를 정합니다.
+      찍으면 숫자 넣는 칸이 뜨고, <b>맞는 숫자를 넣은 사람만</b> 내용을 봅니다. 틀리면 아무것도 안 나옵니다.<br>
+      <b>Q6-n 은 필적 대조입니다.</b> 통 라벨의 글씨를 그 사람의 것과 맞춰 봅니다 —
       <b>그 사람의 손글씨가 있는 카드를 손에 넣은 사람만</b> 찍을 수 있습니다.
       한 장이 한 사람이라, 누가 어느 카드를 찍는지가 그대로 보입니다.</p>
     <div class="sheet">${allQ().map(face).join('')}</div></div>`;
@@ -626,10 +632,6 @@ function charCards() {
       <p style="margin-top:3mm">1라운드 시작 전에 위 내용을 자기 말로 소개합니다.
         <b>접힌 안쪽은 절대 보여 주지 않습니다.</b></p>
     </div>
-    <div class="box">
-      <p>여섯 중 다섯에게 숨길 것이 있고 그중 몇은 실제로 죄입니다. 그러나 목사님을
-        <b>죽인 것은 한 명뿐</b>입니다. 자기 죄가 드러났을 때 전부를 뒤집어쓰지 마세요 —
-        <b>인정할 것은 인정하고, 그것이 사인이 아님을 짚으세요.</b></p></div>
     <div class="covFoot"><b>A4 가로</b>로 양면 인쇄해 가운데 점선을 세로로 접으세요.
       접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
 
@@ -667,8 +669,8 @@ function charCards() {
     const soft = [];
     for (const x of st) for (const [code, r] of Object.entries(x.soft || {})) soft.push([code, r]);
     return `<h1>${esc(name)} <span class="muted">— 대본 (본인만)</span></h1>
-      <p class="muted">외울 필요는 없습니다. 자기 말로 바꿔 말해도 되지만
-        <b>사실관계는 벗어나지 마세요.</b> 없는 질문은 시나리오에 맞게 지어내면 됩니다.</p>
+      <p class="muted">외울 필요는 없습니다. <b>상황에 맞게 자기 말로, 즉흥으로 대응하세요.</b>
+        여기 없는 질문은 시나리오에 맞게 지어내면 됩니다 — 다만 <b>사실관계는 벗어나지 마세요.</b></p>
       <h2>이렇게 물으면 이렇게</h2>
       ${qa(st.map((x) => [esc(asked(x.q || '')),
         `${x.text || ''}${x.press ? `<div class="press"><b>더 캐물으면</b> ${x.press}</div>` : ''}`]))}
@@ -683,8 +685,15 @@ function charCards() {
     if (!s) return '';
     // 카드가 나왔을 때의 반응은 여기 한 면에 모은다 — 대본 면에 두면 두 면 다 넘친다.
     const d = INTERROGATION[SID[name]];
+    const drop = new Set(s.dropSoft || []);
+    const over = s.soft || {};
     const soft = [];
-    for (const x of (d?.statements || [])) for (const [c, r] of Object.entries(x.soft || {})) soft.push([c, r]);
+    for (const x of (d?.statements || [])) {
+      for (const [c, r] of Object.entries(x.soft || {})) {
+        if (drop.has(c)) continue;
+        soft.push([c, over[c] || r]);
+      }
+    }
     return `<h1>${esc(name)} <span class="muted">— 이 상황에서는 이렇게 (본인만)</span></h1>
       <h2>말투</h2><p>${s.tone}</p>
       <h2>당신이 알고 있어서 자꾸 걸리는 것</h2>

@@ -16,6 +16,7 @@ const LOCKS = {
   'LWUY-33': { kind: 'chat', title: '목사님 휴대폰', sub: '카카오톡 톡서랍 복구' },
   'QIVS-92': { kind: 'chat', title: '한다영 휴대폰', sub: '카카오톡 톡서랍 복구' },
   'HUOX-80': { kind: 'chat', title: '한소미 휴대폰', sub: '카카오톡 톡서랍 복구' },
+  'YJWR-74': { kind: 'chat', title: '서지안 휴대폰', sub: '카카오톡 톡서랍 복구' },
   CERT: { kind: 'lookup', of: 'LWUY-33', title: '대한성문장로회 총회', sub: '수료증 진위조회' },
   // 필적 대조는 사람마다 카드가 따로 있다(HAND1~). 화면에서 고르는 게 아니라, 그 사람의
   //   다이어리를 손에 넣은 사람이 그 카드의 QR 을 찍는다 — 대조하려면 글씨 표본이 있어야 한다는

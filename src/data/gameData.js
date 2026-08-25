@@ -706,7 +706,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'IHKX-61': { // 현장(목사 방) — 베개
     title: '베개',
     description: '목사님 방에서 발견되었다.',
-    detail: '목사님 배 위에 놓여 있었다. 겉보기엔 특별할 것 없는 일반적인 베개다.',
+    detail: '목사님 배 위에 놓여 있었다. 겉보기엔 특별할 것 없는 일반적인 베개다.\n배게? 베개? 베게? 항상 헷갈리는 단어인 것 같다.',
     image: '/images/베개.png',
     type: '보통',
     person: '목사'
@@ -1057,7 +1057,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
           type: 'photos',
           name: '사진',
           photos: [
-            { caption: '', image: '/images/여자친구.jpg' },
+            { caption: '종현의 여자친구 사진이다.', image: '/images/여자친구.jpg' },
           ]
         }
       ]
