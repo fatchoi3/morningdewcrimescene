@@ -117,7 +117,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const byQ = (a, b) => qRank(a) - qRank(b);
   // 최상위엔 기본 질문 + 모순으로 열린 질문. 단서로 열리는 질문은 화제 안으로 들어가는데,
   //   그 화제가 아직 안 열려 있으면 최상위로 되돌린다 — 안 그러면 질문이 화면에서 증발한다
-  //   (이현지의 「이사랑과는 어떤 사이죠?」가 현지 방만 뒤진 경로에서 사라지던 문제).
+  //   (한소미의 「한다영과는 어떤 사이죠?」가 소미 방만 뒤진 경로에서 사라지던 문제).
   const ownedByShownTopic = new Set(topics.flatMap((t) => stsOf(t).map((s) => s.id)));
   const rootSts = statements.filter((s) => !ownedByShownTopic.has(s.id)).sort(byQ);
   // 단서 한 줄의 상태 — ❗아직 안 물음 · ✔물어봄 · ✅이걸로 모순을 짚음

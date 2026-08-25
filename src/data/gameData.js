@@ -3,7 +3,7 @@ import { resolveTokens } from './tokens.js';
 import { withAssetBase } from './assets.js';
 
 // 모든 청년부원의 성경책에 공통으로 들어가는 말씀 페이지(밑줄·포스트잇이 있는 흔한 성경책).
-// 가현의 성경책(DZPL-78)만 여기에 아이의 그림 편지 한 장이 더 끼워져 있다.
+// 세린의 성경책(DZPL-78)만 여기에 아이의 그림 편지 한 장이 더 끼워져 있다.
 const BIBLE_PAGES = [
   {
     title: '펼쳐 둔 곳 — 시편 23편',
@@ -19,7 +19,7 @@ const BIBLE_PAGES = [
   }
 ];
 
-// 가현의 성경책: 공통 말씀 + 아이가 그린 그림 편지(친자 정황과 연결)
+// 세린의 성경책: 공통 말씀 + 아이가 그린 그림 편지(친자 정황과 연결)
 const GAHYUN_BIBLE_PAGES = [
   ...BIBLE_PAGES,
   {
@@ -31,7 +31,7 @@ const GAHYUN_BIBLE_PAGES = [
 ];
 
 // 인물별 성경책 — 밑줄·메모가 각자 다르다(성격이 은근히 드러나지만 어디까지나 평범한 성경책).
-// 이사랑(빚·동생을 향한 부담)
+// 한다영(빚·동생을 향한 부담)
 const SARANG_BIBLE_PAGES = [
   {
     title: '펼쳐 둔 곳 — 마태복음 6:34',
@@ -47,7 +47,7 @@ const SARANG_BIBLE_PAGES = [
   }
 ];
 
-// 이현지(회계·언니로서의 죄책과 보호)
+// 한소미(회계·언니로서의 죄책과 보호)
 const HYUNJI_BIBLE_PAGES = [
   {
     title: '펼쳐 둔 곳 — 베드로전서 4:8',
@@ -79,7 +79,7 @@ const JONGHYUN_BIBLE_PAGES = [
   }
 ];
 
-// 박희원(감춰 온 이력·발각의 두려움)
+// 서지안(감춰 온 이력·발각의 두려움)
 const HEEWON_BIBLE_PAGES = [
   {
     title: '펼쳐 둔 곳 — 에스겔 36:26',
@@ -99,7 +99,7 @@ const HEEWON_BIBLE_PAGES = [
   }
 ];
 
-// 윤은재(인정 욕구·분노)
+// 강지후(인정 욕구·분노)
 const EUNJAE_BIBLE_PAGES = [
   {
     title: '펼쳐 둔 곳 — 야고보서 1:19',
@@ -469,7 +469,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     person: '목사',
     unlockedBy: ['TQPA-93'],
   },
-  'LWUY-33': { // 목사 핸드폰 — 지문 인식으로 풀림. 카톡에 삭제된 대화(김민석·이가현) → 톡서랍 복구
+  'LWUY-33': { // 목사 핸드폰 — 지문 인식으로 풀림. 카톡에 삭제된 대화(김민석·문세린) → 톡서랍 복구
     title: '목사님 핸드폰',
     description: '잠금이 풀린 채 발견된 목사님의 핸드폰.',
     detail: '카톡과 사진을 확인할 수 있다. 카카오톡에 삭제된 대화가 있는 듯하다.',
@@ -494,8 +494,8 @@ export const evidenceMap = withAssetBase(resolveTokens({
           ]
         },
         {
-          // 박희원 위조 강조 — 목사가 직접 알아보려던 교단 수료증 진위조회.
-          // 정답(answer)은 박희원 수료증 사진(certificate.jpg)의 발급번호. 사진을 읽어 입력해야 '위조' 판정이 뜬다.
+          // 서지안 위조 강조 — 목사가 직접 알아보려던 교단 수료증 진위조회.
+          // 정답(answer)은 서지안 수료증 사진(certificate.jpg)의 발급번호. 사진을 읽어 입력해야 '위조' 판정이 뜬다.
           id: 'browser',
           type: 'browser',
           name: '인터넷',
@@ -713,7 +713,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 이사랑 (독립 범행 — 요힘빈 라벨 교체, 살인과 무관) — 보통 단서
+  // 한다영 (독립 범행 — 요힘빈 라벨 교체, 살인과 무관) — 보통 단서
   // =============================================
   'NQBT-91': { // 복도 CCTV
     title: '[CCTV 장면] 10:25~27 {{S5}}',
@@ -723,7 +723,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S5}}'
   },
-  'NYBB-98': { // 이사랑 가방
+  'NYBB-98': { // 한다영 가방
     title: '{{S5.short}}의 파우치',
     description: '{{S5}}의 가방에서 발견되었다.',
     detail: '스킨·로션·쿠션 등 일상 화장품이 있다.',
@@ -731,7 +731,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S5}}'
   },
-  'LBPG-31': { // 이사랑 가방 — 라벨 제작 도구 (핵심 물증, '풀'은 GLUE-77로 분리)
+  'LBPG-31': { // 한다영 가방 — 라벨 제작 도구 (핵심 물증, '풀'은 GLUE-77로 분리)
     title: '라벨지와 볼펜',
     description: '{{S5}}의 가방에서 발견되었다.',
     detail: '새 라벨지 묶음과 볼펜.',
@@ -739,7 +739,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S5}}'
   },
-  'GLUE-77': { // 이사랑 가방 — 라벨 재부착 도구 (핵심 물증, LBPG-31에서 '풀' 분리)
+  'GLUE-77': { // 한다영 가방 — 라벨 재부착 도구 (핵심 물증, LBPG-31에서 '풀' 분리)
     title: '풀',
     description: '{{S5}}의 가방에서 발견되었다.',
     detail: '작은 풀(접착제).',
@@ -755,7 +755,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S5}}'
   },
-  'QIVS-92': { // 이사랑 열린 핸드폰 (PECG-06 해금 후). 톡서랍 비번 = 현지 생일 0302
+  'QIVS-92': { // 한다영 열린 핸드폰 (PECG-06 해금 후). 톡서랍 비번 = 소미 생일 0302
     title: '{{S5.short}}의 핸드폰',
     description: '',
     detail: '인터넷 검색 내역, 카카오톡 대화, 메시지, 사진 등을 확인할 수 있다. 카카오톡에 삭제된 대화가 있다.',
@@ -833,7 +833,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
                 { from: 'me', text: '빚이 그렇게 많은 줄도 모르고 나 혼자 다 뒤집어썼어. 난 언니가 알고 떠넘긴 줄 알았어.', time: '전날 21:12' },
                 { from: 'me', text: '근데 통장 정리하다 봤어. 언니가 내 빚… 몇 년째 대신 갚아온 거.', time: '전날 21:13' },
                 { from: 'me', text: '왜 말 안 했어. 나 진짜 언니 원망했는데.', time: '전날 21:13' },
-                // ↓ 언니의 장문 고백 (반전의 핵심) — 이사랑 폰에 남아있음
+                // ↓ 언니의 장문 고백 (반전의 핵심) — 한다영 폰에 남아있음
                 { from: 'them', text: '…알아버렸구나.', time: '전날 21:30' },
                 { from: 'them', text: '그땐 그냥 너 잘 되라고 다 넘긴 거였어. 난 자리 잡았으니까. 빚이 그렇게 숨어 있을 줄 누가 알았겠니.', time: '전날 21:31' },
                 { from: 'them', text: '근데 막상 빚이 터지고 보니 포기한 나는 쏙 빠지고, 너 혼자 다 안게 됐잖아. 그게 계속 마음에 걸렸어.', time: '전날 21:32' },
@@ -867,7 +867,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
       ]
     }
   },
-  'SUIX-89': { // 이사랑 방
+  'SUIX-89': { // 한다영 방
     title: '빚 독촉장',
     description: '{{S5}} 가방 안쪽에서 나온 봉투.',
     detail: '본인({{S5}}) 명의로 집중된 채무 독촉장. 부모에게서 넘어온 빚으로, 금액은 1억 4천만원이다. (발행일 6월 27일 — 수련회 직전)',
@@ -875,7 +875,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S5}}'
   },
-  'HKVQ-36': { // 길잡이형 — 10:25 CCTV(NQBT-91) 확보 시 해금 → 이사랑 추궁 유도
+  'HKVQ-36': { // 길잡이형 — 10:25 CCTV(NQBT-91) 확보 시 해금 → 한다영 추궁 유도
     title: '{{S1.short}} 방엔 왜?',
     description: '',
     detail: '10:25경 {{S5|이/가}} {{S1.short}}의 방 방향으로 갔다가 손에 무언가를 들고 나오는 모습이 CCTV에 찍혔다. 무슨 일이었는지 {{S5}}에게 물어봐야겠다.',
@@ -903,7 +903,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S5}}'
   },
-  'BCZN-89': { // 이사랑 다이어리 — 생일 8월 15일(0815) 노출 → 현지 폰 톡서랍 비번
+  'BCZN-89': { // 한다영 다이어리 — 생일 8월 15일(0815) 노출 → 소미 폰 톡서랍 비번
     title: '{{S5}}의 다이어리',
     description: '{{S5}}의 책상 위에서 발견되었다. 며칠에 걸쳐 적어 온 다이어리. 화살표로 페이지를 넘겨 읽어보세요.',
     detail: '',
@@ -934,7 +934,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 이사랑 (독립 범행) — 특수 단서
+  // 한다영 (독립 범행) — 특수 단서
   // =============================================
 
   // =============================================
@@ -1042,7 +1042,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
               ]
             },
             {
-              // 이사랑 알리바이 빌드업 — 종현 등산 중(오전) 단백질 양해 요청
+              // 한다영 알리바이 빌드업 — 종현 등산 중(오전) 단백질 양해 요청
               name: '{{S5.short|이/}} 누나',
               messages: [
                 { from: 'them', text: '{{S1.short|아/야}}, 나 네 방에서 단백질 좀 타 마셔도 돼? 아침을 걸러서 ㅠ', time: '오늘 오전 10:23' },
@@ -1143,7 +1143,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 이현지 (독립 범행 시도 · 이사랑 언니 · 직접 사인 무관) — 보통 단서
+  // 한소미 (독립 범행 시도 · 한다영 언니 · 직접 사인 무관) — 보통 단서
   // =============================================
   'BXNP-29': { // 가방 — 졸피뎀 약통
     title: '졸피뎀 약통',
@@ -1153,7 +1153,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S3}}'
   },
-  'BUFL-52': { // 이현지 다이어리 — 생일 3월 2일(0302) 노출 → 사랑 폰 톡서랍 비번
+  'BUFL-52': { // 한소미 다이어리 — 생일 3월 2일(0302) 노출 → 다영 폰 톡서랍 비번
     title: '{{S3}}의 다이어리',
     description: '{{S3}}의 책상 위에서 발견되었다.',
     detail: '{{S3|이/가}} 며칠에 걸쳐 적어 온 다이어리. 화살표로 페이지를 넘겨 읽어보세요.',
@@ -1174,7 +1174,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
       }
     ]
   },
-  'HUOX-80': { // 이현지 핸드폰. 톡서랍 비번 = 사랑 생일 0815
+  'HUOX-80': { // 한소미 핸드폰. 톡서랍 비번 = 다영 생일 0815
     title: '{{S3}} 핸드폰',
     description: '{{S3}} 핸드폰이다.',
     detail: '인터넷 검색, 카카오톡 대화, 사진 등을 확인할 수 있다. 카카오톡에 삭제된 대화가 있다.',
@@ -1227,7 +1227,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
                 { from: 'them', text: '빚이 그렇게 많은 줄도 모르고 나 혼자 다 뒤집어썼어. 난 언니가 알고 떠넘긴 줄 알았어.', time: '전날 21:12' },
                 { from: 'them', text: '근데 통장 정리하다 봤어. 언니가 내 빚… 몇 년째 대신 갚아온 거.', time: '전날 21:13' },
                 { from: 'them', text: '왜 말 안 했어. 나 진짜 언니 원망했는데.', time: '전날 21:13' },
-                // ↓ 언니의 장문 고백 (반전의 핵심) — 이사랑 폰에도 남아있음
+                // ↓ 언니의 장문 고백 (반전의 핵심) — 한다영 폰에도 남아있음
                 { from: 'me', text: '…알아버렸구나.', time: '전날 21:30' },
                 { from: 'me', text: '그땐 그냥 너 잘 되라고 다 넘긴 거였어. 난 자리 잡았으니까. 빚이 그렇게 숨어 있을 줄 누가 알았겠니.', time: '전날 21:31' },
                 { from: 'me', text: '근데 막상 빚이 터지고 보니 포기한 나는 쏙 빠지고, 너 혼자 다 안게 됐잖아. 그게 계속 마음에 걸렸어.', time: '전날 21:32' },
@@ -1280,7 +1280,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S3}}'
   },
-  // NKCD-95(현지 '손 닦는' 컷)는 타임라인 재정립으로 제거됨 — 참조 0건 확인 후 삭제
+  // NKCD-95(소미 '손 닦는' 컷)는 타임라인 재정립으로 제거됨 — 참조 0건 확인 후 삭제
   'KPVH-32': {
     title: '{{S3.short}}의 파우치',
     description: '{{S3.short}} 가방에서 발견했다.',
@@ -1291,7 +1291,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 이현지 — 특수 단서
+  // 한소미 — 특수 단서
   // =============================================
   'NVYN-22': {
     title: '목사님 텀블러 성분 감식',
@@ -1303,7 +1303,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 박희원 (주범 — 응급약 교체 + 베개 질식) — 보통 단서
+  // 서지안 (주범 — 응급약 교체 + 베개 질식) — 보통 단서
   // =============================================
   'UTUW-73': { // 방 — 요일별 약통 (핵심)
     title: '요일별 약통',
@@ -1439,7 +1439,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S4}}'
   },
-  'MZKW-75': { // 박희원 다이어리 — 필적 대조용
+  'MZKW-75': { // 서지안 다이어리 — 필적 대조용
     title: '{{S4}}의 다이어리',
     description: '{{S4.short}}의 책상 위에서 발견되었다. 적어 온 다이어리로, 필적을 살펴볼 수 있다.',
     detail: '',
@@ -1453,7 +1453,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 박희원 — 특수 단서
+  // 서지안 — 특수 단서
   // =============================================
   'JXCA-09': { // 길잡이형 — 육안 대조 + 추궁 유도(확정 아님)
     title: '약이 닮았다?',
@@ -1466,7 +1466,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 윤은재 (감정 동기 의혹 · 무고 · 발작 촉진 가능성만) — 보통 단서
+  // 강지후 (감정 동기 의혹 · 무고 · 발작 촉진 가능성만) — 보통 단서
   // =============================================
   'BXCI-79': { // 12:41~12:45 CCTV 컷 + 별도 목격 진술 병행 (코드 끝2자리≠시각, 코드 유지)
     title: '[CCTV 장면] 12:45 {{S2}}',
@@ -1492,7 +1492,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S2}}'
   },
-  'UHRU-61': { // 윤은재 다이어리 — 필적 대조용
+  'UHRU-61': { // 강지후 다이어리 — 필적 대조용
     title: '{{S2}}의 다이어리',
     description: '{{S2.short}}의 책상 위에서 발견되었다.',
     detail: '{{S2|이/가}} 적어 온 다이어리. 필적을 살펴볼 수 있다.',
@@ -1589,7 +1589,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     person: '{{S2}}',
     pages: EUNJAE_BIBLE_PAGES
   },
-  'HWGJ-12': { // CCTV — 은재 산행 출발 (10:05)
+  'HWGJ-12': { // CCTV — 지후 산행 출발 (10:05)
     title: '[CCTV 장면] 10:05 {{S2}}',
     description: '',
     detail: '10:05경 {{S2|이/가}} 숙소에서 산(바깥) 방향으로 나갔다.',
@@ -1597,7 +1597,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S2}}'
   },
-  'JSYT-91': { // CCTV — 은재 산행 복귀 (10:35)
+  'JSYT-91': { // CCTV — 지후 산행 복귀 (10:35)
     title: '[CCTV 장면] 10:35 {{S2}}',
     description: '',
     detail: '10:35경 {{S2|이/가}} 산 방향에서 돌아와 숙소로 들어갔다.',
@@ -1607,7 +1607,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 윤은재 — 특수 단서
+  // 강지후 — 특수 단서
   // =============================================
   'AQFE-59': {
     title: '약봉투 처방전 확인',
@@ -1626,7 +1626,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     person: '{{S2}}',
     unlockedBy: []
   },
-  'YKBP-76': { // 길잡이형 — 손목 멍 + 옷깃 흔적 → 은재 추궁 유도 (가벼운 실랑이, 질식과 무관)
+  'YKBP-76': { // 길잡이형 — 손목 멍 + 옷깃 흔적 → 지후 추궁 유도 (가벼운 실랑이, 질식과 무관)
     title: '목사와 무슨 일이?',
     description: '',
     detail: '{{S2.short}} 손목의 멍과, 목사님 옷에서 떨어진 단추·구겨진 옷깃. 둘 사이에 가벼운 실랑이가 있었던 것 같다. {{S2.short}}에게 직접 물어봐야겠다.',
@@ -1645,7 +1645,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 이가현 (증거 인멸)— 보통 단서
+  // 문세린 (증거 인멸)— 보통 단서
   // =============================================
   'NBZL-83': { // 지갑 — 클릭해서 내용물 확인 (딸 사진 포함)
     title: '{{S6.short}}의 지갑',
@@ -1680,7 +1680,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     person: '{{S6}}',
     unlockedBy: [],
   },
-  'AYMX-96': { // 이가현 다이어리 — 필적 대조용
+  'AYMX-96': { // 문세린 다이어리 — 필적 대조용
     title: '{{S6}}의 다이어리',
     description: '{{S6.short}}의 책상 위에서 발견되었다. 적어 온 다이어리로, 필적을 살펴볼 수 있다.',
     detail: '',
@@ -1752,7 +1752,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
               ]
             },
             {
-              // 딸 정황 — 종현만 아는 비밀. KMRV-41('가현에게 딸이?') 진술 라인과 연결.
+              // 딸 정황 — 종현만 아는 비밀. KMRV-41('세린에게 딸이?') 진술 라인과 연결.
               name: '{{S1.short|이/}}',
               messages: [
                 { from: 'me', text: '{{S1.short|아/야}}, 저번에 네가 본 거… 다른 사람들한텐 그냥 비밀로 해줄 수 있지?', time: '4일 전' },
@@ -1812,9 +1812,9 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
 
   // =============================================
-  // 이가현 
+  // 문세린 
   // =============================================
-  // 'WVBG-31'(어린이집 비상연락망) — 종이 비상연락망은 부자연스러워 폐기. 어린이집 정황은 가현 폰 연락처(TCGA-87)로 이동.
+  // 'WVBG-31'(어린이집 비상연락망) — 종이 비상연락망은 부자연스러워 폐기. 어린이집 정황은 세린 폰 연락처(TCGA-87)로 이동.
   'KMRV-41': { // 진행자 수동 부여 — 종현 구두 진술 시 이 코드를 직접 입력시켜 해금 (자동 해금 아님: unlockedBy 비움)
     title: '{{S6.short}}에게 딸이?',
     description: '',
@@ -1826,10 +1826,10 @@ export const evidenceMap = withAssetBase(resolveTokens({
     award: '막내 {{S1.short|이/}} {{S6.short}}의 딸 정황(폰 배경사진·지갑 속 아이 사진·소아과 영수증 등)을 보고 진술하면 부여'
   },
   // 2-B 수동 부여(unlockedBy 비움) — 비대칭 인멸 입증용 특수 단서.
-  // 부여 조건(운영자 판단): ① 목사 폰(LWUY-33) 톡서랍 0419 복구로 '이가현' 대화 확인 +
-  //   ② 가현 폰(TCGA-87) 카톡 목록에 '목사' 대화방이 없음을 확인 → 둘 다 제시하면 코드 공개.
+  // 부여 조건(운영자 판단): ① 목사 폰(LWUY-33) 톡서랍 0419 복구로 '문세린' 대화 확인 +
+  //   ② 세린 폰(TCGA-87) 카톡 목록에 '목사' 대화방이 없음을 확인 → 둘 다 제시하면 코드 공개.
   //   한쪽만으로는 부여하지 않는다. (포렌식/삭제로그 직접단서는 채택 안 함)
-  'DISC-11': { // 자동 해금 — 목사 폰 톡서랍(0419) 복구 열람 + 가현 폰 카톡 열람 두 흔적이 모이면 App이 자동 부여
+  'DISC-11': { // 자동 해금 — 목사 폰 톡서랍(0419) 복구 열람 + 세린 폰 카톡 열람 두 흔적이 모이면 App이 자동 부여
     title: '사라진 대화방',
     description: '',
     detail: '목사님 폰엔 {{S6.short|과/와}} 나눈 대화가 그대로 남아 있는데, {{S6.short}} 폰엔 그 대화방만 통째로 사라졌다. 한쪽만 지워진 것이다. 왜 이 대화만 지웠는지 {{S6.short}}에게 직접 물어보자.',
@@ -1909,9 +1909,9 @@ export const cctvClueCodes = Array.from(new Set(
 
 // tapReveal 조합 자동 해금 규칙 — 열람 흔적 조합이 모이면 특수 단서를 부여 (App/provider가 사용)
 export const tapRules = [
-  // 목사 폰 톡서랍(0419) 복구 열람 + 가현 폰 카톡 열람 → 사라진 대화방(DISC-11)
+  // 목사 폰 톡서랍(0419) 복구 열람 + 세린 폰 카톡 열람 → 사라진 대화방(DISC-11)
   { grants: 'DISC-11', requiresTaps: ['LWUY-33:톡서랍', 'TCGA-87:kakao'] },
-  // 사랑·현지 폰 톡서랍을 양쪽 다 복구해 교차 대화 확인 → 자매 관계(SIST-22)
+  // 다영·소미 폰 톡서랍을 양쪽 다 복구해 교차 대화 확인 → 자매 관계(SIST-22)
   { grants: 'SIST-22', requiresTaps: ['QIVS-92:톡서랍', 'HUOX-80:톡서랍'] },
 ];
 

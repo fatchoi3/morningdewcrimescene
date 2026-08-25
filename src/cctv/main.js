@@ -27,9 +27,9 @@ const PLAN = `
     .map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="#161d27" stroke="#2c3a4c"/>`).join('')}
   <rect x="334" y="12" width="52" height="80" rx="3" fill="#2a1a1a" stroke="#7a4444"/>
   <text x="360" y="56" text-anchor="middle" font-size="10" fill="#c98b8b">목사님</text>
-  ${[['이사랑', 102], ['이현지', 197], ['박희원', 290]]
+  ${[['한다영', 102], ['한소미', 197], ['서지안', 290]]
     .map(([n, x]) => `<text x="${x}" y="84" text-anchor="middle" font-size="10" fill="#7f8ea3">${n}</text>`).join('')}
-  ${[['최종현', 102], ['이가현', 197], ['윤은재', 290]]
+  ${[['최종현', 102], ['문세린', 197], ['강지후', 290]]
     .map(([n, x]) => `<text x="${x}" y="212" text-anchor="middle" font-size="10" fill="#7f8ea3">${n}</text>`).join('')}
   <circle cx="47" cy="141" r="6" fill="#0a0d12" stroke="#a06ec8" stroke-width="2"/>
   <text x="47" y="160" text-anchor="middle" font-size="7" fill="#a06ec8">CCTV</text>

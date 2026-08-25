@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
  * 지갑 단서. 핸드폰처럼 클릭해서 내용물(사진·카드·신분증 등)을 하나씩 열어본다.
  *
  * item.wallet = {
- *   owner: '가현의 지갑',
+ *   owner: '세린의 지갑',
  *   items: [{ label, detail, image?, icon? }]
  * }
  */

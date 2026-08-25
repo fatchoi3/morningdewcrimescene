@@ -334,7 +334,7 @@ function PhoneModal({ code, clue, onClose }) {
                 );
               })()}
 
-              {/* 전화 — 통화 기록(이가현 폰의 13:31 112 신고·약혼자 통화가 여기 있다) */}
+              {/* 전화 — 통화 기록(문세린 폰의 13:31 112 신고·약혼자 통화가 여기 있다) */}
               {app.type === 'calls' && (
                 <div className="s-kk-list">
                   {(app.calls || []).map((c, i) => {

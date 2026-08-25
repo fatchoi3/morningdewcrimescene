@@ -5,10 +5,10 @@
 //   본문(gameData)·색상표(gameConfig)·용의자 목록이 모두 여기서 파생된다.
 //
 //   본문에서 인물을 가리킬 때는 이름을 직접 쓰지 말고 토큰을 쓸 것:
-//     {{S5}}            이사랑
-//     {{S5.short}}      사랑
-//     {{S5|과/와}}       이사랑과   ← 받침에 따라 조사가 자동으로 맞춰진다
-//     {{S5.short|이/}}   사랑이     ← 받침 없는 이름이면 '이'가 붙지 않는다
+//     {{S5}}            한다영
+//     {{S5.short}}      다영
+//     {{S5|과/와}}       한다영과   ← 받침에 따라 조사가 자동으로 맞춰진다
+//     {{S5.short|이/}}   다영이     ← 받침 없는 이름이면 '이'가 붙지 않는다
 //   자세한 규칙은 tokens.js 참고.
 //
 //   ※ 사진: public/images/people/ 에 아래 image 경로대로 파일을 넣는다.
@@ -61,62 +61,62 @@ const castRaw = {
   },
 
   S2: {
-    name: '윤은재',
+    name: '강지후',
     age: 24,
     gender: '남성',
     occupation: '샛별이슬 청년부 찬양팀 팀장',
     image: '/images/people/s2.png',
     family: '부모님과 함께 거주하며 외동아들이다.',
     notes: '솔직하고 다혈질인 찬양팀 팀장. 목사님과 찬양곡 선정 문제로 몇 달째 부딪혔고, 수련회 당일에도 목사님 방에서 언성을 높이며 크게 다투고 나왔다는 목격담이 있습니다.',
-    short: '은재',
+    short: '지후',
     theme: { color: '#444440', bg: '#F0EFEC' },
   },
 
   S3: {
-    name: '이현지',
+    name: '한소미',
     age: 26,
     gender: '여성',
     occupation: '샛별이슬 청년부 회계',
     image: '/images/people/s3.png',
     family: '',
     notes: '말수가 적고 꼼꼼한 회계 담당. 좀처럼 속을 드러내지 않습니다. 총무 {{S5|과/와}} 유독 가깝게 지내며, 목사님과의 특별한 마찰은 알려진 바 없습니다.',
-    short: '현지',
+    short: '소미',
     theme: { color: '#0F6E56', bg: '#E8F8F2' },
   },
 
   S4: {
-    name: '박희원',
+    name: '서지안',
     age: 28,
     gender: '여성',
     occupation: '샛별이슬 청년부 전도사',
     image: '/images/people/s4.png',
     family: '부모님과 남동생, 여동생이 있다.',
     notes: '차분하고 모범적인 전도사. 평소 목사님을 깍듯이 따랐지만, 수련회 날을 기점으로 목사님을 대하는 태도가 눈에 띄게 어색해졌다고 합니다.',
-    short: '희원',
+    short: '지안',
     theme: { color: '#854F0B', bg: '#FEF6E4' },
   },
 
   S5: {
-    name: '이사랑',
+    name: '한다영',
     age: 25,
     gender: '여성',
     occupation: '샛별이슬 청년부 총무',
     image: '/images/people/s5.png',
     family: '',
     notes: '사교적이고 씀씀이가 큰 총무. 행사·총무 업무를 도맡습니다. 수련회 날을 기점으로 목사님과 마주치기를 피하며 어색해하는 모습이 보였습니다.',
-    short: '사랑',
+    short: '다영',
     theme: { color: '#A32D2D', bg: '#FDEAEA' },
   },
 
   S6: {
-    name: '이가현',
+    name: '문세린',
     age: 28,
     gender: '여성',
     occupation: '샛별이슬 청년부 회장',
     image: '/images/people/s6.png',
     family: '미혼으로, 부모님과는 왕래가 드뭅니다.',
     notes: '책임감 강하고 리더십 있는 청년부 회장. 그러나 수련회 날을 기점으로 목사님과 눈도 마주치지 않을 만큼 사이가 어색해졌습니다.',
-    short: '가현',
+    short: '세린',
     theme: { color: '#534AB7', bg: '#EEEDFE' },
   },
 };

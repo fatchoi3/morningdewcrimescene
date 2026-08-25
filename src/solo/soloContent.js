@@ -144,12 +144,12 @@ const MOTIVES = [
 ];
 // id(S1..S6) 기준 정답
 const caseAnswers = {
-  S4: { role: '진범', method: 'm_pillow', motive: 'mo_cert' },      // 박희원
-  S5: { role: '가담', method: 'm_label', motive: 'mo_debt' },        // 이사랑
-  S3: { role: '가담', method: 'm_sleep', motive: 'mo_sister' },      // 이현지
-  S6: { role: '증거인멸', method: 'm_delete', motive: 'mo_engage' }, // 이가현
+  S4: { role: '진범', method: 'm_pillow', motive: 'mo_cert' },      // 서지안
+  S5: { role: '가담', method: 'm_label', motive: 'mo_debt' },        // 한다영
+  S3: { role: '가담', method: 'm_sleep', motive: 'mo_sister' },      // 한소미
+  S6: { role: '증거인멸', method: 'm_delete', motive: 'mo_engage' }, // 문세린
   S1: { role: '무고', method: 'm_none', motive: 'mo_none' },         // 최종현
-  S2: { role: '무고', method: 'm_none', motive: 'mo_none' },         // 윤은재
+  S2: { role: '무고', method: 'm_none', motive: 'mo_none' },         // 강지후
 };
 
 const _locations = buildLocations();

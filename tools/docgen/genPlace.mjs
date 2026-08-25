@@ -102,9 +102,9 @@ function floorPlan() {
   <rect class="room" x="150" y="172" width="95" height="73" rx="3"/>
   <rect class="room" x="245" y="172" width="90" height="73" rx="3"/>
   <rect class="hall" x="55" y="122" width="287" height="38"/>
-  <text x="102" y="84">이사랑</text><text x="197" y="84">이현지</text><text x="290" y="84">박희원</text>
+  <text x="102" y="84">한다영</text><text x="197" y="84">한소미</text><text x="290" y="84">서지안</text>
   <text x="366" y="55">목사님</text>
-  <text x="102" y="212">최종현</text><text x="197" y="212">이가현</text><text x="290" y="212">윤은재</text>
+  <text x="102" y="212">최종현</text><text x="197" y="212">문세린</text><text x="290" y="212">강지후</text>
   <circle cx="47" cy="141" r="9" fill="#11151c" stroke="#888" stroke-width="2"/>
   <text x="47" y="164" class="cam">CCTV</text>
   <text x="198" y="146" style="fill:#8a98aa;font-size:10px">복도 (CCTV 촬영)</text>
@@ -157,7 +157,7 @@ export function genPlaceGuide() {
   <div class="s"><b>${pages.length}</b> 페이지물</div>
   <div class="s"><b>${wallets.length}</b> 지갑</div>
 </div>
-<div class="tip"><b>귀속 방식</b> — 모든 단서는 <code>person</code> 필드로 인물에 귀속됩니다(박희원·이사랑·이현지·최종현·윤은재·이가현·목사·공용). 현장(목사 방)·CCTV·증언 단서는 person="목사" 또는 "공용"으로 분류되며, 내용·연계로 용의자를 가리킵니다.</div>
+<div class="tip"><b>귀속 방식</b> — 모든 단서는 <code>person</code> 필드로 인물에 귀속됩니다(서지안·한다영·한소미·최종현·강지후·문세린·목사·공용). 현장(목사 방)·CCTV·증언 단서는 person="목사" 또는 "공용"으로 분류되며, 내용·연계로 용의자를 가리킵니다.</div>
 
 <div class="ch">1. 방 배치도</div>
 ${floorPlan()}
@@ -185,7 +185,7 @@ ${renderCctv(cctv?.cctv, titleOf)}
 ${renderSchedule(sched?.schedule)}
 
 <div class="ch pb">6. 전체 동선 타임라인 (시간순)</div>
-<div class="warn"><b>핵심 원칙 — 목사방 진입은 CCTV로 특정 불가</b><br>복도 CCTV는 인물이 <b>목사님 방 쪽으로 향하는 것까지만</b> 잡는다. 방 문은 사각이라 <b>누가 실제로 방 안에 들어갔는지는 어떤 CCTV로도 확인되지 않는다.</b> 박희원·이가현 모두 "방 쪽으로 갔다"까지만 찍혔고, 진입 여부는 진술·물증으로만 좁혀진다.</div>
+<div class="warn"><b>핵심 원칙 — 목사방 진입은 CCTV로 특정 불가</b><br>복도 CCTV는 인물이 <b>목사님 방 쪽으로 향하는 것까지만</b> 잡는다. 방 문은 사각이라 <b>누가 실제로 방 안에 들어갔는지는 어떤 CCTV로도 확인되지 않는다.</b> 서지안·문세린 모두 "방 쪽으로 갔다"까지만 찍혔고, 진입 여부는 진술·물증으로만 좁혀진다.</div>
 ${movementTable()}
 <div class="tip">동선 위주 요약입니다. 각 인물의 구체적 행위·동기는 배우 시트와 진상해설서를 참조하세요.</div>
 
@@ -200,9 +200,9 @@ ${movementTable()}
 ☐ 목사님 방(D) 통제선 + "2부 개방" 안내문<br>
 ☐ 예배당 증거대: 목사님 일정표 + 목사 핸드폰(톡서랍 비번 0419)<br>
 ☐ CCTV 태블릿: ${cctv?.cctv?.timeline?.length || 0}개 시간대 · 총 ${(cctv?.cctv?.timeline || []).reduce((n, t) => n + (t.people?.length || 0), 0)}개 인물컷 장면 준비<br>
-☐ 톡서랍 비번: 목사 0419 · 이사랑 0302(언니 생일) · 이현지 0815(동생 생일)
+☐ 톡서랍 비번: 목사 0419 · 한다영 0302(언니 생일) · 한소미 0815(동생 생일)
 </div>
-<div class="warn"><b>운영 주의</b> — 자매(이사랑·이현지) 폰 톡서랍은 상대 생일로 교차 잠겨 있어, 한쪽 폰을 열려면 상대의 다이어리(생일)를 먼저 읽어야 합니다. 이 교차 구조가 자매 관계를 드러내는 장치입니다.</div>
+<div class="warn"><b>운영 주의</b> — 자매(한다영·한소미) 폰 톡서랍은 상대 생일로 교차 잠겨 있어, 한쪽 폰을 열려면 상대의 다이어리(생일)를 먼저 읽어야 합니다. 이 교차 구조가 자매 관계를 드러내는 장치입니다.</div>
 
 <div class="ch pb">8. 운영자 전용 코드 & 감식 비번</div>
 <div class="warn"><b>⚠ 운영자 전용 — 참가자에게 노출 금지.</b></div>

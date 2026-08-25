@@ -21,13 +21,13 @@ const page = (t) => (MANUAL.find((p) => p.title === t)?.content || '').trim();
 
 // 2층 평면도(배치도) — CCTV 열람대와 동일 레이아웃
 const ROOMS = [
-  { x: 55, y: 45, w: 95, h: 70, label: '이사랑' },
-  { x: 150, y: 45, w: 95, h: 70, label: '이현지' },
-  { x: 245, y: 45, w: 90, h: 70, label: '박희원' },
+  { x: 55, y: 45, w: 95, h: 70, label: '한다영' },
+  { x: 150, y: 45, w: 95, h: 70, label: '한소미' },
+  { x: 245, y: 45, w: 90, h: 70, label: '서지안' },
   { x: 335, y: 12, w: 63, h: 80, label: '목사님', victim: true },
   { x: 55, y: 172, w: 95, h: 73, label: '최종현' },
-  { x: 150, y: 172, w: 95, h: 73, label: '이가현' },
-  { x: 245, y: 172, w: 90, h: 73, label: '윤은재' },
+  { x: 150, y: 172, w: 95, h: 73, label: '문세린' },
+  { x: 245, y: 172, w: 90, h: 73, label: '강지후' },
 ];
 
 // 평면도(배치도) — 어두운 슬라이드에서도 잘 보이도록 밝은 카드 위에 그린다.
@@ -115,7 +115,7 @@ export async function genSlidesPptx(outPath) {
   const urlText = SITE_URL.replace(/^https?:\/\//, '');
 
   // 2부 용의자 6인 핸드폰 QR + 2차 부검 QR (참가자가 화면에서 스캔)
-  const PHONE6 = ['박희원', '이사랑', '이현지', '최종현', '윤은재', '이가현']
+  const PHONE6 = ['서지안', '한다영', '한소미', '최종현', '강지후', '문세린']
     .map((name) => { const e = Object.entries(evidenceMap).find(([, v]) => v.phone && v.person === name); return e ? { name, code: e[0] } : null; })
     .filter(Boolean);
   for (const p of PHONE6) p.qr = await QRCode.toDataURL(p.code, { margin: 1, width: 600, errorCorrectionLevel: 'M' });

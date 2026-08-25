@@ -9,7 +9,7 @@ import { provider } from '../services/index.js';
  *
  * 데이터 형식 (evidenceMap 항목의 phone 필드):
  *   phone: {
- *     owner: '이사랑의 핸드폰',
+ *     owner: '한다영의 핸드폰',
  *     apps: [
  *       { id, type:'browser', name, searches: [{ query, title?, snippet, image? }] },
  *       { id, type:'kakao',   name, chats:    [{ name, messages: [{ from:'me'|'them', text, time?, deleted? }] }] },
@@ -212,7 +212,7 @@ function MessagesApp({ app, variant, onView, ownerCode }) {
     setDrawer(false);
     setErr('');
     setPw('');
-    // 톡서랍 복구(0419 등) 열람 흔적 기록 — 목사 폰 가현 대화 확인 → DISC-11 자동 해금 조건
+    // 톡서랍 복구(0419 등) 열람 흔적 기록 — 목사 폰 세린 대화 확인 → DISC-11 자동 해금 조건
     if (onView && ownerCode) onView(`${ownerCode}:톡서랍`);
   };
 
@@ -400,7 +400,7 @@ function PhoneModal({ item, onClose, onView }) {
   const apps = item.phone.apps || [];
   const current = apps.find((a) => a.id === appId) || null;
 
-  // 카카오톡 앱 열람 흔적 기록 (예: 가현 폰 목사 대화방 부재 확인 → DISC-11 자동 해금 조건)
+  // 카카오톡 앱 열람 흔적 기록 (예: 세린 폰 목사 대화방 부재 확인 → DISC-11 자동 해금 조건)
   useEffect(() => {
     if (current && current.type === 'kakao' && onView) onView(`${item.code}:kakao`);
   }, [appId]); // eslint-disable-line react-hooks/exhaustive-deps

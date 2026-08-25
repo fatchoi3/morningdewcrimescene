@@ -11,13 +11,13 @@ const pctY = (y) => (y / ART.h * 100).toFixed(2) + '%';
 // 판 위의 방 — [x0,y0,x1,y1]. letter 는 단서 번호의 앞글자(A1, A2 …).
 //   순서는 판을 읽는 순서(위 왼쪽→오른쪽, 아래 왼쪽→오른쪽)라 참가자가 헤매지 않는다.
 export const ART_ROOMS = [
-  { id: 'SR', letter: 'A', label: '이사랑의 방', color: '#a32d2d', box: [62, 86, 324, 384] },
-  { id: 'HJ', letter: 'B', label: '이현지의 방', color: '#7a4f9f', box: [336, 86, 579, 384] },
-  { id: 'HW', letter: 'C', label: '박희원의 방', color: '#8a5a2b', box: [590, 86, 825, 384] },
+  { id: 'SR', letter: 'A', label: '한다영의 방', color: '#a32d2d', box: [62, 86, 324, 384] },
+  { id: 'HJ', letter: 'B', label: '한소미의 방', color: '#7a4f9f', box: [336, 86, 579, 384] },
+  { id: 'HW', letter: 'C', label: '서지안의 방', color: '#8a5a2b', box: [590, 86, 825, 384] },
   { id: 'PS', letter: 'D', label: '목사님의 방', color: '#1f1f1f', box: [868, 49, 1137, 391] },
   { id: 'JH', letter: 'E', label: '최종현의 방', color: '#2f6f4f', box: [62, 512, 337, 837] },
-  { id: 'GH', letter: 'F', label: '이가현의 방', color: '#b07d1a', box: [348, 512, 619, 837] },
-  { id: 'EJ', letter: 'G', label: '윤은재의 방', color: '#3a5f9f', box: [634, 512, 924, 837] },
+  { id: 'GH', letter: 'F', label: '문세린의 방', color: '#b07d1a', box: [348, 512, 619, 837] },
+  { id: 'EJ', letter: 'G', label: '강지후의 방', color: '#3a5f9f', box: [634, 512, 924, 837] },
 ];
 
 /**

@@ -14,8 +14,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<'
 // 잠긴 것 — 화면마다 '무엇을 묻는지'와 '맞으면 무엇을 보여 주는지'가 다르다.
 const LOCKS = {
   'LWUY-33': { kind: 'chat', title: '목사님 휴대폰', sub: '카카오톡 톡서랍 복구' },
-  'QIVS-92': { kind: 'chat', title: '이사랑 휴대폰', sub: '카카오톡 톡서랍 복구' },
-  'HUOX-80': { kind: 'chat', title: '이현지 휴대폰', sub: '카카오톡 톡서랍 복구' },
+  'QIVS-92': { kind: 'chat', title: '한다영 휴대폰', sub: '카카오톡 톡서랍 복구' },
+  'HUOX-80': { kind: 'chat', title: '한소미 휴대폰', sub: '카카오톡 톡서랍 복구' },
   CERT: { kind: 'lookup', of: 'LWUY-33', title: '대한성문장로회 총회', sub: '수료증 진위조회' },
   HAND: { kind: 'hand', of: 'TUBE-22', title: '필적 대조', sub: '통 라벨의 글씨는 누구 것인가' },
 };

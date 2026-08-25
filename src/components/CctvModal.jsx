@@ -196,9 +196,9 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
 
       {/* 방 이름 */}
       <g className="cctv-room-label">
-        <text x="102" y="84">이사랑</text><text x="197" y="84">이현지</text><text x="290" y="84">박희원</text>
+        <text x="102" y="84">한다영</text><text x="197" y="84">한소미</text><text x="290" y="84">서지안</text>
         <text x="360" y="55">목사님</text>
-        <text x="102" y="212">최종현</text><text x="197" y="212">이가현</text><text x="290" y="212">윤은재</text>
+        <text x="102" y="212">최종현</text><text x="197" y="212">문세린</text><text x="290" y="212">강지후</text>
       </g>
 
       {/* CCTV 카메라 */}

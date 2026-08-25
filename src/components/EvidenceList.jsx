@@ -476,7 +476,7 @@ function EvidenceList({ evidence, specialUnlockKey = 0, unlockKinds = { special:
     : gamsikEvidence;
 
   // 인물 필터 칩 — 현재 탭에 존재하는 person만 노출(고정 순서)
-  const PERSON_ORDER = ['공용', '목사', '최종현', '윤은재', '이현지', '박희원', '이사랑', '이가현'];
+  const PERSON_ORDER = ['공용', '목사', '최종현', '강지후', '한소미', '서지안', '한다영', '문세린'];
   const presentPersons = PERSON_ORDER.filter((p) => displayEvidence.some((i) => i.person === p));
 
   const byPerson = personFilter === '전체'
