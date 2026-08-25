@@ -300,7 +300,7 @@ function buildHints(num, partNum) {
       const others = src.filter((k) => k !== s).map((k) => num[k]).filter(Boolean);
       if (!others.length) continue;
       push(num[s], `⭐ <b>${others.join(' + ')}</b> 와 함께 → 특수 <b>${num[t.code]}</b>. `
-        + `<span class="hnote">가진 사람이 달라도 된다 — 합의해서 탁자에 공개하면 함께 가져간다</span>`);
+        + `<span class="hnote">가진 사람이 달라도 된다 — 합의해서 판 가운데에 공개하면 함께 가져간다</span>`);
     }
   }
   // 보드 전용 조합 — 앱의 열람 흔적 규칙(톡서랍 복구·필적 대조·심문)을 카드 조합으로 옮긴 것.
@@ -311,7 +311,7 @@ function buildHints(num, partNum) {
     ns.forEach((n, i) => {
       const others = ns.filter((_, k) => k !== i);
       push(n, `⭐ <b>${others.join(' + ')}</b> 와 함께 → 특수 <b>${num[target]}</b>. `
-        + `<span class="hnote">가진 사람이 달라도 된다 — 합의해서 탁자에 공개하면 함께 가져간다</span>`);
+        + `<span class="hnote">가진 사람이 달라도 된다 — 합의해서 판 가운데에 공개하면 함께 가져간다</span>`);
     });
   }
   return hints;
@@ -540,7 +540,7 @@ function clueCards() {
       <div class="cd${c.small ? ' sm' : ''}">${esc(c.detail || c.description || '')}</div>
       ${c.locked ? `<div class="lock">🔒 <b>${c.locked}라운드</b>부터다 (영장 ${c.locked === 3 ? '②' : '③'}).
         가져가는 것은 지금도 되지만, 그때까지는 아무도 못 읽는다.<br>
-        <b>자기 휴대폰은 본인이 가져갈 수 없다.</b></div>` : ''}
+        <b>자기 방에는 못 들어가므로 자기 휴대폰도 못 가져간다.</b></div>` : ''}
       ${mine(c) ? `<div class="lock">⚖ <b>${esc(mine(c))}</b> 본인의 물건에 대한 감식이다.
         <b>${esc(mine(c))}</b> 은(는) 이 결과를 읽을 수 없다 — 다른 사람이 집어 소리 내어 읽는다.</div>` : ''}
       ${meta.letter === 'S' && origin(c) ? `<div class="hint"><div>${esc(origin(c))}</div></div>` : ''}
@@ -607,11 +607,10 @@ function charCards() {
       <p style="margin-top:3mm">1라운드 시작 전에 위 내용을 자기 말로 소개합니다.
         <b>접힌 안쪽은 절대 보여 주지 않습니다.</b></p>
     </div>
-    <div class="box"><div class="bl">당신의 죄와 사인은 다릅니다</div>
+    <div class="box">
       <p>여섯 중 다섯에게 숨길 것이 있고 그중 몇은 실제로 죄입니다. 그러나 목사님을
         <b>죽인 것은 한 명뿐</b>입니다. 자기 죄가 드러났을 때 전부를 뒤집어쓰지 마세요 —
-        <b>인정할 것은 인정하고, 그것이 사인이 아님을 짚으세요.</b> 그래야 판이 "누가 무엇을
-        했나"에서 "무엇이 목사님을 죽였나"로 넘어갑니다.</p></div>
+        <b>인정할 것은 인정하고, 그것이 사인이 아님을 짚으세요.</b></p></div>
     <div class="covFoot"><b>A4 가로</b>로 양면 인쇄해 가운데 점선을 세로로 접으세요.
       접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
 
@@ -628,13 +627,11 @@ function charCards() {
       <h2>당신의 그날</h2>
       ${qa((b.timeline || []).map(([t, x]) => [esc(t), x]))}
       <h2>당신이 아는 것</h2><ul>${li(b.knows || [])}</ul>
-      <p class="muted">여기 없는 것은 <b>당신도 모르는 것</b>입니다. 판이 밝혀 주기 전까지는 모르는 채로 있으세요.</p>
+      <p class="muted">여기 없는 것은 <b>당신도 모르는 것</b>입니다.</p>
       <h2>금지 사항 — 반드시 지키세요</h2><ul>${li(b.forbidden || [])}</ul>
-      ${b.knowsWhatBreaks === false ? `<div class="box"><div class="bl">당신은 언제 무너질지 모릅니다</div>
-        <p>다른 사람들은 자기가 무엇을 숨기는지 알고, 그게 드러나면 인정하면 됩니다.
-          <b>당신은 숨기는 것이 없습니다.</b> 그래서 판이 무엇을 파내든 당신에게는 전부 처음 듣는 이야기입니다.</p>
-        <p>탁자에 뜻밖의 것이 올라오면 <b>그 자리에서 처음 본 사람처럼 반응하세요.</b> 미리 준비한 대답을
-          꺼내지 말고, 그게 무슨 뜻인지 <b>남들에게 물으세요.</b> 당신이 놀라는 모습 자체가 이 판의 증거입니다.</p></div>`
+      ${b.knowsWhatBreaks === false ? `<div class="box">
+        <p><b>당신은 숨기는 것이 없습니다.</b> 그래서 판이 무엇을 파내든 전부 처음 듣는 이야기입니다.
+          뜻밖의 것이 나오면 <b>그 자리에서 처음 본 사람처럼</b> 반응하고, 그게 무슨 뜻인지 <b>남들에게 물으세요.</b></p></div>`
         : ''}
       ${hits.length ? `<div class="box"><div class="bl">⚠ 여기서 무너집니다 — 버티지 마세요</div>
         ${hits.map((h) => `<p>${(h.codes || []).map(named).join(' 또는 ')} 가 나오면:<br>
@@ -677,7 +674,7 @@ function charCards() {
       ${qa(s.watch.map(([a, b]) => [esc(a), esc(b)]))}
       <h2>상황별 대응</h2>
       ${qa(s.moments.map(([a, b]) => [esc(a), b]))}
-      <h2>이 번호가 탁자에 나오면</h2>
+      <h2>이 번호의 카드가 나오면</h2>
       ${qa(Object.entries(s.onCard).map(([c, t]) => [named(c), esc(t)]))}
       ${soft.length ? `<h2>이 카드를 내밀면</h2>${qa(soft.map(([c, r]) => [named(c), r]))}` : ''}
 `;
@@ -727,7 +724,7 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
     ${qa(d.watch.map(([a, b]) => [esc(a), esc(b)]))}
     <h2>상황별 대응</h2>
     ${qa(d.moments.map(([a, b]) => [esc(a), esc(b)]))}
-    <h2>이 번호가 탁자에 나오면</h2>
+    <h2>이 번호의 카드가 나오면</h2>
     ${qa(Object.entries(d.onCard).map(([c, t]) => [no(c), esc(t)]))}
     <div class="box"><div class="bl">결론을 대신 내려 주지 마세요</div>
       <p>아무도 당신을 의심하지 않으니 마음껏 물을 수 있습니다. 그런데 그 편함으로 판을
@@ -821,17 +818,19 @@ function runSheets() {
       0이 됩니다. 실제로 세 번 일어났습니다.</span></p>
 
     <h2>가져갈 수 없는 카드</h2>
-    <p>· <b>자기 방은 1라운드에만</b> 들어갈 수 있습니다. 2라운드부터는 자기 방에 못 들어갑니다.<br>
-      &nbsp;&nbsp;· 단 <b>1라운드에 자기 방에서 가져간 카드는 그 자리에서 소리 내어 읽습니다.</b>
-      집어서 묻어 두는 것은 안 됩니다. 읽고 나서도 카드는 본인이 갖습니다.<br>
-      &nbsp;&nbsp;<span class="muted">이 두 줄이 한 쌍입니다. 자기 방을 먼저 여는 것은 유리하지만,
-      그 대가로 자기 물건을 전원 앞에서 읽어야 합니다. 낭독 의무가 없으면 숨길 것이 있는 사람이
-      1라운드에 그것부터 집어 영영 묻어 버립니다.</span><br>
-      · <b>자기 휴대폰은 본인이 가져갈 수 없습니다.</b><br>
+    <p>· <b>자기 방에는 들어갈 수 없습니다.</b> 처음부터 끝까지, 한 라운드도 예외가 없습니다.
+      자기 물건은 <b>남이 찾아 읽습니다.</b><br>
+      &nbsp;&nbsp;<span class="muted">자기한테 불리한 카드를 자기가 먼저 집어 자기 입으로 해명하는 것이
+      언제나 최선이 되면, 아무도 걸리지 않고 판이 멈춥니다. 내 방은 남이 뒤집니다 — 그게 이 게임입니다.</span><br>
       <span class="muted">(감식은 아래를 따릅니다)</span></p>
   </div>
 
   <div class="page"><h1>기본 규칙 <span class="muted">— 뒷장</span></h1>
+    <h2>모르는 말이 나오면</h2>
+    <p><b>각자 휴대폰으로 찾아봐도 됩니다.</b> 요힘빈이 무엇인지, 졸피뎀이 어떤 약인지,
+      설하정을 언제 쓰는지 — 카드에 다 적혀 있지 않습니다.
+      찾아본 것을 말할지 말지는 본인이 정합니다. <b>검색으로 알아낸 것도 이 판의 단서입니다.</b></p>
+
     <h2>카드 위쪽의 표시 — 네 가지</h2>
     <table><tr><th style="width:20%">표시</th><th>뜻</th></tr>
       <tr><td><span class="lg">🔒</span> <b>3라운드부터</b></td>
@@ -844,7 +843,7 @@ function runSheets() {
           <b>내는 데는 조사 행동을 쓰지 않습니다.</b> 카드 아래에 결과 번호가 적혀 있습니다.</td></tr>
       <tr><td><span class="lg">⭐</span> <b>조합 재료</b></td>
         <td>다른 카드와 함께 모으면 <b>특수 단서(S)</b> 를 가져갑니다. 무엇과 묶는지는 카드 아래에 적혀 있습니다.
-          <b>가진 사람이 달라도 됩니다</b> — 합의해서 탁자에 공개하면 함께 가져갑니다.</td></tr></table>
+          <b>가진 사람이 달라도 됩니다</b> — 합의해서 판 가운데에 공개하면 함께 가져갑니다.</td></tr></table>
 
     <h2>특수 단서</h2>
     <p>카드에 적힌 조합(⭐)을 손에 다 모으면, 특수 더미에서 그 번호를 <b>말없이 가져갑니다.</b>
@@ -887,7 +886,7 @@ function runSheets() {
       `<p>유족이 유품 반출에 동의했고, 통신 기록 영장이 나왔습니다.</p>
       <p><b>목사님의 방 — 기록이 열립니다.</b> 일기장과 휴대폰입니다.<br>
         그리고 <b>따로 빼 두었던 🔒3 휴대폰 카드를 각 방 더미에 섞어 넣습니다.</b>
-        이제부터 각 방에서 그 방 주인의 휴대폰을 가져갈 수 있습니다 — 자기 것만 빼고.</p>`)}
+        이제부터 각 방에서 그 방 주인의 휴대폰을 가져갈 수 있습니다. 자기 방에는 못 들어가니 <b>자기 폰은 남이 읽습니다.</b></p>`)}
     ${ev('③', '3라운드가 끝나면 펼친다', '압수수색 영장 — 감정 의뢰까지',
       `<p>영장 범위가 넓어졌습니다. 채취한 것을 정식으로 감정에 넘길 수 있습니다.</p>
       <p><b>감식실(L)이 열립니다.</b> 이번 라운드 끝부터 채취물을 낼 수 있습니다.<br>
