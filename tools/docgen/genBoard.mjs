@@ -422,11 +422,11 @@ const CSS = `
   .fold h2 { font-size: 8.6pt; margin: 1.8mm 0 0.9mm; padding-bottom: 0.7mm;
              border-bottom: 0.8px solid #14120f; break-after: avoid; }
   .fold h2:first-of-type { margin-top: 0; }
-  .fold p { font-size: 6.9pt; line-height: 1.5; margin: 0 0 1.4mm; }
+  .fold p { font-size: 6.9pt; line-height: 1.46; margin: 0 0 1.2mm; }
   .fold .muted { font-size: 6.6pt; line-height: 1.45; }
   .fold table { font-size: 7.6pt; }
   .fold th, .fold td { padding: 1mm 1.4mm; }
-  .fold ul { font-size: 6.8pt; line-height: 1.44; margin: 0 0 1.2mm 3.4mm; }
+  .fold ul { font-size: 6.8pt; line-height: 1.4; margin: 0 0 1mm 3.4mm; }
   .fold .cname { font-size: 6pt; }
   /* 묻고 답하는 대목 — 표는 좁은 면에서 칸이 뭉개져서, 대신 블록으로 쌓는다. */
   .qa { font-size: 6.6pt; line-height: 1.32; margin: 0 0 0.7mm; }
@@ -585,6 +585,14 @@ function charCards() {
     return `<b>${esc(no(code))}</b>${t ? ` <span class="cname">${esc(t)}</span>` : ''}`;
   };
   // 표는 좁은 단을 넘어갈 때 줄이 깨진다. 묻고 답하는 대목은 블록으로 쌓는다.
+  // 앱에서는 추궁하는 쪽이 고르는 질문 제목이라 사실을 단정해도 된다. 종이는 다르다 —
+  //   당사자가 판 시작 전에 자기 시트를 통째로 읽으므로, 제목이 사실이면 그 순간 아는 사람이 된다.
+  const ASK_AS = {
+    '라벨이 바뀐 것에 대해': '누군가 "라벨이 바뀐 것 같다"고 하면',
+    '라벨의 글씨를 대조해 봤습니다': '누군가 라벨 글씨를 대조해 봤다고 하면',
+  };
+  const asked = (q) => ASK_AS[q] || q;
+
   const qa = (rows) => rows.map(([q, a]) =>
     `<div class="qa"><b>${q}</b><span>${a}</span></div>`).join('');
 
@@ -611,17 +619,23 @@ function charCards() {
   const secret = (s) => {
     const b = BIBLE[s.name] || {};
     // 언제 무너지는지는 자기 시나리오의 끝이다. 대본 면은 문답만으로도 거의 차다.
-    const hits = (INTERROGATION[SID[s.name]]?.statements || [])
-      .filter((x) => x.contradict).map((x) => x.contradict);
+    const hits = b.knowsWhatBreaks === false ? []
+      : (INTERROGATION[SID[s.name]]?.statements || [])
+        .filter((x) => x.contradict).map((x) => x.contradict);
     return `<h1>${esc(s.name)} <span class="muted">— 비밀 시나리오 (본인만)</span></h1>
       <p class="muted">${esc(b.meta || '')}</p>
       <h2>당신의 정체</h2><p>${b.identity || ''}</p>
       <h2>당신의 그날</h2>
       ${qa((b.timeline || []).map(([t, x]) => [esc(t), x]))}
-      <h2>아는 것 / 모르는 것</h2><ul>${li(b.knows || [])}</ul>
+      <h2>당신이 아는 것</h2><ul>${li(b.knows || [])}</ul>
+      <p class="muted">여기 없는 것은 <b>당신도 모르는 것</b>입니다. 판이 밝혀 주기 전까지는 모르는 채로 있으세요.</p>
       <h2>금지 사항 — 반드시 지키세요</h2><ul>${li(b.forbidden || [])}</ul>
-      ${(b.script || []).length ? `<h2>추궁당할 때</h2>
-        ${qa(b.script.map(([q, a]) => [esc(q), a]))}` : ''}
+      ${b.knowsWhatBreaks === false ? `<div class="box"><div class="bl">당신은 언제 무너질지 모릅니다</div>
+        <p>다른 사람들은 자기가 무엇을 숨기는지 알고, 그게 드러나면 인정하면 됩니다.
+          <b>당신은 숨기는 것이 없습니다.</b> 그래서 판이 무엇을 파내든 당신에게는 전부 처음 듣는 이야기입니다.</p>
+        <p>탁자에 뜻밖의 것이 올라오면 <b>그 자리에서 처음 본 사람처럼 반응하세요.</b> 미리 준비한 대답을
+          꺼내지 말고, 그게 무슨 뜻인지 <b>남들에게 물으세요.</b> 당신이 놀라는 모습 자체가 이 판의 증거입니다.</p></div>`
+        : ''}
       ${hits.length ? `<div class="box"><div class="bl">⚠ 여기서 무너집니다 — 버티지 마세요</div>
         ${hits.map((h) => `<p>${(h.codes || []).map(named).join(' 또는 ')} 가 나오면:<br>
           ${h.text || ''}${h.confess ? '<br><b>— 여기서 인정합니다.</b>' : ''}</p>`).join('')}
@@ -640,8 +654,10 @@ function charCards() {
       <p class="muted">외울 필요는 없습니다. 자기 말로 바꿔 말해도 되지만
         <b>사실관계는 벗어나지 마세요.</b> 없는 질문은 시나리오에 맞게 지어내면 됩니다.</p>
       <h2>이렇게 물으면 이렇게</h2>
-      ${qa(st.map((x) => [esc(x.q || ''),
+      ${qa(st.map((x) => [esc(asked(x.q || '')),
         `${x.text || ''}${x.press ? `<div class="press"><b>더 캐물으면</b> ${x.press}</div>` : ''}`]))}
+      ${(BIBLE[name]?.script || []).length ? `<h2>이렇게 몰리면</h2>
+        ${qa(BIBLE[name].script.map(([q, a]) => [esc(q), a]))}` : ''}
 `;
   };
 
@@ -702,7 +718,8 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
     <h2>당신의 정체</h2><p>${esc(d.identity)}</p>
     <h2>당신의 그날</h2>
     ${qa(d.timeline.map(([t, x]) => [esc(t), esc(x)]))}
-    <h2>아는 것 / 모르는 것</h2><ul>${li(d.knows.map(esc))}</ul>
+    <h2>당신이 아는 것</h2><ul>${li(d.knows.map(esc))}</ul>
+    <p class="muted">여기 없는 것은 <b>당신도 모르는 것</b>입니다.</p>
     <h2>지켜야 할 것</h2><ul>${li(d.forbidden.map(esc))}</ul>`;
   const back = `<h1>${esc(d.name)} 형사 <span class="muted">— 이 상황에서는 이렇게</span></h1>
     <h2>말투</h2><p>${esc(d.tone)}</p>

@@ -106,9 +106,10 @@ export function genRefSheet(person) {
 <div class="sec">당일 타임라인</div>
 <div>${b.timeline.map(([t, x]) => `<div class="tlr"><div class="tlt">${esc(t)}</div><div class="tlx">${x}</div></div>`).join('')}</div>
 
-<div class="sec">내가 아는 것 / 모르는 것</div>
+<div class="sec">이 인물이 아는 것</div>
 <div class="kbox know">${b.knows[0]}</div>
-<div class="kbox unk">${b.knows[1]}</div>
+${b.truth ? `<div class="sec">— 여기부터는 인물이 모르는 것 (연기자만 봅니다)</div>
+<div class="kbox unk">${b.truth}</div>` : ''}
 
 ${movementSection(person, c)}
 
