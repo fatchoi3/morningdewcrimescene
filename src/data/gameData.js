@@ -439,7 +439,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'SAJL-88': { // 현장(목사 방) — 텀블러
     title: '개인 텀블러',
     description: '책상 위에서 개인 텀블러를 발견했다.',
-    detail: '안에 내용물이 가득 담겨있다. 내용물에 하얀 가루가 보인다.',
+    detail: '안에 내용물이 가득 담겨있다. 내용물에 하얀 가루가 보인다.\n물이 가득 찬 걸로 보아 아직 마시지 않은 듯하다.',
     image: '/images/텀블러.jpg',
     type: '보통',
     person: '목사'

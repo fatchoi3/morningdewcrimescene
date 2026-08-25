@@ -440,8 +440,13 @@ const CSS = `
   .fold th, .fold td { padding: 1mm 1.4mm; }
   .fold ul { font-size: 6.8pt; line-height: 1.4; margin: 0 0 1mm 3.4mm; }
   .fold .cname { font-size: 6pt; }
+  .sy { font-size: 5.6pt; font-weight: 800; padding: 0.2mm 1mm; border-radius: 0.8mm;
+        border: 0.25mm solid; vertical-align: 1px; white-space: nowrap; }
+  .syF { color: #2f6b45; border-color: #8fbfa2; background: #eef7f1; }
+  .syH { color: #7d6116; border-color: #cfae5e; background: #fdf7e6; }
+  .syL { color: #8a3b3b; border-color: #c98a8a; background: #fdf0ee; }
   /* 묻고 답하는 대목 — 표는 좁은 면에서 칸이 뭉개져서, 대신 블록으로 쌓는다. */
-  .qa { font-size: 6.6pt; line-height: 1.32; margin: 0 0 0.7mm; }
+  .qa { font-size: 6.9pt; line-height: 1.34; margin: 0 0 0.75mm; }
   .qa > b { color: #4a4436; }
   .qa > b::after { content: ' — '; font-weight: 400; color: #a49b88; }
   .qa > span { display: inline; }
@@ -610,6 +615,10 @@ function charCards() {
     '라벨의 글씨를 대조해 봤습니다': '누군가 라벨 글씨를 대조해 봤다고 하면',
   };
   const asked = (q) => ASK_AS[q] || q;
+  // 이 답이 사실인지, 사실이되 감춘 것이 있는지, 아예 거짓인지. 연기하는 사람이 스스로
+  //   가늠하기 어려운 대목이라 표시해 둔다 — 「감춤」은 거짓말 없이 몰리는 자리다.
+  const SAY_CLS = { '사실': 'syF', '감춤': 'syH', '거짓': 'syL' };
+  const say = (v) => (v ? ` <span class="sy ${SAY_CLS[v] || ''}">${esc(v)}</span>` : '');
   const deCode = (t) => String(t)
     .replace(/([A-Z]{4}-\d{2})/g, (m, code) => (num[code] ? `<b>${num[code]}</b>` : ''))
     .replace(/[(（]\s*(?:\d단\s*·\s*)?\s*[)）]/g, '')
@@ -655,7 +664,8 @@ function charCards() {
           뜻밖의 것이 나오면 <b>그 자리에서 처음 본 사람처럼</b> 반응하고, 그게 무슨 뜻인지 <b>남들에게 물으세요.</b></p></div>`
         : ''}
       ${hits.length ? `<div class="box"><div class="bl">⚠ 여기서 무너집니다 — 버티지 마세요</div>
-        ${hits.map((h) => `<p>${(h.codes || []).map(named).join(' 또는 ')} 가 나오면:<br>
+        ${hits.map((h) => `<p>${b.breakAs?.[(h.codes || [])[0]]
+            || `${(h.codes || []).map(named).join(' 또는 ')} 가 나오면`}:<br>
           ${h.text || ''}${h.confess ? '<br><b>— 여기서 인정합니다.</b>' : ''}</p>`).join('')}
         <p class="muted">나온 뒤에도 계속 우기면 게임이 멈춥니다 — 무너지는 것이 당신의 역할입니다.
           <b>뒷면 「상황별 대응」과 어긋나면 그쪽을 따르세요.</b></p></div>` : ''}`;
@@ -672,7 +682,10 @@ function charCards() {
       <p class="muted">외울 필요는 없습니다. <b>상황에 맞게 자기 말로, 즉흥으로 대응하세요.</b>
         여기 없는 질문은 시나리오에 맞게 지어내면 됩니다 — 다만 <b>사실관계는 벗어나지 마세요.</b></p>
       <h2>이렇게 물으면 이렇게</h2>
-      ${qa(st.map((x) => [esc(asked(x.q || '')),
+      <p class="muted">답마다 <span class="sy syF">사실</span> <span class="sy syH">감춤</span>
+        <span class="sy syL">거짓</span> 이 붙어 있습니다 — <b>감춤</b>은 말한 것 자체는 사실이되
+        중요한 것을 빼놓은 것입니다. 굳이 거짓말까지 할 자리가 아닙니다.</p>
+      ${qa(st.map((x) => [esc(asked(x.q || '')) + say(x.say),
         `${x.text || ''}${x.press ? `<div class="press"><b>더 캐물으면</b> ${x.press}</div>` : ''}`]))}
       ${(BIBLE[name]?.script || []).length ? `<h2>이렇게 몰리면</h2>
         ${qa(BIBLE[name].script.map(([q, a]) => [deCode(esc(q)), deCode(a)]))}` : ''}
