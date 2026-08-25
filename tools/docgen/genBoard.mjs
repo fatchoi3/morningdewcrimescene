@@ -35,10 +35,6 @@ PLACES.find((p) => p.id === 'PS').open = '현장(D1~D10) 1라운드 종료 후 �
 const BOARD_UNLOCK = {
   'SIST-22': [['QIVS-92', '카카오톡'], ['HUOX-80', '카카오톡']],   // 자매의 교차 대화
   'DISC-11': [['LWUY-33', '카카오톡'], ['TCGA-87', '카카오톡']],   // 지워진 대화방
-  // 필적 대조는 표본이 '아무 방에나' 있어야 한다. 종현 다이어리를 표본으로 쓰면 조합이 죽는다 —
-  //   앞 단계 TUBE-12 의 재료(통 두 개)가 둘 다 종현 방이라 종현이 1라운드에 가져가는 게
-  //   합리적인데, 그러면 자기 방이 닫힌 뒤라 표본을 영영 못 얻는다. 목사님 일기장은 누구나 간다.
-  'TUBE-22': [['TUBE-12'], ['PRBO-03']],                          // 라벨 위화감 + 필적 표본
   'KMRV-41': [['NBZL-83'], ['AYMX-96', '6월 30일']],              // 지갑 + 세린 일기
 };
 
@@ -62,12 +58,23 @@ const QCARDS = [
     hint: '네 자리 숫자가 필요하다. 소미가 무엇을 기준으로 숫자를 정했는지는 다른 사람의 기록에 있다.' },
   { no: 'Q4', code: 'CERT', title: '교단 「수료증 진위조회」',
     hint: '수료증에 적힌 발급번호를 넣으면 등록 여부가 나온다. 번호는 그 수료증을 찍은 사진에 있다.' },
-  // 필적 대조는 '고르고 결과를 보는' 행위다. 일곱 결과를 카드에 다 인쇄하면 정답이 바로
-  //   보이고, 목록만 적으면 결과가 없어 아무것도 못 밝힌다 — 실제로 그래서 라벨을 누가
-  //   썼는지가 판마다 미해결로 끝났다. 고르는 화면을 QR 뒤에 둔다.
-  { no: 'Q5', code: 'HAND', title: '필적 대조',
-    hint: '통 라벨의 글씨를 누구의 것과 맞춰 볼지 고른다. 대조하려면 그 사람의 손글씨가 있는 카드가 필요하다.' },
 ];
+
+// 필적 대조는 사람마다 카드가 따로 있다. 화면에서 고르게 두면 손에 표본이 없어도 일곱을
+//   차례로 돌려 보게 되고, 그러면 대조가 아니라 목록 훑기가 된다. 카드를 나눠 두면
+//   「그 사람의 다이어리를 가진 사람만 그 대조를 할 수 있다」가 물건으로 강제된다.
+const HAND_CARDS = () => {
+  const at = (code) => allClues.find((c) => c.code === code);
+  const opts = at('TUBE-22')?.handwriting?.options || [];
+  return opts.map((o, i) => ({
+    no: `Q5-${i + 1}`, code: `HAND${i + 1}`, hand: true,
+    title: `필적 대조 — ${o.who}`,
+    need: at(o.requires)?.title || `${o.who} 의 손글씨가 있는 카드`,
+    hint: `통 라벨의 글씨를 ${o.who} 의 것과 맞춰 본다.`,
+  }));
+};
+let HANDS = [];                                   // 필적 대조 카드(정본에서 만든다)
+const allQ = () => [...QCARDS, ...HANDS];
 const QCARD_NO = Object.fromEntries(QCARDS.map((q) => [q.code, q.no]));
 
 // 공개 단서 — 아무도 가져갈 수 없고 전원이 언제든 읽는다.
@@ -469,7 +476,8 @@ async function buildQR(list) {
     QR[c.code] = await QRCode.toString(`${siteUrl}/cctv#${c.code}`,
       { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
   }
-  for (const q of QCARDS) {
+  HANDS = HAND_CARDS();
+  for (const q of allQ()) {
     QR[`Q:${q.code}`] = await QRCode.toString(`${siteUrl}/unlock#${q.code}`,
       { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
   }
@@ -487,17 +495,21 @@ function lockCards() {
   const face = (q) => `<div class="card" style="border-color:#5a3f8a">
     <span class="no" style="background:#5a3f8a">${q.no}</span>
     <div class="ct">${esc(q.title)}</div>
-    <div class="qr">${QR[`Q:${q.code}`] || ''}<div class="qrl">찍으면 입력 화면이 열린다</div></div>
+    <div class="qr">${QR[`Q:${q.code}`] || ''}<div class="qrl">${q.hand ? '찍으면 대조 결과가 나온다' : '찍으면 입력 화면이 열린다'}</div></div>
     <div class="cd">${esc(q.hint)}</div>
-    <div class="hint"><div>이 카드는 <b>아무도 가져갈 수 없다.</b> 탁자에 펴 두고 누구나 찍는다.
-      잠긴 것은 카드가 아니라 <b>숫자</b>다.</div></div>
+    <div class="hint"><div>이 카드는 <b>아무도 가져갈 수 없다.</b> 판 옆에 펴 두고 누구나 찍는다.<br>
+      ${q.hand ? `대조하려면 <b>${esc(q.need)}</b>가 손에 있어야 한다.` : '잠긴 것은 카드가 아니라 <b>숫자</b>다.'}</div></div>
   </div>`;
-  return `<div class="page"><h1>잠금 카드 — ${QCARDS.length}장
-      <span class="muted">Q1 ~ Q${QCARDS.length}</span></h1>
+  return `<div class="page"><h1>잠금 카드 — ${allQ().length}장
+      <span class="muted">Q1 ~ Q${QCARDS.length} · 필적 대조 Q5-1 ~ Q5-${HANDS.length}</span></h1>
     <p class="muted">앞면이 보이게 판 옆에 펴 둡니다. <b>가져가는 카드가 아닙니다.</b>
-      휴대폰 카메라로 QR 을 찍으면 숫자를 넣는 화면이 열리고, 맞는 숫자를 넣은 사람만 내용을 봅니다.<br>
-      숫자는 다른 단서 카드 안에 적혀 있습니다. 그 카드를 가진 사람이 알려 줄지 말지를 정합니다.</p>
-    <div class="sheet">${QCARDS.map(face).join('')}</div></div>`;
+      휴대폰 카메라로 QR 을 찍으면 화면이 열리고, 그 사람만 내용을 봅니다.<br>
+      Q1~Q4 는 <b>숫자</b>를 넣어야 열립니다 — 숫자는 다른 단서 카드 안에 적혀 있고,
+      그 카드를 가진 사람이 알려 줄지 말지를 정합니다.<br>
+      <b>Q5-n 은 필적 대조입니다.</b> 통 라벨의 글씨를 그 사람의 것과 맞춰 봅니다 —
+      <b>그 사람의 손글씨가 있는 카드를 손에 넣은 사람만</b> 찍을 수 있습니다.
+      한 장이 한 사람이라, 누가 어느 카드를 찍는지가 그대로 보입니다.</p>
+    <div class="sheet">${allQ().map(face).join('')}</div></div>`;
 }
 
 // ── 1. 단서 카드 ─────────────────────────────────────────────────────────────
@@ -592,6 +604,13 @@ function charCards() {
     '라벨의 글씨를 대조해 봤습니다': '누군가 라벨 글씨를 대조해 봤다고 하면',
   };
   const asked = (q) => ASK_AS[q] || q;
+  const deCode = (t) => String(t)
+    .replace(/([A-Z]{4}-\d{2})/g, (m, code) => (num[code] ? `<b>${num[code]}</b>` : ''))
+    .replace(/[(（]\s*(?:\d단\s*·\s*)?\s*[)）]/g, '')
+    .replace(/[(（]\s*·\s*/g, '(')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([)）,.])/g, '$1')
+    .trim();
 
   const qa = (rows) => rows.map(([q, a]) =>
     `<div class="qa"><b>${q}</b><span>${a}</span></div>`).join('');
@@ -654,7 +673,7 @@ function charCards() {
       ${qa(st.map((x) => [esc(asked(x.q || '')),
         `${x.text || ''}${x.press ? `<div class="press"><b>더 캐물으면</b> ${x.press}</div>` : ''}`]))}
       ${(BIBLE[name]?.script || []).length ? `<h2>이렇게 몰리면</h2>
-        ${qa(BIBLE[name].script.map(([q, a]) => [esc(q), a]))}` : ''}
+        ${qa(BIBLE[name].script.map(([q, a]) => [deCode(esc(q)), deCode(a)]))}` : ''}
 `;
   };
 

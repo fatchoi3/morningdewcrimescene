@@ -17,6 +17,9 @@ const LOCKS = {
   'QIVS-92': { kind: 'chat', title: '한다영 휴대폰', sub: '카카오톡 톡서랍 복구' },
   'HUOX-80': { kind: 'chat', title: '한소미 휴대폰', sub: '카카오톡 톡서랍 복구' },
   CERT: { kind: 'lookup', of: 'LWUY-33', title: '대한성문장로회 총회', sub: '수료증 진위조회' },
+  // 필적 대조는 사람마다 카드가 따로 있다(HAND1~). 화면에서 고르는 게 아니라, 그 사람의
+  //   다이어리를 손에 넣은 사람이 그 카드의 QR 을 찍는다 — 대조하려면 글씨 표본이 있어야 한다는
+  //   당연한 조건이 카드로 강제된다. 목록에서 고르게 하면 표본 없이 일곱 명을 다 돌려 볼 수 있다.
   HAND: { kind: 'hand', of: 'TUBE-22', title: '필적 대조', sub: '통 라벨의 글씨는 누구 것인가' },
 };
 
@@ -26,7 +29,9 @@ window.addEventListener('hashchange', () => location.reload());
 
 const root = document.getElementById('unlock-root');
 const code = decodeURIComponent(location.hash.replace(/^#/, '')).trim().toUpperCase();
-const lock = LOCKS[code];
+// HAND1 ~ HANDn — 뒤의 숫자가 대조할 사람의 순번이다.
+const handAt = /^HAND(\d+)$/.exec(code);
+const lock = handAt ? { ...LOCKS.HAND, one: +handAt[1] - 1 } : LOCKS[code];
 
 if (!lock) {
   root.innerHTML = `<div class="box"><h1>잠긴 자료</h1>
@@ -36,20 +41,23 @@ if (!lock) {
   // 필적 대조는 숫자가 아니라 '누구와 맞춰 볼까'를 고르는 일이다. 고른 뒤에야 결과가 나온다 —
   //   일곱 결과를 한꺼번에 보여 주면 일치하는 사람이 첫눈에 드러나 대조가 아니라 정답 공개가 된다.
   const opts = evidenceMap[lock.of]?.handwriting?.options || [];
-  root.innerHTML = `<div class="box">
-    <div class="hd"><div class="tt">${esc(lock.title)}</div><div class="sb">${esc(lock.sub)}</div></div>
-    <p class="sub" style="margin-top:0">누구의 글씨와 맞춰 보시겠습니까? <b>한 번에 한 사람</b>씩 봅니다.</p>
-    <div class="who">${opts.map((o, i) => `<button class="wbtn" data-i="${i}">${esc(o.who)}</button>`).join('')}</div>
-    <div id="out"></div>
-    <p class="foot">이 화면을 본 사람은 당신뿐입니다. 무엇을 봤는지 말할지 말지는 당신이 정합니다.</p>
-  </div>`;
-  root.querySelectorAll('.wbtn').forEach((btn) => btn.addEventListener('click', () => {
-    const o = opts[+btn.dataset.i];
-    root.querySelectorAll('.wbtn').forEach((b) => { b.disabled = b === btn; });
-    document.getElementById('out').innerHTML = `<div class="room">
-      <div class="rn">${esc(o.who)} 의 글씨와 대조</div>
-      <div class="ln">${esc(o.result || '')}</div></div>`;
-  }));
+  const o = opts[lock.one];
+  if (!o) {
+    root.innerHTML = `<div class="box"><h1>필적 대조</h1>
+      <p class="msg">이 카드가 가리키는 사람이 없습니다.</p></div>`;
+  } else {
+    const sample = evidenceMap[o.requires];
+    root.innerHTML = `<div class="box">
+      <div class="hd"><div class="tt">${esc(o.who)} 의 글씨와 대조</div>
+        <div class="sb">${esc(lock.sub)}</div></div>
+      <p class="sub" style="margin-top:0">대조하려면 <b>${esc(sample?.title || o.who + ' 의 손글씨가 있는 카드')}</b>가
+        손에 있어야 합니다. 없으면 여기서 멈추세요 — 표본 없이 나온 결과는 근거가 되지 않습니다.</p>
+      <div class="room"><div class="rn">대조 결과</div>
+        <div class="ln">${esc(o.result || '')}</div></div>
+      <p class="foot">이 화면을 본 사람은 당신뿐입니다. 무엇을 봤는지 말할지 말지는 당신이 정합니다.<br>
+        다른 사람과 맞춰 보려면 <b>그 사람의 대조 카드</b>를 찾아 찍으세요.</p>
+    </div>`;
+  }
 } else {
   const isChat = lock.kind === 'chat';
   const answer = isChat ? secrets.recover?.[code] : secrets.lookups?.[lock.of]?.answer;
