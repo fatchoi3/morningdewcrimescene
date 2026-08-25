@@ -3,7 +3,10 @@
 export const BASE_CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:10pt;line-height:1.6;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-@page{margin:14mm}
+/* @page 에 여백을 주면 브라우저가 그 자리에 날짜·제목·주소·쪽번호를 찍는다. 여백은 본문이 든다. */
+@page{margin:0}
+body{padding:7mm 14mm}
+.pb,.avoid{padding-top:0}
 h1,h2,h3{line-height:1.25}
 code{font-family:Consolas,monospace;font-size:8.5pt;background:#f1f0ec;border:1px solid #e0ddd6;border-radius:3px;padding:0 4px;white-space:nowrap}
 .nowrap{white-space:nowrap}

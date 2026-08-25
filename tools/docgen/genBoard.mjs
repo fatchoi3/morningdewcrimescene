@@ -319,11 +319,16 @@ function buildHints(num, partNum) {
 
 // ── 공통 CSS ─────────────────────────────────────────────────────────────────
 const CSS = `
+  /* 인쇄 여백은 @page 가 아니라 각 장이 직접 가진다. @page 에 여백을 주면 브라우저가
+     그 자리에 날짜·문서 제목·파일 주소·쪽번호를 찍어 넣는다 — 끄는 표준 방법이 없어서,
+     찍을 자리를 아예 없앤다. */
+  @page { margin: 0; }
   * { box-sizing: border-box; }
   body { font-family: 'Malgun Gothic','맑은 고딕',sans-serif; margin: 0; color: #14120f;
          -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .sheet { display: grid; grid-template-columns: repeat(3, 63mm); grid-auto-rows: 88mm;
-           justify-content: center; align-content: start; page-break-after: always; }
+           justify-content: center; align-content: start; page-break-after: always;
+           padding: 12mm 0; }
   .card { border: 0.3mm dashed #bbb; padding: 3.2mm; overflow: hidden; position: relative;
           display: flex; flex-direction: column; }
   .no { font-size: 11pt; font-weight: 800; letter-spacing: .05em; color: #fff;
@@ -363,7 +368,9 @@ const CSS = `
   .bsub { font-size: 6.4pt; font-weight: 600; color: #a06a6a; margin-top: 0.6mm; }
   h1 { font-size: 19pt; margin: 0 0 3mm; }
   h2 { font-size: 13pt; margin: 6mm 0 2mm; padding-bottom: 1.2mm; border-bottom: 1.2px solid #14120f; }
-  .page { padding: 10mm 12mm; page-break-after: always; }
+  .page { padding: 14mm 14mm 12mm; page-break-after: always; }
+  .brief h2 { font-size: 12pt; margin: 4mm 0 1.6mm; }
+  .brief p { font-size: 9.6pt; line-height: 1.62; }
   table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
   th, td { border: 1px solid #333; padding: 2mm 2.4mm; vertical-align: top; text-align: left; }
   th { background: #efeae0; font-weight: 800; }
@@ -376,15 +383,15 @@ const CSS = `
   .trN { font-size: 17pt; font-weight: 800; }
   .trL { font-size: 7.4pt; color: #6b6760; margin-top: 1mm; }
   .trX { font-size: 6.6pt; font-weight: 800; color: #b8912c; margin-top: 0.8mm; }
-  .ev { border: 2px solid #b8912c; border-radius: 2mm; padding: 5mm 6mm; margin-bottom: 6mm; background: #fffdf6; }
+  .ev { border: 2px solid #b8912c; border-radius: 2mm; padding: 4mm 5mm; margin-bottom: 4mm; background: #fffdf6; }
   .evHead { font-size: 9pt; font-weight: 800; color: #8a6d1f; }
   .evNo { display: inline-block; background: #b8912c; color: #fff; border-radius: 50%;
           width: 6mm; height: 6mm; line-height: 6mm; text-align: center; margin-right: 1.5mm; }
-  .evTitle { font-size: 15pt; font-weight: 800; margin: 2mm 0 2.5mm; }
-  .evBody { font-size: 10pt; line-height: 1.7; }
+  .evTitle { font-size: 14pt; font-weight: 800; margin: 1.6mm 0 2mm; }
+  .evBody { font-size: 9.4pt; line-height: 1.6; }
   .evBody p { margin: 0 0 2mm; }
-  .evFold { margin-top: 4mm; text-align: center; font-size: 7.4pt; color: #a09880;
-            border-top: 1px dashed #c9bd9a; padding-top: 2mm; }
+  .evFold { margin-top: 2.5mm; text-align: center; font-size: 7pt; color: #a09880;
+            border-top: 1px dashed #c9bd9a; padding-top: 1.5mm; }
   /* 그림 판 */
   .art { position: relative; margin: 4mm 0; }
   .art img { width: 100%; height: auto; display: block; border-radius: 2mm; }
@@ -756,7 +763,7 @@ function runSheets() {
     <div class="evHead"><span class="evNo">${n}</span> ${esc(when)}</div>
     <div class="evTitle">${esc(title)}</div><div class="evBody">${body}</div>
     <div class="evFold">— 접어서 뒷면이 보이게 트랙 위에 둔다 —</div></div>`;
-  const body = `<div class="page"><h1>사건 브리핑 <span class="muted">— 시작할 때 함께 읽으세요</span></h1>
+  const body = `<div class="page brief"><h1>사건 브리핑 <span class="muted">— 시작할 때 함께 읽으세요</span></h1>
     <p class="muted">인물 카드를 나눠 갖고 자기소개를 마친 뒤, 이 시트를 소리 내어 돌려 읽습니다.
       한 사람이 한 절씩 읽으면 됩니다.</p>${pages}
     <h2>그리고 규칙 하나</h2>
@@ -805,6 +812,9 @@ function runSheets() {
       1라운드에 그것부터 집어 영영 묻어 버립니다.</span><br>
       · <b>자기 휴대폰은 본인이 가져갈 수 없습니다.</b><br>
       <span class="muted">(감식은 아래를 따릅니다)</span></p>
+  </div>
+
+  <div class="page"><h1>기본 규칙 <span class="muted">— 뒷장</span></h1>
     <h2>카드 위쪽의 표시 — 네 가지</h2>
     <table><tr><th style="width:20%">표시</th><th>뜻</th></tr>
       <tr><td><span class="lg">🔒</span> <b>3라운드부터</b></td>

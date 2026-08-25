@@ -51,7 +51,10 @@ export function genPrompts() {
   const css = `
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0a0908;font-family:'Malgun Gothic',sans-serif;color:#e8e4dc;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-@page{margin:12mm}
+/* @page 에 여백을 주면 브라우저가 그 자리에 날짜·제목·주소·쪽번호를 찍는다. 여백은 본문이 든다. */
+@page{margin:0}
+body{padding:7mm 12mm}
+.grp{padding-top:12mm}
 .cover{padding:50px 44px}
 .ct{font-size:8pt;letter-spacing:.22em;color:#7a7976;text-transform:uppercase;margin-bottom:14px}
 .h1{font-size:24pt;font-weight:800;margin-bottom:8px}

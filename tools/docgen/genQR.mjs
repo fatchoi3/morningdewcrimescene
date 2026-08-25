@@ -166,7 +166,10 @@ export async function genQRDocs() {
   const gridCSS = `
 *{box-sizing:border-box}
 body{font-family:'Malgun Gothic',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0}
-@page{margin:10mm}
+/* @page 에 여백을 주면 브라우저가 그 자리에 날짜·제목·주소·쪽번호를 찍는다. 여백은 본문이 든다. */
+@page{margin:0}
+body{padding:7mm 10mm}
+.phase.pb{padding-top:10mm}
 .gtitle{font-size:13pt;font-weight:800;margin:0 0 4px}
 .gsub{font-size:8.5pt;color:#666;margin-bottom:12px}
 .phase{background:#0f0e0c;color:#fff;font-size:11pt;font-weight:800;padding:8px 14px;border-radius:7px;margin:16px 0 8px}

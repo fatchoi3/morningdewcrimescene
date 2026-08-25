@@ -6,7 +6,10 @@ let V = '김호치 목사';
 const TRUTH_CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Malgun Gothic','Apple SD Gothic Neo',serif;font-size:10.5pt;line-height:1.85;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-@page{margin:20mm 18mm 22mm 18mm}
+/* @page 에 여백을 주면 브라우저가 그 자리에 날짜·제목·주소·쪽번호를 찍는다. 여백은 본문이 든다. */
+@page{margin:0}
+body{padding:8mm 18mm}
+.ch{padding-top:18mm}
 .cover{background:#0f0e0c;color:#e8e4dc;padding:90px 56px;page-break-after:always;min-height:100vh}
 .ct{font-size:8pt;letter-spacing:.25em;color:#5f5e5a;text-transform:uppercase;margin-bottom:22px}
 .ctitle{font-size:34pt;font-weight:800;line-height:1.2;margin-bottom:16px}

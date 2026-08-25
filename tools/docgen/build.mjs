@@ -22,18 +22,20 @@ const PDF_DIR = join(OUT, 'pdf');
 // A4 + 문서별 여백(mm)
 const M = (t, r, b, l) => ({ top: `${t}mm`, right: `${r}mm`, bottom: `${b}mm`, left: `${l}mm` });
 function marginFor(name) {
+  // 보드 인쇄물은 장마다 크기가 정해져 있고 여백도 그 안에 들어 있다.
+  //   여기서 또 여백을 주면 그만큼 줄어들어 카드가 63x88mm 로 안 나온다.
+  if (name.startsWith('보드_') || name.startsWith('결과제출지')) return M(0, 0, 0, 0);
   if (name.startsWith('배우레퍼런스')) return M(14, 14, 16, 14);
   if (name.startsWith('단서배치')) return M(16, 15, 18, 15);
   if (name.startsWith('진상해설서')) return M(20, 18, 22, 18);
   if (name.startsWith('이미지생성')) return M(12, 12, 12, 12);
   if (name.startsWith('QR_인쇄시트')) return M(8, 8, 8, 8);
   if (name.startsWith('QR_')) return M(14, 14, 16, 14);
-  if (name.startsWith('결과제출지')) return M(8, 8, 8, 8);
-  // 카드 시트는 재단 여유가 없어야 63x88mm 가 그대로 나온다
-  if (name.startsWith('보드_단서카드')) return M(4, 4, 4, 4);
-  if (name.startsWith('보드_')) return M(12, 12, 14, 12);
   return M(14, 14, 14, 14);
 }
+
+// 가로로 뽑을 문서 — 인물 시트는 A4 가로를 세로로 접는 형식이고, 결과 제출지는 두 벌이 나란히 있다.
+const LANDSCAPE = /^(보드_인물카드|결과제출지)/;
 
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
@@ -84,7 +86,7 @@ async function main() {
   for (const d of docs) {
     const pdfName = d.filename.replace(/\.html$/, '.pdf');
     await page.goto('file:///' + join(HTML_DIR, d.filename).replace(/\\/g, '/'), { waitUntil: 'networkidle0', timeout: 30000 });
-    await page.pdf({ path: join(PDF_DIR, pdfName), format: 'A4', landscape: d.filename.startsWith('결과제출지'), printBackground: true, margin: marginFor(d.filename) });
+    await page.pdf({ path: join(PDF_DIR, pdfName), format: 'A4', landscape: LANDSCAPE.test(d.filename), printBackground: true, margin: marginFor(d.filename) });
     console.log('  PDF:', pdfName);
   }
   await browser.close();

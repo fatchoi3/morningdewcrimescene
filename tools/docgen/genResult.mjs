@@ -13,10 +13,12 @@ export function genResultSheet() {
   </div>`;
   const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>결과 제출지</title>
 <style>
+  /* @page 에 여백을 주면 브라우저가 그 자리에 날짜·제목·주소·쪽번호를 찍는다. 여백은 본문이 든다. */
+  @page { margin: 0; }
   * { box-sizing: border-box; }
   body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; color: #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .wrap { display: flex; }
-  .form { flex: 1; padding: 5mm 7mm; }
+  .form { flex: 1; padding: 12mm 10mm; }
   .form:first-child { border-right: 1.4px dashed #aaa; }
   .title { text-align: center; font-size: 25pt; font-weight: 800; letter-spacing: 0.05em; margin: 1mm 0 3mm; }
   .meta { font-size: 11pt; color: #333; margin-bottom: 3mm; }
