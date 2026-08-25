@@ -704,7 +704,7 @@ function charCards() {
     for (const x of (d?.statements || [])) {
       for (const [c, r] of Object.entries(x.soft || {})) {
         if (drop.has(c)) continue;
-        soft.push([c, over[c] || r]);
+        soft.push([c, over[c] || (typeof r === 'string' ? r : r?.text || '')]);
       }
     }
     return `<h1>${esc(name)} <span class="muted">— 이 상황에서는 이렇게 (본인만)</span></h1>
