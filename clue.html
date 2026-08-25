@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <link rel="icon" href="/favicon2.png" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>단서 열람 — 새벽이슬 크라임씬</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 16px; background: #0a0d12; color: #e6e2d8;
+             font-family: 'Malgun Gothic', '맑은 고딕', system-ui, sans-serif; }
+      .box { max-width: 520px; margin: 0 auto; }
+      h1 { font-size: 1.25rem; margin: 0 0 10px; }
+      .hd { border-bottom: 1px solid #24303f; padding-bottom: 10px; margin-bottom: 16px; }
+      .tt { font-size: 1.15rem; font-weight: 800; }
+      .sb { font-size: .85rem; color: #8b97a8; margin-top: 3px; }
+      .pad label { display: block; font-size: .85rem; color: #8b97a8; margin-bottom: 6px; }
+      .pad input { width: 100%; padding: 14px; font-size: 1.4rem; letter-spacing: .3em;
+                   text-align: center; border-radius: 10px; border: 1px solid #33445a;
+                   background: #131a24; color: #e6e2d8; }
+      .pad button { width: 100%; margin-top: 10px; padding: 13px; font-size: 1rem; font-weight: 700;
+                    border-radius: 10px; border: 0; background: #5a3f8a; color: #fff; }
+      .err { margin-top: 10px; padding: 9px 11px; border-radius: 8px; background: #2a1a1a;
+             border: 1px solid #7a4444; color: #d9b3b3; font-size: .85rem; text-align: center; }
+      .ok { margin-bottom: 12px; padding: 9px 11px; border-radius: 8px; background: #14261d;
+            border: 1px solid #2f6b4a; color: #9ed8b6; font-size: .85rem; }
+      .room { margin-bottom: 14px; padding: 12px; border-radius: 10px;
+              background: #131a24; border: 1px solid #24303f; }
+      .rn { font-weight: 800; margin-bottom: 8px; font-size: .95rem; }
+      .rn span { margin-left: 8px; font-size: .72rem; font-weight: 500; color: #c98b8b; }
+      .ln { font-size: .9rem; line-height: 1.7; color: #cfc8ba; }
+      .ln b { color: #ffd24a; font-weight: 700; margin-right: 6px; }
+      .who { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+      .wbtn { padding: 13px 8px; font-size: .95rem; font-weight: 700; border-radius: 10px;
+              border: 1px solid #33445a; background: #131a24; color: #e6e2d8; }
+      .wbtn:disabled { background: #5a3f8a; border-color: #5a3f8a; color: #fff; }
+      .tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 4px; }
+      .tab { flex: 0 0 auto; padding: 9px 14px; font-size: .88rem; font-weight: 700; border-radius: 999px;
+             border: 1px solid #33445a; background: #131a24; color: #8b97a8; }
+      .tab.on { background: #5a3f8a; border-color: #5a3f8a; color: #fff; }
+      .body { font-size: .95rem; line-height: 1.8; white-space: pre-wrap; }
+      .ph { width: 100%; margin-top: 8px; border-radius: 8px; border: 1px solid #24303f; }
+      .warn { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #2a1a1a;
+              border: 1px solid #7a4444; color: #d9b3b3; font-size: .85rem; line-height: 1.6; }
+      .msg { font-size: .95rem; line-height: 1.7; }
+      .sub, .foot { color: #8b97a8; font-size: .82rem; line-height: 1.6; margin-top: 14px; }
+      code { background: #1b2430; padding: 1px 6px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <div id="clue-root"></div>
+    <script type="module" src="/src/clue/main.js"></script>
+  </body>
+</html>

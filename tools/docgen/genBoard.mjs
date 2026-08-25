@@ -45,7 +45,7 @@ const BOARD_UNLOCK = {
 // 휴대폰 잠금은 두 단계다. 통신 기록(누구와 이어져 있었나)이 먼저, 대화 내용(무슨 말을 했나)이
 //   나중에 열린다. 관계를 먼저 알고 내용을 나중에 아는 순서라야, 대화가 열릴 때 그게
 //   누구와의 대화인지가 이미 판에 깔려 있다. 반대로 열면 내용부터 쏟아져 관계가 묻힌다.
-const LOCK_TIER = { 연락처: 3, 인터넷: 3 };      // 나머지 앱(카카오톡·메시지·사진·전화)은 4라운드
+// 휴대폰은 앱별로 쪼개지 않고 카드 한 장이 되었다. 잠금도 폰 단위 하나뿐이다(3라운드·영장 ②).
 const SPECIAL = { letter: 'S', name: '특수 단서', color: '#8a6d1f' };
 const ROOM_OF = { 최종현: 'JH', 강지후: 'EJ', 한소미: 'HJ', 서지안: 'HW', 한다영: 'SR', 문세린: 'GH' };
 
@@ -79,85 +79,39 @@ const PUBLIC = new Set(['HQIR-26']);
 //   앱판은 화면 안에서 넘겨 보면 그만이지만 종이에서는 그럴 수 없다 — 안 쪼개면 카드에
 //   "화살표로 페이지를 넘기세요" 같은 조작 안내만 남고 정작 일기 본문·카톡 대화가 통째로 빠진다.
 const line = (a, b) => (b ? `${a}\n${b}` : a);
+// QR 로 여는 물건 — 카드 한 장에 QR 하나, 속은 화면에서 본다.
+//   휴대폰은 앱마다, 다이어리·성경책은 쪽마다 카드가 갈라져서 물건 하나가 서너 장이 됐다.
+//   덱의 절반이 남의 신상으로 채워지고, 한 사람의 폰을 다 읽으려면 네 번을 뽑아야 했다.
+//   물건은 하나인데 카드만 늘어난 셈이다. 카드는 하나로 두고 속은 QR 뒤에 둔다 —
+//   폰을 손에 넣은 사람은 실제로 폰을 손에 넣은 것처럼 다 본다. 대신 그 폰은 그 사람 것이다.
+const isScreen = (c) => !!(c.phone?.apps?.length
+  || (c.pages?.length && /다이어리|일기장|성경책/.test(c.title)));
+
 function explode(c) {
   const one = (extra) => ({ ...c, ...extra, src: c });
+
+  // 화면으로 여는 물건은 쪼개지 않는다. 카드에는 무엇이 들어 있는지만 적고 QR 을 붙인다.
+  if (isScreen(c)) {
+    const phone = !!c.phone?.apps?.length;
+    const what = phone
+      ? c.phone.apps.map((a) => a.name || a.id).join(' · ')
+      : `${c.pages.length}쪽 — ${c.pages.map((p) => p.title).filter(Boolean).join(' · ')}`;
+    const body = [
+      phone ? '안에 든 것' : '표시된 자리',
+      what,
+      phone ? '지워진 대화방은 잠금 카드로 따로 연다.' : '',
+    ].filter(Boolean).join('\n');
+    // 휴대폰은 3라운드부터 각 방에서 가져갈 수 있다. 다이어리·성경책은 처음부터.
+    return [one({ screen: true, image: null, detail: body, locked: phone ? 3 : 0 })];
+  }
+
   if (c.pages?.length) {
-    // 성경책은 쪽마다 나누지 않는다. 밑줄 친 구절 서너 장이 방마다 깔리면 정보량이 낮은
-    //   카드가 덱의 4분의 1을 먹어, "이 방에서 무엇을 고를까"가 고민이 아니게 된다.
-    //   표시된 자리를 한 장에 모아 둬도 "이 사람이 무엇을 붙들고 있었나"는 그대로 읽힌다.
-    //   단 그림이 끼워진 쪽은 따로 남긴다 — 그건 구절이 아니라 물건이다.
-    if (/성경책/.test(c.title)) {
-      const plain = c.pages.filter((p) => !p.image);
-      const withImg = c.pages.filter((p) => p.image);
-      const merged = one({
-        detail: plain.map((p) => `[${p.title}]\n${p.content || ''}`).join('\n\n'),
-      });
-      return [merged, ...withImg.map((pg) => one({
-        title: `${c.title} · ${pg.title}`, image: pg.image, detail: pg.content || '', part: pg.title,
-      }))];
-    }
     return c.pages.map((pg, i) => one({
       title: `${c.title} · ${pg.title || i + 1}`,
       image: pg.image || null,
       detail: pg.content || '',
       part: `${i + 1}/${c.pages.length}`,
     }));
-  }
-  if (c.phone?.apps?.length) {
-    return c.phone.apps.flatMap((a) => {
-      const NL = '\n';
-      let body = '';
-      // 필드 이름을 정본과 맞춘다. 어긋나면 조용히 빈 카드가 나온다 —
-      //   실제로 검색 기록(searches)이 x.q 를 찾다가 전부 '[object Object]' 로 찍혀,
-      //   요힘빈 검색 같은 결정적 물증이 인쇄물에서 통째로 빠져 있었다.
-      if (a.chats) {
-        // 삭제된 대화방은 카드에 싣지 않는다. 앱에서는 톡서랍 비밀번호를 찾아 복구해야 보이는
-        //   것인데, 종이에 그냥 인쇄하면 그 잠금이 통째로 사라진다. 잠긴 것은 Q 카드로 뽑고
-        //   여기에는 "잠긴 방이 있다"는 사실만 남긴다 — 그 사실 자체가 단서다.
-        const live = a.chats.filter((ch) => !ch.deleted);
-        const gone = a.chats.filter((ch) => ch.deleted);
-        body = live.map((ch) => `[${ch.name}]` + NL
-          + (ch.messages || []).map((mm) => `${mm.who ? mm.who + ': ' : ''}${mm.text || ''}`).join(NL)
-        ).join(NL + NL);
-        if (gone.length) {
-          body += (body ? NL + NL : '')
-            + `[잠긴 대화방 ${gone.length}개]` + NL
-            + `삭제된 흔적이 남아 있다. 복구하려면 네 자리 숫자가 필요하다.` + NL
-            + `→ 잠금 카드 ${QCARD_NO[c.code] || 'Q'} 의 QR 을 찍어 열어라.`;
-        }
-      } else if (a.photos) {
-        // 사진은 캡션만 적으면 정작 찍힌 내용이 빠진다. 수료증 발급번호처럼 그림에만 있는
-        //   정보가 있으므로 사진마다 한 장으로 나누고 그림을 싣는다.
-        return a.photos.map((ph, i) => {
-          const cap = ph.caption || ph.title || '';
-          return one({
-            title: cap ? `${c.title} · 사진 — ${cap}` : `${c.title} · 사진${a.photos.length > 1 ? ' ' + (i + 1) : ''}`,
-            image: ph.image || null,
-            detail: cap || '(설명 없이 저장된 사진 한 장)',
-            part: `사진${i + 1}`, locked: 4,
-          });
-        });
-      } else if (a.searches) {
-        // 검색어만으로는 '무엇을 알아냈는지'가 안 남는다. 결과 제목과 본문까지 실어야
-        //   카드 한 장이 그 사람이 읽은 것을 그대로 전한다.
-        body = a.searches.map((x) => [
-          '· ' + (x.query || x.title || ''),
-          x.title && x.query ? '  ' + x.title : '',
-          x.snippet ? '  ' + x.snippet : '',
-        ].filter(Boolean).join(NL)).join(NL + NL);
-      } else if (a.calls) {
-        // 통화 기록이 통째로 빠져 있었다. 누구에게 언제 걸었고 연결이 됐는지가 그대로 알리바이다.
-        body = a.calls.map((x) => `· ${x.time || ''} ${x.name || ''}`
-          + ` — ${{ out: '발신', in: '수신', missed: '부재중' }[x.direction] || x.direction || ''}`
-          + (x.duration ? ` (${x.duration})` : '')).join(NL);
-      } else if (a.contacts) {
-        // 저장된 이름이 별명이면 그게 누구인지가 곧 관계다("종현이" → 최종현)
-        body = a.contacts.map((x) => `· ${x.name || ''}`
-          + (x.who && x.who !== x.name ? ` — ${x.who}` : '')).join(NL);
-      }
-      const nm = a.name || a.id;
-      return [one({ title: `${c.title} · ${nm}`, image: null, detail: body || '(비어 있다)', part: nm, locked: LOCK_TIER[nm] || 4 })];
-    });
   }
   if (c.wallet?.items?.length) {
     return c.wallet.items.map((it) => one({
@@ -166,9 +120,7 @@ function explode(c) {
     }));
   }
   if (c.handwriting?.options?.length) {
-    // 대조 결과를 카드에 다 실으면 일치하는 사람이 첫눈에 드러나 대조가 아니라 정답 공개가 된다.
-    //   반대로 이름만 나열하면 결과가 없어 아무것도 못 밝힌다 — 실제로 그래서 라벨을 누가
-    //   썼는지가 판마다 미해결로 끝났다. 고르는 화면은 Q5 QR 뒤에 둔다.
+    // 결과를 카드에 다 실으면 일치하는 사람이 첫눈에 드러나 대조가 아니라 정답 공개가 된다.
     return [one({
       detail: line(c.detail,
         '대조할 수 있는 사람: ' + c.handwriting.options.map((o) => o.who).join(', ')
@@ -201,6 +153,8 @@ function markHinted() {
 }
 
 function splitLong(u) {
+  // QR 카드는 나누지 않는다. 나누면 같은 QR 이 두 장에 붙어 무엇을 찍을지 모른다.
+  if (u.screen) return [u];
   // 본문 말고 다른 것들이 먼저 먹는 높이
   let fixed = 5.2 + Math.ceil((u.title || '').length / 19) * 4.9 + 3.2;
   if (u.image) fixed += 28.4;
@@ -404,6 +358,7 @@ const CSS = `
   .trEv { background: #fdf3dc; border-color: #b8912c; border-width: 2px; }
   .trN { font-size: 17pt; font-weight: 800; }
   .trL { font-size: 7.4pt; color: #6b6760; margin-top: 1mm; }
+  .trX { font-size: 6.6pt; font-weight: 800; color: #b8912c; margin-top: 0.8mm; }
   .ev { border: 2px solid #b8912c; border-radius: 2mm; padding: 5mm 6mm; margin-bottom: 6mm; background: #fffdf6; }
   .evHead { font-size: 9pt; font-weight: 800; color: #8a6d1f; }
   .evNo { display: inline-block; background: #b8912c; color: #fff; border-radius: 50%;
@@ -428,6 +383,43 @@ const CSS = `
   .art .note { position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
                background: #fffffff2; font-size: 7.4pt; font-weight: 700;
                padding: 0.7mm 1.8mm; border-radius: 1mm; border: 0.4mm solid; }
+  /* A4 반접이 인물 시트 — 한 사람이 한 장에 들어가고, 가운데를 가로로 접는다.
+     세로 4장을 들고 있으면 남의 눈에 뭐가 보이는지 신경 쓰게 된다.
+     접어서 한 장이면 공개 프로필만 위로 두고 탁자에 넣어 두면 된다. */
+  .fold { width: 210mm; height: 297mm; page-break-after: always; display: flex;
+          flex-direction: column; position: relative; }
+  .half { flex: 0 0 148.5mm; height: 148.5mm; padding: 7mm 8mm 4.5mm; overflow: hidden; position: relative;
+          display: flex; flex-direction: column; }
+  .half.two { column-count: 2; column-gap: 5mm; column-rule: 0.3mm solid #e2ddd2; display: block;
+              column-fill: auto; }
+  .foldline { position: absolute; left: 0; right: 0; top: 148.5mm; border-top: 0.3mm dashed #c3bcae; }
+  .foldtag { position: absolute; right: 4mm; top: 145.6mm; font-size: 6pt; color: #b3aa99;
+             background: #fff; padding: 0 1.5mm; }
+  .fold h1 { font-size: 13.5pt; margin: 0 0 1.6mm; column-span: all; }
+  .fold h1 .muted { font-size: 8pt; }
+  .fold h2 { font-size: 8.5pt; margin: 2mm 0 0.8mm; padding-bottom: 0.8mm;
+             border-bottom: 0.8px solid #14120f; break-after: avoid; }
+  .fold h2:first-of-type { margin-top: 0; }
+  .fold p { font-size: 7pt; line-height: 1.5; margin: 0 0 1.4mm; }
+  .fold .muted { font-size: 6.8pt; line-height: 1.45; }
+  .fold table { font-size: 7.4pt; }
+  .fold th, .fold td { padding: 1mm 1.4mm; }
+  .fold ul { font-size: 6.9pt; line-height: 1.48; margin: 0 0 1.4mm 3.6mm; }
+  .fold .cname { font-size: 5.9pt; }
+  /* 묻고 답하는 대목 — 표는 단을 넘어 흘를 때 깨져서, 대신 블록으로 쌓는다. */
+  .qa { font-size: 6.3pt; line-height: 1.36; margin: 0 0 0.9mm; orphans: 2; widows: 2; }
+  .qa > b { break-inside: avoid; break-after: avoid; orphans: 2; widows: 2; }
+  .qa > b { display: block; color: #4a4436; }
+  .qa > span { display: block; padding-left: 2.2mm; border-left: 0.5mm solid #ded7c7; }
+  .fold .press { margin-top: 0.8mm; font-size: 6.9pt; }
+  .fold .box { border: 0.5mm solid #8a3b3b; border-radius: 1.5mm; padding: 2mm 2.6mm;
+               margin-top: 2mm; background: #fdf6f4; }
+  .fold .bl { font-size: 8.4pt; font-weight: 800; color: #8a3b3b; margin-bottom: 1.2mm; }
+  .fold .box p { font-size: 6.8pt; line-height: 1.45; margin-bottom: 0.8mm; }
+  .cover { justify-content: space-between; }
+  .covName { font-size: 30pt; font-weight: 800; letter-spacing: .02em; }
+  .covSub { font-size: 9pt; color: #6b6760; margin-top: 1.5mm; }
+  .covFoot { font-size: 6.8pt; color: #8a8375; border-top: 0.3mm solid #ded7c7; padding-top: 2mm; }
 `;
 const doc = (title, body) => `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
 <title>${esc(title)}</title><style>${CSS}</style></head><body>${body}</body></html>`;
@@ -456,6 +448,12 @@ async function buildQR(list) {
   }
   for (const q of QCARDS) {
     QR[`Q:${q.code}`] = await QRCode.toString(`${siteUrl}/unlock#${q.code}`,
+      { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
+  }
+  // 휴대폰·다이어리·성경책 — 카드 한 장에 QR 하나. 속은 /clue 화면에서 넘겨 본다.
+  for (const c of allClues) {
+    if (!isScreen(c) || QR[c.code]) continue;
+    QR[c.code] = await QRCode.toString(`${siteUrl}/clue#${c.code}`,
       { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
   }
 }
@@ -527,156 +525,159 @@ function clueCards() {
   return { filename: '보드_단서카드.html', html: doc('보드게임 단서 카드', body) };
 }
 
-// ── 2. 인물 카드 ─────────────────────────────────────────────────────────────
+// ── 2. 인물 시트 — A4 한 장에 한 사람, 가로로 반 접는다 ──────────────────────
+//   세로 4장을 손에 들고 있으면 어느 장이 공개고 어느 장이 비밀인지 매번 확인해야 하고,
+//   옆 사람 눈에 뒷장이 비친다. 한 장으로 접어 두면 겉에는 공개 프로필만 있고
+//   나머지는 펼쳐야 보인다 — 탁자에 그대로 두었다가 필요할 때만 편다.
+//   면은 넷이다: 겉(공개) · 안 위(비밀 시나리오) · 안 아래(대본) · 뒷면(상황별 대응).
 function charCards() {
   const li = (a) => a.map((x) => `<li>${x}</li>`).join('');
   const { num } = buildBoard();
-  // 앱은 화면이 대사를 주지만 종이에서는 사람이 직접 연기한다. 같은 정본에서 대본을 뽑아
-  //   "이렇게 물으면 이렇게 답한다"까지 손에 쥐여 준다. 시트에 정체와 금지 사항만 있으면
-  //   연기가 사람마다 들쭉날쭉해지고, 그러면 같은 사건이 판마다 다른 게임이 된다.
   const SID = { 최종현: 'S1', 강지후: 'S2', 한소미: 'S3', 서지안: 'S4', 한다영: 'S5', 문세린: 'S6' };
-  // 덱에서 뺀 것들은 보드에서 다른 물건이 대신한다 — 번호가 없다고 대사를 버리면 안 된다.
   const OFF_DECK = {
-    'LONS-62': '이벤트 ①',        // 2차 부검 — 2라운드 끝에 전원이 함께 읽는다
+    'LONS-62': '이벤트 ①',
     'BRIF-00': '시작 시트',
     'SIAH-72': 'V 더미',
   };
   const no = (code) => num[code] || OFF_DECK[code] || '(덱 밖)';
-  // 번호만 적으면 "S2 가 나오면" 이 무슨 카드인지 알 수가 없다. 카드 이름을 같이 적어
-  //   시트를 처음 읽는 사람도 무엇을 말하는지 바로 알게 한다.
   const titleOfCode = Object.fromEntries(allClues.map((c) => [c.code, c.title || '']));
   const OFF_TITLE = { 'LONS-62': '2차 부검 — 타살 확정', 'BRIF-00': '사건 브리핑', 'SIAH-72': 'CCTV 열람실' };
   const named = (code) => {
     const t = titleOfCode[code] || OFF_TITLE[code] || '';
     return `<b>${esc(no(code))}</b>${t ? ` <span class="cname">${esc(t)}</span>` : ''}`;
   };
-  const script = (name) => {
-    const d = INTERROGATION[SID[name]];
-    if (!d) return '';
-    const st = d.statements || [];
-    const rows = st.map((x) => `<tr><td>${esc(x.q || '')}</td><td>${x.text || ''}
-      ${x.press ? `<div class="press"><b>더 캐물으면</b> ${x.press}</div>` : ''}</td></tr>`).join('');
-    // 단서를 들이댔을 때의 반응 — 모순이 아닌 것들
-    const soft = [];
-    for (const x of st) for (const [code, r] of Object.entries(x.soft || {})) soft.push([code, r]);
-    // 무너지는 지점 — 이 카드가 나오면 더는 버틸 수 없다
-    const hits = st.filter((x) => x.contradict).map((x) => x.contradict);
-    return `<div class="page">
-      <h1>${esc(name)} <span class="muted">— 대본 (본인만)</span></h1>
-      <p class="muted">외울 필요는 없습니다. 상황에 맞게 자기 말로 바꿔 말해도 되지만,
-        <b>사실관계는 아래를 벗어나지 마세요.</b> 여기 없는 질문은 시나리오에 맞게 지어내면 됩니다.</p>
-      <h2>이렇게 물으면 이렇게 답합니다</h2>
-      <table><tr><th style="width:31%">질문</th><th>대답</th></tr>${rows}</table>
-      ${soft.length ? `<h2>이 카드를 내밀면</h2>
-        <table><tr><th style="width:14%">번호</th><th>당신의 반응</th></tr>
-        ${soft.map(([c, r]) => `<tr><td>${named(c)}</td><td>${r}</td></tr>`).join('')}</table>` : ''}
-      ${hits.length ? `<div class="box"><div class="bl">⚠ 여기서 무너집니다 — 버티지 마세요</div>
-        ${hits.map((h) => `<p>${(h.codes || []).map(named).join(' 또는 ')} 가 나오면:<br>
-          ${h.text || ''}${h.confess ? '<br><b>— 여기서 인정합니다.</b>' : ''}</p>`).join('')}
-        <p class="muted">이 카드들이 나오기 전까지는 위 대본대로 버팁니다. 나온 뒤에도 계속 우기면
-          게임이 멈춥니다 — 무너지는 것이 당신의 역할입니다.<br>
-          <b>다음 장의 「상황별 대응」과 어긋나면 그쪽을 따르세요.</b> 이 대사는 앱판에서 시스템이
-          판정할 때의 것이고, 종이판에서는 상황이 더 복잡하게 굴러갑니다.</p></div>` : ''}
-    </div>`;
-  };
+  // 표는 좁은 단을 넘어갈 때 줄이 깨진다. 묻고 답하는 대목은 블록으로 쌓는다.
+  const qa = (rows) => rows.map(([q, a]) =>
+    `<div class="qa"><b>${q}</b><span>${a}</span></div>`).join('');
 
-  // 보드에서만 벌어지는 상황 — 조사 선언, 남이 내 방을 여는 것, 감식 낭독, 지목.
-  //   앱에는 없는 국면이라 심문 정본만으로는 대응이 안 나온다.
-  const boardScript = (name) => {
-    const s = BOARD_SCRIPT[name];
-    if (!s) return '';
-    return `<div class="page">
-      <h1>${esc(name)} <span class="muted">— 이 상황에서는 이렇게 (본인만)</span></h1>
-      <h2>말투</h2><p>${s.tone}</p>
-      <h2>당신이 알고 있어서 자꾸 걸리는 것</h2>
-      <p class="muted">누구를 의심하라는 지시가 아닙니다. <b>당신이 아는 사실</b>일 뿐입니다 —
-        이걸 지키려다 보면 시선은 저절로 어디론가 향합니다. 그 방향은 당신이 정하세요.</p>
-      <table><tr><th style="width:34%">내가 아는 것</th><th>그래서 걸리는 것</th></tr>
-        ${s.watch.map(([a, b]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td></tr>`).join('')}</table>
-      <h2>상황별 대응</h2>
-      <table><tr><th style="width:30%">이런 상황이 오면</th><th>이렇게 합니다</th></tr>
-        ${s.moments.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${b}</td></tr>`).join('')}</table>
-      <h2>이 번호가 탁자에 나오면</h2>
-      <table><tr><th style="width:14%">번호</th><th>첫마디</th></tr>
-        ${Object.entries(s.onCard).map(([c, t]) =>
-          `<tr><td>${named(c)}</td><td>${esc(t)}</td></tr>`).join('')}</table>
-      <div class="box"><div class="bl">모두에게 — 당신의 죄와 사인은 다릅니다</div>
-        <p>여섯 명 중 다섯 명에게 숨길 것이 있고, 그중 몇은 실제로 죄입니다. 그러나 목사님을
-          <b>죽인 것은 한 명뿐</b>입니다. 자기 죄가 드러났을 때 전부를 뒤집어쓰지 마세요 —
-          <b>인정할 것은 인정하고, 그것이 사인이 아님을 짚으세요.</b> 그래야 판이 "누가 무엇을
-          했나"에서 "무엇이 목사님을 죽였나"로 넘어갑니다.</p></div>
-    </div>`;
-  };
-  const body = suspects.map((s) => {
-    const b = BIBLE[s.name] || {};
-    return `<div class="page">
-      <h1>${esc(s.name)} <span class="muted">— 공개 프로필 (모두에게 보여 주세요)</span></h1>
-      <table><tr><th style="width:22%">나이 · 성별</th><td>${s.age}세 · ${esc(s.gender)}</td></tr>
-        <tr><th>직책</th><td>${esc(s.occupation)}</td></tr>
-        <tr><th>가족</th><td>${esc(s.family || '-')}</td></tr>
+  // 면 ① 겉 — 접었을 때 위로 오는 면. 남이 봐도 되는 것만 있다.
+  const cover = (s) => `<div>
+      <div class="covName">${esc(s.name)}</div>
+      <div class="covSub">${s.age}세 · ${esc(s.gender)} · ${esc(s.occupation)}</div>
+    </div>
+    <div>
+      <table><tr><th style="width:22%">가족</th><td>${esc(s.family || '-')}</td></tr>
         <tr><th>알려진 것</th><td>${esc(s.notes || '')}</td></tr></table>
-      <h2>자기소개</h2>
-      <p>1라운드 시작 전에 위 내용을 자기 말로 소개합니다.
-        <b>뒷면 내용은 절대 말하지 않습니다.</b></p></div>
-    <div class="page">
-      <h1>${esc(s.name)} <span class="muted">— 비밀 시나리오 (본인만)</span></h1>
+      <p style="margin-top:3mm">1라운드 시작 전에 위 내용을 자기 말로 소개합니다.
+        <b>접힌 안쪽은 절대 보여 주지 않습니다.</b></p>
+    </div>
+    <div class="box"><div class="bl">당신의 죄와 사인은 다릅니다</div>
+      <p>여섯 중 다섯에게 숨길 것이 있고 그중 몇은 실제로 죄입니다. 그러나 목사님을
+        <b>죽인 것은 한 명뿐</b>입니다. 자기 죄가 드러났을 때 전부를 뒤집어쓰지 마세요 —
+        <b>인정할 것은 인정하고, 그것이 사인이 아님을 짚으세요.</b> 그래야 판이 "누가 무엇을
+        했나"에서 "무엇이 목사님을 죽였나"로 넘어갑니다.</p></div>
+    <div class="covFoot">양면으로 인쇄해 가운데 점선을 가로로 접으세요.
+      접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
+
+  // 면 ② 안 위 — 비밀 시나리오
+  const secret = (s) => {
+    const b = BIBLE[s.name] || {};
+    // 「여기서 무너진다」는 자기 시나리오의 끝이다. 대본 면은 문답만으로도 두 단이 찬다.
+    const hits = (INTERROGATION[SID[s.name]]?.statements || [])
+      .filter((x) => x.contradict).map((x) => x.contradict);
+    return `<h1>${esc(s.name)} <span class="muted">— 비밀 시나리오 (본인만)</span></h1>
       <p class="muted">${esc(b.meta || '')}</p>
       <h2>당신의 정체</h2><p>${b.identity || ''}</p>
-      <h2>당신의 그날 (시간순)</h2>
-      <table><tr><th style="width:20%">시각</th><th>행동</th></tr>
-        ${(b.timeline || []).map(([t, x]) => `<tr><td>${esc(t)}</td><td>${x}</td></tr>`).join('')}</table>
+      <h2>당신의 그날</h2>
+      ${qa((b.timeline || []).map(([t, x]) => [esc(t), x]))}
       <h2>아는 것 / 모르는 것</h2><ul>${li(b.knows || [])}</ul>
       <h2>금지 사항 — 반드시 지키세요</h2><ul>${li(b.forbidden || [])}</ul>
       ${(b.script || []).length ? `<h2>추궁당할 때</h2>
-        <table><tr><th style="width:34%">상황</th><th>대응</th></tr>
-        ${b.script.map(([q, a]) => `<tr><td>${esc(q)}</td><td>${a}</td></tr>`).join('')}</table>` : ''}
-    </div>
-    ${script(s.name)}
-    ${boardScript(s.name)}`;
-  }).join('');
-  return { filename: '보드_인물카드.html', html: doc('보드게임 인물 카드', body + detectiveCard(named)) };
+        ${qa(b.script.map(([q, a]) => [esc(q), a]))}` : ''}
+      ${hits.length ? `<div class="box"><div class="bl">⚠ 여기서 무너집니다 — 버티지 마세요</div>
+        ${hits.map((h) => `<p>${(h.codes || []).map(named).join(' 또는 ')} 가 나오면:<br>
+          ${h.text || ''}${h.confess ? '<br><b>— 여기서 인정합니다.</b>' : ''}</p>`).join('')}
+        <p class="muted">나온 뒤에도 계속 우기면 게임이 멈춥니다 — 무너지는 것이 당신의 역할입니다.
+          <b>뒷면 「상황별 대응」과 어긋나면 그쪽을 따르세요.</b></p></div>` : ''}`;
+  };
+
+  // 면 ③ 안 아래 — 앱판 심문 정본에서 뽑은 대본
+  const lines = (name) => {
+    const d = INTERROGATION[SID[name]];
+    if (!d) return '';
+    const st = d.statements || [];
+    const soft = [];
+    for (const x of st) for (const [code, r] of Object.entries(x.soft || {})) soft.push([code, r]);
+    const hits = st.filter((x) => x.contradict).map((x) => x.contradict);
+    return `<h1>${esc(name)} <span class="muted">— 대본 (본인만)</span></h1>
+      <p class="muted">외울 필요는 없습니다. 자기 말로 바꿔 말해도 되지만
+        <b>사실관계는 벗어나지 마세요.</b> 없는 질문은 시나리오에 맞게 지어내면 됩니다.</p>
+      <h2>이렇게 물으면 이렇게</h2>
+      ${qa(st.map((x) => [esc(x.q || ''),
+        `${x.text || ''}${x.press ? `<div class="press"><b>더 캐물으면</b> ${x.press}</div>` : ''}`]))}
+`;
+  };
+
+  // 면 ④ 뒷면 — 보드에서만 벌어지는 국면. 앱에는 없어서 심문 정본만으로는 대응이 안 나온다.
+  const moments = (name) => {
+    const s = BOARD_SCRIPT[name];
+    if (!s) return '';
+    // 카드가 나왔을 때의 반응은 여기 한 면에 모은다 — 대본 면에 두면 두 면 다 넘친다.
+    const d = INTERROGATION[SID[name]];
+    const soft = [];
+    for (const x of (d?.statements || [])) for (const [c, r] of Object.entries(x.soft || {})) soft.push([c, r]);
+    return `<h1>${esc(name)} <span class="muted">— 이 상황에서는 이렇게 (본인만)</span></h1>
+      <h2>말투</h2><p>${s.tone}</p>
+      <h2>당신이 알고 있어서 자꾸 걸리는 것</h2>
+      <p class="muted">누구를 의심하라는 지시가 아닙니다. <b>당신이 아는 사실</b>일 뿐입니다 —
+        이걸 지키려다 보면 시선은 저절로 어디론가 향합니다.</p>
+      ${qa(s.watch.map(([a, b]) => [esc(a), esc(b)]))}
+      <h2>상황별 대응</h2>
+      ${qa(s.moments.map(([a, b]) => [esc(a), b]))}
+      <h2>이 번호가 탁자에 나오면</h2>
+      ${qa(Object.entries(s.onCard).map(([c, t]) => [named(c), esc(t)]))}
+      ${soft.length ? `<h2>이 카드를 내밀면</h2>${qa(soft.map(([c, r]) => [named(c), r]))}` : ''}
+`;
+  };
+
+  const sheet = (top, bottom, topCls = 'two') => `<div class="fold">
+    <div class="half ${topCls}">${top}</div>
+    <div class="foldline"></div><div class="foldtag">가로로 접는 선</div>
+    <div class="half two">${bottom}</div></div>`;
+
+  const body = suspects.map((s) =>
+    sheet(cover(s), secret(s), 'cover') + sheet(lines(s.name), moments(s.name))).join('');
+  return { filename: '보드_인물카드.html', html: doc('보드게임 인물 시트', body + detectiveCard(named, sheet, qa)) };
 }
 
-// ── 7인 모드 · 형사 카드 ─────────────────────────────────────────────────────
-//   여섯이면 이 두 장을 빼고, 일곱이면 넣는다. 다른 인물과 같은 형식으로 뽑되
-//   비밀 시나리오가 없다 — 숨길 것이 없는 사람이라 뒷면이 필요 없다.
-function detectiveCard(no) {   // no 는 이름까지 붙은 HTML 을 돌려준다
+// ── 7인 모드 · 형사 시트 ─────────────────────────────────────────────────────
+//   여섯이면 이 한 장을 빼고, 일곱이면 넣는다. 다른 인물과 같은 반접이 형식이되
+//   비밀 시나리오가 없다 — 숨길 것이 없는 사람이라 채울 면이 하나 적다.
+function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을 돌려준다
   const d = DETECTIVE;
   const li = (a) => a.map((x) => `<li>${x}</li>`).join('');
-  return `<div class="page">
-    <h1>${esc(d.name)} 형사 <span class="muted">— 7인 모드 전용 · 공개 프로필</span></h1>
-    <p class="muted">여섯 명이 하면 이 두 장을 빼세요. 일곱 명이면 넣습니다.</p>
-    <table><tr><th style="width:22%">나이 · 성별</th><td>47세 · 남성</td></tr>
-      <tr><th>직책</th><td>관할서 강력팀 · 이 사건 담당</td></tr>
-      <tr><th>알려진 것</th><td>13시 31분 신고를 받고 온 담당 형사. 초동 수사를 마치고 관계자 여섯을 불러 모았다.</td></tr></table>
-    <div class="box"><div class="bl">형사는 용의자가 아닙니다</div>
-      <p>목사님을 죽인 사람은 나머지 여섯 안에 있습니다. <b>아무도 형사를 지목하지 않습니다.</b>
-        그 대신 형사는 <b>자기 방이 없습니다</b> — 처음부터 끝까지 아무 방이나 갈 수 있고,
-        1라운드에 자기 물건을 낭독할 것도 없습니다. 조사·토론·지목은 나머지와 똑같이 합니다.</p></div>
-    <h2>당신의 정체</h2><p>${d.identity}</p>
+  const cover = `<div>
+      <div class="covName">${esc(d.name)} 형사</div>
+      <div class="covSub">47세 · 남성 · 관할서 강력팀 · 이 사건 담당</div>
+    </div>
+    <div>
+      <table><tr><th style="width:22%">알려진 것</th>
+        <td>13시 31분 신고를 받고 온 담당 형사. 초동 수사를 마치고 관계자 여섯을 불러 모았다.</td></tr></table>
+      <div class="box"><div class="bl">형사는 용의자가 아닙니다</div>
+        <p>목사님을 죽인 사람은 나머지 여섯 안에 있습니다. <b>아무도 형사를 지목하지 않습니다.</b>
+          그 대신 형사는 <b>자기 방이 없습니다</b> — 처음부터 끝까지 아무 방이나 갈 수 있고,
+          1라운드에 낭독할 자기 물건도 없습니다. 조사·토론·지목은 나머지와 똑같이 합니다.</p></div>
+    </div>
+    <div class="covFoot">여섯이 하면 이 장을 빼세요. 양면 인쇄 후 가운데 점선을 가로로 접습니다.</div>`;
+  const inner = `<h1>${esc(d.name)} 형사 <span class="muted">— 당신이 아는 것 (본인만)</span></h1>
+    <h2>당신의 정체</h2><p>${esc(d.identity)}</p>
     <h2>당신의 그날</h2>
-    <table><tr><th style="width:16%">시각</th><th>행동</th></tr>
-      ${d.timeline.map(([t, x]) => `<tr><td>${esc(t)}</td><td>${esc(x)}</td></tr>`).join('')}</table>
+    ${qa(d.timeline.map(([t, x]) => [esc(t), esc(x)]))}
     <h2>아는 것 / 모르는 것</h2><ul>${li(d.knows.map(esc))}</ul>
-    <h2>지켜야 할 것</h2><ul>${li(d.forbidden.map(esc))}</ul></div>
-
-  <div class="page">
-    <h1>${esc(d.name)} 형사 <span class="muted">— 이 상황에서는 이렇게</span></h1>
+    <h2>지켜야 할 것</h2><ul>${li(d.forbidden.map(esc))}</ul>`;
+  const back = `<h1>${esc(d.name)} 형사 <span class="muted">— 이 상황에서는 이렇게</span></h1>
     <h2>말투</h2><p>${esc(d.tone)}</p>
     <h2>당신이 알고 있어서 자꾸 걸리는 것</h2>
-    <table><tr><th style="width:34%">내가 아는 것</th><th>그래서 걸리는 것</th></tr>
-      ${d.watch.map(([a, b]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td></tr>`).join('')}</table>
+    ${qa(d.watch.map(([a, b]) => [esc(a), esc(b)]))}
     <h2>상황별 대응</h2>
-    <table><tr><th style="width:30%">이런 상황이 오면</th><th>이렇게 합니다</th></tr>
-      ${d.moments.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</table>
+    ${qa(d.moments.map(([a, b]) => [esc(a), esc(b)]))}
     <h2>이 번호가 탁자에 나오면</h2>
-    <table><tr><th style="width:14%">번호</th><th>첫마디</th></tr>
-      ${Object.entries(d.onCard).map(([c, t]) => `<tr><td>${no(c)}</td><td>${esc(t)}</td></tr>`).join('')}</table>
+    ${qa(Object.entries(d.onCard).map(([c, t]) => [no(c), esc(t)]))}
     <div class="box"><div class="bl">결론을 대신 내려 주지 마세요</div>
       <p>아무도 당신을 의심하지 않으니 마음껏 물을 수 있습니다. 그런데 그 편함으로 판을
         정리해 버리면 <b>나머지 여섯이 구경꾼이 됩니다.</b> 묻고, 짚고, 기다리세요.
-        답은 저들의 입에서 나와야 합니다.</p></div>
-  </div>`;
+        답은 저들의 입에서 나와야 합니다.</p></div>`;
+  return sheet(cover, inner, 'cover') + sheet(back, '<p class="muted">(비워 둡니다 — 형사에게는 숨길 시나리오가 없습니다.)</p>');
 }
 
 // ── 3. 장소 판 + 공개 단서 ───────────────────────────────────────────────────
@@ -736,18 +737,21 @@ function runSheets() {
     <div class="track">${[1,2,3,4,5,6].map((n) => {
       const ev = { 1: '이벤트 ①', 2: '이벤트 ②', 3: '이벤트 ③', 4: '이벤트 ④' }[n];
       return `<div class="tr${ev ? ' trEv' : ''}">
-      <div class="trN">${n}</div><div class="trL">${ev || '조사 3장 → 토론 10분'}</div></div>`;
+      <div class="trN">${n}</div><div class="trL">${ev || '조사 2장 → 토론 10분'}</div>${n === 6 ? '<div class="trX">여섯일 때만</div>' : ''}</div>`;
     }).join('')}</div>
-    <p class="muted"><b>여섯이든 일곱이든 6라운드입니다.</b> 일곱이면 한 라운드에 조사가 일곱 번 돌아
-      전체 시간이 20~30분쯤 더 걸립니다.</p>
-    <p class="muted">6라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.<br>
+    <p class="muted"><b>여섯이면 6라운드, 일곱이면 5라운드입니다.</b>
+      일곱은 한 라운드에 조사가 일곱 번 돌아, 라운드가 하나 적어도 전체 조사
+      횟수는 거의 같습니다 — 35회와 36회.<br>
+      조사해 가져갈 카드는 모두 <b>75장</b>입니다. 여섯이 6라운드면 72장,
+      일곱이 5라운드면 70장을 엽니다 — 거의 다 열고 끝납니다.</p>
+    <p class="muted">마지막 라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.<br>
       <b>일곱이면 형사도 한 표를 던집니다.</b> 다만 아무도 형사를 지목하지 않습니다.</p></div>
 
 
   <div class="page"><h1>기본 규칙 <span class="muted">— 판 옆에 펴 두세요</span></h1>
     <h2>한 라운드</h2>
     <p>①<b>조사</b> — 순서대로 한 명씩, 열려 있는 장소 <b>하나</b>를 골라 그 장소의 남은 번호 중
-      <b>3장</b>을 가져갑니다. 가져간 번호는 남이 못 가집니다. 내용은 자기만 읽습니다.<br>
+      <b>2장</b>을 가져갑니다. 가져간 번호는 남이 못 가집니다. 내용은 자기만 읽습니다.<br>
       &nbsp;&nbsp;시작 플레이어는 <b>라운드마다 한 칸씩 돕니다.</b><br>
       &nbsp;&nbsp;<b>가져오면 그 자리에서 읽습니다 — 소리 내지 말고 혼자서.</b> 남은 번호만 봅니다.<br>
       &nbsp;&nbsp;<span class="muted">읽고 나서 토론에 들어갑니다. 안 읽고 넘어가면 그 라운드 조사가
@@ -781,7 +785,7 @@ function runSheets() {
       <b>소리 내어 읽습니다.</b> 읽은 뒤 그 카드는 읽은 사람이 갖습니다.<br>
       3. 낼 사람이 없으면 채취물을 <b>다른 사람에게 넘겨</b> 대신 내게 할 수 있습니다.
       감식실에 내는 목적일 때만 카드를 넘길 수 있습니다.<br>
-      4. <b>7라운드에 낸 것은 최종 토론이 시작될 때 읽습니다.</b> 마지막 라운드라고 해서
+      4. <b>마지막 라운드에 낸 것은 최종 토론이 시작될 때 읽습니다.</b> 마지막 라운드라고 해서
       버려지지 않습니다 — 늦게라도 내는 것이 안 내는 것보다 낫습니다.</p>
     <p class="muted">결과를 읽는 손과 결과가 걸린 목이 같으면 그 카드는 증거가 아니라 증언이 됩니다.
       그래서 낸 사람은 자기 결과를 못 읽습니다. 반대로 "내 물건이라 아예 못 낸다"고 해 두면
@@ -793,7 +797,7 @@ function runSheets() {
       채우세요. 한 사람이 맡지 말고 그 라운드 시작 플레이어가 적습니다.</p>
     <table><tr><th style="width:8%">R</th><th style="width:46%">이번 라운드에 확정된 사실</th>
       <th>답을 못 받은 질문 — 다음 토론 첫머리에 반드시 답한다</th></tr>
-      ${[1,2,3,4,5,6,7].map((n) => `<tr style="height:13mm"><td style="text-align:center;font-weight:800">${n}</td><td></td><td></td></tr>`).join('')}</table>
+      ${[1,2,3,4,5,6].map((n) => `<tr style="height:13mm"><td style="text-align:center;font-weight:800">${n}</td><td></td><td></td></tr>`).join('')}</table>
     <h2>그날의 시간표 <span class="muted">— 밝혀진 것만 적습니다</span></h2>
     <table><tr><th style="width:14%">시각</th><th style="width:20%">누가</th><th>무엇을 했나 · 근거 번호</th></tr>
       ${Array.from({ length: 10 }).map(() => '<tr style="height:9mm"><td></td><td></td><td></td></tr>').join('')}</table>
@@ -804,17 +808,18 @@ function runSheets() {
     ${ev('①', '1라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
       `<p>정밀 부검 결과가 왔습니다. <b>심정지가 아니라 질식사</b>입니다.
         코·입 주변 압박흔과 안면 점상출혈, 그리고 기도에서 베개 솜·섬유가 검출됐습니다.</p>
-      <p><b>목사님의 방 — 현장(D1~D10)이 열립니다.</b> 그 열 장을 탁자에 놓고,
+      <p><b>목사님의 방 — 현장이 열립니다.</b> 그 카드들을 탁자에 놓고,
         「목사님 일정표」는 <b>앞면이 보이게</b> 그 옆에 펴 둡니다 — 이 한 장은 아무도 가져갈 수 없습니다.</p>`)}
     ${ev('②', '2라운드가 끝나면 펼친다', '유품 반출 동의 · 통신 기록 영장',
       `<p>유족이 유품 반출에 동의했고, 통신 기록 영장이 나왔습니다.</p>
-      <p><b>목사님의 방 — 기록(D11부터)이 열립니다.</b> 일기장과 휴대폰입니다.<br>
-        그리고 <b>따로 빼 두었던 🔒3 카드(연락처·인터넷)를 각 방 더미에 섞어 넣습니다.</b>
-        누구와 이어져 있었는지는 알 수 있지만, 무슨 말을 했는지는 아직 못 봅니다.</p>`)}
-    ${ev('③', '3라운드가 끝나면 펼친다', '압수수색 영장 — 대화 내용까지',
-      `<p>영장 범위가 넓어졌습니다. 주고받은 말과 사진을 볼 수 있습니다.</p>
-      <p><b>따로 빼 두었던 🔒4 카드(카카오톡·메시지·사진·전화)를 각 방 더미에 섞어 넣습니다.</b><br>
-        그리고 <b>감식실(L)이 열립니다.</b> 이번 라운드 끝부터 채취물을 낼 수 있습니다.</p>`)}
+      <p><b>목사님의 방 — 기록이 열립니다.</b> 일기장과 휴대폰입니다.<br>
+        그리고 <b>따로 빼 두었던 🔒3 휴대폰 카드를 각 방 더미에 섞어 넣습니다.</b>
+        이제부터 각 방에서 그 방 주인의 휴대폰을 가져갈 수 있습니다 — 자기 것만 빼고.</p>`)}
+    ${ev('③', '3라운드가 끝나면 펼친다', '압수수색 영장 — 감정 의뢰까지',
+      `<p>영장 범위가 넓어졌습니다. 채취한 것을 정식으로 감정에 넘길 수 있습니다.</p>
+      <p><b>감식실(L)이 열립니다.</b> 이번 라운드 끝부터 채취물을 낼 수 있습니다.<br>
+        <span class="muted">🔬 표시가 있는 카드를 가진 사람은 라운드 끝에 감식실 옆에 내려놓으세요.
+        결과는 다음 라운드에 <b>낸 사람이 아닌 다른 사람</b>이 집어 소리 내어 읽습니다.</span></p>`)}
     ${ev('④', '4라운드가 끝나면 펼친다', '복도 CCTV 원본 확보',
       `<p>숙소 2층 복도 CCTV 원본을 확보했습니다. 그날 누가 언제 움직였는지가 남아 있습니다.</p>
       <p><b>CCTV 열람실(V)이 열립니다.</b> 더미를 탁자에 놓습니다.<br>
