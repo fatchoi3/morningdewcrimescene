@@ -338,12 +338,29 @@ const CSS = `
   .press { margin-top: 1.2mm; padding-left: 2mm; border-left: 0.6mm solid #cdbf94;
            font-size: 8.6pt; color: #5b5140; }
   .lock { margin-top: 1.2mm; font-size: 6.9pt; font-weight: 700; color: #8a3b3b; }
+  /* 표시는 넷이다 — 🔒 못 읽는 카드, ⚖ 본인이 못 읽는 감식, 🔬 감식실에 낼 것, ⭐ 조합 재료.
+     넷 다 6.9pt 로 카드 밑에 깔려 있어서, 급히 집어 든 사람은 그냥 못 보고 지나갔다.
+     번호 옆은 원래 비어 있던 자리다 — 세로를 더 먹지 않고 표시를 키울 수 있다. */
+  .chd { display: flex; align-items: flex-start; gap: 1.2mm; }
+  .bgs { display: flex; gap: 0.9mm; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .bg { display: flex; align-items: center; gap: 0.7mm; font-size: 6.8pt; font-weight: 800;
+        padding: 0.5mm 1.4mm; border-radius: 1.2mm; border: 0.35mm solid; white-space: nowrap;
+        line-height: 1.1; }
+  .bg i { font-style: normal; font-size: 10pt; line-height: 1; }
+  .bgLock { color: #8a3b3b; border-color: #c98a8a; background: #fdf0ee; }
+  .bgLab { color: #265a66; border-color: #85b3bd; background: #edf6f8; }
+  .bgStar { color: #7d6116; border-color: #cfae5e; background: #fdf7e6; }
   .qr { text-align: center; margin-bottom: 1.4mm; }
   .qr svg { width: 21mm; height: 21mm; }
   .qrl { font-size: 6.2pt; color: #6b6760; margin-top: 0.6mm; }
   .cback { align-items: center; justify-content: center; text-align: center; }
   .bnum { font-size: 30pt; font-weight: 800; letter-spacing: .04em; }
   .bplace { font-size: 8.5pt; font-weight: 700; margin-top: 3mm; opacity: .8; }
+  .lg { font-size: 15pt; vertical-align: -2px; }
+  .block { margin-top: 3.5mm; font-size: 11pt; font-weight: 800; color: #8a3b3b;
+           border: 0.5mm solid #c98a8a; background: #fdf0ee; border-radius: 1.6mm;
+           padding: 1.6mm 3mm; }
+  .bsub { font-size: 6.4pt; font-weight: 600; color: #a06a6a; margin-top: 0.6mm; }
   h1 { font-size: 19pt; margin: 0 0 3mm; }
   h2 { font-size: 13pt; margin: 6mm 0 2mm; padding-bottom: 1.2mm; border-bottom: 1.2px solid #14120f; }
   .page { padding: 10mm 12mm; page-break-after: always; }
@@ -493,9 +510,23 @@ function clueCards() {
   };
   // 자기 물건의 감식을 본인이 집으면 무료 방어권이 된다. 소유자가 참가자인 감식만 막는다.
   const mine = (c) => (c.type === '감식' && ROOM_OF[c.person] ? c.person : null);
+  // 카드 한 장이 무슨 취급을 받는 물건인지, 집어 들자마자 보이게 한다.
+  const badges = (c) => {
+    const hs = hintFor(c) || [];
+    const b = [];
+    if (c.locked) b.push(['bgLock', '🔒', `${c.locked}라운드부터`]);
+    if (mine(c)) b.push(['bgLock', '⚖', '본인 낭독 불가']);
+    if (hs.some((h) => h.includes('🔬'))) b.push(['bgLab', '🔬', '감식실']);
+    if (hs.some((h) => h.includes('⭐'))) b.push(['bgStar', '⭐', '조합 재료']);
+    return b.length
+      ? `<span class="bgs">${b.map(([k, ic, tx]) =>
+          `<span class="bg ${k}"><i>${ic}</i>${tx}</span>`).join('')}</span>`
+      : '';
+  };
   const deck = (list, meta) => {
     const front = (c) => `<div class="card" style="border-color:${meta.color}">
-      <span class="no" style="background:${meta.color}">${esc(unitNum.get(c))}</span>
+      <div class="chd"><span class="no" style="background:${meta.color}">${esc(unitNum.get(c))}</span>
+        ${badges(c)}</div>
       <div class="ct">${esc(c.title)}</div>
       ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">찍으면 이 장면이 열린다</div></div>`
         : c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
@@ -510,7 +541,8 @@ function clueCards() {
     </div>`;
     const back = (c) => `<div class="card cback" style="border-color:${meta.color};background:${meta.color}12">
       <div class="bnum" style="color:${meta.color}">${esc(unitNum.get(c))}</div>
-      <div class="bplace" style="color:${meta.color}">${esc(meta.name)}${c.locked ? ` 🔒${c.locked}` : ''}</div></div>`;
+      <div class="bplace" style="color:${meta.color}">${esc(meta.name)}</div>
+      ${c.locked ? `<div class="block">🔒 <b>${c.locked}라운드</b>부터<div class="bsub">준비할 때 빼서 따로 둔다</div></div>` : ''}</div>`;
     return `<div class="page"><h1>${esc(meta.name)} — ${list.length}장
       <span class="muted">${meta.letter}1 ~ ${meta.letter}${list.length}</span></h1>
       <p class="muted">${esc(meta.open || '조건을 채우면 이 더미에서 가져간다')} ·
@@ -773,6 +805,20 @@ function runSheets() {
       1라운드에 그것부터 집어 영영 묻어 버립니다.</span><br>
       · <b>자기 휴대폰은 본인이 가져갈 수 없습니다.</b><br>
       <span class="muted">(감식은 아래를 따릅니다)</span></p>
+    <h2>카드 위쪽의 표시 — 네 가지</h2>
+    <table><tr><th style="width:20%">표시</th><th>뜻</th></tr>
+      <tr><td><span class="lg">🔒</span> <b>3라운드부터</b></td>
+        <td>휴대폰입니다. <b>준비할 때 빼서 따로 두었다가</b>, 2라운드가 끝나면 각 방 더미에 섬어 넣습니다.
+          카드 뒷면에도 같은 표시가 있습니다 — 그걸 보고 골라내세요.</td></tr>
+      <tr><td><span class="lg">⚖</span> <b>본인 낭독 불가</b></td>
+        <td>자기 물건을 감식한 결과입니다. 카드에 적힌 사람은 <b>이 결과를 읽을 수 없습니다</b> — 다른 사람이 집어 소리 내어 읽습니다.</td></tr>
+      <tr><td><span class="lg">🔬</span> <b>감식실</b></td>
+        <td>채취물입니다. 감식실이 열린 뒤부터 라운드 끝에 감식실 옆에 내려놓으세요.
+          <b>내는 데는 조사 행동을 쓰지 않습니다.</b> 카드 아래에 결과 번호가 적혀 있습니다.</td></tr>
+      <tr><td><span class="lg">⭐</span> <b>조합 재료</b></td>
+        <td>다른 카드와 함께 모으면 <b>특수 단서(S)</b> 를 가져갑니다. 무엇과 묶는지는 카드 아래에 적혀 있습니다.
+          <b>가진 사람이 달라도 됩니다</b> — 합의해서 탁자에 공개하면 함께 가져갑니다.</td></tr></table>
+
     <h2>특수 단서</h2>
     <p>카드에 적힌 조합(⭐)을 손에 다 모으면, 특수 더미에서 그 번호를 <b>말없이 가져갑니다.</b>
       무엇으로 얻었는지는 특수 카드 앞면에 적혀 있습니다.</p>
