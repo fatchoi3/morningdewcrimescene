@@ -383,46 +383,45 @@ const CSS = `
   .art .note { position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
                background: #fffffff2; font-size: 7.4pt; font-weight: 700;
                padding: 0.7mm 1.8mm; border-radius: 1mm; border: 0.4mm solid; }
-  /* A4 반접이 인물 시트 — 한 사람이 한 장에 들어가고, 가운데를 가로로 접는다.
-     세로 4장을 들고 있으면 남의 눈에 뭐가 보이는지 신경 쓰게 된다.
-     접어서 한 장이면 공개 프로필만 위로 두고 탁자에 넣어 두면 된다. */
-  .fold { width: 210mm; height: 297mm; page-break-after: always; display: flex;
-          flex-direction: column; position: relative; }
-  .half { flex: 0 0 148.5mm; height: 148.5mm; padding: 7mm 8mm 4.5mm; overflow: hidden; position: relative;
-          display: flex; flex-direction: column; }
-  .half.two { column-count: 2; column-gap: 5mm; column-rule: 0.3mm solid #e2ddd2; display: block;
-              column-fill: auto; }
-  .foldline { position: absolute; left: 0; right: 0; top: 148.5mm; border-top: 0.3mm dashed #c3bcae; }
-  .foldtag { position: absolute; right: 4mm; top: 145.6mm; font-size: 6pt; color: #b3aa99;
-             background: #fff; padding: 0 1.5mm; }
-  .fold h1 { font-size: 13.5pt; margin: 0 0 1.6mm; column-span: all; }
+  /* A4 반접이 인물 시트 — 한 사람이 A4 가로 한 장에 들어가고, 가운데를 세로로 접는다.
+     접으면 A5 세로 책자가 된다. 세로 4장을 들고 있으면 남의 눈에 뭐가 보이는지 신경 쓰게 된다.
+     접어서 한 장이면 공개 프로필만 겉으로 두고 탁자에 놓아 두면 된다. */
+  .fold { width: 297mm; height: 210mm; page-break-after: always; display: flex;
+          flex-direction: row; position: relative; }
+  .half { flex: 0 0 148.5mm; width: 148.5mm; height: 210mm; padding: 8mm 8mm 5mm; overflow: hidden;
+          position: relative; display: flex; flex-direction: column; }
+  .foldline { position: absolute; top: 0; bottom: 0; left: 148.5mm; border-left: 0.3mm dashed #c3bcae; }
+  .foldtag { position: absolute; left: 148.5mm; bottom: 4mm; transform: translateX(-50%);
+             font-size: 6pt; color: #b3aa99; background: #fff; padding: 0 1.5mm; }
+  .fold h1 { font-size: 13pt; margin: 0 0 1.6mm; }
   .fold h1 .muted { font-size: 8pt; }
-  .fold h2 { font-size: 8.5pt; margin: 2mm 0 0.8mm; padding-bottom: 0.8mm;
+  .fold h2 { font-size: 8.6pt; margin: 1.8mm 0 0.9mm; padding-bottom: 0.7mm;
              border-bottom: 0.8px solid #14120f; break-after: avoid; }
   .fold h2:first-of-type { margin-top: 0; }
-  .fold p { font-size: 7pt; line-height: 1.5; margin: 0 0 1.4mm; }
-  .fold .muted { font-size: 6.8pt; line-height: 1.45; }
-  .fold table { font-size: 7.4pt; }
+  .fold p { font-size: 6.9pt; line-height: 1.5; margin: 0 0 1.4mm; }
+  .fold .muted { font-size: 6.6pt; line-height: 1.45; }
+  .fold table { font-size: 7.6pt; }
   .fold th, .fold td { padding: 1mm 1.4mm; }
-  .fold ul { font-size: 6.9pt; line-height: 1.48; margin: 0 0 1.4mm 3.6mm; }
-  .fold .cname { font-size: 5.9pt; }
-  /* 묻고 답하는 대목 — 표는 단을 넘어 흘를 때 깨져서, 대신 블록으로 쌓는다. */
-  .qa { font-size: 6.3pt; line-height: 1.36; margin: 0 0 0.9mm; orphans: 2; widows: 2; }
-  .qa > b { break-inside: avoid; break-after: avoid; orphans: 2; widows: 2; }
-  .qa > b { display: block; color: #4a4436; }
-  .qa > span { display: block; padding-left: 2.2mm; border-left: 0.5mm solid #ded7c7; }
-  .fold .press { margin-top: 0.8mm; font-size: 6.9pt; }
-  .fold .box { border: 0.5mm solid #8a3b3b; border-radius: 1.5mm; padding: 2mm 2.6mm;
-               margin-top: 2mm; background: #fdf6f4; }
-  .fold .bl { font-size: 8.4pt; font-weight: 800; color: #8a3b3b; margin-bottom: 1.2mm; }
+  .fold ul { font-size: 6.8pt; line-height: 1.44; margin: 0 0 1.2mm 3.4mm; }
+  .fold .cname { font-size: 6pt; }
+  /* 묻고 답하는 대목 — 표는 좁은 면에서 칸이 뭉개져서, 대신 블록으로 쌓는다. */
+  .qa { font-size: 6.6pt; line-height: 1.32; margin: 0 0 0.7mm; }
+  .qa > b { color: #4a4436; }
+  .qa > b::after { content: ' — '; font-weight: 400; color: #a49b88; }
+  .qa > span { display: inline; }
+  .qa .press { display: block; }
+  .fold .press { margin-top: 0.8mm; font-size: 6.6pt; }
+  .fold .box { border: 0.4mm solid #8a3b3b; border-radius: 1.5mm; padding: 1.6mm 2.2mm;
+               margin-top: 1.4mm; background: #fdf6f4; }
+  .fold .bl { font-size: 8pt; font-weight: 800; color: #8a3b3b; margin-bottom: 0.9mm; }
   .fold .box p { font-size: 6.8pt; line-height: 1.45; margin-bottom: 0.8mm; }
   .cover { justify-content: space-between; }
   .covName { font-size: 30pt; font-weight: 800; letter-spacing: .02em; }
   .covSub { font-size: 9pt; color: #6b6760; margin-top: 1.5mm; }
   .covFoot { font-size: 6.8pt; color: #8a8375; border-top: 0.3mm solid #ded7c7; padding-top: 2mm; }
 `;
-const doc = (title, body) => `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
-<title>${esc(title)}</title><style>${CSS}</style></head><body>${body}</body></html>`;
+const doc = (title, body, pageCss = '') => `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+<title>${esc(title)}</title><style>${CSS}${pageCss}</style></head><body>${body}</body></html>`;
 
 // 3x3 면 단위로 자르고, 뒷면은 행마다 좌우를 뒤집어 양면 인쇄를 맞춘다.
 function paginate(items, front, back) {
@@ -566,13 +565,13 @@ function charCards() {
         <b>죽인 것은 한 명뿐</b>입니다. 자기 죄가 드러났을 때 전부를 뒤집어쓰지 마세요 —
         <b>인정할 것은 인정하고, 그것이 사인이 아님을 짚으세요.</b> 그래야 판이 "누가 무엇을
         했나"에서 "무엇이 목사님을 죽였나"로 넘어갑니다.</p></div>
-    <div class="covFoot">양면으로 인쇄해 가운데 점선을 가로로 접으세요.
+    <div class="covFoot"><b>A4 가로</b>로 양면 인쇄해 가운데 점선을 세로로 접으세요.
       접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
 
   // 면 ② 안 위 — 비밀 시나리오
   const secret = (s) => {
     const b = BIBLE[s.name] || {};
-    // 「여기서 무너진다」는 자기 시나리오의 끝이다. 대본 면은 문답만으로도 두 단이 찬다.
+    // 언제 무너지는지는 자기 시나리오의 끝이다. 대본 면은 문답만으로도 거의 차다.
     const hits = (INTERROGATION[SID[s.name]]?.statements || [])
       .filter((x) => x.contradict).map((x) => x.contradict);
     return `<h1>${esc(s.name)} <span class="muted">— 비밀 시나리오 (본인만)</span></h1>
@@ -598,7 +597,6 @@ function charCards() {
     const st = d.statements || [];
     const soft = [];
     for (const x of st) for (const [code, r] of Object.entries(x.soft || {})) soft.push([code, r]);
-    const hits = st.filter((x) => x.contradict).map((x) => x.contradict);
     return `<h1>${esc(name)} <span class="muted">— 대본 (본인만)</span></h1>
       <p class="muted">외울 필요는 없습니다. 자기 말로 바꿔 말해도 되지만
         <b>사실관계는 벗어나지 마세요.</b> 없는 질문은 시나리오에 맞게 지어내면 됩니다.</p>
@@ -630,14 +628,16 @@ function charCards() {
 `;
   };
 
-  const sheet = (top, bottom, topCls = 'two') => `<div class="fold">
-    <div class="half ${topCls}">${top}</div>
-    <div class="foldline"></div><div class="foldtag">가로로 접는 선</div>
-    <div class="half two">${bottom}</div></div>`;
+  const sheet = (left, right, leftCls = '') => `<div class="fold">
+    <div class="half ${leftCls}">${left}</div>
+    <div class="foldline"></div><div class="foldtag">세로로 접는 선</div>
+    <div class="half">${right}</div></div>`;
 
   const body = suspects.map((s) =>
     sheet(cover(s), secret(s), 'cover') + sheet(lines(s.name), moments(s.name))).join('');
-  return { filename: '보드_인물카드.html', html: doc('보드게임 인물 시트', body + detectiveCard(named, sheet, qa)) };
+  const landscape = '@page { size: A4 landscape; margin: 0; }';
+  return { filename: '보드_인물카드.html',
+    html: doc('보드게임 인물 시트', body + detectiveCard(named, sheet, qa), landscape) };
 }
 
 // ── 7인 모드 · 형사 시트 ─────────────────────────────────────────────────────
@@ -658,7 +658,7 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
           그 대신 형사는 <b>자기 방이 없습니다</b> — 처음부터 끝까지 아무 방이나 갈 수 있고,
           1라운드에 낭독할 자기 물건도 없습니다. 조사·토론·지목은 나머지와 똑같이 합니다.</p></div>
     </div>
-    <div class="covFoot">여섯이 하면 이 장을 빼세요. 양면 인쇄 후 가운데 점선을 가로로 접습니다.</div>`;
+    <div class="covFoot">여섯이 하면 이 장을 빼세요. <b>A4 가로</b>로 양면 인쇄해 가운데 점선을 세로로 접습니다.</div>`;
   const inner = `<h1>${esc(d.name)} 형사 <span class="muted">— 당신이 아는 것 (본인만)</span></h1>
     <h2>당신의 정체</h2><p>${esc(d.identity)}</p>
     <h2>당신의 그날</h2>
