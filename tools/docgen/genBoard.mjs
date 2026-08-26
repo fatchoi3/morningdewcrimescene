@@ -10,7 +10,7 @@
 import { BIBLE } from './bible.mjs';
 import { DATA as INTERROGATION } from '../../src/solo/interrogation.js';
 import { BOARD_SCRIPT, DETECTIVE } from './boardScript.mjs';
-import { illustratedMapHTML, ART_ROOMS } from './boardMap.mjs';
+import { illustratedMapHTML, ART_ROOMS, shortLabel } from './boardMap.mjs';
 import QRCode from 'qrcode';
 
 // 정본 데이터는 주입받는다 — Node(문서 생성기)는 loadData.mjs 가 fs 로 비밀팩을 찾아 넘기고,
@@ -70,22 +70,10 @@ const BOARD_UNLOCK = {
 const SPECIAL = { letter: 'S', name: '특수 단서', color: '#8a6d1f' };
 const ROOM_OF = { 최종현: 'JH', 강지후: 'EJ', 한소미: 'HJ', 서지안: 'HW', 한다영: 'SR', 문세린: 'GH' };
 
-// 잠금 카드 — 비밀번호를 넣어야 열리는 것들. 앱에서는 톡서랍을 복구하거나 진위조회를 하는
-//   상호작용인데, 종이에는 넣을 화면이 없다. QR 한 장으로 그 화면을 대신한다.
-//   카드가 아니라 게시물이다 — 아무도 가져가지 않고, 누구나 찍을 수 있다. 잠근 것은 카드가
-//   아니라 숫자이므로, 숫자를 아는 사람이 열지 말지·남에게 알려줄지를 정하게 된다.
-const QCARDS = [
-  { no: 'Q1', code: 'LWUY-33', title: '목사님 휴대폰 — 잠긴 대화방',
-    hint: '네 자리 숫자가 필요하다. 목사님은 잠글 것마다 같은 날짜를 쓴다고 어딘가에 적어 두었다.' },
-  { no: 'Q2', code: 'QIVS-92', title: '한다영 휴대폰 — 잠긴 대화방',
-    hint: '네 자리 숫자가 필요하다. 다영이 무엇을 기준으로 숫자를 정했는지는 다른 사람의 기록에 있다.' },
-  { no: 'Q3', code: 'HUOX-80', title: '한소미 휴대폰 — 잠긴 대화방',
-    hint: '네 자리 숫자가 필요하다. 소미가 무엇을 기준으로 숫자를 정했는지는 다른 사람의 기록에 있다.' },
-  { no: 'Q4', code: 'YJWR-74', title: '서지안 휴대폰 — 잠긴 대화방',
-    hint: '네 자리 숫자가 필요하다. 지안이 무엇을 기준으로 숫자를 정했는지는 그가 감추고 싶어 하는 종이 한 장에 적혀 있다.' },
-  { no: 'Q5', code: 'CERT', title: '교단 「수료증 진위조회」',
-    hint: '수료증에 적힌 발급번호를 넣으면 등록 여부가 나온다. 번호는 그 수료증을 찍은 사진에 있다.' },
-];
+// 잠긴 대화방과 진위조회는 예전에 카드 다섯 장(Q1~Q5)이었다. 폰을 손에 쥔 사람이 폰을 두고
+//   다른 카드를 찾으러 가야 했고, 종이만 다섯 장 늘었다. 지금은 폰 카드의 QR 이 여는 화면
+//   안에서 바로 숫자를 넣는다 — 실제 폰이 그렇듯. 잠근 것은 여전히 카드가 아니라 숫자다.
+const QCARDS = [];
 
 // 필적 대조는 사람마다 카드가 따로 있다. 화면에서 고르게 두면 손에 표본이 없어도 일곱을
 //   차례로 돌려 보게 되고, 그러면 대조가 아니라 목록 훑기가 된다. 카드를 나눠 두면
@@ -137,7 +125,7 @@ function explode(c) {
       phone ? '안에 든 것' : '표시된 자리',
       what,
       phone && hasDeleted(c)
-        ? `지워진 대화방이 있다 — 판 옆의 ${QCARD_NO[c.code] || '잠금'} 카드를 찍어 네 자리 숫자를 넣는다.`
+        ? '카카오톡에 지워진 대화방이 있다 — 이 QR 을 찍어 들어간 화면 안에서, 그 방을 열고 네 자리 숫자를 넣으면 되살아난다.'
         : '',
     ].filter(Boolean).join('\n');
     // 휴대폰은 이벤트 ② 뒤부터 각 방에서 가져갈 수 있다. 다이어리·성경책은 처음부터.
@@ -490,6 +478,10 @@ const CSS = `
              border: 0.5mm solid; border-radius: 50%; width: 7.4mm; height: 7.4mm;
              display: flex; align-items: center; justify-content: center;
              font-size: 7pt; font-weight: 800; }
+  /* 이름이 붙은 마커 — 동그라미가 아니라 알약 모양으로 늘어난다. */
+  .art .mkW { width: auto; height: auto; min-width: 0; border-radius: 2.4mm; gap: 1mm;
+              padding: 0.7mm 1.6mm; white-space: nowrap; font-size: 6.4pt; }
+  .art .mkW .mkN { font-size: 6.2pt; font-weight: 700; color: #3a352c; }
   .art .note { position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
                background: #fffffff2; font-size: 7.4pt; font-weight: 700;
                padding: 0.7mm 1.8mm; border-radius: 1mm; border: 0.4mm solid; }
@@ -529,6 +521,7 @@ const CSS = `
   .fold .box { border: 0.4mm solid #8a3b3b; border-radius: 1.5mm; padding: 1.6mm 2.2mm;
                margin-top: 1.4mm; background: #fdf6f4; }
   .fold .bl { font-size: 8pt; font-weight: 800; color: #8a3b3b; margin-bottom: 0.9mm; }
+  .fold .brk { color: #8a3b3b; }
   .fold .box p { font-size: 6.8pt; line-height: 1.45; margin-bottom: 0.8mm; }
   .cover { justify-content: space-between; }
   .covName { font-size: 30pt; font-weight: 800; letter-spacing: .02em; }
@@ -584,16 +577,15 @@ function lockCards() {
     <div class="hint"><div>이 카드는 <b>아무도 가져갈 수 없다.</b> 판 옆에 펴 두고 누구나 찍는다.<br>
       ${q.hand ? `대조하려면 <b>${esc(q.need)}</b>가 손에 있어야 한다.` : '잠긴 것은 카드가 아니라 <b>숫자</b>다.'}</div></div>
   </div>`;
-  return `<div class="page"><h1>잠금 카드 — ${allQ().length}장
-      <span class="muted">Q1 ~ Q${QCARDS.length} · 필적 대조 Q6-1 ~ Q6-${HANDS.length}</span></h1>
+  return `<div class="page"><h1>필적 대조 카드 — ${allQ().length}장
+      <span class="muted">Q6-1 ~ Q6-${HANDS.length}</span></h1>
     <p class="muted">앞면이 보이게 판 옆에 펴 둡니다. <b>가져가는 카드가 아닙니다.</b>
-      휴대폰 카메라로 QR 을 찍으면 화면이 열리고, 그 사람만 내용을 봅니다.<br>
-      <b>Q1~Q5 는 숫자를 넣어야 열립니다.</b> Q1~Q4 는 지워진 카카오톡 대화방이고, Q5 는 수료증 조회입니다.
-      숫자는 <b>다른 단서 카드 안에 적혀 있습니다</b> — 그 카드를 손에 넣은 사람이 알려 줄지 말지를 정합니다.
-      찍으면 숫자 넣는 칸이 뜨고, <b>맞는 숫자를 넣은 사람만</b> 내용을 봅니다. 틀리면 아무것도 안 나옵니다.<br>
-      <b>Q6-n 은 필적 대조입니다.</b> 통 라벨의 글씨를 그 사람의 것과 맞춰 봅니다 —
+      휴대폰 카메라로 QR 을 찍으면 화면이 열리고, 그 사람만 결과를 봅니다.<br>
+      통 라벨의 글씨를 그 사람의 것과 맞춰 봅니다 —
       <b>그 사람의 손글씨가 있는 카드를 손에 넣은 사람만</b> 찍을 수 있습니다.
-      한 장이 한 사람이라, 누가 어느 카드를 찍는지가 그대로 보입니다.</p>
+      한 장이 한 사람이라, 누가 어느 카드를 찍는지가 그대로 보입니다.<br>
+      <span class="muted">지워진 대화방과 수료증 조회는 카드가 따로 없습니다 —
+      그 휴대폰 카드의 QR 을 찍어 들어간 <b>폰 화면 안에서</b> 엽니다.</span></p>
     <div class="sheet">${allQ().map(face).join('')}</div></div>`;
 }
 
@@ -709,7 +701,11 @@ function clueCards() {
 //   면은 넷이다: 겉(공개) · 안 위(비밀 시나리오) · 안 아래(대본) · 뒷면(상황별 대응).
 function charCards() {
   const li = (a) => a.map((x) => `<li>${x}</li>`).join('');
-  const { num } = buildBoard();
+  const { num, unitNum } = buildBoard();
+  // 카드 이름은 정본 단서 제목이 아니라 «판에 실제로 인쇄된 제목»이어야 한다. 파우치와 옷가지를
+  //   한 장으로 합쳐 「다영의 소지품」이 됐는데 시트는 계속 「다영의 파우치」를 가리키고 있었다.
+  const boardTitle = {};
+  for (const [u, n] of unitNum) if (u.code && !boardTitle[u.code]) boardTitle[u.code] = { n, t: u.title };
   const SID = { 최종현: 'S1', 강지후: 'S2', 한소미: 'S3', 서지안: 'S4', 한다영: 'S5', 문세린: 'S6' };
   const OFF_DECK = {
     'LONS-62': '이벤트 ④',
@@ -720,7 +716,7 @@ function charCards() {
   const titleOfCode = Object.fromEntries(allClues.map((c) => [c.code, c.title || '']));
   const OFF_TITLE = { 'LONS-62': '2차 부검 — 타살 확정', 'BRIF-00': '사건 브리핑', 'SIAH-72': 'CCTV 열람실' };
   const named = (code) => {
-    const t = titleOfCode[code] || OFF_TITLE[code] || '';
+    const t = boardTitle[code]?.t || titleOfCode[code] || OFF_TITLE[code] || '';
     return `<b>${esc(no(code))}</b>${t ? ` <span class="cname">${esc(t)}</span>` : ''}`;
   };
   // 표는 좁은 단을 넘어갈 때 줄이 깨진다. 묻고 답하는 대목은 블록으로 쌓는다.
@@ -779,12 +775,12 @@ function charCards() {
         <p><b>당신은 숨기는 것이 없습니다.</b> 그래서 판이 무엇을 파내든 전부 처음 듣는 이야기입니다.
           뜻밖의 것이 나오면 <b>그 자리에서 처음 본 사람처럼</b> 반응하고, 그게 무슨 뜻인지 <b>남들에게 물으세요.</b></p></div>`
         : ''}
-      ${hits.length ? `<div class="box"><div class="bl">⚠ 여기서 무너집니다 — 버티지 마세요</div>
-        ${hits.map((h) => `<p>${b.breakAs?.[(h.codes || [])[0]]
-            || `${(h.codes || []).map(named).join(' 또는 ')} 가 나오면`}:<br>
-          ${h.text || ''}${h.confess ? '<br><b>— 여기서 인정합니다.</b>' : ''}</p>`).join('')}
-        <p class="muted">나온 뒤에도 계속 우기면 게임이 멈춥니다 — 무너지는 것이 당신의 역할입니다.
-          <b>뒷면 「상황별 대응」과 어긋나면 그쪽을 따르세요.</b></p></div>` : ''}`;
+      ${hits.length ? `<div class="box"><div class="bl">⚠ 여기서 무너집니다</div>
+        <p>아래 카드가 판에 나오면 <b>더 우기지 말고 인정합니다.</b>
+          우기면 게임이 멈춥니다 — 무너지는 것이 당신의 역할입니다.</p>
+        <p>${hits.map((h) => b.breakAs?.[(h.codes || [])[0]]
+            || (h.codes || []).map(named).join(' · ')).join('<br>')}</p>
+        <p class="muted">무엇이라고 말할지는 <b>뒷면 「이 카드가 나오면」</b>에 카드별로 적혀 있습니다.</p></div>` : ''}`;
   };
 
   // 면 ③ 안 아래 — 앱판 심문 정본에서 뽑은 대본
@@ -812,8 +808,11 @@ function charCards() {
   const moments = (name) => {
     const s = BOARD_SCRIPT[name];
     if (!s) return '';
-    // 카드가 나왔을 때의 반응은 여기 한 면에 모은다 — 대본 면에 두면 두 면 다 넘친다.
+    // 대응이 세 군데(대본·상황별·카드별)에 흩어져 있으면 판이 도는 중에 어디를 봐야 하는지가
+    //   매번 헷갈린다. 그래서 두 덩이로만 모은다 — 「이런 일이 벌어지면」(정황)과
+    //   「이 카드가 나오면」(카드 번호). 판에서 실제로 일어나는 일은 둘 중 하나다.
     const d = INTERROGATION[SID[name]];
+    const b = BIBLE[name] || {};
     const drop = new Set(s.dropSoft || []);
     const over = s.soft || {};
     const soft = [];
@@ -823,18 +822,30 @@ function charCards() {
         soft.push([c, over[c] || (typeof r === 'string' ? r : r?.text || '')]);
       }
     }
+    // 무너지는 카드는 따로 두지 않고 같은 표 안에 ⚠ 로 찍는다 — 그 카드가 나온 순간
+    //   시선이 이미 그 줄에 가 있는데, 인정하라는 지시만 다른 면에 있으면 늦는다.
+    const breakOn = new Set(b.knowsWhatBreaks === false ? []
+      : (INTERROGATION[SID[name]]?.statements || [])
+        .filter((x) => x.contradict).flatMap((x) => x.contradict.codes || []));
+    const rows = [...new Map([...soft, ...Object.entries(s.onCard)]).entries()];
+    for (const c of breakOn) if (!rows.some(([k]) => k === c)) rows.push([c, '']);
+    const line = (c, t) => {
+      const txt = esc(String(t).replace(/<[^>]+>/g, ''));
+      return breakOn.has(c)
+        ? `${txt}${txt ? ' ' : ''}<b class="brk">⚠ 여기서 인정합니다.</b>` : txt;
+    };
     return `<h1>${esc(name)} <span class="muted">— 이 상황에서는 이렇게 (본인만)</span></h1>
       <h2>말투</h2><p>${s.tone}</p>
       <h2>당신이 알고 있어서 자꾸 걸리는 것</h2>
       <p class="muted">누구를 의심하라는 지시가 아닙니다. <b>당신이 아는 사실</b>일 뿐입니다 —
         이걸 지키려다 보면 시선은 저절로 어디론가 향합니다.</p>
-      ${qa(s.watch.map(([a, b]) => [esc(a), b]))}
-      <h2>상황별 대응</h2>
-      ${qa(s.moments.map(([a, b]) => [esc(a), b]))}
-      <h2>이 카드가 판에 나오면</h2>
-      <p class="muted">남이 그 카드를 읽었거나 당신에게 내밀었을 때의 첫마디입니다.</p>
-      ${qa([...new Map([...soft, ...Object.entries(s.onCard)]).entries()]
-        .map(([c, t]) => [named(c), esc(String(t).replace(/<[^>]+>/g, ''))]))}
+      ${qa(s.watch.map(([a, x]) => [esc(a), x]))}
+      <h2>이런 일이 벌어지면 <span class="muted">— 정황</span></h2>
+      ${qa(s.moments.map(([a, x]) => [esc(a), x]))}
+      <h2>이 카드가 나오면 <span class="muted">— 카드 번호</span></h2>
+      <p class="muted">남이 그 카드를 읽었거나 당신에게 내밀었을 때의 첫마디입니다.
+        <b class="brk">⚠</b> 가 붙은 카드는 <b>더 우기지 않고 인정하는 자리</b>입니다.</p>
+      ${qa(rows.map(([c, t]) => [named(c), line(c, t)]))}
 `;
   };
 
@@ -862,7 +873,7 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
     </div>
     <div>
       <table><tr><th style="width:22%">알려진 것</th>
-        <td>13시 31분 신고를 받고 온 담당 형사. 초동 수사를 마치고 관계자 여섯을 불러 모았다.</td></tr></table>
+        <td>13시 34분 신고를 받고 온 담당 형사. 초동 수사를 마치고 관계자 여섯을 불러 모았다.</td></tr></table>
       <div class="box"><div class="bl">형사는 용의자가 아닙니다</div>
         <p>목사님을 죽인 사람은 나머지 여섯 안에 있습니다. <b>아무도 형사를 지목하지 않습니다.</b>
           그 대신 형사는 <b>자기 방이 없습니다</b> — 처음부터 끝까지 아무 방이나 갈 수 있고,
@@ -896,6 +907,8 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
 function placeBoard() {
   const { bag, open, num } = buildBoard();
   const counts = Object.fromEntries(Object.entries(bag).map(([k, v]) => [k, v.length]));
+  // 판 위의 번호마다 물건 이름을 한마디씩 — 「A3 볼게요」가 「A3, 풀이요」가 된다.
+  const labels = Object.fromEntries(Object.entries(bag).map(([k, v]) => [k, v.map((u) => shortLabel(u.title))]));
   const openPages = open.map((c) => {
     const rows = (c.schedule?.entries || [])
       .map((e) => `<tr><td>${esc(e.time)}</td><td>${esc(e.person)}</td><td>${esc(e.content)}</td></tr>`).join('');
@@ -913,9 +926,11 @@ function placeBoard() {
     <p class="muted">탁자 가운데에 까는 판이다. <b>A3 가로</b> 권장.
       카드는 판 위에 올리지 않고 장소별로 옆에 쌓는다. 방 안의 번호는 <b>고를 자리</b>이지
       물건이 놓인 위치가 아니다 — "A3 볼게요" 하고 그 번호 카드를 집으면 된다.</p>
-    ${illustratedMapHTML(counts, img('/images/board/2층평면.png'))}
+    ${illustratedMapHTML(counts, img('/images/board/2층평면.png'), labels)}
     <p class="muted">복도 끝 CCTV는 <b>복도만</b> 비춘다. 방문 앞은 사각이라
-      누가 방에 들어갔는지는 찍히지 않는다 — 이 사건의 전제다.</p>
+      누가 방에 들어갔는지는 찍히지 않는다 — 이 사건의 전제다.<br>
+      <b>목사님 방 문에는 작은 유리창이 있다.</b> 복도에 선 채로 안을 들여다볼 수 있다 —
+      들어가지 않고도 방 안에서 무슨 일이 있는지 볼 수 있었다는 뜻이다.</p>
     <h2>판 밖 시설</h2>
     <table><tr><th style="width:22%">장소</th><th style="width:16%">번호</th><th>여는 시점</th></tr>
       ${side.map((p) => `<tr><td>${esc(p.name)}</td>
@@ -1010,7 +1025,7 @@ function runSheets() {
       </div>
       <div class="tblRow">
         <div class="slot slotOpen">S <span>특수 단서 — 처음부터 꺼내 두되 <b>뒷면이 보이게</b></span></div>
-        <div class="slot slotOpen">Q <span>잠금 카드 12장 — 앞면이 보이게</span></div>
+        <div class="slot slotOpen">Q <span>필적 대조 7장 — 앞면이 보이게</span></div>
         <div class="slot slotOpen">공개 <span>목사님 일정표 — 이벤트 ① 과 함께 펴 둔다</span></div>
       </div>
       <div class="tblRow">
@@ -1122,6 +1137,7 @@ function runSheets() {
     ${ev('①', whenEv('①'), '현장 통제 해제',
       `<p>단순 발작사로 보기 어렵다는 소견이 나와, <b>목사님 방을 현장으로 보존하고 있었습니다.</b>
         1차 검안이 끝나 이제 들어갈 수 있습니다.</p>
+      <p class="muted">방 문에는 <b>작은 유리창</b>이 있습니다. 복도에서 안이 들여다보입니다.</p>
       <p><b>목사님의 방 — 현장이 열립니다.</b> 그 카드들을 판 옆에 놓고,
         「목사님 일정표」는 <b>앞면이 보이게</b> 그 옆에 펴 둡니다 — 이 한 장은 아무도 가져갈 수 없습니다.</p>
       <p class="muted">정밀 부검은 아직 나오지 않았습니다. 지금 아는 것은 시작 시트에 적힌 것까지입니다 —

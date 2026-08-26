@@ -154,7 +154,7 @@ export function genTruth(data) {
   <p><strong>죽은 사람을 발견하고, 신고 대신 비밀을 지운 사람.</strong> 문세린에겐 숨겨온 비밀이 있었다 — 이혼 경력과 다섯 살 딸. 그녀는 딸을 "조카"라 속이며 살아왔다. 그녀의 약혼자는 같은 교회 청년 '김민석'이었다.</p>
   <p>그런데 목사가 김민석에게 (상대가 세린의 약혼자인 줄 모르고) "세린이는 애도 있고 곧 결혼한다더라"고 흘렸다. 충격받은 김민석은 세린에게 파혼을 통보했다. 분노한 세린은 목사에게 <strong>"당신 때문에 이렇게 됐잖아요!"</strong>라는 카톡을 보냈다.</p>
   <div class="sec">당일 — 이미 죽어 있던 목사</div>
-  <p>수련회 당일 13시 20분경, 세린은 목사를 따지러 방에 들어갔다. 그런데 <strong>목사는 이미 죽어 있었다.</strong> (서지안이 떠난 지 3분 뒤였다.) 충격 속에서 그녀는 냉정하게 판단했다 — 이대로면 자신의 비밀과 항의 카톡이 다 드러난다. <strong>목사 폰은 지문으로 열린다.</strong> 사망 직후라 손가락을 대자 그대로 열렸고, 그녀는 카카오톡에서 <strong>김민석과의 험담 대화와 자신의 항의 카톡을 삭제</strong>한 뒤 13시 31분에야 119에 신고했다. 지우는 데는 비밀번호가 필요 없다 — 열려 있으면 그만이다. (되살리려면 톡서랍 비번 <strong>0419</strong>가 필요하고, 그 숫자는 목사 일기장 <code>PRBO-03</code>의 "결혼기념일 4월 19일"에서 나온다. 세린은 그 번호를 몰라도 됐다.) 진입 시각과 신고 시각의 큰 공백이 그녀를 의심받게 만들었다.</p>
+  <p>수련회 당일 13시 23분경, 세린은 목사를 따지러 방에 들어갔다. 그런데 <strong>목사는 이미 죽어 있었다.</strong> (서지안이 떠난 지 3분 뒤였다.) 충격 속에서 그녀는 냉정하게 판단했다 — 이대로면 자신의 비밀과 항의 카톡이 다 드러난다. <strong>목사 폰은 지문으로 열린다.</strong> 사망 직후라 손가락을 대자 그대로 열렸고, 그녀는 카카오톡에서 <strong>김민석과의 험담 대화와 자신의 항의 카톡을 삭제</strong>한 뒤 13시 34분에야 112에 신고했다. 지우는 데는 비밀번호가 필요 없다 — 열려 있으면 그만이다. (되살리려면 톡서랍 비번 <strong>0419</strong>가 필요하고, 그 숫자는 목사 일기장 <code>PRBO-03</code>의 "결혼기념일 4월 19일"에서 나온다. 세린은 그 번호를 몰라도 됐다.) 진입 시각과 신고 시각의 큰 공백이 그녀를 의심받게 만들었다.</p>
   <div class="box key"><div class="bl">역설 — 그녀만 아는 결정적 진실</div>
     <p>그녀는 <strong>누가 목사를 죽였는지 모른다.</strong> 들어갔을 때 이미 죽어 있었으니까. 하지만 역설적으로 그녀는 결정적 단서를 쥐고 있다 — <strong>"내가 들어갔을 때 방엔 아무도 없었고, 목사는 이미 죽어 있었다."</strong> 그녀의 진입 시각을 역산하면, 그 직전에 누군가(서지안)가 다녀갔다는 게 드러난다. 그녀의 증거 인멸은 자기 비밀을 지키기 위한 것이었지, 살인과는 무관하다. (그녀가 지운 대화를 되살리는 열쇠는 목사 일기장의 "결혼기념일 4월 19일"이다 — 톡서랍 비번 0419.)</p></div>
 </div>
@@ -181,13 +181,13 @@ export function genTruth(data) {
     <div class="tl-row"><div class="tl-t">~12:50</div><div class="tl-x"><strong>목사</strong> 요힘빈 음료 복용 → 컨디션 악화 시작.</div></div>
     <div class="tl-row"><div class="tl-t">13:10</div><div class="tl-x"><strong>목사</strong> 협심증 발작. 책상 설하정(가짜 비타민) 복용 → 딸기맛 안 남 → 이상 감지 → <strong>품속 진짜 설하정</strong> 복용 후 침대에서 잠시 안정.</div></div>
     <div class="tl-row"><div class="tl-t">13:15</div><div class="tl-x"><strong>서지안</strong> 유리창으로 안을 봄 → "안정 취함 = 실패" 판단 → 진입 → 베개 질식 살해 (직접 사인).</div></div>
-    <div class="tl-row"><div class="tl-t">13:17</div><div class="tl-x"><strong>서지안</strong> 숙소 방향으로 퇴장.</div></div>
-    <div class="tl-row"><div class="tl-t">13:20</div><div class="tl-x"><strong>문세린</strong> 발견 진입 → 이미 사망 → 목사 손가락으로 폰을 열어 카톡 기록 삭제.</div></div>
-    <div class="tl-row"><div class="tl-t">13:31</div><div class="tl-x"><strong>문세린</strong> 119 신고. (진입~신고 공백이 의심을 부름)</div></div>
+    <div class="tl-row"><div class="tl-t">13:20</div><div class="tl-x"><strong>서지안</strong> 숙소 방향으로 퇴장.</div></div>
+    <div class="tl-row"><div class="tl-t">13:23</div><div class="tl-x"><strong>문세린</strong> 발견 진입 → 이미 사망 → 목사 손가락으로 폰을 열어 카톡 기록 삭제.</div></div>
+    <div class="tl-row"><div class="tl-t">13:34</div><div class="tl-x"><strong>문세린</strong> 112 신고. (진입~신고 공백이 의심을 부름)</div></div>
     <div class="tl-row"><div class="tl-t">사건 후</div><div class="tl-x"><strong>한다영·한소미</strong> 각자 자기 폰에서 전날 자매·범행 정황 카톡 삭제 (서로 모른 채 상대를 감쌈) — 상대 폰엔 남아 교차 복원됨.</div></div>
   </div>
   <div class="box key" style="margin-top:18px"><div class="bl">동선 분리 — 서지안 퇴장과 세린 진입은 마주치지 않는다</div>
-    <p>서지안 퇴장(13:17, 숙소 방향)과 세린 진입(13:20, 자기 방 쪽)은 출발 위치가 다르고 3분 시차라 복도에서 마주치지 않는다. 질식(≈13:16)~세린 진입(13:20)이 약 4분이라 시신은 "막 사망" 상태. 둘 다 CCTV는 방향만 포착이라, 세린이 "지안이 나오는 걸 봤다"고 증언할 근거는 없다.</p></div>
+    <p>서지안 퇴장(13:20, 숙소 방향)과 세린 진입(13:23, 자기 방 쪽)은 출발 위치가 다르고 3분 시차라 복도에서 마주치지 않는다. 질식(≈13:18)~세린 진입(13:23)이 약 5분이라 시신은 "막 사망" 상태. 둘 다 CCTV는 방향만 포착이라, 세린이 "지안이 나오는 걸 봤다"고 증언할 근거는 없다.</p></div>
   <div class="final"><div class="fl">사건의 본질</div>
     <p>여섯 사람이 각자 다른 이유로, 서로 모르게, 같은 날 같은 사람을 노렸다. 한다영은 <strong>빚</strong> 때문에, 한소미는 <strong>동생</strong> 때문에, 서지안은 <strong>자격</strong> 때문에, 문세린은 <strong>파혼</strong> 때문에. 최종현과 강지후는 무고하지만 하필 최악의 타이밍에 얽혔다.<br><br>목사를 실제로 죽인 건 <strong>서지안의 베개</strong>다. 하지만 그 죽음을 만든 건 목사 자신이 무심코 건드린 <strong>여섯 사람의 얽힌 원한 전부</strong>였다.</p></div>
 </div>

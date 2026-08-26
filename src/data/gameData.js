@@ -326,7 +326,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
           ]
         },
         {
-          time: '13:13~18',
+          time: '13:13~21',
           location: '목사님 방 앞 복도',
           scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 사라졌다가, 5분 뒤 다시 나타나 숙소 쪽으로 빠르게 빠져나간다.',
           people: [
@@ -334,9 +334,9 @@ export const evidenceMap = withAssetBase(resolveTokens({
           ]
         },
         {
-          time: '13:20',
+          time: '13:23',
           location: '목사님 방 앞 복도',
-          scene: '한 인물이 자기 방 쪽에서 나타나 목사님 방 방향으로 사라진다. (신고 접수는 13:31 — 사이가 비어 있다)',
+          scene: '한 인물이 자기 방 쪽에서 나타나 목사님 방 방향으로 사라진다. (신고 접수는 13:34 — 사이가 비어 있다)',
           people: [
             { look: '여성 — 자기 방 쪽에서 나타나 방 방향으로 사라짐', who: '{{S6}}', unlocks: 'DVCS-80', x: 325, y: 138, arrow: { from: { x: 197, y: 208 }, to: { x: 355, y: 60 } } }
           ]
@@ -405,10 +405,10 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S6}}'
   },
-  'PKIN-42': { // 13:13~18 진입+퇴장 통합 컷 (코드 끝2자리≠시각, 코드 유지). 옛 PKUT-44는 이 컷에 흡수
-    title: '[CCTV 장면] 13:13~18 {{S4}}',
+  'PKIN-42': { // 13:13~21 진입+퇴장 통합 컷 (코드 끝2자리≠시각, 코드 유지). 옛 PKUT-44는 이 컷에 흡수
+    title: '[CCTV 장면] 13:13~21 {{S4}}',
     description: '',
-    detail: '13:13경 목사 방 방향으로 사라졌다 13:18경 다시 나타나 숙소 쪽으로 빠르게 빠져나감. 화면에서 사라져 있던 시간은 약 5분.',
+    detail: '13:13경 목사 방 방향으로 사라졌다 13:21경 다시 나타나 숙소 쪽으로 빠르게 빠져나감. 화면에서 사라져 있던 시간은 약 8분.',
     image: '',
     type: '보통',
     person: '{{S4}}'
@@ -429,7 +429,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     person: '공용',
     reveal: '시작브리핑',
     pages: [
-      { title: '사건 현황 — 초동 정보', image: '/images/사건현장.png', content: '사망 장소: {{victim.full}}님 개인 방.\n사망 추정 시각: 수련회 마지막 날 오후 1시대(13시경).\n최초 신고자: {{S6}} 회장 — 13:31에 112로 신고.\n\n협심증 병력이 있었으나, 부검상 단순 발작사로 보기 어려운 정황이 있어 수사가 진행 중이다.' },
+      { title: '사건 현황 — 초동 정보', image: '/images/사건현장.png', content: '사망 장소: {{victim.full}}님 개인 방.\n사망 추정 시각: 수련회 마지막 날 오후 1시대(13시경).\n최초 신고자: {{S6}} 회장 — 13:34에 112로 신고.\n\n협심증 병력이 있었으나, 부검상 단순 발작사로 보기 어려운 정황이 있어 수사가 진행 중이다.' },
       { title: '1차 부검 소견', content: '사망 원인은 정확히 추측하긴 어렵지만, 협심증이 있던 목사가 발작을 일으킨 정황으로 보아 심정지로 추정된다.\n\n안구에 출혈이 발견되었고 손에 과하게 힘이 들어간 채 굳어 있다. 입가에서 약간의 딸기향이 느껴진다.' },
       { title: '목사님 방 위치·구조', image: '/images/방구조.jpg', content: '방 문에 작은 유리창이 있다.\n\n방 내부엔 CCTV가 없다. 단, 방 바깥 복도에는 CCTV가 있다. — 복도에서 누가·언제 움직였는지가 추리의 열쇠다.' },
       { title: '용의자가 6명인 이유', content: '수련회 숙소 2층(목사님 방이 있는 층)은 청년부 임원 6명만 사용했다. 일반 청년부원과 외부 참가자는 1층·별관에 묵었고, 사건 시간대(오후 1시 전후) 2층으로 올라온 외부인은 복도 CCTV에 단 한 명도 없다.\n\n또한 사건 전날부터 당일까지 목사님과 단독 접점이 있었던 인원도 정확히 이 여섯 명뿐이다 — 전날 개인 면담을 가진 다섯 명({{S5}}·{{S3}}·{{S4}}·{{S2}}·{{S6}})과, 평소 음료·등산을 전담해 목사님 방을 자주 드나든 {{S1}}.\n\n따라서 수사 대상은 이 여섯 명으로 한정된다.' },
@@ -1781,7 +1781,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
           type: 'calls',
           name: '전화',
           calls: [
-            { name: '112 (긴급신고)', direction: 'out', time: '13:31', duration: '2분 41초' },
+            { name: '112 (긴급신고)', direction: 'out', time: '13:34', duration: '2분 41초' },
             { name: '민석', direction: 'out', time: '11:48', duration: '연결 안 됨' },
             { name: '민석', direction: 'missed', time: '이틀 전' }
           ]
@@ -1798,9 +1798,9 @@ export const evidenceMap = withAssetBase(resolveTokens({
     person: '{{S6}}'
   },
   'DVCS-80': { // CCTV — 신고 지연 (코드 끝2자리≠시각, 코드 유지)
-    title: '[CCTV 장면] 13:20 {{S6}}',
+    title: '[CCTV 장면] 13:23 {{S6}}',
     description: '',
-    detail: '목사 방 내부는 안 보이지만, 복도 CCTV에 13:20경 {{S6.short|이/}} 목사님 방 쪽으로 향한 모습이 찍힘.',
+    detail: '목사 방 내부는 안 보이지만, 복도 CCTV에 13:23경 {{S6.short|이/}} 목사님 방 쪽으로 향한 모습이 찍힘.',
     image: '',
     type: '보통',
     person: '{{S6}}'

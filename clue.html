@@ -47,6 +47,68 @@
       .msg { font-size: .95rem; line-height: 1.7; }
       .sub, .foot { color: #8b97a8; font-size: .82rem; line-height: 1.6; margin-top: 14px; }
       code { background: #1b2430; padding: 1px 6px; border-radius: 4px; }
+
+      /* ── 휴대폰 — 실제 폰을 손에 든 것처럼 ───────────────────────────────── */
+      .phone { border: 1px solid #24303f; border-radius: 18px; overflow: hidden;
+               background: #0f141c; box-shadow: 0 6px 24px #0008; }
+      .pbar { display: flex; justify-content: space-between; padding: 7px 14px;
+              font-size: .72rem; color: #8b97a8; background: #0c1118; }
+      .pnav { display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+              background: #131a24; border-bottom: 1px solid #24303f; }
+      .pnt { font-weight: 800; font-size: .95rem; flex: 1; text-align: center; }
+      .pback { background: none; border: 0; color: #8b97a8; font-size: 1.3rem;
+               line-height: 1; padding: 0 6px; cursor: pointer; }
+      .pscr { padding: 12px; min-height: 320px; }
+      .phome { text-align: center; }
+      .pown { font-weight: 800; margin-top: 14px; }
+      .psub { color: #8b97a8; font-size: .82rem; margin: 4px 0 18px; }
+      .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 8px; }
+      .pic { background: none; border: 0; color: #e6e2d8; display: flex;
+             flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+      .picb { width: 52px; height: 52px; border-radius: 15px; background: #1b2430;
+              border: 1px solid #2b3a4c; display: flex; align-items: center;
+              justify-content: center; font-size: 1.5rem; }
+      .picl { font-size: .74rem; color: #b9c2ce; }
+
+      /* 대화 목록 · 통화 기록 · 연락처 */
+      .klist { display: flex; flex-direction: column; }
+      .krow { width: 100%; display: flex; gap: 11px; align-items: center; text-align: left;
+              background: none; border: 0; border-bottom: 1px solid #1c2531;
+              padding: 11px 4px; color: #e6e2d8; cursor: pointer; }
+      .kav { width: 42px; height: 42px; border-radius: 14px; background: #f7e14b;
+             color: #3a3320; display: flex; align-items: center; justify-content: center;
+             font-weight: 800; flex: none; }
+      .krow.call .kav { border-radius: 50%; background: #2b4a35; color: #a6e6bd; }
+      .krow.call.out .kav { background: #2b3b5a; color: #a8c8ff; }
+      .krow.call.missed .kav { background: #4a2b2b; color: #ffb4b4; }
+      .kbody { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+      .kname { font-weight: 700; font-size: .9rem; }
+      .ktag { font-style: normal; margin-left: 7px; font-size: .68rem; font-weight: 700;
+              color: #d9b3b3; border: 1px solid #7a4444; border-radius: 4px; padding: 0 5px; }
+      .kprev { font-size: .8rem; color: #8b97a8; overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
+
+      /* 대화방 — 카카오톡 배경에 노란 말풍선 */
+      .kchat { display: flex; flex-direction: column; gap: 7px; padding: 10px 4px;
+               background: #91a3b8; border-radius: 10px; }
+      .kmsg { display: flex; flex-direction: column; max-width: 82%; }
+      .kmsg.them { align-self: flex-start; align-items: flex-start; }
+      .kmsg.me { align-self: flex-end; align-items: flex-end; }
+      .kwho { font-size: .72rem; color: #2c3644; margin: 0 4px 3px; }
+      .kbub { background: #fff; color: #17202b; padding: 8px 12px;
+              border-radius: 13px; font-size: .88rem; line-height: 1.55; }
+      .kmsg.them .kbub { border-top-left-radius: 4px; }
+      .kmsg.me .kbub { background: #fae100; border-top-right-radius: 4px; }
+      .ktime { font-size: .68rem; color: #3a4654; margin: 3px 4px 0; }
+
+      /* 잠긴 대화방 — 폰 안에서 연다 */
+      .krec { text-align: center; padding: 26px 8px; }
+      .krl { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+      .krd { color: #8b97a8; font-size: .85rem; line-height: 1.6; margin-bottom: 16px; }
+      .khint { margin-top: 10px; padding: 9px 11px; border-radius: 8px; background: #1f2a1a;
+               border: 1px solid #4a6b2f; color: #cbe3a8; font-size: .82rem; line-height: 1.6; }
+      .knote { margin-top: 16px; color: #8b97a8; font-size: .78rem; line-height: 1.6; }
+      .room.lk { border-color: #4a3a6b; background: #171423; }
     </style>
   </head>
   <body>

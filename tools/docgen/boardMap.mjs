@@ -20,24 +20,56 @@ export const ART_ROOMS = [
   { id: 'EJ', letter: 'G', label: '강지후의 방', color: '#3a5f9f', box: [634, 512, 924, 837] },
 ];
 
+// 판에 번호만 찍혀 있으면 조사가 「A3 볼게요」로 끝난다 — 무엇을 뒤지는지 모르고 고르는 것이라
+//   추리가 아니라 제비뽑기가 된다. 물건 이름을 한마디씩 얹으면 「저 방 다이어리부터」처럼
+//   이유를 갖고 고르게 된다. 다만 이름이 답을 알려 주면 안 된다 — 라벨이 걸린 두 통은
+//   둘 다 그냥 「플라스틱 통」이고, 어느 쪽이 무엇인지는 카드를 집어야 안다.
+const SHORT = {
+  '거부 도장이 찍힌 제안서': '제안서',
+  '목사님 협심증 진단서': '진단서',
+  '목사 옷깃 구겨짐': '옷깃',
+  '소아과 진료 영수증': '영수증',
+  '아이가 그린 그림': '그림',
+  '손등 긁힌 자국': '손등 자국',
+  '손톱 밑 이물질': '손톱 밑',
+  '설하정 처방전': '처방전',
+  '설하정 약통': '약통',
+  '운동화 흙': '운동화',
+  '라벨지와 볼펜': '라벨지',
+  '바닥의 단추': '단추',
+  '개인 텀블러': '텀블러',
+  '등산코스 지도': '등산 지도',
+};
+export const shortLabel = (title = '') => {
+  let t = String(title).replace(/\s*\[[^\]]*\]\s*$/, '').trim();   // 「플라스틱 통 [요힘빈]」의 라벨을 뗀다
+  if (SHORT[t]) return SHORT[t];
+  t = t.replace(/^\S{2,3}의\s+/, '');                              // 「다영의 소지품」 → 「소지품」
+  t = t.replace(/^\S+\s+(핸드폰|다이어리|성경책)$/, '$1');           // 「한소미 핸드폰」 → 「핸드폰」
+  return SHORT[t] || t;
+};
+
 /**
  * 그림 판 HTML. counts[id] 만큼 방 안에 번호 마커를 깐다.
  *   마커는 '단서가 거기 있다'는 표시가 아니라 '몇 번 카드를 집을지 고르는 자리'다 —
  *   그림 속 가구와 맞출 필요가 없고, 맞추려 들면 방마다 개수가 달라 배치가 깨진다.
+ *   labels[id][i] 가 있으면 번호 옆에 물건 이름을 한마디 붙인다.
  */
-export function illustratedMapHTML(counts = {}, src) {
+export function illustratedMapHTML(counts = {}, src, labels = {}) {
   const room = (r) => {
     const [x0, y0, x1, y1] = r.box;
     const n = counts[r.id] || 0;
-    // 이름표는 방 위쪽에 붙이고, 번호는 그 아래를 격자로 채운다
-    const cols = n > 8 ? 4 : n > 3 ? 3 : Math.max(1, n);
+    const lb = labels[r.id] || [];
+    // 이름표는 방 위쪽에 붙이고, 번호는 그 아래를 격자로 채운다.
+    //   이름이 붙으면 마커가 넓어지므로 한 줄에 둘까지만 놓는다.
+    const cols = lb.length ? (n > 6 ? 2 : n > 2 ? 2 : 1) : (n > 8 ? 4 : n > 3 ? 3 : Math.max(1, n));
     const rows = Math.ceil(n / cols);
     const gx0 = x0 + 16, gx1 = x1 - 16, gy0 = y0 + 74, gy1 = y1 - 16;
     const cw = (gx1 - gx0) / cols, ch = Math.min((gy1 - gy0) / Math.max(1, rows), 62);
     const marks = Array.from({ length: n }, (_, i) => {
       const c = i % cols, rw = Math.floor(i / cols);
       const cx = gx0 + cw * (c + 0.5), cy = gy0 + ch * (rw + 0.5);
-      return `<div class="mk" style="left:${pctX(cx)};top:${pctY(cy)};border-color:${r.color};color:${r.color}">${r.letter}${i + 1}</div>`;
+      const name = lb[i] ? `<span class="mkN">${lb[i]}</span>` : '';
+      return `<div class="mk${lb[i] ? ' mkW' : ''}" style="left:${pctX(cx)};top:${pctY(cy)};border-color:${r.color};color:${r.color}"><b>${r.letter}${i + 1}</b>${name}</div>`;
     }).join('');
     return `<div class="rm" style="left:${pctX(x0)};top:${pctY(y0)};width:${pctX(x1 - x0)};height:${pctY(y1 - y0)}">
       <div class="rmName" style="background:${r.color}">${r.label} · ${r.letter}1~${r.letter}${n}</div>
@@ -55,5 +87,6 @@ export function illustratedMapHTML(counts = {}, src) {
     ${ART_ROOMS.map(room).join('')}
     ${note(470, 448, 'CCTV 촬영 범위 — 복도만', '#7b4fa0')}
     ${note(1015, 430, '사각 — 목사님 방 문 앞', '#c9403a')}
+    ${note(1002, 60, '문에 작은 유리창 — 복도에서 안이 들여다보인다', '#1f1f1f')}
   </div>`;
 }
