@@ -982,7 +982,7 @@ function runSheets() {
     <p class="muted">각 종이가 무엇인지는 <b>다음 장</b>에 한 줄씩 적어 두었습니다.
       지금은 이 표만 보고 1번부터 하면 됩니다.</p>
     <table><tr><th style="width:7%">순</th><th style="width:30%">무엇을</th><th>누가 · 어떻게</th></tr>
-      <tr><td class="stn">1</td><td><b>「탁자에 이렇게 놓습니다」</b><br><span class="muted">이 책자 다음 장</span></td>
+      <tr><td class="stn">1</td><td><b>「탁자에 이렇게 놓습니다」</b><br><span class="muted">이 책자 셋째 장</span></td>
         <td>한 사람이 읽으며 <b>카드와 종이를 자리에 놓습니다.</b> 10분. 나머지는 거들면 됩니다.</td></tr>
       <tr><td class="stn">2</td><td><b>인물 시트를 하나씩</b></td>
         <td>제비뽑기든 합의든 좋습니다. 받으면 <b>혼자서 5분간 읽습니다.</b>
