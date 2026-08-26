@@ -23,10 +23,28 @@ const esc = (s) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<'
 // 판 위 7개 방 + 판 밖 시설 2곳. 순서가 곧 카드 번호 순서다.
 const PLACES = [
   ...ART_ROOMS.map((r) => ({ id: r.id, letter: r.letter, name: r.label, color: r.color, open: '처음부터' })),
-  { id: 'CC', letter: 'V', name: 'CCTV 열람실', color: '#2b6b73', open: '3라운드 종료 후' },
-  { id: 'LB', letter: 'L', name: '감식실', color: '#5a5a5a', open: '2라운드 종료 후 · 채취물 제출 전용' },
+  { id: 'CC', letter: 'V', name: 'CCTV 열람실', color: '#2b6b73', open: '이벤트 ③ 을 읽은 뒤' },
+  { id: 'LB', letter: 'L', name: '감식실', color: '#5a5a5a', open: '이벤트 ② 를 읽은 뒤 · 채취물 제출 전용' },
 ];
-PLACES.find((p) => p.id === 'PS').open = '현장(D1~D10) 1라운드 종료 후 · 기록(D11~) 2라운드 종료 후';
+// 개방 시점은 라운드 숫자가 아니라 이벤트 번호로 적는다. 여섯이면 6라운드, 일곱이면 5라운드라
+//   이벤트가 붙는 라운드가 서로 다른데, 종이마다 숫자를 박아 두었더니 같은 제품 안에서
+//   감식실이 3라운드·4라운드로 갈리고 CCTV 가 4라운드·5라운드로 갈렸다. 이벤트 번호는
+//   인원수와 무관하게 하나뿐이라, 이렇게 적으면 어긋날 자리가 없어진다.
+PLACES.find((p) => p.id === 'PS').open = '현장(D1~D10) 이벤트 ① 뒤 · 기록(D11~) 이벤트 ② 뒤';
+
+// 이벤트가 붙는 라운드는 인원수마다 다르다. 어느 쪽이든 「마지막 라운드 하나를 남기고 넷을 다
+//   읽는다」가 규칙이다 — 2차 부검(④)이 뒤집힌 뒤에 조사할 라운드가 한 번은 남아야, 그때서야
+//   값이 생기는 카드(베개·손톱 밑 이물질)를 쓸 자리가 있다.
+// 여섯은 라운드가 하나 더 있으므로 그 여유를 앞에 둔다 — 1·2라운드는 서로의 방과 조합만으로
+//   굴러, 목사님 방이 열리기 전에 사람의 말이 먼저 쌓인다.
+const TRACKS = [
+  { label: '여섯이 할 때 — 6라운드', rounds: 6, evAt: { 2: '①', 3: '②', 4: '③', 5: '④' } },
+  { label: '일곱이 할 때 — 5라운드 (형사 포함)', rounds: 5, evAt: { 1: '①', 2: '②', 3: '③', 4: '④' } },
+];
+// 이벤트 카드에 「몇 라운드가 끝나면 펼치는지」를 인원별로 같이 적는다.
+const whenEv = (ev) => TRACKS
+  .map((t) => `${t.rounds === 6 ? '여섯이면' : '일곱이면'} ${
+    Object.keys(t.evAt).find((k) => t.evAt[k] === ev)}라운드`).join(' · ') + '가 끝나면 펼친다';
 
 // 앱에서는 이 특수 단서들이 '열람 흔적'(톡서랍 비밀번호 복구·필적 대조·심문)으로 열린다.
 //   보드에는 비밀번호도 심문도 없어 unlockedBy 가 비어 있고, 그래서 네 장이 영원히 더미에
@@ -44,7 +62,7 @@ const BOARD_UNLOCK = {
 // 휴대폰 잠금은 두 단계다. 통신 기록(누구와 이어져 있었나)이 먼저, 대화 내용(무슨 말을 했나)이
 //   나중에 열린다. 관계를 먼저 알고 내용을 나중에 아는 순서라야, 대화가 열릴 때 그게
 //   누구와의 대화인지가 이미 판에 깔려 있다. 반대로 열면 내용부터 쏟아져 관계가 묻힌다.
-// 휴대폰은 앱별로 쪼개지 않고 카드 한 장이 되었다. 잠금도 폰 단위 하나뿐이다(3라운드·영장 ②).
+// 휴대폰은 앱별로 쪼개지 않고 카드 한 장이 되었다. 잠금도 폰 단위 하나뿐이다(이벤트 ② 통신 기록 영장).
 const SPECIAL = { letter: 'S', name: '특수 단서', color: '#8a6d1f' };
 const ROOM_OF = { 최종현: 'JH', 강지후: 'EJ', 한소미: 'HJ', 서지안: 'HW', 한다영: 'SR', 문세린: 'GH' };
 
@@ -118,7 +136,7 @@ function explode(c) {
         ? `지워진 대화방이 있다 — 판 옆의 ${QCARD_NO[c.code] || '잠금'} 카드를 찍어 네 자리 숫자를 넣는다.`
         : '',
     ].filter(Boolean).join('\n');
-    // 휴대폰은 3라운드부터 각 방에서 가져갈 수 있다. 다이어리·성경책은 처음부터.
+    // 휴대폰은 이벤트 ② 뒤부터 각 방에서 가져갈 수 있다. 다이어리·성경책은 처음부터.
     return [one({ screen: true, image: null, detail: body, locked: phone ? 3 : 0 })];
   }
 
@@ -243,7 +261,7 @@ function buildBoard() {
     //   — 누가 '가져가는' 물건이 아니라 시작할 때 전원이 돌려 읽는 물건이다.
     // SIAH-72(CCTV 열람대)도 뺀다 — 앱에서 '화면 속 인물을 누르라'는 진입점이라 종이에는 누를 화면이
     //   없다. 빼면 V 덱이 동선 16장으로 딱 떨어져, 그게 곧 사건 당일 타임라인이 된다.
-    // LONS-62(2차 부검)는 4라운드가 끝날 때 이벤트로 전원이 함께 읽는다 — 덱에는 넣지 않는다.
+    // LONS-62(2차 부검)는 이벤트 ④ 로 전원이 함께 읽는다 — 덱에는 넣지 않는다.
     if (c.type === '방' || c.code === 'LSUX-91' || c.code === 'BRIF-00'
       || c.code === 'SIAH-72' || c.code === 'LONS-62') continue;
     if (PUBLIC.has(c.code)) { open.push(c); continue; }
@@ -276,7 +294,7 @@ function buildBoard() {
   //   원본 → '그 단서의 첫 장' 번호로 잇는다(폰 카톡이 조합 조건이면 그 앱 카드를 가리켜야 한다).
   // 목사님 방 19장을 한 라운드에 통째로 열면 5명이 동시에 몰려 겹치고, 그 다음 라운드는 텅 빈다.
   //   두 묶음으로 나눠 연속된 번호를 준다 — 앞쪽이 현장 물증, 뒤쪽이 기록물(일기장·휴대폰).
-  //   순서를 여기서 정해 두면 "D1~D10 은 3라운드, D11~ 은 4라운드" 로 규칙이 한 줄로 끝난다.
+  //   순서를 여기서 정해 두면 "D1~D10 은 이벤트 ① 뒤, D11~ 은 이벤트 ② 뒤" 로 규칙이 한 줄로 끝난다.
   const isRecord = (u) => !!(u.src?.pages || u.src?.phone);
   bag.PS = [...bag.PS.filter((u) => !isRecord(u)), ...bag.PS.filter(isRecord)];
 
@@ -385,6 +403,10 @@ const CSS = `
   .bsub { font-size: 6.4pt; font-weight: 600; color: #a06a6a; margin-top: 0.6mm; }
   .bsci { margin-top: 2.5mm; font-size: 7.4pt; font-weight: 800; color: #265a66;
           border: 0.4mm solid #85b3bd; background: #edf6f8; border-radius: 1.4mm; padding: 1mm 2.4mm; }
+  /* CCTV 뒷면의 인물 색점 — 뽑기 전에 누구 장면인지 보이게 하는 것이 전부다. */
+  .bdot { width: 9mm; height: 9mm; border-radius: 50%; margin: 3mm auto 1.4mm;
+          border: 0.5mm solid #ffffffcc; box-shadow: 0 0 0 0.4mm #00000022; }
+  .bdotl { font-size: 6.4pt; color: #6b6760; line-height: 1.3; }
   h1 { font-size: 19pt; margin: 0 0 3mm; }
   h2 { font-size: 13pt; margin: 6mm 0 2mm; padding-bottom: 1.2mm; border-bottom: 1.2px solid #14120f; }
   .page { padding: 14mm 14mm 12mm; page-break-after: always; }
@@ -404,7 +426,8 @@ const CSS = `
   .trX { font-size: 6.6pt; font-weight: 800; color: #b8912c; margin-top: 0.8mm; }
   /* 라운드 트랙 · 배치도 — 종이 위에서 「판」으로 보여야 한다. 숫자만 늘어놓으면
      어디에 무엇을 얹는지가 안 보여서, 이벤트 카드를 손에 들고 있다가 잊는 일이 생긴다. */
-  .board .trk { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2.4mm; margin: 5mm 0 4mm; }
+  .board .trk { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2.4mm; margin: 3mm 0 5mm; }
+  .board .trk5 { grid-template-columns: repeat(5, 1fr); }
   .cell { border: 0.6mm solid #2f2b24; border-radius: 2.4mm; padding: 2.6mm 2mm 2.4mm;
           display: flex; flex-direction: column; gap: 1.6mm; background: #fbf9f4; }
   .cellEv { border-color: #b8912c; background: #fffdf4; }
@@ -582,20 +605,29 @@ function clueCards() {
     const ok = ns.filter(Boolean);
     return ok.length ? `얻는 법 — ${ok.join(' + ')}` : null;
   };
-  // 자기 물건의 감식을 본인이 집으면 무료 방어권이 된다. 소유자가 참가자인 감식만 막는다.
-  // 감식 결과가 걸리는 목은 카드에 적힌 소유자와 다를 수 있다 — 종현의 쉐이크 통은
-  //   목사님 방에서 나와 person 이 '목사'로 잡히지만, 결과가 겨누는 것은 종현이다.
-  const OWNER_OF = { 'SHKB-77': '최종현' };
+  // ⚖ 는 「누구 물건인가」가 아니라 「결과가 누구를 겨누는가」로 붙어야 한다. person 만 보면
+  //   목사님 방에서 나온 채취물이 전부 '목사'로 잡혀, 정작 이름이 결과에 박혀 있는 사람이
+  //   자기 결과를 자기 입으로 읽는다 — L5 는 본문이 「늘어난 옷깃에서 강지후의 피부 세포가
+  //   검출되었다」인데 강지후가 낭독할 수 있었다. 겨누는 목을 여기 손으로 적어 준다.
+  const AIMS_AT = {
+    'SHKB-77': '최종현',   // 쉐이크 통 — 목사님 방에서 나오지만 탄 사람은 종현이다
+    'NTGB-51': '서지안',   // 설하정 약통이 가짜였다 — 바꿔치기한 손이 걸린다
+    'TUCH-83': '강지후',   // 옷깃 접촉 DNA — 결과에 이름이 박혀 있다
+    'NVYN-22': '한소미',   // 목사님 텀블러의 졸피뎀 — 넣은 손이 걸린다
+  };
+  // 결과가 무해한 감식까지 막으면 그 카드가 영영 안 나온다. 지후의 약봉투(AQFE-59)는
+  //   「진짜 부모님 고혈압약이 맞다」라 오히려 본인이 읽는 편이 자연스럽다.
+  const HARMLESS = new Set(['AQFE-59']);
   const mine = (c) => {
-    if (c.type !== '감식') return null;
-    const who = OWNER_OF[c.code] || c.person;
+    if (c.type !== '감식' || HARMLESS.has(c.code)) return null;
+    const who = AIMS_AT[c.code] || c.person;
     return ROOM_OF[who] ? who : null;
   };
   // 카드 한 장이 무슨 취급을 받는 물건인지, 집어 들자마자 보이게 한다.
   const badges = (c) => {
     const hs = hintFor(c) || [];
     const b = [];
-    if (c.locked) b.push(['bgLock', '🔒', `${c.locked}라운드부터`]);
+    if (c.locked) b.push(['bgLock', '🔒', '이벤트 ② 뒤']);
     if (mine(c)) b.push(['bgLock', '⚖', '본인 낭독 불가']);
     if (hs.some((h) => h.includes('🔬'))) b.push(['bgLab', '🔬', '감식실']);
     if (hs.some((h) => h.includes('⭐'))) b.push(['bgStar', '⭐', '조합 재료']);
@@ -604,7 +636,18 @@ function clueCards() {
           `<span class="bg ${k}"><i>${ic}</i>${tx}</span>`).join('')}</span>`
       : '';
   };
+  // CCTV 장면은 뒷면에 그 인물의 방 색을 점 하나로 찍는다. 방 카드는 「어느 방에서 나왔나」가
+  //   뒷면에 적혀 있어 누구 물건인지 추정되지만, V 는 번호가 시각과도 인물과도 무관해서
+  //   무엇을 집었는지 아무도 몰랐다. 그래서 자기 방 금지가 막으려던 바로 그 행동 —
+  //   자기에게 불리한 것을 자기가 집어 묻는 것 — 이 V 에서만 완전히 자유로웠다.
+  //   실제로 6인 판에서 진범이 자기 장면 두 장을 뽑아 끝까지 묻었다.
+  const sceneOf = (c) => {
+    const who = Object.keys(ROOM_OF).find((n) => (c.title || '').includes(n));
+    if (!who) return null;
+    return { who, color: (PLACES.find((p) => p.id === ROOM_OF[who]) || {}).color || '#2b6b73' };
+  };
   const deck = (list, meta) => {
+    const isCC = meta.letter === 'V';
     const front = (c) => `<div class="card" style="border-color:${meta.color}">
       <div class="chd"><span class="no" style="background:${meta.color}">${esc(unitNum.get(c))}</span>
         ${badges(c)}</div>
@@ -612,24 +655,35 @@ function clueCards() {
       ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">찍으면 이 장면이 열린다</div></div>`
         : c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
       <div class="cd${c.small ? ' sm' : ''}">${esc(c.detail || c.description || '')}</div>
-      ${c.locked ? `<div class="lock">🔒 <b>${c.locked}라운드</b>부터다 (영장 ${c.locked === 3 ? '②' : '③'}).
+      ${c.locked ? `<div class="lock">🔒 <b>이벤트 ②</b>(통신 기록 영장)을 읽은 뒤부터다.
         가져가는 것은 지금도 되지만, 그때까지는 아무도 못 읽는다.<br>
         <b>자기 방에는 못 들어가므로 자기 휴대폰도 못 가져간다.</b></div>` : ''}
       ${mine(c) ? `<div class="lock">⚖ <b>${esc(mine(c))}</b> 본인의 물건에 대한 감식이다.
         <b>${esc(mine(c))}</b> 은(는) 이 결과를 읽을 수 없다 — 다른 사람이 집어 소리 내어 읽는다.</div>` : ''}
+      ${isCC ? '<div class="lock">📢 이 장면은 <b>가져오는 즉시 소리 내어 읽는다.</b> 혼자 읽고 덮어 두지 못한다.</div>' : ''}
       ${meta.letter === 'S' && origin(c) ? `<div class="hint"><div>${esc(origin(c))}</div></div>` : ''}
       ${hintFor(c) ? `<div class="hint">${hintFor(c).map((h) => `<div>${h}</div>`).join('')}</div>` : ''}
     </div>`;
-    const back = (c) => `<div class="card cback" style="border-color:${meta.color};background:${meta.color}12">
+    const back = (c) => {
+      const sc = isCC ? sceneOf(c) : null;
+      return `<div class="card cback" style="border-color:${meta.color};background:${meta.color}12">
       <div class="bnum" style="color:${meta.color}">${esc(unitNum.get(c))}</div>
       <div class="bplace" style="color:${meta.color}">${esc(meta.name)}</div>
+      ${sc ? `<div class="bdot" style="background:${sc.color}"></div>
+        <div class="bdotl">이 색의 사람은 이 장면을 가져갈 수 없다</div>` : ''}
       ${(hintFor(c) || []).some((h) => h.includes('🔬'))
         ? '<div class="bsci">🔬 감식실에 낼 수 있는 카드</div>' : ''}
-      ${c.locked ? `<div class="block">🔒 <b>${c.locked}라운드</b>부터<div class="bsub">준비할 때 빼서 따로 둔다</div></div>` : ''}</div>`;
+      ${c.locked ? `<div class="block">🔒 <b>이벤트 ②</b> 뒤<div class="bsub">준비할 때 빼서 따로 둔다</div></div>` : ''}</div>`;
+    };
     return `<div class="page"><h1>${esc(meta.name)} — ${list.length}장
       <span class="muted">${meta.letter}1 ~ ${meta.letter}${list.length}</span></h1>
       <p class="muted">${esc(meta.open || '조건을 채우면 이 더미에서 가져간다')} ·
-      <b>뒷면(번호)이 보이게</b> 쌓고, 가져간 사람이 앞면을 읽는다.</p></div>`
+      <b>뒷면(번호)이 보이게</b> 쌓고, ${isCC
+        ? '가져간 사람이 <b>앞면을 모두에게 소리 내어 읽는다.</b>'
+        : '가져간 사람이 앞면을 읽는다.'}</p>
+      ${isCC ? `<p class="muted"><b>뒷면의 색점이 그 장면에 찍힌 사람입니다.</b>
+        <b>자기 색은 가져갈 수 없습니다</b> — 자기 방에 못 들어가는 것과 같은 이유입니다.
+        여기서만은 카드를 가져가는 것이 곧 공개라, 무엇을 집었는지 감출 수 없습니다.</p>` : ''}</div>`
       + paginate(list, front, back);
   };
   let body = '';
@@ -880,26 +934,32 @@ function runSheets() {
     <p>여러분 중 <b>한 명이 범인</b>입니다. 범인도 남들과 똑같이 수사에 참여하고, 거짓말을 합니다.
       나머지는 자기가 결백하다는 것만 알 뿐, 누가 범인인지는 모릅니다.</p></div>
 
-  <div class="page board"><h1>라운드 트랙 <span class="muted">— 판 옆에 펴 두세요</span></h1>
+  <div class="page board"><h1>라운드 트랙 <span class="muted">— 인원에 맞는 것 하나만 펴 두세요</span></h1>
     <p class="muted">라운드가 끝날 때마다 <b>말을 한 칸 옮깁니다.</b> 말은 동전이든 무엇이든 됩니다.
-      <b>1·2·3·4 칸의 네모 자리에 이벤트 카드를 접어 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
-    <div class="trk">${[1, 2, 3, 4, 5, 6].map((n) => {
-      const ev = { 1: '①', 2: '②', 3: '③', 4: '④' }[n];
-      const open = {
-        2: '목사님의 방<br>— 현장',
-        3: '목사님의 방 — 기록<br>🔒3 휴대폰 · 감식실 L',
-        4: 'CCTV 열람실 V',
-      }[n];
-      return `<div class="cell${ev ? ' cellEv' : ''}${n === 6 ? ' cellLast' : ''}">
-        <div class="cellTop"><span class="cellN">${n}</span>${n === 6
-          ? '<span class="cellTag">여섯일 때만</span>'
-          : n === 5 ? '<span class="cellTag">일곱은 여기서 끝</span>' : ''}</div>
-        <div class="cellOpen">${open ? `<b>여기서 열립니다</b><br>${open}` : '<span class="muted">새로 열리는 곳 없음</span>'}</div>
+      <b>①②③④ 자리에 이벤트 카드를 접어 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.<br>
+      이벤트가 붙는 라운드는 인원에 따라 다릅니다. <b>순서와 내용은 같습니다</b> —
+      마지막 라운드 하나를 남기고 넷을 다 읽습니다.</p>
+    ${TRACKS.map(({ label, rounds, evAt }) => `
+    <h2>${label}</h2>
+    <div class="trk trk${rounds}">${Array.from({ length: rounds }, (_, i) => i + 1).map((n) => {
+      const ev = evAt[n];
+      // 그 라운드 '시작'에 무엇이 열려 있는지 — 직전 라운드 끝에 읽은 이벤트가 연 것이다.
+      const opened = { '①': '목사님의 방<br>— 현장',
+        '②': '목사님의 방 — 기록<br>🔒 휴대폰 · 감식실 L',
+        '③': 'CCTV 열람실 V' }[evAt[n - 1]];
+      return `<div class="cell${ev ? ' cellEv' : ''}${n === rounds ? ' cellLast' : ''}">
+        <div class="cellTop"><span class="cellN">${n}</span>${n === rounds
+          ? '<span class="cellTag">마지막</span>' : ''}</div>
+        <div class="cellOpen">${opened ? `<b>여기서 열립니다</b><br>${opened}`
+          : '<span class="muted">새로 열리는 곳 없음</span>'}</div>
         <div class="cellDo">조사 2장<br>토론 10분</div>
         ${ev ? `<div class="evSlot">이벤트 ${ev}<div class="evSlotSub">라운드 끝에 뒤집는다</div></div>`
           : '<div class="pawnSlot">말 자리</div>'}
       </div>`;
-    }).join('')}</div>
+    }).join('')}</div>`).join('')}
+    <p class="muted"><b>여섯이면 처음 두 라운드에는 새로 열리는 곳이 없습니다.</b> 서로의 방과
+      특수 단서 조합만으로 굽니다 — 규칙을 몸에 익히는 자리이고, 목사님 방이 열리기 전에
+      「누가 무엇을 숨기는가」를 사람의 말로 먼저 세워 두는 자리입니다.</p>
     <div class="trkEnd">
       <div class="endStep"><b>최종 토론</b> 15분</div>
       <div class="endArrow">→</div>
@@ -911,8 +971,9 @@ function runSheets() {
     </div>
     <p class="muted"><b>여섯이면 6라운드, 일곱이면 5라운드입니다.</b>
       일곱은 한 라운드에 조사가 일곱 번 돌아, 라운드가 하나 적어도 전체 조사 횟수는
-      거의 같습니다 — 35회와 36회. 조사해 가져갈 카드는 모두 <b>75장</b>이라,
-      여섯이 6라운드면 72장, 일곱이 5라운드면 70장을 엽니다 — 거의 다 열고 끝납니다.<br>
+      거의 같습니다 — 35회와 36회. 조사해 가져갈 카드는 모두 <b>72장</b>(방 56 · CCTV 16)이라,
+      여섯이 6라운드면 72장을 <b>정확히 다 소진합니다</b> — 마지막 라운드에는 더미가 바닥나므로
+      아래의 <b>세 명 제한 해제</b>로 나눠 가집니다. 일곱이 5라운드면 70장이라 두 장이 남습니다.<br>
       <b>일곱이면 형사도 한 표를 던집니다.</b> 다만 아무도 형사를 지목하지 않습니다.</p>
   </div>
 
@@ -924,22 +985,22 @@ function runSheets() {
         <div class="slot slotDim">A<br><span>한다영</span></div>
         <div class="slot slotDim">B<br><span>한소미</span></div>
         <div class="slot slotDim">C<br><span>서지안</span></div>
-        <div class="slot slotBox">D<br><span>목사님의 방<br>현장 2R · 기록 3R 부터</span></div>
+        <div class="slot slotBox">D<br><span>목사님의 방<br>현장 ① 뒤 · 기록 ② 뒤</span></div>
       </div>
       <div class="tblRow">
         <div class="slot slotWide slotMap">현장 판 <span>숙소 2층 평면도 · A3 가로</span></div>
-        <div class="slot slotBox">V<br><span>CCTV 열람실<br>5라운드부터</span></div>
+        <div class="slot slotBox">V<br><span>CCTV 열람실<br>이벤트 ③ 뒤</span></div>
       </div>
       <div class="tblRow">
         <div class="slot slotDim">E<br><span>최종현</span></div>
         <div class="slot slotDim">F<br><span>문세린</span></div>
         <div class="slot slotDim">G<br><span>강지후</span></div>
-        <div class="slot slotBox">L<br><span>감식실<br>4라운드부터</span></div>
+        <div class="slot slotBox">L<br><span>감식실<br>이벤트 ② 뒤</span></div>
       </div>
       <div class="tblRow">
         <div class="slot slotOpen">S <span>특수 단서 — 처음부터 꺼내 둔다</span></div>
         <div class="slot slotOpen">Q <span>잠금 카드 12장 — 앞면이 보이게</span></div>
-        <div class="slot slotOpen">공개 <span>목사님 일정표 — 2라운드에 펴 둔다</span></div>
+        <div class="slot slotOpen">공개 <span>목사님 일정표 — 이벤트 ① 과 함께 펴 둔다</span></div>
       </div>
       <div class="tblRow">
         <div class="slot slotSheet">라운드 트랙 <span>말 하나</span></div>
@@ -977,7 +1038,17 @@ function runSheets() {
       자기 물건은 <b>남이 찾아 읽습니다.</b><br>
       &nbsp;&nbsp;<span class="muted">자기한테 불리한 카드를 자기가 먼저 집어 자기 입으로 해명하는 것이
       언제나 최선이 되면, 아무도 걸리지 않고 판이 멈춥니다. 내 방은 남이 뒤집니다 — 그게 이 게임입니다.</span><br>
+      · <b>CCTV 열람실에서는 자기 장면을 가져갈 수 없습니다.</b> 뒷면의 색점이 그 장면에 찍힌 사람입니다.<br>
+      &nbsp;&nbsp;<span class="muted">방 카드는 어느 방에서 나왔는지가 뒷면에 적혀 있어 누구 물건인지 짐작되지만,
+      CCTV 는 번호가 시각과도 인물과도 무관해 무엇을 집었는지 아무도 몰랐습니다. 같은 이유의 같은 규칙입니다.</span><br>
       <span class="muted">(감식은 아래를 따릅니다)</span></p>
+
+    <h2>CCTV 는 혼자 읽지 않습니다</h2>
+    <p><b>가져온 CCTV 장면(V)은 그 자리에서 모두에게 소리 내어 읽습니다.</b>
+      다른 모든 카드는 혼자 읽고 말할지 말지를 정하지만, 이 더미만은 아닙니다.<br>
+      <span class="muted">화면은 감출 수 있는 물건이 아닙니다 — 수사팀이 확보한 원본을 한 사람이
+      혼자 보고 덮는 일은 없습니다. 그리고 자기 발자국을 자기가 지울 수 있으면,
+      이 더미는 진범에게만 유리한 더미가 됩니다.</span></p>
   </div>
 
   <div class="page"><h1>기본 규칙 <span class="muted">— 뒷장</span></h1>
@@ -988,8 +1059,8 @@ function runSheets() {
 
     <h2>카드 위쪽의 표시 — 네 가지</h2>
     <table><tr><th style="width:20%">표시</th><th>뜻</th></tr>
-      <tr><td><span class="lg">🔒</span> <b>3라운드부터</b></td>
-        <td>휴대폰입니다. <b>준비할 때 빼서 따로 두었다가</b>, 2라운드가 끝나면 각 방 더미에 섬어 넣습니다.
+      <tr><td><span class="lg">🔒</span> <b>이벤트 ② 뒤</b></td>
+        <td>휴대폰입니다. <b>준비할 때 빼서 따로 두었다가</b>, 이벤트 ② 를 읽을 때 각 방 더미에 섞어 넣습니다.
           카드 뒷면에도 같은 표시가 있습니다 — 그걸 보고 골라내세요.</td></tr>
       <tr><td><span class="lg">⚖</span> <b>본인 낭독 불가</b></td>
         <td>자기 물건을 감식한 결과입니다. 카드에 적힌 사람은 <b>이 결과를 읽을 수 없습니다</b> — 다른 사람이 집어 소리 내어 읽습니다.</td></tr>
@@ -1032,26 +1103,31 @@ function runSheets() {
       다릅니다 — 이 판에서 사람이 속는 자리가 정확히 거기입니다.</p></div>
 
   <div class="page"><h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
-    ${ev('①', '1라운드가 끝나면 펼친다', '현장 통제 해제',
+    ${ev('①', whenEv('①'), '현장 통제 해제',
       `<p>단순 발작사로 보기 어렵다는 소견이 나와, <b>목사님 방을 현장으로 보존하고 있었습니다.</b>
         1차 검안이 끝나 이제 들어갈 수 있습니다.</p>
       <p><b>목사님의 방 — 현장이 열립니다.</b> 그 카드들을 판 옆에 놓고,
         「목사님 일정표」는 <b>앞면이 보이게</b> 그 옆에 펴 둡니다 — 이 한 장은 아무도 가져갈 수 없습니다.</p>
       <p class="muted">정밀 부검은 아직 나오지 않았습니다. 지금 아는 것은 시작 시트에 적힌 것까지입니다 —
         안구의 출혈, 굳은 손, 입가의 딸기향. <b>무엇이 목사님을 죽였는지는 아직 아무도 모릅니다.</b></p>`)}
-    ${ev('②', '2라운드가 끝나면 펼친다', '유품 반출 동의 · 통신 기록 영장',
+    ${ev('②', whenEv('②'), '유품 반출 동의 · 통신 기록 영장',
       `<p>유족이 유품 반출에 동의했고, 통신 기록 영장이 나왔습니다.</p>
       <p><b>목사님의 방 — 기록이 열립니다.</b> 일기장과 휴대폰입니다.<br>
-        그리고 <b>따로 빼 두었던 🔒3 휴대폰 카드를 각 방 더미에 섞어 넣습니다.</b>
+        그리고 <b>따로 빼 두었던 🔒 휴대폰 카드를 각 방 더미에 섞어 넣습니다.</b>
         이제부터 각 방에서 그 방 주인의 휴대폰을 가져갈 수 있습니다. 자기 방에는 못 들어가니 <b>자기 폰은 남이 읽습니다.</b></p>
       <p><b>감식실(L)도 함께 열립니다.</b> <b>이번 라운드 끝부터</b> 채취물을 낼 수 있습니다.<br>
         <span class="muted">🔬 표시가 있는 카드를 가진 사람은 라운드 끝에 감식실 옆에 내려놓으세요.
         결과는 다음 라운드에 <b>낸 사람이 아닌 다른 사람</b>이 집어 소리 내어 읽습니다.</span></p>`)}
-    ${ev('③', '3라운드가 끝나면 펼친다', '복도 CCTV 원본 확보',
+    ${ev('③', whenEv('③'), '복도 CCTV 원본 확보',
       `<p>숙소 2층 복도 CCTV 원본을 확보했습니다. 그날 누가 언제 움직였는지가 남아 있습니다.</p>
-      <p><b>CCTV 열람실(V)이 열립니다.</b> 더미를 판 옆에 놓습니다.<br>
-        <span class="muted">방 안은 찍히지 않습니다. 복도만입니다.</span></p>`)}
-    ${ev('④', '4라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
+      <p><b>CCTV 열람실(V)이 열립니다.</b> 더미를 <b>뒷면이 보이게</b> 판 옆에 놓습니다.<br>
+        <span class="muted">방 안은 찍히지 않습니다. 복도만입니다.</span></p>
+      <p><b>여기는 규칙이 둘 다릅니다.</b><br>
+        · <b>뒷면의 색점이 그 장면에 찍힌 사람입니다. 자기 색은 가져갈 수 없습니다.</b><br>
+        · <b>가져온 장면은 그 자리에서 모두에게 소리 내어 읽습니다.</b> 혼자 읽고 덮어 두지 못합니다.<br>
+        <span class="muted">화면은 감출 수 있는 물건이 아닙니다. 그리고 자기 발자국을 자기가
+        지울 수 있으면, 이 더미는 진범에게만 유리한 더미가 됩니다.</span></p>`)}
+    ${ev('④', whenEv('④'), '2차 부검 소견 — 타살로 확정',
       `<p>정밀 부검 결과가 왔습니다. <b>심정지가 아니라 질식사</b>입니다.
         코·입 주변 압박흔과 안면 점출혈이 확인됐습니다.</p>
       <p>새로 열리는 곳은 없습니다. 지금까지 나온 것으로 좁혀야 합니다.</p>

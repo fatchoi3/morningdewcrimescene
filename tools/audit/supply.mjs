@@ -8,19 +8,27 @@ const cnt = (r) => cards.filter((c) => c.room === r).length;
 const ROOMS = 'ABCEFG'.split('');            // 각자 방
 const PHONES = cards.filter((c) => /핸드폰/.test(c.title));
 
-// 라운드별로 열리는 장소 — [6인 일정, 7인 일정]
-const openAt = (plan) => ({
-  1: ROOMS.map((r) => [r, cnt(r) - PHONES.filter((p) => p.room === r).length]),
-  2: [['D', 10]],
-  3: [['D', 2], ...ROOMS.map((r) => [r, PHONES.filter((p) => p.room === r).length])],
-  4: plan.cctv === 4 ? [['V', 16]] : [],
-  5: plan.cctv === 4 ? [] : [['V', 16]],
-  6: [],
-});
+// 이벤트가 붙는 라운드는 인원수마다 다르다 — 어느 쪽이든 마지막 라운드 하나를 남기고 넷을 다 읽는다.
+//   여섯은 1·2라운드에 새로 열리는 곳이 없고(이벤트 ① 이 2라운드 끝), 일곱은 1라운드 끝부터 시작한다.
+//   여기서 라운드 숫자를 직접 적으면 판정이 인쇄물과 어긋나므로, 이벤트 번호로 적고 라운드에 얹는다.
+const AFTER = {                                   // 이벤트 번호 → 그 이벤트가 여는 것
+  '①': () => [['D', 10]],
+  '②': () => [['D', 2], ...ROOMS.map((r) => [r, PHONES.filter((p) => p.room === r).length])],
+  '③': () => [['V', 16]],
+  '④': () => [],
+};
+const openAt = (evAt, rounds) => {
+  const o = { 1: ROOMS.map((r) => [r, cnt(r) - PHONES.filter((p) => p.room === r).length]) };
+  for (let R = 1; R <= rounds; R++) {
+    const ev = evAt[R];                           // R 끝에 읽은 이벤트가 R+1 을 연다
+    if (ev && AFTER[ev]) o[R + 1] = [...(o[R + 1] || []), ...AFTER[ev]()];
+  }
+  return o;
+};
 
-function run(players, rounds, plan, label) {
+function run(players, rounds, evAt, label) {
   const pool = {};
-  const open = openAt(plan);
+  const open = openAt(evAt, rounds);
   const rows = [];
   let fail = 0;
   for (let R = 1; R <= rounds; R++) {
@@ -54,5 +62,5 @@ function run(players, rounds, plan, label) {
   return fail;
 }
 console.log('방:', ROOMS.map((r) => r + cnt(r)).join(' '), '· D' + cnt('D'), '· V' + cnt('V'), '· 폰', PHONES.length, '\n');
-run(6, 6, { cctv: 4 }, '지금 일정 — CCTV 는 3라운드 끝에 열린다');
-run(7, 5, { cctv: 4 }, '지금 일정 — CCTV 는 3라운드 끝에 열린다');
+run(6, 6, { 2: '①', 3: '②', 4: '③', 5: '④' }, '여섯 — 이벤트는 2라운드 끝부터');
+run(7, 5, { 1: '①', 2: '②', 3: '③', 4: '④' }, '일곱 — 이벤트는 1라운드 끝부터');
