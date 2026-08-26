@@ -315,9 +315,11 @@ function buildHints(num, partNum) {
     }
     for (const s of src) {
       const others = src.filter((k) => k !== s).map((k) => num[k]).filter(Boolean);
-      if (!others.length) continue;
-      push(num[s], `⭐ <b>${others.join(' + ')}</b> 와 함께 → 특수 <b>${num[t.code]}</b>. `
-        + `<span class="hnote">가진 사람이 달라도 된다 — 합의해서 판 가운데에 공개하면 함께 가져간다</span>`);
+      push(num[s], others.length
+        ? `⭐ <b>${others.join(' + ')}</b> 와 함께 → 특수 <b>${num[t.code]}</b>. `
+          + `<span class="hnote">가진 사람이 달라도 된다 — 합의해서 판 가운데에 공개하면 함께 가져간다</span>`
+        : `⭐ 이 카드 하나로 → 특수 <b>${num[t.code]}</b>. `
+          + `<span class="hnote">판 가운데에 공개하고 특수 더미에서 가져간다</span>`);
     }
   }
   // 보드 전용 조합 — 앱의 열람 흔적 규칙(톡서랍 복구·필적 대조·심문)을 카드 조합으로 옮긴 것.
@@ -383,6 +385,8 @@ const CSS = `
            border: 0.5mm solid #c98a8a; background: #fdf0ee; border-radius: 1.6mm;
            padding: 1.6mm 3mm; }
   .bsub { font-size: 6.4pt; font-weight: 600; color: #a06a6a; margin-top: 0.6mm; }
+  .bsci { margin-top: 2.5mm; font-size: 7.4pt; font-weight: 800; color: #265a66;
+          border: 0.4mm solid #85b3bd; background: #edf6f8; border-radius: 1.4mm; padding: 1mm 2.4mm; }
   h1 { font-size: 19pt; margin: 0 0 3mm; }
   h2 { font-size: 13pt; margin: 6mm 0 2mm; padding-bottom: 1.2mm; border-bottom: 1.2px solid #14120f; }
   .page { padding: 14mm 14mm 12mm; page-break-after: always; }
@@ -581,7 +585,14 @@ function clueCards() {
     return ok.length ? `얻는 법 — ${ok.join(' + ')}` : null;
   };
   // 자기 물건의 감식을 본인이 집으면 무료 방어권이 된다. 소유자가 참가자인 감식만 막는다.
-  const mine = (c) => (c.type === '감식' && ROOM_OF[c.person] ? c.person : null);
+  // 감식 결과가 걸리는 목은 카드에 적힌 소유자와 다를 수 있다 — 종현의 쉐이크 통은
+  //   목사님 방에서 나와 person 이 '목사'로 잡히지만, 결과가 겨누는 것은 종현이다.
+  const OWNER_OF = { 'SHKB-77': '최종현' };
+  const mine = (c) => {
+    if (c.type !== '감식') return null;
+    const who = OWNER_OF[c.code] || c.person;
+    return ROOM_OF[who] ? who : null;
+  };
   // 카드 한 장이 무슨 취급을 받는 물건인지, 집어 들자마자 보이게 한다.
   const badges = (c) => {
     const hs = hintFor(c) || [];
@@ -614,6 +625,8 @@ function clueCards() {
     const back = (c) => `<div class="card cback" style="border-color:${meta.color};background:${meta.color}12">
       <div class="bnum" style="color:${meta.color}">${esc(unitNum.get(c))}</div>
       <div class="bplace" style="color:${meta.color}">${esc(meta.name)}</div>
+      ${(hintFor(c) || []).some((h) => h.includes('🔬'))
+        ? '<div class="bsci">🔬 감식실에 낼 수 있는 카드</div>' : ''}
       ${c.locked ? `<div class="block">🔒 <b>${c.locked}라운드</b>부터<div class="bsub">준비할 때 빼서 따로 둔다</div></div>` : ''}</div>`;
     return `<div class="page"><h1>${esc(meta.name)} — ${list.length}장
       <span class="muted">${meta.letter}1 ~ ${meta.letter}${list.length}</span></h1>
@@ -754,12 +767,13 @@ function charCards() {
       <h2>당신이 알고 있어서 자꾸 걸리는 것</h2>
       <p class="muted">누구를 의심하라는 지시가 아닙니다. <b>당신이 아는 사실</b>일 뿐입니다 —
         이걸 지키려다 보면 시선은 저절로 어디론가 향합니다.</p>
-      ${qa(s.watch.map(([a, b]) => [esc(a), esc(b)]))}
+      ${qa(s.watch.map(([a, b]) => [esc(a), b]))}
       <h2>상황별 대응</h2>
       ${qa(s.moments.map(([a, b]) => [esc(a), b]))}
-      <h2>이 번호의 카드가 나오면</h2>
-      ${qa(Object.entries(s.onCard).map(([c, t]) => [named(c), esc(t)]))}
-      ${soft.length ? `<h2>이 카드를 내밀면</h2>${qa(soft.map(([c, r]) => [named(c), r]))}` : ''}
+      <h2>이 카드가 판에 나오면</h2>
+      <p class="muted">남이 그 카드를 읽었거나 당신에게 내밀었을 때의 첫마디입니다.</p>
+      ${qa([...new Map([...soft, ...Object.entries(s.onCard)]).entries()]
+        .map(([c, t]) => [named(c), esc(String(t).replace(/<[^>]+>/g, ''))]))}
 `;
   };
 
@@ -799,15 +813,15 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
     <h2>당신의 정체</h2><p>${esc(d.identity)}</p>
     <h2>당신의 그날</h2>
     ${qa(d.timeline.map(([t, x]) => [esc(t), esc(x)]))}
-    <h2>당신이 아는 것</h2><ul>${li(d.knows.map(esc))}</ul>
+    <h2>당신이 아는 것</h2><ul>${li(d.knows)}</ul>
     <p class="muted">여기 없는 것은 <b>당신도 모르는 것</b>입니다.</p>
-    <h2>지켜야 할 것</h2><ul>${li(d.forbidden.map(esc))}</ul>`;
+    <h2>지켜야 할 것</h2><ul>${li(d.forbidden)}</ul>`;
   const back = `<h1>${esc(d.name)} 형사 <span class="muted">— 이 상황에서는 이렇게</span></h1>
     <h2>말투</h2><p>${esc(d.tone)}</p>
     <h2>당신이 알고 있어서 자꾸 걸리는 것</h2>
-    ${qa(d.watch.map(([a, b]) => [esc(a), esc(b)]))}
+    ${qa(d.watch.map(([a, b]) => [esc(a), b]))}
     <h2>상황별 대응</h2>
-    ${qa(d.moments.map(([a, b]) => [esc(a), esc(b)]))}
+    ${qa(d.moments.map(([a, b]) => [esc(a), b]))}
     <h2>이 번호의 카드가 나오면</h2>
     ${qa(Object.entries(d.onCard).map(([c, t]) => [no(c), esc(t)]))}
     <div class="box"><div class="bl">결론을 대신 내려 주지 마세요</div>
@@ -997,6 +1011,11 @@ function runSheets() {
       <b>조사 행동을 쓰지 않습니다.</b> <b>사람마다 한 라운드에 한 장</b>씩 낼 수 있습니다. 무엇을 냈는지는 전원이 봅니다.<br>
       2. 다음 라운드 시작 때, <b>낸 사람이 아닌 다른 사람</b>이 그 결과 번호(L…)를 집어
       <b>소리 내어 읽습니다.</b> 읽은 뒤 그 카드는 읽은 사람이 갖습니다.<br>
+      3. <b>채취물을 가진 사람이 두 라운드가 지나도 내지 않으면, 그다음 라운드 끝에 누구든
+      대신 낼 수 있습니다.</b> 가진 사람은 거부하지 못합니다 — 카드는 낸 뒤 돌려주고, 결과는
+      여느 때처럼 낸 사람 아닌 이가 읽습니다.<br>
+      &nbsp;&nbsp;<span class="muted">쥐고 안 내는 것으로 감식 하나를 잠글 수 있으면, 자기에게
+      불리한 채취물을 먼저 집는 것이 언제나 최선이 됩니다 — 그러면 감식실이 무력해집니다.</span><br>
       3. 낼 사람이 없으면 채취물을 <b>다른 사람에게 넘겨</b> 대신 내게 할 수 있습니다.
       감식실에 내는 목적일 때만 카드를 넘길 수 있습니다.<br>
       4. <b>마지막 라운드에 낸 것은 최종 토론이 시작될 때 읽습니다.</b> 마지막 라운드라고 해서
@@ -1021,7 +1040,8 @@ function runSheets() {
   <div class="page"><h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
     ${ev('①', '1라운드가 끝나면 펼친다', '2차 부검 소견 — 타살로 확정',
       `<p>정밀 부검 결과가 왔습니다. <b>심정지가 아니라 질식사</b>입니다.
-        코·입 주변 압박흔과 안면 점상출혈, 그리고 기도에서 베개 솜·섬유가 검출됐습니다.</p>
+        코·입 주변 압박흔과 안면 점상출혈이 있습니다. <b>무언가로 얼굴을 눌렀다는 뜻입니다.</b><br>
+        <span class="muted">무엇으로 눌렀는지는 아직 모릅니다 — 기도에서 나온 이물질은 감정에 넘겼습니다.</span></p>
       <p><b>목사님의 방 — 현장이 열립니다.</b> 그 카드들을 탁자에 놓고,
         「목사님 일정표」는 <b>앞면이 보이게</b> 그 옆에 펴 둡니다 — 이 한 장은 아무도 가져갈 수 없습니다.</p>`)}
     ${ev('②', '2라운드가 끝나면 펼친다', '유품 반출 동의 · 통신 기록 영장',
