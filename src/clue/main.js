@@ -63,8 +63,13 @@ function appHTML(a) {
     return live.map((ch) => `<div class="room"><div class="rn">${esc(ch.name)}</div>
       ${(ch.messages || []).map((m) => `<div class="ln"><b>${esc(m.who || '')}</b>${esc(m.text || '')}</div>`).join('')}
       </div>`).join('')
-      + (gone.length ? `<div class="warn">🔒 지워진 대화방이 ${gone.length}개 있습니다.
-        복구하려면 네 자리 숫자가 필요합니다 — <b>잠금 카드의 QR</b>을 찍으세요.</div>` : '');
+      + (gone.length ? `<div class="warn">🔒 <b>지워진 대화방이 ${gone.length}개 있습니다.</b>
+        여기서는 볼 수 없습니다 — 되살리려면 네 자리 숫자가 필요합니다.<br><br>
+        ① 판 옆에 펴 둔 <b>잠금 카드</b> 중 이 사람 이름이 적힌 것을 찾습니다.<br>
+        ② 그 카드의 <b>QR 을 찍으면</b> 숫자를 넣는 칸이 뜹니다.<br>
+        ③ <b>맞는 네 자리</b>를 넣으면 지워진 대화가 그 자리에서 복구됩니다.<br><br>
+        숫자는 <b>다른 단서 카드 안에 적혀 있습니다.</b> 그 카드를 가진 사람이
+        알려 줄지 말지는 그 사람이 정합니다.</div>` : '');
   }
   if (a.searches) {
     return a.searches.map((x) => `<div class="room">

@@ -111,7 +111,9 @@ function explode(c) {
     const body = [
       phone ? '안에 든 것' : '표시된 자리',
       what,
-      phone && hasDeleted(c) ? '지워진 대화방이 있다 — 잠금 카드로 따로 연다.' : '',
+      phone && hasDeleted(c)
+        ? `지워진 대화방이 있다 — 판 옆의 ${QCARD_NO[c.code] || '잠금'} 카드를 찍어 네 자리 숫자를 넣는다.`
+        : '',
     ].filter(Boolean).join('\n');
     // 휴대폰은 3라운드부터 각 방에서 가져갈 수 있다. 다이어리·성경책은 처음부터.
     return [one({ screen: true, image: null, detail: body, locked: phone ? 3 : 0 })];
