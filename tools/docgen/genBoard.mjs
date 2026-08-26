@@ -467,6 +467,11 @@ const CSS = `
   .evFold { margin-top: 2.5mm; text-align: center; font-size: 7pt; color: #a09880;
             border-top: 1px dashed #c9bd9a; padding-top: 1.5mm; }
   /* 그림 판 */
+  /* 이 종이를 언제 쓰는가 — 장 머리의 작은 표. */
+  .stg { display: inline-block; font-size: 7.6pt; font-weight: 800; color: #6b5a2a;
+         background: #fdf7e6; border: 0.4mm solid #cfae5e; border-radius: 1.4mm;
+         padding: 0.8mm 2.4mm; margin-bottom: 2.4mm; }
+  .stn { text-align: center; font-weight: 800; font-size: 12pt; color: #8a6d1f; }
   .art { position: relative; margin: 4mm 0; }
   .art img { width: 100%; height: auto; display: block; border-radius: 2mm; }
   .art .zone { position: absolute; border-radius: 1mm; }
@@ -522,6 +527,12 @@ const CSS = `
                margin-top: 1.4mm; background: #fdf6f4; }
   .fold .bl { font-size: 8pt; font-weight: 800; color: #8a3b3b; margin-bottom: 0.9mm; }
   .fold .brk { color: #8a3b3b; }
+  /* 시트를 받자마자 무엇을 하는지 — 처음 하는 사람은 이게 없으면 안쪽부터 펼쳐 남에게 보인다. */
+  .covHow { margin-top: 3mm; border: 0.5mm solid #b8912c; border-radius: 2mm; padding: 2.6mm 3mm;
+            background: #fffdf4; font-size: 8.6pt; line-height: 1.6; }
+  .covHow > b { display: block; color: #8a6d1f; margin-bottom: 1.2mm; }
+  .covHow > div { margin-bottom: 0.8mm; }
+  .covWarn { margin-top: 1.6mm; padding-top: 1.6mm; border-top: 0.3mm dashed #cfc7b6; color: #8a3b3b; }
   .fold .box p { font-size: 6.8pt; line-height: 1.45; margin-bottom: 0.8mm; }
   .cover { justify-content: space-between; }
   .covName { font-size: 30pt; font-weight: 800; letter-spacing: .02em; }
@@ -750,8 +761,11 @@ function charCards() {
     <div>
       <table><tr><th style="width:22%">가족</th><td>${esc(s.family || '-')}</td></tr>
         <tr><th>알려진 것</th><td>${esc(s.notes || '')}</td></tr></table>
-      <p style="margin-top:3mm">1라운드 시작 전에 위 내용을 자기 말로 소개합니다.
-        <b>접힌 안쪽은 절대 보여 주지 않습니다.</b></p>
+      <div class="covHow"><b>이 시트를 받으면</b>
+        <div>① 펼쳐서 <b>안쪽 세 면을 혼자 읽습니다</b> — 5분. 남에게 보이지 않게 세워서 읽으세요.</div>
+        <div>② 다시 접어 이 겉면만 보이게 탁자에 둡니다.</div>
+        <div>③ 자기 차례에 <b>위 내용만</b> 자기 말로 소개합니다 — 30초.</div>
+        <div class="covWarn">접힌 안쪽은 게임이 끝날 때까지 <b>절대 보여 주지 않습니다.</b></div></div>
     </div>
     <div class="covFoot"><b>A4 가로</b>로 양면 인쇄해 가운데 점선을 세로로 접으세요.
       접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
@@ -922,7 +936,8 @@ function placeBoard() {
         면담 내용은 이 표에 없다 — 당사자에게 직접 물어야 한다.</p></div>`;
   }).join('');
   const side = PLACES.filter((p) => !ART_ROOMS.some((r) => r.id === p.id));
-  const body = `<div class="page"><h1>사건 현장 — 숙소 2층</h1>
+  const body = `<div class="page"><div class="stg">준비할 때 깔고 · 조사할 때마다 봅니다</div>
+    <h1>사건 현장 — 숙소 2층</h1>
     <p class="muted">탁자 가운데에 까는 판이다. <b>A3 가로</b> 권장.
       카드는 판 위에 올리지 않고 장소별로 옆에 쌓는다. 방 안의 번호는 <b>고를 자리</b>이지
       물건이 놓인 위치가 아니다 — "A3 볼게요" 하고 그 번호 카드를 집으면 된다.</p>
@@ -947,18 +962,212 @@ function runSheets() {
   const brief = allClues.find((c) => c.code === 'BRIF-00');
   const pages = (brief?.pages || []).map((pg) =>
     `<h2>${esc(pg.title)}</h2><p style="white-space:pre-wrap">${esc(pg.content)}</p>`).join('');
+  // 종이마다 언제 쓰는 것인지를 머리에 한 칸 찍는다. 처음 하는 사람은 「판 옆에 펴 두세요」만
+  //   봐서는 그게 지금 읽을 것인지 나중에 볼 것인지 알 수 없다.
+  const stage = (t) => `<div class="stg">${esc(t)}</div>`;
   const ev = (n, when, title, body) => `<div class="ev">
     <div class="evHead"><span class="evNo">${n}</span> ${esc(when)}</div>
     <div class="evTitle">${esc(title)}</div><div class="evBody">${body}</div>
     <div class="evFold">— 접어서 뒷면이 보이게 트랙 위에 둔다 —</div></div>`;
-  const body = `<div class="page brief"><h1>사건 브리핑 <span class="muted">— 시작할 때 함께 읽으세요</span></h1>
-    <p class="muted">인물 카드를 나눠 갖고 자기소개를 마친 뒤, 이 시트를 소리 내어 돌려 읽습니다.
-      한 사람이 한 절씩 읽으면 됩니다.</p>${pages}
+  // 처음 하는 여섯 명이 인쇄물 뭉치를 앞에 두고 앉았을 때, 무엇부터 집어야 하는지가
+  //   어디에도 없었다. 종이마다 「판 옆에 펴 두세요」라고만 적혀 있어 순서를 알 수 없다.
+  //   그래서 첫 장을 「무엇을 언제 읽는가」로 만들고, 이후 모든 장에 그 단계를 찍는다.
+  const body = `<div class="page"><h1>여기서부터 <span class="muted">— 이 게임을 처음 하는 분들께</span></h1>
+    <p><b>진행자가 없는 추리 게임입니다.</b> 여섯 명(또는 일곱) 모두가 용의자이고,
+      그중 한 명이 범인입니다. 범인도 남들과 똑같이 조사하고 똑같이 거짓말합니다.
+      나머지는 <b>자기가 결백하다는 것만</b> 알 뿐, 누가 범인인지는 모릅니다.<br>
+      전체 90~120분. 규칙을 다 외울 필요는 없습니다 — <b>이 순서대로만 따라오세요.</b></p>
+
+    <h2>읽는 순서 — 이대로 하면 됩니다</h2>
+    <p class="muted">각 종이가 무엇인지는 <b>다음 장</b>에 한 줄씩 적어 두었습니다.
+      지금은 이 표만 보고 1번부터 하면 됩니다.</p>
+    <table><tr><th style="width:7%">순</th><th style="width:30%">무엇을</th><th>누가 · 어떻게</th></tr>
+      <tr><td class="stn">1</td><td><b>「탁자에 이렇게 놓습니다」</b><br><span class="muted">이 책자 다음 장</span></td>
+        <td>한 사람이 읽으며 <b>카드와 종이를 자리에 놓습니다.</b> 10분. 나머지는 거들면 됩니다.</td></tr>
+      <tr><td class="stn">2</td><td><b>인물 시트를 하나씩</b></td>
+        <td>제비뽑기든 합의든 좋습니다. 받으면 <b>혼자서 5분간 읽습니다.</b>
+          접힌 안쪽은 절대 보여 주지 않습니다.</td></tr>
+      <tr><td class="stn">3</td><td><b>「사건 브리핑」</b></td>
+        <td>한 사람이 <b>소리 내어 읽습니다.</b> 여기까지가 전원이 아는 전부입니다.</td></tr>
+      <tr><td class="stn">4</td><td><b>자기소개</b></td>
+        <td>인물 시트 <b>겉면</b>에 적힌 것을 자기 말로. 한 사람에 30초.</td></tr>
+      <tr><td class="stn">5</td><td><b>「기본 규칙」 앞·뒷장</b></td>
+        <td>다 함께 훑습니다. 3분. 판 옆에 계속 펴 둡니다 — 헷갈리면 그때 봅니다.</td></tr>
+      <tr><td class="stn">6</td><td><b>1라운드 시작</b></td>
+        <td>조사 → 토론 10분 → 라운드 끝. 이것을 여섯 번(일곱이면 다섯 번) 반복합니다.</td></tr>
+      <tr><td class="stn">7</td><td><b>라운드가 끝날 때마다</b></td>
+        <td><b>「라운드 트랙」</b>의 말을 한 칸 옮기고, 이벤트 칸이면 그 카드를 뒤집어 읽습니다.
+          <b>「사건 기록판」</b>에 한 줄 적습니다.</td></tr>
+      <tr><td class="stn">8</td><td><b>최종 토론 · 지목</b></td>
+        <td>마지막 라운드가 끝나면 15분 토론하고 <b>동시에</b> 한 명씩 지목합니다.</td></tr>
+      <tr><td class="stn">9</td><td><b>진상 해설서</b></td>
+        <td>봉투를 엽니다. 한 사람이 소리 내어 읽습니다. 그리고 10분쯤 이야기를 나눕니다.</td></tr></table>
+
+  </div>
+
+  <div class="page">${stage('헷갈릴 때')}<h1>이 종이는 무엇인가 <span class="muted">— 헷갈리면 여기를 보세요</span></h1>
+    <table><tr><th style="width:26%">무엇</th><th>어떤 물건인가</th></tr>
+      <tr><td><b>진행 물품</b><br><span class="muted">지금 보는 이 책자</span></td>
+        <td>사건 브리핑 · 탁자 배치 · 기본 규칙 · 라운드 트랙 · 사건 기록판 · 이벤트 카드.
+          <b>전원이 함께 씁니다.</b> 장마다 머리에 <b>언제 쓰는 것인지</b>가 적혀 있습니다.</td></tr>
+      <tr><td><b>인물 시트</b><br><span class="muted">사람마다 한 장</span></td>
+        <td>당신이 맡을 사람의 정체·그날의 행적·대사가 들어 있습니다. A4 한 장을 세로로 접은 것이라
+          <b>겉면만 남에게 보이고 안쪽 세 면은 본인만</b> 봅니다.</td></tr>
+      <tr><td><b>현장 판</b><br><span class="muted">큰 종이 한 장</span></td>
+        <td>숙소 2층 평면도. 방마다 <b>번호와 물건 이름</b>이 적혀 있습니다 — 「A3 풀」처럼.
+          조사할 때 이 판을 보고 어디를 뒤질지 고릅니다.</td></tr>
+      <tr><td><b>단서 카드</b><br><span class="muted">잘라 둔 카드 뭉치</span></td>
+        <td>장소별로 따로 쌓아 둡니다. <b>뒷면(번호)이 보이게</b> 쌓고, 가져간 사람이 앞면을 혼자 읽습니다.</td></tr>
+      <tr><td><b>필적 대조 카드</b><br><span class="muted">Q6 일곱 장</span></td>
+        <td>앞면이 보이게 펴 둡니다. <b>가져가는 카드가 아닙니다</b> — 그 자리에서 QR 만 찍습니다.</td></tr>
+      <tr><td><b>진상 해설서</b><br><span class="muted">봉투 안</span></td>
+        <td><b>끝나기 전엔 아무도 열지 않습니다.</b> 지목이 끝난 뒤에 엽니다.</td></tr></table>
+
+    <h2>카드에 붙는 표시 넷</h2>
+    <p class="muted">자세한 것은 「기본 규칙 — 뒷장」에 있습니다. 지금은 이 정도만 알면 됩니다.</p>
+    <table><tr><th style="width:22%">표시</th><th>뜻</th></tr>
+      <tr><td><span class="lg">🔒</span></td><td>아직 못 읽는 카드입니다. 영장이 나와야 열립니다</td></tr>
+      <tr><td><span class="lg">⚖</span></td><td>여기 적힌 사람은 <b>이 결과를 읽을 수 없습니다.</b> 남이 집어 읽습니다</td></tr>
+      <tr><td><span class="lg">🔬</span></td><td>감식실에 낼 수 있는 것입니다. 결과는 <b>낸 사람 아닌 이가</b> 읽습니다</td></tr>
+      <tr><td><span class="lg">⭐</span></td><td>다른 카드와 짝을 맞추면 <b>특수 단서</b>를 가져갑니다. 짝 번호가 카드에 적혀 있습니다</td></tr></table>
+
+    <div class="box"><div class="bl">처음 하는 분들이 가장 많이 묻는 것</div>
+      <p><b>규칙을 다 알아야 하나요?</b> 아닙니다. 「기본 규칙」 앞장 한 면만 알면 1라운드를 돌 수 있습니다.
+        나머지는 그때가 오면 이벤트 카드가 알려 줍니다.<br>
+        <b>연기를 잘해야 하나요?</b> 아닙니다. 시트에 적힌 대로만 말하면 됩니다.
+        모르는 질문을 받으면 <b>「그건 모릅니다」</b>가 정답입니다.<br>
+        <b>거짓말해도 되나요?</b> <b>전원이 해도 됩니다.</b> 다만 시트에 <b>⚠</b> 로 찍힌 카드가
+        판에 나오면 그때는 인정해야 합니다 — 우기면 게임이 멈춥니다.<br>
+        <b>휴대폰이 필요한가요?</b> 각자 한 대씩 필요합니다. 카드에 붙은 QR 을 찍어야 하는 것이 있습니다.</p></div>
+  </div>
+
+  <div class="page board">${stage('준비할 때')}<h1>탁자에 이렇게 놓습니다</h1>
+    <p class="muted">가운데에 현장 판을 깔고, 장소마다 카드를 따로 쌓습니다.
+      <b>카드는 판 위에 올리지 않습니다</b> — 판은 어디를 고를지 보는 그림이고, 카드는 그 옆에 쌓입니다.</p>
+    <div class="tbl">
+      <div class="tblRow">
+        <div class="slot slotDim">A<br><span>한다영</span></div>
+        <div class="slot slotDim">B<br><span>한소미</span></div>
+        <div class="slot slotDim">C<br><span>서지안</span></div>
+        <div class="slot slotBox">D<br><span>목사님의 방<br>현장 ① 뒤 · 기록 ② 뒤</span></div>
+      </div>
+      <div class="tblRow">
+        <div class="slot slotWide slotMap">현장 판 <span>숙소 2층 평면도 · A3 가로</span></div>
+        <div class="slot slotBox">V<br><span>CCTV 열람실<br>이벤트 ③ 뒤</span></div>
+      </div>
+      <div class="tblRow">
+        <div class="slot slotDim">E<br><span>최종현</span></div>
+        <div class="slot slotDim">F<br><span>문세린</span></div>
+        <div class="slot slotDim">G<br><span>강지후</span></div>
+        <div class="slot slotBox">L<br><span>감식실<br>이벤트 ② 뒤</span></div>
+      </div>
+      <div class="tblRow">
+        <div class="slot slotOpen">S <span>특수 단서 — 처음부터 꺼내 두되 <b>뒷면이 보이게</b></span></div>
+        <div class="slot slotOpen">Q <span>필적 대조 7장 — 앞면이 보이게</span></div>
+        <div class="slot slotOpen">공개 <span>목사님 일정표 — 이벤트 ① 과 함께 펴 둔다</span></div>
+      </div>
+      <div class="tblRow">
+        <div class="slot slotSheet">라운드 트랙 <span>말 하나</span></div>
+        <div class="slot slotSheet">기본 규칙 시트 <span>앞·뒷장</span></div>
+        <div class="slot slotSheet">사건 기록판 <span>연필</span></div>
+        <div class="slot slotSeal">진상 해설서 <span>봉투째 — 끝나기 전엔 열지 않는다</span></div>
+      </div>
+    </div>
+    <p class="muted"><b>사람마다 손에 드는 것</b> — 인물 시트 한 장(접어서 겉면만 보이게)과
+      휴대폰 하나. 가져간 카드는 자기 앞에 <b>번호가 보이게</b> 늘어놓습니다 —
+      무엇을 몇 장 가졌는지는 서로 보이고, 그 내용만 자기 것입니다.</p>
+  </div>
+
+
+
+  <div class="page brief">${stage('시작할 때')}<h1>사건 브리핑</h1>
+    <p class="muted"><b>순서 3.</b> 인물 시트를 각자 읽은 뒤, 한 사람이 소리 내어 읽습니다.
+      한 절씩 돌아가며 읽어도 좋습니다. <b>여기까지가 전원이 아는 전부입니다.</b></p>${pages}
     <h2>그리고 규칙 하나</h2>
     <p>여러분 중 <b>한 명이 범인</b>입니다. 범인도 남들과 똑같이 수사에 참여하고, 거짓말을 합니다.
       나머지는 자기가 결백하다는 것만 알 뿐, 누가 범인인지는 모릅니다.</p></div>
 
-  <div class="page board"><h1>라운드 트랙 <span class="muted">— 인원에 맞는 것 하나만 펴 두세요</span></h1>
+  <div class="page">${stage('첫 라운드 전에 · 계속 펴 둡니다')}<h1>기본 규칙 <span class="muted">— 앞장</span></h1>
+    <p class="muted"><b>순서 5.</b> 다 함께 3분간 훑습니다. 다 외울 필요는 없습니다 — 이 한 면이면 1라운드가 돕니다.</p>
+    <h2>한 라운드</h2>
+    <p>①<b>조사</b> — 순서대로 한 명씩, 열려 있는 장소 <b>하나</b>를 골라 그 장소의 남은 번호 중
+      <b>2장</b>을 가져갑니다. 가져간 번호는 남이 못 가집니다. 내용은 자기만 읽습니다.<br>
+      &nbsp;&nbsp;시작 플레이어는 <b>라운드마다 한 칸씩 돕니다.</b><br>
+      &nbsp;&nbsp;<b>가져오면 그 자리에서 읽습니다 — 소리 내지 말고 혼자서.</b> 남은 번호만 봅니다.<br>
+      &nbsp;&nbsp;<span class="muted">읽고 나서 토론에 들어갑니다. 안 읽고 넘어가면 그 라운드 조사가
+      발언에 아무 영향을 못 줍니다. 무엇을 읽었는지는 토론에서 <b>말하고 싶은 만큼만, 사실이든
+      거짓이든 자유롭게</b> 말합니다.</span><br>
+      ②<b>토론 10분</b> — 카드를 <b>보여 주지 않고</b> 말로만 공유합니다. 거짓말해도 됩니다.<br>
+      ③<b>종료</b> — 트랙의 말을 한 칸 옮기고, 이벤트 칸이면 이벤트 카드를 펼칩니다.</p>
+    <h2>한 방에 세 명까지</h2>
+    <p>같은 라운드에 <b>같은 장소로는 세 명까지</b> 갑니다. 네 번째 사람은 다른 곳으로 가세요.<br>
+      <b>단, 갈 만한 곳이 없으면 이 제한을 풉니다.</b> 남은 카드가 모자라 뒷순번이 조사를 통째로
+      건너뛰게 되는 라운드에는, 이미 세 명이 간 장소에도 들어가 남은 것을 나눠 가집니다.<br>
+      <span class="muted">여섯이 한 방에 몰리면 뒷순번은 집을 카드가 없어 그 라운드 발언 재료가
+      0이 됩니다. 실제로 세 번 일어났습니다.</span></p>
+    <p><b>고른 장소에 남은 카드가 2장에 못 미치면, 남은 만큼만 가져갑니다.</b> 한 장이면 한 장입니다 —
+      모자란 만큼을 다른 장소에서 채우지는 않습니다.<br>
+      <span class="muted">마지막 라운드에는 장소마다 한두 장씩만 남습니다. 이 한 줄이 없으면
+      뒷순번이 「갈 곳은 있는데 2장을 못 채우는」 자리에서 판이 멈춥니다.</span></p>
+
+    <h2>가져갈 수 없는 카드</h2>
+    <p>· <b>자기 방에는 들어갈 수 없습니다.</b> 처음부터 끝까지, 한 라운드도 예외가 없습니다.
+      자기 물건은 <b>남이 찾아 읽습니다.</b><br>
+      &nbsp;&nbsp;<span class="muted">자기한테 불리한 카드를 자기가 먼저 집어 자기 입으로 해명하는 것이
+      언제나 최선이 되면, 아무도 걸리지 않고 판이 멈춥니다. 내 방은 남이 뒤집니다 — 그게 이 게임입니다.</span><br>
+      <span class="muted">(감식은 아래를 따릅니다)</span></p>
+
+    <h2>CCTV 는 혼자 읽지 않습니다</h2>
+    <p><b>가져온 CCTV 장면(V)은 그 자리에서 모두에게 소리 내어 읽습니다.</b>
+      다른 모든 카드는 혼자 읽고 말할지 말지를 정하지만, 이 더미만은 아닙니다.<br>
+      <span class="muted">화면은 감출 수 있는 물건이 아닙니다 — 수사팀이 확보한 원본을 한 사람이
+      혼자 보고 덮는 일은 없습니다. 자기 발자국을 자기가 지울 수 있으면 이 더미는 진범에게만
+      유리한 더미가 됩니다.</span></p>
+    <p><b>뒷면에는 그 장면에 찍힌 사람의 색점이 하나 있습니다.</b> 번호만으로는 무엇을 집는지 알 수 없어서입니다 —
+      V 번호는 시각과도 인물과도 무관합니다.<br>
+      <b>자기 색도 가져갈 수 있습니다.</b> 다만 가져오면 소리 내어 읽어야 하니, 자기 장면을 집는 것은
+      감추는 수가 아니라 <b>먼저 해명하겠다는 선언</b>입니다.</p>
+  </div>
+
+  <div class="page">${stage('첫 라운드 전에 · 계속 펴 둡니다')}<h1>기본 규칙 <span class="muted">— 뒷장</span></h1>
+    <h2>모르는 말이 나오면</h2>
+    <p><b>각자 휴대폰으로 찾아봐도 됩니다.</b> 요힘빈이 무엇인지, 졸피뎀이 어떤 약인지,
+      설하정을 언제 쓰는지 — 카드에 다 적혀 있지 않습니다.
+      찾아본 것을 말할지 말지는 본인이 정합니다. <b>검색으로 알아낸 것도 이 판의 단서입니다.</b></p>
+
+    <h2>카드 위쪽의 표시 — 네 가지</h2>
+    <table><tr><th style="width:20%">표시</th><th>뜻</th></tr>
+      <tr><td><span class="lg">🔒</span> <b>이벤트 ② 뒤</b></td>
+        <td>휴대폰입니다. <b>준비할 때 빼서 따로 두었다가</b>, 이벤트 ② 를 읽을 때 각 방 더미에 섞어 넣습니다.
+          카드 뒷면에도 같은 표시가 있습니다 — 그걸 보고 골라내세요.</td></tr>
+      <tr><td><span class="lg">⚖</span> <b>본인 낭독 불가</b></td>
+        <td>그 결과가 걸리는 사람이 카드에 적혀 있습니다. <b>그 사람은 이 결과를 읽을 수 없습니다</b> — 다른 사람이 집어 소리 내어 읽습니다. <b>가져가는 것도, 내는 것도 누구나 됩니다.</b></td></tr>
+      <tr><td><span class="lg">🔬</span> <b>감식실</b></td>
+        <td>채취물입니다. 감식실이 열린 뒤부터 라운드 끝에 감식실 옆에 내려놓으세요.
+          <b>내는 데는 조사 행동을 쓰지 않습니다.</b> 카드 아래에 결과 번호가 적혀 있습니다.</td></tr>
+      <tr><td><span class="lg">⭐</span> <b>조합 재료</b></td>
+        <td>다른 카드와 함께 모으면 <b>특수 단서(S)</b> 를 가져갑니다. 무엇과 묶는지는 카드 아래에 적혀 있습니다.
+          <b>가진 사람이 달라도 됩니다</b> — 합의해서 판 가운데에 공개하면 함께 가져갑니다.</td></tr></table>
+
+    <h2>특수 단서</h2>
+    <p>카드에 적힌 조합(⭐)을 손에 다 모으면, 특수 더미에서 그 번호를 <b>말없이 가져갑니다.</b>
+      무엇으로 얻었는지는 특수 카드 앞면에 적혀 있습니다.</p>
+    <h2>감식 — 낸 사람과 읽는 사람이 다르다</h2>
+    <p>🔬 표시가 있는 카드는 <b>채취물</b>입니다. 감식실이 열린 뒤부터,</p>
+    <p>1. 채취물을 가진 사람이 라운드 끝에 그 카드를 <b>앞면으로 감식실 옆에 내려놓습니다.</b>
+      <b>조사 행동을 쓰지 않습니다.</b> <b>사람마다 한 라운드에 한 장</b>씩 낼 수 있습니다. 무엇을 냈는지는 전원이 봅니다.<br>
+      2. 다음 라운드 시작 때, <b>낸 사람이 아닌 다른 사람</b>이 그 결과 번호(L…)를 집어
+      <b>소리 내어 읽습니다.</b> 읽은 뒤 그 카드는 읽은 사람이 갖습니다.<br>
+      3. <b>채취물을 가진 사람이 두 라운드가 지나도 내지 않으면, 그다음 라운드 끝에 누구든
+      대신 낼 수 있습니다.</b> 가진 사람은 거부하지 못합니다 — 카드는 낸 뒤 돌려주고, 결과는
+      여느 때처럼 낸 사람 아닌 이가 읽습니다.<br>
+      4. <b>마지막 라운드에 낸 것은 최종 토론이 시작될 때 읽습니다.</b> 마지막 라운드라고 해서
+      버려지지 않습니다 — 늦게라도 내는 것이 안 내는 것보다 낫습니다.</p>
+    <p class="muted">결과를 읽는 손과 결과가 걸린 목이 같으면 그 카드는 증거가 아니라 증언이 됩니다.
+      그래서 낸 사람은 자기 결과를 못 읽습니다. 반대로 "내 물건이라 아예 못 낸다"고 해 두면
+      그 카드가 영영 잠기므로, 넘겨서 내는 길을 열어 둡니다.</p></div>
+
+  <div class="page board">${stage('라운드마다')}<h1>라운드 트랙 <span class="muted">— 인원에 맞는 것 하나만 펴 두세요</span></h1>
     <p class="muted">라운드가 끝날 때마다 <b>말을 한 칸 옮깁니다.</b> 말은 동전이든 무엇이든 됩니다.
       <b>①②③④ 자리에 이벤트 카드를 접어 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.<br>
       이벤트가 붙는 라운드는 인원에 따라 다릅니다. <b>순서와 내용은 같습니다</b> —
@@ -1003,124 +1212,7 @@ function runSheets() {
       <b>일곱이면 형사도 한 표를 던집니다.</b> 다만 아무도 형사를 지목하지 않습니다.</p>
   </div>
 
-  <div class="page board"><h1>탁자에 이렇게 놓습니다</h1>
-    <p class="muted">가운데에 현장 판을 깔고, 장소마다 카드를 따로 쌓습니다.
-      <b>카드는 판 위에 올리지 않습니다</b> — 판은 어디를 고를지 보는 그림이고, 카드는 그 옆에 쌓입니다.</p>
-    <div class="tbl">
-      <div class="tblRow">
-        <div class="slot slotDim">A<br><span>한다영</span></div>
-        <div class="slot slotDim">B<br><span>한소미</span></div>
-        <div class="slot slotDim">C<br><span>서지안</span></div>
-        <div class="slot slotBox">D<br><span>목사님의 방<br>현장 ① 뒤 · 기록 ② 뒤</span></div>
-      </div>
-      <div class="tblRow">
-        <div class="slot slotWide slotMap">현장 판 <span>숙소 2층 평면도 · A3 가로</span></div>
-        <div class="slot slotBox">V<br><span>CCTV 열람실<br>이벤트 ③ 뒤</span></div>
-      </div>
-      <div class="tblRow">
-        <div class="slot slotDim">E<br><span>최종현</span></div>
-        <div class="slot slotDim">F<br><span>문세린</span></div>
-        <div class="slot slotDim">G<br><span>강지후</span></div>
-        <div class="slot slotBox">L<br><span>감식실<br>이벤트 ② 뒤</span></div>
-      </div>
-      <div class="tblRow">
-        <div class="slot slotOpen">S <span>특수 단서 — 처음부터 꺼내 두되 <b>뒷면이 보이게</b></span></div>
-        <div class="slot slotOpen">Q <span>필적 대조 7장 — 앞면이 보이게</span></div>
-        <div class="slot slotOpen">공개 <span>목사님 일정표 — 이벤트 ① 과 함께 펴 둔다</span></div>
-      </div>
-      <div class="tblRow">
-        <div class="slot slotSheet">라운드 트랙 <span>말 하나</span></div>
-        <div class="slot slotSheet">기본 규칙 시트 <span>앞·뒷장</span></div>
-        <div class="slot slotSheet">사건 기록판 <span>연필</span></div>
-        <div class="slot slotSeal">진상 해설서 <span>봉투째 — 끝나기 전엔 열지 않는다</span></div>
-      </div>
-    </div>
-    <p class="muted"><b>사람마다 손에 드는 것</b> — 인물 시트 한 장(접어서 겉면만 보이게)과
-      휴대폰 하나. 가져간 카드는 자기 앞에 <b>번호가 보이게</b> 늘어놓습니다 —
-      무엇을 몇 장 가졌는지는 서로 보이고, 그 내용만 자기 것입니다.</p>
-  </div>
-
-
-  <div class="page"><h1>기본 규칙 <span class="muted">— 판 옆에 펴 두세요</span></h1>
-    <h2>한 라운드</h2>
-    <p>①<b>조사</b> — 순서대로 한 명씩, 열려 있는 장소 <b>하나</b>를 골라 그 장소의 남은 번호 중
-      <b>2장</b>을 가져갑니다. 가져간 번호는 남이 못 가집니다. 내용은 자기만 읽습니다.<br>
-      &nbsp;&nbsp;시작 플레이어는 <b>라운드마다 한 칸씩 돕니다.</b><br>
-      &nbsp;&nbsp;<b>가져오면 그 자리에서 읽습니다 — 소리 내지 말고 혼자서.</b> 남은 번호만 봅니다.<br>
-      &nbsp;&nbsp;<span class="muted">읽고 나서 토론에 들어갑니다. 안 읽고 넘어가면 그 라운드 조사가
-      발언에 아무 영향을 못 줍니다. 무엇을 읽었는지는 토론에서 <b>말하고 싶은 만큼만, 사실이든
-      거짓이든 자유롭게</b> 말합니다.</span><br>
-      ②<b>토론 10분</b> — 카드를 <b>보여 주지 않고</b> 말로만 공유합니다. 거짓말해도 됩니다.<br>
-      ③<b>종료</b> — 트랙의 말을 한 칸 옮기고, 이벤트 칸이면 이벤트 카드를 펼칩니다.</p>
-    <h2>한 방에 세 명까지</h2>
-    <p>같은 라운드에 <b>같은 장소로는 세 명까지</b> 갑니다. 네 번째 사람은 다른 곳으로 가세요.<br>
-      <b>단, 갈 만한 곳이 없으면 이 제한을 풉니다.</b> 남은 카드가 모자라 뒷순번이 조사를 통째로
-      건너뛰게 되는 라운드에는, 이미 세 명이 간 장소에도 들어가 남은 것을 나눠 가집니다.<br>
-      <span class="muted">여섯이 한 방에 몰리면 뒷순번은 집을 카드가 없어 그 라운드 발언 재료가
-      0이 됩니다. 실제로 세 번 일어났습니다.</span></p>
-    <p><b>고른 장소에 남은 카드가 2장에 못 미치면, 남은 만큼만 가져갑니다.</b> 한 장이면 한 장입니다 —
-      모자란 만큼을 다른 장소에서 채우지는 않습니다.<br>
-      <span class="muted">마지막 라운드에는 장소마다 한두 장씩만 남습니다. 이 한 줄이 없으면
-      뒷순번이 「갈 곳은 있는데 2장을 못 채우는」 자리에서 판이 멈춥니다.</span></p>
-
-    <h2>가져갈 수 없는 카드</h2>
-    <p>· <b>자기 방에는 들어갈 수 없습니다.</b> 처음부터 끝까지, 한 라운드도 예외가 없습니다.
-      자기 물건은 <b>남이 찾아 읽습니다.</b><br>
-      &nbsp;&nbsp;<span class="muted">자기한테 불리한 카드를 자기가 먼저 집어 자기 입으로 해명하는 것이
-      언제나 최선이 되면, 아무도 걸리지 않고 판이 멈춥니다. 내 방은 남이 뒤집니다 — 그게 이 게임입니다.</span><br>
-      <span class="muted">(감식은 아래를 따릅니다)</span></p>
-
-    <h2>CCTV 는 혼자 읽지 않습니다</h2>
-    <p><b>가져온 CCTV 장면(V)은 그 자리에서 모두에게 소리 내어 읽습니다.</b>
-      다른 모든 카드는 혼자 읽고 말할지 말지를 정하지만, 이 더미만은 아닙니다.<br>
-      <span class="muted">화면은 감출 수 있는 물건이 아닙니다 — 수사팀이 확보한 원본을 한 사람이
-      혼자 보고 덮는 일은 없습니다. 자기 발자국을 자기가 지울 수 있으면 이 더미는 진범에게만
-      유리한 더미가 됩니다.</span></p>
-    <p><b>뒷면에는 그 장면에 찍힌 사람의 색점이 하나 있습니다.</b> 번호만으로는 무엇을 집는지 알 수 없어서입니다 —
-      V 번호는 시각과도 인물과도 무관합니다.<br>
-      <b>자기 색도 가져갈 수 있습니다.</b> 다만 가져오면 소리 내어 읽어야 하니, 자기 장면을 집는 것은
-      감추는 수가 아니라 <b>먼저 해명하겠다는 선언</b>입니다.</p>
-  </div>
-
-  <div class="page"><h1>기본 규칙 <span class="muted">— 뒷장</span></h1>
-    <h2>모르는 말이 나오면</h2>
-    <p><b>각자 휴대폰으로 찾아봐도 됩니다.</b> 요힘빈이 무엇인지, 졸피뎀이 어떤 약인지,
-      설하정을 언제 쓰는지 — 카드에 다 적혀 있지 않습니다.
-      찾아본 것을 말할지 말지는 본인이 정합니다. <b>검색으로 알아낸 것도 이 판의 단서입니다.</b></p>
-
-    <h2>카드 위쪽의 표시 — 네 가지</h2>
-    <table><tr><th style="width:20%">표시</th><th>뜻</th></tr>
-      <tr><td><span class="lg">🔒</span> <b>이벤트 ② 뒤</b></td>
-        <td>휴대폰입니다. <b>준비할 때 빼서 따로 두었다가</b>, 이벤트 ② 를 읽을 때 각 방 더미에 섞어 넣습니다.
-          카드 뒷면에도 같은 표시가 있습니다 — 그걸 보고 골라내세요.</td></tr>
-      <tr><td><span class="lg">⚖</span> <b>본인 낭독 불가</b></td>
-        <td>그 결과가 걸리는 사람이 카드에 적혀 있습니다. <b>그 사람은 이 결과를 읽을 수 없습니다</b> — 다른 사람이 집어 소리 내어 읽습니다. <b>가져가는 것도, 내는 것도 누구나 됩니다.</b></td></tr>
-      <tr><td><span class="lg">🔬</span> <b>감식실</b></td>
-        <td>채취물입니다. 감식실이 열린 뒤부터 라운드 끝에 감식실 옆에 내려놓으세요.
-          <b>내는 데는 조사 행동을 쓰지 않습니다.</b> 카드 아래에 결과 번호가 적혀 있습니다.</td></tr>
-      <tr><td><span class="lg">⭐</span> <b>조합 재료</b></td>
-        <td>다른 카드와 함께 모으면 <b>특수 단서(S)</b> 를 가져갑니다. 무엇과 묶는지는 카드 아래에 적혀 있습니다.
-          <b>가진 사람이 달라도 됩니다</b> — 합의해서 판 가운데에 공개하면 함께 가져갑니다.</td></tr></table>
-
-    <h2>특수 단서</h2>
-    <p>카드에 적힌 조합(⭐)을 손에 다 모으면, 특수 더미에서 그 번호를 <b>말없이 가져갑니다.</b>
-      무엇으로 얻었는지는 특수 카드 앞면에 적혀 있습니다.</p>
-    <h2>감식 — 낸 사람과 읽는 사람이 다르다</h2>
-    <p>🔬 표시가 있는 카드는 <b>채취물</b>입니다. 감식실이 열린 뒤부터,</p>
-    <p>1. 채취물을 가진 사람이 라운드 끝에 그 카드를 <b>앞면으로 감식실 옆에 내려놓습니다.</b>
-      <b>조사 행동을 쓰지 않습니다.</b> <b>사람마다 한 라운드에 한 장</b>씩 낼 수 있습니다. 무엇을 냈는지는 전원이 봅니다.<br>
-      2. 다음 라운드 시작 때, <b>낸 사람이 아닌 다른 사람</b>이 그 결과 번호(L…)를 집어
-      <b>소리 내어 읽습니다.</b> 읽은 뒤 그 카드는 읽은 사람이 갖습니다.<br>
-      3. <b>채취물을 가진 사람이 두 라운드가 지나도 내지 않으면, 그다음 라운드 끝에 누구든
-      대신 낼 수 있습니다.</b> 가진 사람은 거부하지 못합니다 — 카드는 낸 뒤 돌려주고, 결과는
-      여느 때처럼 낸 사람 아닌 이가 읽습니다.<br>
-      4. <b>마지막 라운드에 낸 것은 최종 토론이 시작될 때 읽습니다.</b> 마지막 라운드라고 해서
-      버려지지 않습니다 — 늦게라도 내는 것이 안 내는 것보다 낫습니다.</p>
-    <p class="muted">결과를 읽는 손과 결과가 걸린 목이 같으면 그 카드는 증거가 아니라 증언이 됩니다.
-      그래서 낸 사람은 자기 결과를 못 읽습니다. 반대로 "내 물건이라 아예 못 낸다"고 해 두면
-      그 카드가 영영 잠기므로, 넘겨서 내는 길을 열어 둡니다.</p></div>
-
-  <div class="page"><h1>사건 기록판 <span class="muted">— 판 가운데에 펴 두세요</span></h1>
+  <div class="page">${stage('라운드마다')}<h1>사건 기록판 <span class="muted">— 판 가운데에 펴 두세요</span></h1>
     <p class="muted">진행자가 없으니 판이 무엇을 확정했는지 아무도 기록하지 않습니다. 그러면 같은 질문이
       네 번 반복되고, 시간표를 매 라운드 다시 계산하게 됩니다. <b>라운드가 끝날 때마다 한 줄씩</b>
       채우세요. 한 사람이 맡지 말고 그 라운드 시작 플레이어가 적습니다.</p>
@@ -1133,7 +1225,9 @@ function runSheets() {
     <p class="muted">근거 번호를 꼭 같이 적으세요. "누가 그렇게 말했다"와 "어느 카드에 그렇게 적혀 있다"는
       다릅니다 — 이 판에서 사람이 속는 자리가 정확히 거기입니다.</p></div>
 
-  <div class="page"><h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
+  <div class="page">${stage('준비할 때 오려 둡니다')}<h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
+    <p class="muted">준비할 때 네 장을 잘라 접어서, 라운드 트랙의 ①②③④ 자리에 <b>뒷면이 보이게</b> 얹어 둡니다.
+      그 라운드가 끝나면 뒤집어 한 사람이 소리 내어 읽습니다. <b>미리 읽지 마세요.</b></p>
     ${ev('①', whenEv('①'), '현장 통제 해제',
       `<p>단순 발작사로 보기 어렵다는 소견이 나와, <b>목사님 방을 현장으로 보존하고 있었습니다.</b>
         1차 검안이 끝나 이제 들어갈 수 있습니다.</p>
