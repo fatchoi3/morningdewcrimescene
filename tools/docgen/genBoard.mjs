@@ -395,6 +395,43 @@ const CSS = `
   .trN { font-size: 17pt; font-weight: 800; }
   .trL { font-size: 7.4pt; color: #6b6760; margin-top: 1mm; }
   .trX { font-size: 6.6pt; font-weight: 800; color: #b8912c; margin-top: 0.8mm; }
+  /* 라운드 트랙 · 배치도 — 종이 위에서 「판」으로 보여야 한다. 숫자만 늘어놓으면
+     어디에 무엇을 얹는지가 안 보여서, 이벤트 카드를 손에 들고 있다가 잊는 일이 생긴다. */
+  .board .trk { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2.4mm; margin: 5mm 0 4mm; }
+  .cell { border: 0.6mm solid #2f2b24; border-radius: 2.4mm; padding: 2.6mm 2mm 2.4mm;
+          display: flex; flex-direction: column; gap: 1.6mm; background: #fbf9f4; }
+  .cellEv { border-color: #b8912c; background: #fffdf4; }
+  .cellLast { border-style: dashed; }
+  .cellTop { display: flex; align-items: baseline; justify-content: center; gap: 1.2mm; min-height: 9mm; }
+  .cellN { font-size: 20pt; font-weight: 800; line-height: 1; }
+  .cellTag { font-size: 5.6pt; font-weight: 800; color: #8a6d1f; }
+  .cellOpen { font-size: 6.4pt; line-height: 1.4; text-align: center; min-height: 11mm;
+              border-top: 0.3mm dashed #cfc7b6; border-bottom: 0.3mm dashed #cfc7b6; padding: 1.4mm 0; }
+  .cellDo { font-size: 6.6pt; font-weight: 700; text-align: center; color: #5b5140; }
+  .evSlot { margin-top: auto; border: 0.5mm dashed #b8912c; border-radius: 1.6mm;
+            min-height: 15mm; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; font-size: 7.4pt; font-weight: 800; color: #8a6d1f; text-align: center; }
+  .evSlotSub { font-size: 5.4pt; font-weight: 600; color: #a89468; margin-top: 0.8mm; }
+  .pawnSlot { margin-top: auto; border: 0.4mm dashed #c3bcae; border-radius: 50%;
+              width: 13mm; height: 13mm; align-self: center; display: flex; align-items: center;
+              justify-content: center; font-size: 5.6pt; color: #a39a89; text-align: center; }
+  .trkEnd { display: flex; align-items: stretch; gap: 1.6mm; margin: 4mm 0 3mm; }
+  .endStep { flex: 1; border: 0.4mm solid #b3aa99; border-radius: 1.6mm; padding: 2.2mm 1.6mm;
+             font-size: 7pt; text-align: center; background: #f6f4ef; }
+  .endArrow { align-self: center; font-size: 9pt; color: #a39a89; }
+  /* 탁자 배치도 */
+  .tbl { display: flex; flex-direction: column; gap: 2.4mm; margin: 5mm 0 4mm;
+         border: 0.8mm solid #2f2b24; border-radius: 3mm; padding: 4mm; background: #f4f1ea; }
+  .tblRow { display: flex; gap: 2.4mm; }
+  .slot { flex: 1; border: 0.5mm solid #6b6250; border-radius: 2mm; padding: 2.4mm 2mm;
+          font-size: 9pt; font-weight: 800; text-align: center; background: #fff; min-height: 14mm;
+          display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1mm; }
+  .slot span { font-size: 6.2pt; font-weight: 600; color: #6b6250; line-height: 1.35; }
+  .slotBox { border-style: dashed; background: #efece5; color: #8a8375; }
+  .slotMap { flex: 3; min-height: 26mm; font-size: 11pt; background: #fdfcf9; border-width: 0.8mm; }
+  .slotOpen { background: #fdf7e6; border-color: #b8912c; }
+  .slotSheet { background: #fbf9f4; }
+  .slotSeal { background: #fdf0ee; border-color: #8a3b3b; color: #8a3b3b; }
   .ev { border: 2px solid #b8912c; border-radius: 2mm; padding: 4mm 5mm; margin-bottom: 4mm; background: #fffdf6; }
   .evHead { font-size: 9pt; font-weight: 800; color: #8a6d1f; }
   .evNo { display: inline-block; background: #b8912c; color: #fff; border-radius: 50%;
@@ -825,21 +862,79 @@ function runSheets() {
     <p>여러분 중 <b>한 명이 범인</b>입니다. 범인도 남들과 똑같이 수사에 참여하고, 거짓말을 합니다.
       나머지는 자기가 결백하다는 것만 알 뿐, 누가 범인인지는 모릅니다.</p></div>
 
-  <div class="page"><h1>라운드 트랙</h1>
-    <p class="muted">한 라운드가 끝날 때마다 말을 한 칸 옮깁니다.
-      <b>1·2·3·4라운드 칸에 이벤트 카드를 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
-    <div class="track">${[1,2,3,4,5,6].map((n) => {
-      const ev = { 1: '이벤트 ①', 2: '이벤트 ②', 3: '이벤트 ③', 4: '이벤트 ④' }[n];
-      return `<div class="tr${ev ? ' trEv' : ''}">
-      <div class="trN">${n}</div><div class="trL">${ev || '조사 2장 → 토론 10분'}</div>${n === 6 ? '<div class="trX">여섯일 때만</div>' : ''}</div>`;
+  <div class="page board"><h1>라운드 트랙 <span class="muted">— 판 옆에 펴 두세요</span></h1>
+    <p class="muted">라운드가 끝날 때마다 <b>말을 한 칸 옮깁니다.</b> 말은 동전이든 무엇이든 됩니다.
+      <b>1·2·3·4 칸의 네모 자리에 이벤트 카드를 접어 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.</p>
+    <div class="trk">${[1, 2, 3, 4, 5, 6].map((n) => {
+      const ev = { 1: '①', 2: '②', 3: '③', 4: '④' }[n];
+      const open = {
+        2: '목사님의 방<br>— 현장',
+        3: '목사님의 방 — 기록<br>🔒3 휴대폰',
+        4: '감식실 L',
+        5: 'CCTV 열람실 V',
+      }[n];
+      return `<div class="cell${ev ? ' cellEv' : ''}${n === 6 ? ' cellLast' : ''}">
+        <div class="cellTop"><span class="cellN">${n}</span>${n === 6
+          ? '<span class="cellTag">여섯일 때만</span>'
+          : n === 5 ? '<span class="cellTag">일곱은 여기서 끝</span>' : ''}</div>
+        <div class="cellOpen">${open ? `<b>여기서 열립니다</b><br>${open}` : '<span class="muted">새로 열리는 곳 없음</span>'}</div>
+        <div class="cellDo">조사 2장<br>토론 10분</div>
+        ${ev ? `<div class="evSlot">이벤트 ${ev}<div class="evSlotSub">라운드 끝에 뒤집는다</div></div>`
+          : '<div class="pawnSlot">말 자리</div>'}
+      </div>`;
     }).join('')}</div>
+    <div class="trkEnd">
+      <div class="endStep"><b>최종 토론</b> 15분</div>
+      <div class="endArrow">→</div>
+      <div class="endStep"><b>지목</b> 한 명씩 동시에</div>
+      <div class="endArrow">→</div>
+      <div class="endStep"><b>진상 해설서</b> 봉투를 연다</div>
+      <div class="endArrow">→</div>
+      <div class="endStep"><b>감상전</b> 10분</div>
+    </div>
     <p class="muted"><b>여섯이면 6라운드, 일곱이면 5라운드입니다.</b>
-      일곱은 한 라운드에 조사가 일곱 번 돌아, 라운드가 하나 적어도 전체 조사
-      횟수는 거의 같습니다 — 35회와 36회.<br>
-      조사해 가져갈 카드는 모두 <b>75장</b>입니다. 여섯이 6라운드면 72장,
-      일곱이 5라운드면 70장을 엽니다 — 거의 다 열고 끝납니다.</p>
-    <p class="muted">마지막 라운드가 끝나면 최종 토론 15분 → 한 명씩 범인 지목 → 진상 해설서 → 감상전 10분.<br>
-      <b>일곱이면 형사도 한 표를 던집니다.</b> 다만 아무도 형사를 지목하지 않습니다.</p></div>
+      일곱은 한 라운드에 조사가 일곱 번 돌아, 라운드가 하나 적어도 전체 조사 횟수는
+      거의 같습니다 — 35회와 36회. 조사해 가져갈 카드는 모두 <b>75장</b>이라,
+      여섯이 6라운드면 72장, 일곱이 5라운드면 70장을 엽니다 — 거의 다 열고 끝납니다.<br>
+      <b>일곱이면 형사도 한 표를 던집니다.</b> 다만 아무도 형사를 지목하지 않습니다.</p>
+  </div>
+
+  <div class="page board"><h1>탁자에 이렇게 놓습니다</h1>
+    <p class="muted">가운데에 현장 판을 깔고, 장소마다 카드를 따로 쌓습니다.
+      <b>카드는 판 위에 올리지 않습니다</b> — 판은 어디를 고를지 보는 그림이고, 카드는 그 옆에 쌓입니다.</p>
+    <div class="tbl">
+      <div class="tblRow">
+        <div class="slot slotDim">A<br><span>한다영</span></div>
+        <div class="slot slotDim">B<br><span>한소미</span></div>
+        <div class="slot slotDim">C<br><span>서지안</span></div>
+        <div class="slot slotBox">D<br><span>목사님의 방<br>현장 2R · 기록 3R 부터</span></div>
+      </div>
+      <div class="tblRow">
+        <div class="slot slotWide slotMap">현장 판 <span>숙소 2층 평면도 · A3 가로</span></div>
+        <div class="slot slotBox">V<br><span>CCTV 열람실<br>5라운드부터</span></div>
+      </div>
+      <div class="tblRow">
+        <div class="slot slotDim">E<br><span>최종현</span></div>
+        <div class="slot slotDim">F<br><span>문세린</span></div>
+        <div class="slot slotDim">G<br><span>강지후</span></div>
+        <div class="slot slotBox">L<br><span>감식실<br>4라운드부터</span></div>
+      </div>
+      <div class="tblRow">
+        <div class="slot slotOpen">S <span>특수 단서 — 처음부터 꺼내 둔다</span></div>
+        <div class="slot slotOpen">Q <span>잠금 카드 12장 — 앞면이 보이게</span></div>
+        <div class="slot slotOpen">공개 <span>목사님 일정표 — 2라운드에 펴 둔다</span></div>
+      </div>
+      <div class="tblRow">
+        <div class="slot slotSheet">라운드 트랙 <span>말 하나</span></div>
+        <div class="slot slotSheet">기본 규칙 시트 <span>앞·뒷장</span></div>
+        <div class="slot slotSheet">사건 기록판 <span>연필</span></div>
+        <div class="slot slotSeal">진상 해설서 <span>봉투째 — 끝나기 전엔 열지 않는다</span></div>
+      </div>
+    </div>
+    <p class="muted"><b>사람마다 손에 드는 것</b> — 인물 시트 한 장(접어서 겉면만 보이게)과
+      휴대폰 하나. 가져간 카드는 자기 앞에 <b>번호가 보이게</b> 늘어놓습니다 —
+      무엇을 몇 장 가졌는지는 서로 보이고, 그 내용만 자기 것입니다.</p>
+  </div>
 
 
   <div class="page"><h1>기본 규칙 <span class="muted">— 판 옆에 펴 두세요</span></h1>

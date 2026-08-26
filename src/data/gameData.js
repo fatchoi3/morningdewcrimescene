@@ -472,7 +472,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'LWUY-33': { // 목사 핸드폰 — 지문 인식으로 풀림. 카톡에 삭제된 대화(김민석·문세린) → 톡서랍 복구
     title: '목사님 핸드폰',
     description: '잠금이 풀린 채 발견된 목사님의 핸드폰.',
-    detail: '카톡과 사진을 확인할 수 있다. 카카오톡에 삭제된 대화가 있는 듯하다.',
+    detail: '잠금은 지문이다. 목사님의 손가락을 대면 그대로 열린다.\n카톡과 사진을 확인할 수 있다. 카카오톡에 삭제된 대화가 있는 듯하다.',
     image: '',
     type: '보통',
     person: '목사',
