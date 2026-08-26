@@ -35,8 +35,17 @@ function run(players, rounds, plan, label) {
       const take = Math.min(e[1], 6, left);
       pool[e[0]] -= take; left -= take;
     }
+    // 갈 만한 곳이 없으면 세 명 제한을 푼다(규칙에 있는 예외) — 그래도 모자라면 진짜 부족이다.
+    let relaxed = false;
+    if (left > 0) {
+      relaxed = true;
+      for (const e of Object.entries(pool).sort((x, y) => y[1] - x[1])) {
+        const take = Math.min(e[1], left);
+        pool[e[0]] -= take; left -= take;
+      }
+    }
     if (left > 0) fail++;
-    rows.push(`R${R} 상한 ${cap}/필요 ${need}${left > 0 ? ` ← ${left}장 부족` : ''}`);
+    rows.push(`R${R} 상한 ${cap}/필요 ${need}${left > 0 ? ` ← ${left}장 부족` : relaxed ? ' (제한 해제)' : ''}`);
   }
   const rest = Object.values(pool).reduce((a, b) => a + b, 0);
   console.log(`[${label}] ${players}인 ${rounds}R`);
