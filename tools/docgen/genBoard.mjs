@@ -462,7 +462,10 @@ const CSS = `
   .slotOpen { background: #fdf7e6; border-color: #b8912c; }
   .slotSheet { background: #fbf9f4; }
   .slotSeal { background: #fdf0ee; border-color: #8a3b3b; color: #8a3b3b; }
-  .ev { border: 2px solid #b8912c; border-radius: 2mm; padding: 4mm 5mm; margin-bottom: 4mm; background: #fffdf6; }
+  /* 이벤트 카드 넷은 한 면에 안 들어간다(합쳐 290mm 넘음). 넘치는 것은 괜찮지만
+     한 장이 페이지 경계에서 잘리면 오려 낼 수가 없다 — 장 단위로 넘긴다. */
+  .ev { border: 2px solid #b8912c; border-radius: 2mm; padding: 4mm 5mm; margin-bottom: 4mm; background: #fffdf6;
+        page-break-inside: avoid; break-inside: avoid; }
   .evHead { font-size: 9pt; font-weight: 800; color: #8a6d1f; }
   .evNo { display: inline-block; background: #b8912c; color: #fff; border-radius: 50%;
           width: 6mm; height: 6mm; line-height: 6mm; text-align: center; margin-right: 1.5mm; }
