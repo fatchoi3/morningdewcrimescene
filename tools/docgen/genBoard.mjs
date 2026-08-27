@@ -592,7 +592,7 @@ const FIT_SCRIPT = `<script>
    일괄로 키우면 이미 꽉 찬 면이 잘린다. 그래서 각 면이 스스로 잰다. 넘치지 않는 선까지만
    --fit 을 올리고, 못 늘리는 면은 1 로 남는다. 인쇄와 PDF 모두 이 스크립트가 돈 뒤에 찍힌다. */
 (function () {
-  var MAX = 1.45, TARGET = 0.97;
+  var MIN = 0.82, MAX = 1.45, TARGET = 0.97;
   function fill(h) {
     var cs = getComputedStyle(h);
     var box = h.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
@@ -604,9 +604,9 @@ const FIT_SCRIPT = `<script>
     var halves = document.querySelectorAll(".half:not(.cover)");
     for (var i = 0; i < halves.length; i++) {
       var h = halves[i];
-      if (fill(h) >= TARGET) continue;
-      /* 이분법으로 가장 큰 배율을 찾는다 — 열 번이면 소수 셋째 자리까지 좁혀진다 */
-      var lo = 1, hi = MAX;
+      /* 이분법으로 담기는 가장 큰 배율을 찾는다 — 열 번이면 소수 셋째 자리까지 좁혀진다.
+         아래로도 내려간다: 내용이 늘어 넘치는 면은 1 미만으로 줄여야 잘리지 않는다. */
+      var lo = MIN, hi = MAX;
       for (var n = 0; n < 10; n++) {
         var mid = (lo + hi) / 2;
         h.style.setProperty("--fit", mid.toFixed(3));
@@ -849,10 +849,10 @@ function charCards() {
       <table><tr><th style="width:22%">가족</th><td>${esc(s.family || '-')}</td></tr>
         <tr><th>알려진 것</th><td>${esc(s.notes || '')}</td></tr></table>
       <div class="covHow"><b>이 시트를 받으면</b>
-        <div>① 펼쳐서 <b>안쪽 세 면을 혼자 읽습니다</b> — 5분. 남에게 보이지 않게 세워서 읽으세요.</div>
-        <div>② 다시 접어 이 겉면만 보이게 탁자에 둡니다.</div>
-        <div>③ 자기 차례에 <b>위 내용만</b> 자기 말로 소개합니다 — 30초.</div>
-        <div class="covWarn">접힌 안쪽은 게임이 끝날 때까지 <b>절대 보여 주지 않습니다.</b></div></div>
+        <div>① <b>혼자만 모든 내용을 읽습니다</b> — 5분. 남에게 보이지 않게 읽으세요.</div>
+        <div>② 자유롭게 차례를 정하여 <b>가족·나이·직책</b>을 소개합니다.
+          <b>나이에 몰두하여 연기해 주세요.</b></div>
+        <div class="covWarn">게임이 끝날 때까지 <b>자신의 카드를 절대 보여 주지 않습니다.</b></div></div>
     </div>
     <div class="covFoot"><b>A4 가로</b>로 양면 인쇄(<b>짧은 쪽 넘김</b>)해 가운데 점선을 세로로 접으세요.
       접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
@@ -904,7 +904,15 @@ function charCards() {
         <p class="muted">무엇이라고 말할지는 <b>뒷면 「이 카드가 나오면」</b>에 카드별로 적혀 있습니다.</p></div>` : ''}`;
   };
 
-  // 면 ③ 안 아래 — 앱판 심문 정본에서 뽑은 대본
+  // 「이렇게 몰리면」 열세 줄 중 카드 코드가 글에 안 적힌 세 줄. 하나는 카드가 있고 둘은 정황이다.
+const PUSH_AT = { 강지후: { '손목 멍 추궁 (1단)': 'IOVT-95' } };
+//   카드가 아닌 둘은 이미 있는 정황 줄과 같은 순간이다. 새 줄로 늘리지 않고 그 줄에 붙인다.
+const PUSH_AS_MOMENT = {
+  '설하정을 비타민으로 바꾼 것이 드러나면': '약 바꿔치기가 드러났을 때',
+  '필적 일치(라벨 글씨)로 추궁받으면': '라벨 글씨가 내 것으로 밝혀졌을 때',
+};
+
+// 면 ③ 안 아래 — 앱판 심문 정본에서 뽑은 대본
   const lines = (name) => {
     const d = INTERROGATION[SID[name]];
     if (!d) return '';
@@ -914,14 +922,12 @@ function charCards() {
     return `<h1>${esc(name)} <span class="muted">— 대본 (본인만)</span></h1>
       <p class="muted">외울 필요는 없습니다. <b>상황에 맞게 자기 말로, 즉흥으로 대응하세요.</b>
         여기 없는 질문은 시나리오에 맞게 지어내면 됩니다 — 다만 <b>사실관계는 벗어나지 마세요.</b></p>
-      <h2>이렇게 물으면 이렇게</h2>
+      <h2>이렇게 물으면 이렇게 <span class="muted">— 말로 물어올 때</span></h2>
       <p class="muted">답마다 <span class="sy syF">사실</span> <span class="sy syH">감춤</span>
         <span class="sy syL">거짓</span> 이 붙어 있습니다 — <b>감춤</b>은 말한 것 자체는 사실이되
         중요한 것을 빼놓은 것입니다. 굳이 거짓말까지 할 자리가 아닙니다.</p>
       ${qa(st.map((x) => [esc(asked(x.q || '')) + say(x.say),
         `${x.text || ''}${x.press ? `<div class="press"><b>더 캐물으면</b> ${x.press}</div>` : ''}`]))}
-      ${(BIBLE[name]?.script || []).length ? `<h2>이렇게 몰리면</h2>
-        ${qa(BIBLE[name].script.map(([q, a]) => [deCode(esc(q)), deCode(a)]))}` : ''}
 `;
   };
 
@@ -957,17 +963,31 @@ function charCards() {
       if (!ct) continue;
       for (const c of (ct.codes || [])) breakLine[c] = ct.textBy?.[c] || ct.text || '';
     }
+    // 「이렇게 몰리면」을 여기로 받는다. 트리거가 같은 표를 둘로 나눠 두면, 그 카드가 나온
+    //   순간에 어느 면을 펴야 하는지부터 고르게 된다 — 한 줄 안에서 단계로 읽히는 편이 낫다.
+    const pushBy = {}, pushAt = {}, pushMoments = [];
+    for (const [q, a] of (b.script || [])) {
+      const qs = String(q).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      const at = PUSH_AS_MOMENT[qs];
+      const code = at ? null : (PUSH_AT[name]?.[qs] || (qs.match(/[A-Z]{4}-\d{2}/) || [])[0]);
+      if (code) pushBy[code] = [pushBy[code], a].filter(Boolean).join(' ');
+      else if (at) pushAt[at] = [pushAt[at], a].filter(Boolean).join(' ');
+      else pushMoments.push([qs, a]);
+    }
     const rows = [...new Map([...soft, ...Object.entries(s.onCard)]).entries()];
     for (const c of breakOn) if (!rows.some(([k]) => k === c)) rows.push([c, '']);
+    for (const c of Object.keys(pushBy)) if (!rows.some(([k]) => k === c)) rows.push([c, '']);
     // 한 카드에 둘 다 걸리는 경우가 있다 — 폰에는 무해한 통화 기록과 복구되는 대화방이 같이 있다.
     //   무엇을 들이미느냐에 따라 할 말이 다르므로 두 줄로 갈라 놓는다. 위가 버티는 첫마디,
     //   아래가 더는 못 버티는 자리다.
     const strip = (x) => esc(String(x || '').replace(/<[^>]+>/g, ''));
     const line = (c, t) => {
       const txt = strip(t);
-      if (!breakOn.has(c)) return txt;
+      const psh = strip(pushBy[c]);
+      const head = psh ? `${txt}${txt ? '<br>' : ''}<b class="brk">더 몰리면</b> ${psh}` : txt;
+      if (!breakOn.has(c)) return head;
       const brk = strip(breakLine[c]);
-      return `${txt}${txt ? '<br>' : ''}<b class="brk">⚠</b> ${brk}${brk ? ' ' : ''}<b class="brk">여기서 인정합니다.</b>`;
+      return `${head}${head ? '<br>' : ''}<b class="brk">⚠</b> ${brk}${brk ? ' ' : ''}<b class="brk">여기서 인정합니다.</b>`;
     };
     return `<h1>${esc(name)} <span class="muted">— 이 상황에서는 이렇게 (본인만)</span></h1>
       <h2>말투</h2><p>${s.tone}</p>
@@ -976,7 +996,10 @@ function charCards() {
         이걸 지키려다 보면 시선은 저절로 어디론가 향합니다.</p>
       ${qa(s.watch.map(([a, x]) => [esc(a), x]))}
       <h2>이런 일이 벌어지면 <span class="muted">— 정황</span></h2>
-      ${qa(s.moments.map(([a, x]) => [esc(a), x]))}
+      ${qa([...s.moments, ...pushMoments].map(([a, x]) => {
+        const add = Object.keys(pushAt).find((k) => String(a).startsWith(k));
+        return [esc(a), add ? `${x}<br><b class="brk">더 몰리면</b> ${pushAt[add]}` : x];
+      }))}
       <h2>이 카드가 나오면 <span class="muted">— 카드 번호</span></h2>
       <p class="muted">남이 그 카드를 읽었거나 당신에게 내밀었을 때의 첫마디입니다.
         <b class="brk">⚠</b> 가 붙은 카드는 <b>더 우기지 않고 인정하는 자리</b>입니다.</p>

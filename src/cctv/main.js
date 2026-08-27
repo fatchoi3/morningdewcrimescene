@@ -128,7 +128,6 @@ if (!hit) {
     </svg>
     <div class="who">${esc(mine.look || '')}</div>
     <div class="scene">${esc(t.scene || '')}</div>
-    <p class="warn">복도만 찍힌다. <b>방 안으로 들어갔는지는 이 화면으로 알 수 없다.</b><br>
-      목사님 방 쪽으로 갈수록 동선이 흐려지는 것은 그 때문이다.</p>
+    <p class="warn">복도만 찍힌다. <b>목사님 방 안으로 들어갔는지는 이 화면으로 알 수 없다.</b></p>
   </div>`;
 }
