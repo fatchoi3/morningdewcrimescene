@@ -557,6 +557,17 @@ export const evidenceMap = withAssetBase(resolveTokens({
           ]
         },
         {
+          // 통화 기록은 세린이 지우지 않았다 — 그가 지운 것은 카카오톡 대화방 둘뿐이다.
+          id: 'calls',
+          type: 'calls',
+          name: '전화',
+          calls: [
+            { name: '{{S4}} 전도사', direction: 'missed', time: '13:16' },
+            { name: '{{S1.short|이/}}', direction: 'in', time: '12:38', duration: '38초' },
+            { name: '아내', direction: 'out', time: '11:20', duration: '6분 04초' }
+          ]
+        },
+        {
           id: 'photos',
           type: 'photos',
           name: '사진',
@@ -1373,6 +1384,18 @@ export const evidenceMap = withAssetBase(resolveTokens({
             { name: '{{S1}} 서기', who: '{{S1}}' },
             { name: '{{S2}} 팀장', who: '{{S2}}' },
             { name: '{{S6}} 회장', who: '{{S6}}' }
+          ]
+        },
+        {
+          // 13:16 발신 — 방 안에서 건 것이다. 안 받힌 기록만 남아 「문 앞에서 기다렸다」의 근거가 된다.
+          //   목사님 폰에도 같은 시각 부재중이 남아 있어, 남이 먼저 찾아낼 수 있다.
+          id: 'calls',
+          type: 'calls',
+          name: '전화',
+          calls: [
+            { name: '담임목사님', direction: 'out', time: '13:16', duration: '연결 안 됨' },
+            { name: '담임목사님', direction: 'out', time: '전날 19:40', duration: '4분 12초' },
+            { name: '{{S1}} 서기', direction: 'in', time: '전날 21:05', duration: '1분 33초' }
           ]
         },
         {

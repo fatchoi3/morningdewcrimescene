@@ -16,7 +16,7 @@ import QRCode from 'qrcode';
 // 정본 데이터는 주입받는다 — Node(문서 생성기)는 loadData.mjs 가 fs 로 비밀팩을 찾아 넘기고,
 //   브라우저(웹 키트)는 @secrets 별칭으로 번들된 것을 넘긴다. loadData 를 직접 import 하면
 //   node:fs 가 딸려 들어와 브라우저 번들이 깨진다.
-let allClues = [], suspects = [], img = (p) => p, siteUrl = 'https://crimescene.dawndew.org';
+let allClues = [], suspects = [], recover = {}, img = (p) => p, siteUrl = 'https://crimescene.dawndew.org';
 
 const esc = (s) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 
@@ -477,18 +477,20 @@ const CSS = `
   .art .zone { position: absolute; border-radius: 1mm; }
   .art .rm { position: absolute; }
   .art .rmName { position: absolute; left: 50%; top: 1.5mm; transform: translateX(-50%);
-                 color: #fff; font-size: 7.6pt; font-weight: 800; white-space: nowrap;
+                 color: #fff; font-size: 10.5pt; font-weight: 800; white-space: nowrap;
                  padding: 0.8mm 2mm; border-radius: 1.2mm; box-shadow: 0 0.3mm 1mm #0005; }
   .art .mk { position: absolute; transform: translate(-50%, -50%); background: #fffffff0;
              border: 0.5mm solid; border-radius: 50%; width: 7.4mm; height: 7.4mm;
              display: flex; align-items: center; justify-content: center;
              font-size: 7pt; font-weight: 800; }
   /* 이름이 붙은 마커 — 동그라미가 아니라 알약 모양으로 늘어난다. */
-  .art .mkW { width: auto; height: auto; min-width: 0; border-radius: 2.4mm; gap: 1mm;
-              padding: 0.7mm 1.6mm; white-space: nowrap; font-size: 6.4pt; }
-  .art .mkW .mkN { font-size: 6.2pt; font-weight: 700; color: #3a352c; }
+  .art .mkW { width: auto; height: auto; min-width: 0; max-width: 30mm; border-radius: 2.4mm;
+              gap: 1.4mm; padding: 1mm 2.2mm; white-space: normal; font-size: 9pt;
+              line-height: 1.25; text-align: left; }
+  .art .mkW > b { flex: none; }
+  .art .mkW .mkN { font-size: 8.6pt; font-weight: 700; color: #3a352c; }
   .art .note { position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
-               background: #fffffff2; font-size: 7.4pt; font-weight: 700;
+               background: #fffffff2; font-size: 9.4pt; font-weight: 700;
                padding: 0.7mm 1.8mm; border-radius: 1mm; border: 0.4mm solid; }
   /* A4 반접이 인물 시트 — 한 사람이 A4 가로 한 장에 들어가고, 가운데를 세로로 접는다.
      접으면 A5 세로 책자가 된다. 세로 4장을 들고 있으면 남의 눈에 뭐가 보이는지 신경 쓰게 된다.
@@ -770,6 +772,19 @@ function charCards() {
     <div class="covFoot"><b>A4 가로</b>로 양면 인쇄해 가운데 점선을 세로로 접으세요.
       접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
 
+  // 자기 폰에 지워진 대화방이 있는 사람만 번호가 있다. 없는 사람에게는 아무것도 안 찍는다.
+  const myPhone = (who) => {
+    const mine = allClues.find((c) => c.person === who && /핸드폰/.test(c.title || '')
+      && (c.phone?.apps || []).some((a) => (a.chats || []).some((ch) => ch.deleted)));
+    const num = mine && recover[mine.code];
+    if (!num) return '';
+    return `<div class="box"><div class="bl">내 휴대폰 — 톡서랍 복구 번호 ${esc(num)}</div>
+      <p>내 폰(<b>${esc(no(mine.code))}</b>)의 카카오톡에는 <b>내가 지운 대화방</b>이 있습니다.
+        되살리려면 이 네 자리가 필요하고, <b>그 번호를 아는 사람은 나뿐입니다.</b></p>
+      <p class="muted">남이 내 폰을 가져가 「비밀번호가 뭐냐」고 물으면 — 알려 줄지, 모른다고 할지,
+        엉뚱한 번호를 댈지는 <b>당신이 정합니다.</b> 다만 끝까지 안 알려 주면 그것도 판에 보입니다.</p></div>`;
+  };
+
   // 면 ② 안 위 — 비밀 시나리오
   const secret = (s) => {
     const b = BIBLE[s.name] || {};
@@ -784,6 +799,7 @@ function charCards() {
       ${qa((b.timeline || []).map(([t, x]) => [esc(t), x]))}
       <h2>당신이 아는 것</h2><ul>${li(b.knows || [])}</ul>
       <p class="muted">여기 없는 것은 <b>당신도 모르는 것</b>입니다.</p>
+      ${myPhone(s.name)}
       <h2>금지 사항 — 반드시 지키세요</h2><ul>${li(b.forbidden || [])}</ul>
       ${b.knowsWhatBreaks === false ? `<div class="box">
         <p><b>당신은 숨기는 것이 없습니다.</b> 그래서 판이 무엇을 파내든 전부 처음 듣는 이야기입니다.
@@ -947,7 +963,7 @@ function placeBoard() {
   const side = PLACES.filter((p) => !ART_ROOMS.some((r) => r.id === p.id));
   const body = `<div class="page"><div class="stg">준비할 때 깔고 · 조사할 때마다 봅니다</div>
     <h1>사건 현장 — 숙소 2층</h1>
-    <p class="muted">탁자 가운데에 까는 판이다. <b>A3 가로</b> 권장.
+    <p class="muted">탁자 가운데에 까는 판이다. <b>A3 세로</b>로 인쇄한다 — A4 로 줄이면 번호 옆 물건 이름이 읽기 어렵다.
       카드는 판 위에 올리지 않고 장소별로 옆에 쌓는다. 방 안의 번호는 <b>고를 자리</b>이지
       물건이 놓인 위치가 아니다 — "A3 볼게요" 하고 그 번호 카드를 집으면 된다.</p>
     ${illustratedMapHTML(counts, img('/images/board/2층평면.png'), labels)}
@@ -962,7 +978,8 @@ function placeBoard() {
       <tr><td>특수 단서</td><td>S1~S${Object.values(num).filter((v) => v.startsWith('S')).length}</td>
         <td>카드에 적힌 조건을 채우면 가져간다</td></tr></table>
   </div>${openPages}`;
-  return { filename: '보드_장소판.html', html: doc('보드게임 장소 판', body) };
+  const a3 = '@page { size: A3 portrait; margin: 0; }';
+  return { filename: '보드_장소판.html', html: doc('보드게임 장소 판', body, a3) };
 }
 
 // ── 4. 진행 물품 — 시작 시트 · 라운드 트랙 · 이벤트 카드 ────────────────────
@@ -1308,6 +1325,7 @@ function runSheets() {
 export async function genBoardDocs(data, opts = {}) {
   allClues = data.allClues;
   suspects = data.suspects;
+  recover = data.recover || {};
   const base = opts.assetBase ?? '../../../../public';
   img = (p) => base + p;
   if (opts.siteUrl) siteUrl = opts.siteUrl;

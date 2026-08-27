@@ -13,6 +13,7 @@ const evidenceMap = mergeSecrets(publicMap, secrets);
 const data = {
   victim, suspects,
   allClues: Object.entries(evidenceMap).map(([code, v]) => ({ code, ...v })),
+  recover: secrets.recover || {},   // 인물 시트의 「내 폰 번호」
 };
 
 // ZIP 안에서는 HTML 옆에 images/ 폴더가 놓인다 — 절대경로(/images/…)로 두면 압축을 풀어

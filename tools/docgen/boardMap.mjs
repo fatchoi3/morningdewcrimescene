@@ -38,6 +38,7 @@ const SHORT = {
   '바닥의 단추': '단추',
   '개인 텀블러': '텀블러',
   '등산코스 지도': '등산 지도',
+  '목사님 일기장': '일기장',
 };
 export const shortLabel = (title = '') => {
   let t = String(title).replace(/\s*\[[^\]]*\]\s*$/, '').trim();   // 「플라스틱 통 [요힘빈]」의 라벨을 뗀다

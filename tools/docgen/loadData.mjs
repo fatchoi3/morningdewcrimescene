@@ -14,6 +14,8 @@ const secrets = (await import(_hasRealSecrets ? '../../src/data/secrets.js' : '.
 
 export const evidenceMap = mergeSecrets(_publicMap, secrets);
 export { victim, suspects };
+// 톡서랍 복구 번호 — 인물 시트에 「내 폰 번호」로 찍는다. 사람은 자기 폰 번호를 안다.
+export const recover = secrets.recover || {};
 
 // 게임 접속 사이트 (참가자용 QR · PPT 표지에서 사용)
 export const SITE_URL = gameConfig.siteUrl;

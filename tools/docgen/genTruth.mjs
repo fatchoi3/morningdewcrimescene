@@ -181,6 +181,7 @@ export function genTruth(data) {
     <div class="tl-row"><div class="tl-t">~12:50</div><div class="tl-x"><strong>목사</strong> 요힘빈 음료 복용 → 컨디션 악화 시작.</div></div>
     <div class="tl-row"><div class="tl-t">13:10</div><div class="tl-x"><strong>목사</strong> 협심증 발작. 책상 설하정(가짜 비타민) 복용 → 딸기맛 안 남 → 이상 감지 → <strong>품속 진짜 설하정</strong> 복용 후 침대에서 잠시 안정.</div></div>
     <div class="tl-row"><div class="tl-t">13:15</div><div class="tl-x"><strong>서지안</strong> 유리창으로 안을 봄 → "안정 취함 = 실패" 판단 → 진입 → 베개 질식 살해 (직접 사인).</div></div>
+    <div class="tl-row"><div class="tl-t">13:16</div><div class="tl-x"><strong>서지안</strong> 방 안에서 목사 휴대폰으로 전화를 건다 — 안 받힌 기록을 남겨 「문 앞에서 기다렸다」는 알리바이를 만든다.</div></div>
     <div class="tl-row"><div class="tl-t">13:20</div><div class="tl-x"><strong>서지안</strong> 숙소 방향으로 퇴장.</div></div>
     <div class="tl-row"><div class="tl-t">13:23</div><div class="tl-x"><strong>문세린</strong> 발견 진입 → 이미 사망 → 목사 손가락으로 폰을 열어 카톡 기록 삭제.</div></div>
     <div class="tl-row"><div class="tl-t">13:34</div><div class="tl-x"><strong>문세린</strong> 112 신고. (진입~신고 공백이 의심을 부름)</div></div>
