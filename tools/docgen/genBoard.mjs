@@ -401,9 +401,13 @@ const CSS = `
   .bsub { font-size: 6.4pt; font-weight: 600; color: #a06a6a; margin-top: 0.6mm; }
   .bsci { margin-top: 2.5mm; font-size: 7.4pt; font-weight: 800; color: #265a66;
           border: 0.4mm solid #85b3bd; background: #edf6f8; border-radius: 1.4mm; padding: 1mm 2.4mm; }
-  /* CCTV 뒷면의 인물 색점 — 뽑기 전에 누구 장면인지 보이게 하는 것이 전부다. */
+  /* CCTV 뒷면의 인물 색점 — 뽑기 전에 누구 장면인지 보이게 하는 것이 전부다.
+     흑백으로 뽑으면 여섯 색이 다 같은 회색이 되므로, 점 안에 이름 끝 글자를 흰 글씨로 앉힌다. */
   .bdot { width: 9mm; height: 9mm; border-radius: 50%; margin: 3mm auto 1.4mm;
-          border: 0.5mm solid #ffffffcc; box-shadow: 0 0 0 0.4mm #00000022; }
+          border: 0.5mm solid #ffffffcc; box-shadow: 0 0 0 0.4mm #00000022;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 15pt; font-weight: 800; color: #fff; line-height: 1;
+          text-shadow: 0 0 0.6mm #00000055; }
   .bdotl { font-size: 6.4pt; color: #6b6760; line-height: 1.3; }
   h1 { font-size: 19pt; margin: 0 0 3mm; }
   h2 { font-size: 13pt; margin: 6mm 0 2mm; padding-bottom: 1.2mm; border-bottom: 1.2px solid #14120f; }
@@ -762,8 +766,8 @@ function clueCards() {
       return `<div class="card cback" style="border-color:${meta.color};background:${meta.color}12">
       <div class="bnum" style="color:${meta.color}">${esc(unitNum.get(c))}</div>
       <div class="bplace" style="color:${meta.color}">${esc(meta.name)}</div>
-      ${sc ? `<div class="bdot" style="background:${sc.color}"></div>
-        <div class="bdotl">이 장면에 찍힌 사람의 색</div>` : ''}
+      ${sc ? `<div class="bdot" style="background:${sc.color}">${esc(sc.who.slice(-1))}</div>
+        <div class="bdotl">이 장면에 찍힌 사람 — 색과 이름 끝 글자</div>` : ''}
       ${(hintFor(c) || []).some((h) => h.includes('🔬'))
         ? '<div class="bsci">🔬 감식실에 낼 수 있는 카드</div>' : ''}
       ${c.locked ? `<div class="block">🔒 <b>이벤트 ②</b> 뒤<div class="bsub">준비할 때 빼서 따로 둔다</div></div>` : ''}</div>`;
@@ -1279,7 +1283,8 @@ function runSheets() {
       <span class="muted">화면은 감출 수 있는 물건이 아닙니다 — 수사팀이 확보한 원본을 한 사람이
       혼자 보고 덮는 일은 없습니다. 자기 발자국을 자기가 지울 수 있으면 이 더미는 진범에게만
       유리한 더미가 됩니다.</span></p>
-    <p><b>뒷면에는 그 장면에 찍힌 사람의 색점이 하나 있습니다.</b> 열람실 판이 알려 주는 것은
+    <p><b>뒷면에는 그 장면에 찍힌 사람의 색점이 하나 있고, 그 안에 이름 끝 글자가 적혀 있습니다</b>
+      (현·후·미·안·영·린). 열람실 판이 알려 주는 것은
       번호와 <b>시각</b>까지이고, <b>누가 찍혔는지</b>는 이 색점이 알려 줍니다.<br>
       <b>자기 색도 가져갈 수 있습니다.</b> 다만 가져오면 소리 내어 읽어야 하니, 자기 장면을 집는 것은
       감추는 수가 아니라 <b>먼저 해명하겠다는 선언</b>입니다.</p>

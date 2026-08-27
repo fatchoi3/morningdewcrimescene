@@ -32,14 +32,14 @@ export function cctvRoomHTML(cards, unitNo, personColor, src) {
   const mon = (r) => `<div class="mon">
     <div class="monScr"><span class="monNo">${esc(r.no)}</span>
       <span class="monTm">${esc(r.time)}</span></div>
-    <div class="monDot" style="background:${personColor(r.who) || '#5a6270'}"></div>
+    <div class="monDot" style="background:${personColor(r.who) || '#5a6270'}">${esc(r.who.slice(-1))}</div>
   </div>`;
   return `<div class="art art-room">
     <img src="${src}" alt="CCTV 열람실">
     <div class="monWall">${rows.map(mon).join('')}</div>
   </div>
-  <p class="muted">모니터는 <b>시간 순서</b>로 놓여 있습니다. 아래의 색점은 <b>그 장면에 찍힌 사람</b>입니다 —
-    카드 뒷면의 색점과 같습니다. <b>무엇이 찍혔는지는 카드를 집어야 압니다.</b></p>`;
+  <p class="muted">모니터는 <b>시간 순서</b>로 놓여 있습니다. 아래의 색점과 그 안의 글자는
+    <b>그 장면에 찍힌 사람</b>입니다 — 카드 뒷면의 표시와 같습니다. <b>무엇이 찍혔는지는 카드를 집어야 압니다.</b></p>`;
 }
 
 /**
@@ -84,8 +84,11 @@ export const ROOM_CSS = `
   .monScr { display: flex; flex-direction: column; align-items: center; gap: 0.6mm; }
   .monNo { font-size: 13pt; font-weight: 800; color: #cfe9ff; letter-spacing: .02em; }
   .monTm { font-size: 8.4pt; font-weight: 700; color: #7fd4ff; }
-  .monDot { width: 3.6mm; height: 3.6mm; border-radius: 50%;
-            border: 0.4mm solid #ffffffaa; }
+  /* 카드 뒷면과 같은 표시 — 색이 죽어도 글자가 남게. */
+  .monDot { width: 5.4mm; height: 5.4mm; border-radius: 50%;
+            border: 0.4mm solid #ffffffaa; display: flex; align-items: center;
+            justify-content: center; font-size: 9pt; font-weight: 800; color: #fff;
+            line-height: 1; text-shadow: 0 0 0.5mm #00000066; }
   /* 감식실 — 내는 자리와 읽는 자리. */
   /* 감식실 그림의 작업대 자리 — 가운데 아래쪽에 두 구역을 나란히 */
   .labZones { position: absolute; inset: 46% 7% 6%; display: grid;
