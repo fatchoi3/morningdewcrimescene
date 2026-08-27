@@ -11,6 +11,7 @@ import { BIBLE } from './bible.mjs';
 import { DATA as INTERROGATION } from '../../src/solo/interrogation.js';
 import { BOARD_SCRIPT, DETECTIVE } from './boardScript.mjs';
 import { illustratedMapHTML, ART_ROOMS, shortLabel } from './boardMap.mjs';
+import { cctvRoomHTML, labRoomHTML, ROOM_CSS } from './boardRooms.mjs';
 import QRCode from 'qrcode';
 
 // 정본 데이터는 주입받는다 — Node(문서 생성기)는 loadData.mjs 가 fs 로 비밀팩을 찾아 넘기고,
@@ -473,6 +474,7 @@ const CSS = `
          padding: 0.8mm 2.4mm; margin-bottom: 2.4mm; }
   .stn { text-align: center; font-weight: 800; font-size: 12pt; color: #8a6d1f; }
   .art { position: relative; margin: 4mm 0; }
+${ROOM_CSS}
   .art img { width: 100%; height: auto; display: block; border-radius: 2mm; }
   .art .zone { position: absolute; border-radius: 1mm; }
   .art .rm { position: absolute; }
@@ -951,7 +953,9 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
 
 // ── 3. 장소 판 + 공개 단서 ───────────────────────────────────────────────────
 function placeBoard() {
-  const { bag, open, num } = buildBoard();
+  const { bag, open, num, unitNum } = buildBoard();
+  // CCTV 모니터의 색점은 카드 뒷면 색점과 같아야 한다 — 같은 방 색을 쓴다.
+  const personColor = (who) => (ART_ROOMS.find((r) => r.id === ROOM_OF[who]) || {}).color;
   const counts = Object.fromEntries(Object.entries(bag).map(([k, v]) => [k, v.length]));
   // 판 위의 번호마다 물건 이름을 한마디씩 — 「A3 볼게요」가 「A3, 풀이요」가 된다.
   const labels = Object.fromEntries(Object.entries(bag).map(([k, v]) => [k, v.map((u) => shortLabel(u.title))]));
@@ -984,7 +988,29 @@ function placeBoard() {
         <td>${p.letter}1~${p.letter}${counts[p.id]}</td><td>${esc(p.open)}</td></tr>`).join('')}
       <tr><td>특수 단서</td><td>S1~S${Object.values(num).filter((v) => v.startsWith('S')).length}</td>
         <td>카드에 적힌 조건을 채우면 가져간다</td></tr></table>
-  </div>${openPages}`;
+  </div>
+
+  <div class="page"><div class="stg">이벤트 ③ 을 읽은 뒤 · 판 옆에 펴 둡니다</div>
+    <h1>CCTV 열람실 <span class="muted">— 복도 카메라 원본</span></h1>
+    <p class="muted">숙소 2층 복도 카메라가 남긴 열여섯 컷입니다. <b>모니터 한 대가 한 장면</b>이고,
+      <b>시간 순서</b>로 늘어서 있습니다. 보고 싶은 시각을 골라 그 번호 카드를 집으세요 —
+      화면을 눈감고 고르는 일은 없습니다.</p>
+    <p class="muted"><b>여기서만 한 번에 세 장을 봅니다.</b> 다른 장소는 두 장입니다.
+      그리고 <b>본 장면은 그 자리에서 모두에게 소리 내어 읽습니다</b> — 혼자 읽고 덮어 두지 못합니다.</p>
+    ${cctvRoomHTML(bag.CC, (u) => unitNum.get(u), personColor, img('/images/board/CCTV실.png'))}
+    <p class="muted"><b>방 안은 찍히지 않습니다. 복도만입니다.</b>
+      목사님 방 문 앞은 사각이라, 누가 방에 들어갔는지는 이 화면으로 알 수 없습니다 —
+      <b>화면에서 사라져 있던 시간</b>이 그 자리를 대신합니다.</p></div>
+
+  <div class="page"><div class="stg">이벤트 ② 를 읽은 뒤 · 판 옆에 펴 둡니다</div>
+    <h1>감식실 <span class="muted">— 낸 사람과 읽는 사람이 다르다</span></h1>
+    <p class="muted">🔬 표시가 있는 카드가 <b>채취물</b>입니다. 왼쪽에 내려놓으면 다음 라운드에
+      오른쪽에서 결과가 나옵니다. <b>낸 사람은 자기 결과를 읽지 못합니다</b> —
+      결과를 읽는 손과 결과가 걸린 목이 같으면 그 카드는 증거가 아니라 증언이 되기 때문입니다.</p>
+    ${labRoomHTML(bag.LB, (u) => unitNum.get(u), img('/images/board/감식실.png'))}
+    <p class="muted"><b>두 라운드가 지나도 안 내면</b> 그다음 라운드 끝에 누구든 대신 낼 수 있습니다.
+      가진 사람은 거부하지 못합니다 — 카드는 낸 뒤 돌려줍니다.<br>
+      <b>마지막 라운드에 낸 것은 최종 토론이 시작될 때 읽습니다.</b></p></div>${openPages}`;
   const a3 = '@page { size: A3 portrait; margin: 0; }';
   return { filename: '보드_장소판.html', html: doc('보드게임 장소 판', body, a3) };
 }
@@ -1049,7 +1075,8 @@ function runSheets() {
           <b>겉면만 남에게 보이고 안쪽 세 면은 본인만</b> 봅니다.</td></tr>
       <tr><td><b>현장 판</b><br><span class="muted">큰 종이 한 장</span></td>
         <td>숙소 2층 평면도. 방마다 <b>번호와 물건 이름</b>이 적혀 있습니다 — 「A3 풀」처럼.
-          조사할 때 이 판을 보고 어디를 뒤질지 고릅니다.</td></tr>
+          조사할 때 이 판을 보고 어디를 뒤질지 고릅니다.<br>
+          <b>같은 종이에 CCTV 열람실과 감식실 판도 있습니다</b> — 그 이벤트가 열릴 때 꺼내 펴 둡니다.</td></tr>
       <tr><td><b>단서 카드</b><br><span class="muted">잘라 둔 카드 뭉치</span></td>
         <td>장소별로 따로 쌓아 둡니다. <b>뒷면(번호)이 보이게</b> 쌓고, 가져간 사람이 앞면을 혼자 읽습니다.</td></tr>
       <tr><td><b>필적 대조 카드</b><br><span class="muted">Q6 일곱 장</span></td>
@@ -1088,13 +1115,13 @@ function runSheets() {
       </div>
       <div class="tblRow">
         <div class="slot slotWide slotMap">현장 판 <span>숙소 2층 평면도 · A3 가로</span></div>
-        <div class="slot slotBox">V<br><span>CCTV 열람실<br>이벤트 ③ 뒤</span></div>
+        <div class="slot slotBox">V<br><span>CCTV 열람실<br>이벤트 ③ 뒤 · <b>판 있음</b></span></div>
       </div>
       <div class="tblRow">
         <div class="slot slotDim">E<br><span>최종현</span></div>
         <div class="slot slotDim">F<br><span>문세린</span></div>
         <div class="slot slotDim">G<br><span>강지후</span></div>
-        <div class="slot slotBox">L<br><span>감식실<br>이벤트 ② 뒤</span></div>
+        <div class="slot slotBox">L<br><span>감식실<br>이벤트 ② 뒤 · <b>판 있음</b></span></div>
       </div>
       <div class="tblRow">
         <div class="slot slotOpen">S <span>특수 단서 — 처음부터 꺼내 두되 <b>뒷면이 보이게</b></span></div>
