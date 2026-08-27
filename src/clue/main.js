@@ -27,9 +27,12 @@ window.addEventListener('hashchange', () => location.reload());
 const APP_ICON = { contacts: '📇', kakao: '💬', sms: '✉️', calls: '📞', browser: '🌐', photos: '🖼️', gallery: '🖼️', messages: '✉️' };
 const isChat = (t) => t === 'kakao' || t === 'sms';
 // 폰마다 복구 비번의 출처가 다르다. 세 번 틀린 사람에게만 알려 준다 — 난이도를 미리 낮추지 않는다.
-const recoverHint = (cl) => (cl.person === '목사'
-  ? '생일이 아닙니다 — 목사님 일기장을 끝까지 넘겨, 잊은 적 없다는 기념일을 찾아보세요'
-  : '상대의 생일 네 자리 — 그 사람의 다이어리를 찾아보세요');
+// 네 자리마다 나온 곳이 다르다. 셋을 한 문장으로 뭉뚱그리면 한 대는 없는 곳을 가리킨다.
+const RECOVER_HINT = {
+  'LWUY-33': '생일이 아닙니다 — 목사님 일기장을 끝까지 넘겨, 잊은 적 없다는 기념일을 찾아보세요',
+  'YJWR-74': '생일이 아닙니다 — 교단에 낸 그 수료증의 발급번호, 그 뒤 네 자리입니다. 수료증 사진은 목사님 휴대폰 사진첩에 있습니다',
+};
+const recoverHint = () => RECOVER_HINT[code] || '상대의 생일 네 자리 — 그 사람의 다이어리를 찾아보세요';
 
 const root = document.getElementById('clue-root');
 const code = decodeURIComponent(location.hash.replace(/^#/, '')).trim().toUpperCase();
@@ -46,6 +49,7 @@ if (!c) {
 } else {
   root.innerHTML = `<div class="box">
     <div class="hd"><div class="tt">${esc(c.title)}</div></div>
+    ${c.image ? `<img class="ph" src="${esc(c.image)}" alt="">` : ''}
     <div class="body">${nl2br(c.detail || c.description || '')}</div></div>`;
 }
 
@@ -165,7 +169,7 @@ function renderPhone(cl) {
         <div class="pad"><input id="pw" type="tel" inputmode="numeric" maxlength="4"
           autocomplete="off" placeholder="0000"><button id="pwgo">복구</button></div>
         ${s.fails ? `<div class="err">맞지 않습니다.</div>` : ''}
-        ${s.fails >= 3 ? `<div class="khint">힌트 — ${esc(recoverHint(cl))}</div>` : ''}
+        ${s.fails >= 3 ? `<div class="khint">힌트 — ${esc(recoverHint())}</div>` : ''}
         <div class="knote">숫자는 <b>다른 단서 안에 적혀 있습니다.</b>
           그것을 가진 사람이 알려 줄지 말지는 그 사람이 정합니다.</div>
       </div>`;

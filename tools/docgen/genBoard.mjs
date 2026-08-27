@@ -126,7 +126,7 @@ function explode(c) {
       phone ? '안에 든 것' : '표시된 자리',
       what,
       phone && hasDeleted(c)
-        ? '카카오톡에 지워진 대화방이 있다 — 이 QR 을 찍어 들어간 화면 안에서, 그 방을 열고 네 자리 숫자를 넣으면 되살아난다.'
+        ? '카카오톡에 지워진 대화방이 있다 — 이 QR 을 찍어 들어간 화면 안에서, 그 방을 열고 네 자리 숫자를 넣으면 되살아난다.\n그 네 자리는 다른 단서 안에 적혀 있다. 세 번 틀리면 화면이 어디를 볼지 일러 준다.'
         : '',
     ].filter(Boolean).join('\n');
     // 휴대폰은 이벤트 ② 뒤부터 각 방에서 가져갈 수 있다. 다이어리·성경책은 처음부터.
@@ -357,20 +357,25 @@ const CSS = `
   .sheet { display: grid; grid-template-columns: repeat(3, 63mm); grid-auto-rows: 88mm;
            justify-content: center; align-content: start; page-break-after: always;
            padding: 12mm 0; }
-  .card { border: 0.3mm dashed #bbb; padding: 3.2mm; overflow: hidden; position: relative;
+  /* --cf 는 넘치는 카드에만 인쇄 직전에 1 미만으로 정해진다(아래 cardFit). */
+  .card { --cf: 1; border: 0.3mm dashed #bbb; padding: 3.2mm; overflow: hidden; position: relative;
           display: flex; flex-direction: column; }
   .no { font-size: 11pt; font-weight: 800; letter-spacing: .05em; color: #fff;
         padding: 0.8mm 2.4mm; border-radius: 1.2mm; align-self: flex-start; }
-  .ct { font-size: 11pt; font-weight: 800; line-height: 1.25; margin: 1.8mm 0 1.4mm; }
-  .cimg { width: 100%; height: 27mm; object-fit: contain; background: #f4f1ea; border-radius: 1mm; margin-bottom: 1.4mm; }
-  .cd { font-size: 7.4pt; line-height: 1.5; white-space: pre-wrap; flex: 1; }
-  .hint { margin-top: 1.4mm; padding-top: 1.2mm; border-top: 0.3mm dashed #b9a86a; }
-  .hint div { font-size: 6.9pt; line-height: 1.45; color: #6b551a; }
+  .ct { font-size: calc(11pt * var(--cf)); font-weight: 800; line-height: 1.25;
+        margin: calc(1.8mm * var(--cf)) 0 calc(1.4mm * var(--cf)); }
+  .cimg { width: 100%; height: calc(27mm * var(--cf)); object-fit: contain; background: #f4f1ea;
+          border-radius: 1mm; margin-bottom: calc(1.4mm * var(--cf)); }
+  .cd { font-size: calc(7.4pt * var(--cf)); line-height: 1.5; white-space: pre-wrap; flex: 1; }
+  .hint { margin-top: calc(1.4mm * var(--cf)); padding-top: calc(1.2mm * var(--cf));
+          border-top: 0.3mm dashed #b9a86a; }
+  .hint div { font-size: calc(6.9pt * var(--cf)); line-height: 1.45; color: #6b551a; }
   .hnote { display: block; font-size: 6.1pt; color: #8a7a45; }
   .cname { font-weight: 500; color: #6b6250; font-size: 9pt; }
   .press { margin-top: 1.2mm; padding-left: 2mm; border-left: 0.6mm solid #cdbf94;
            font-size: 8.6pt; color: #5b5140; }
-  .lock { margin-top: 1.2mm; font-size: 6.9pt; font-weight: 700; color: #8a3b3b; }
+  .lock { margin-top: calc(1.2mm * var(--cf)); font-size: calc(6.9pt * var(--cf));
+          font-weight: 700; color: #8a3b3b; }
   /* 표시는 넷이다 — 🔒 못 읽는 카드, ⚖ 본인이 못 읽는 감식, 🔬 감식실에 낼 것, ⭐ 조합 재료.
      넷 다 6.9pt 로 카드 밑에 깔려 있어서, 급히 집어 든 사람은 그냥 못 보고 지나갔다.
      번호 옆은 원래 비어 있던 자리다 — 세로를 더 먹지 않고 표시를 키울 수 있다. */
@@ -383,8 +388,8 @@ const CSS = `
   .bgLock { color: #8a3b3b; border-color: #c98a8a; background: #fdf0ee; }
   .bgLab { color: #265a66; border-color: #85b3bd; background: #edf6f8; }
   .bgStar { color: #7d6116; border-color: #cfae5e; background: #fdf7e6; }
-  .qr { text-align: center; margin-bottom: 1.4mm; }
-  .qr svg { width: 21mm; height: 21mm; }
+  .qr { text-align: center; margin-bottom: calc(1.4mm * var(--cf)); }
+  .qr svg { width: calc(21mm * var(--cf)); height: calc(21mm * var(--cf)); }
   .qrl { font-size: 6.2pt; color: #6b6760; margin-top: 0.6mm; }
   .cback { align-items: center; justify-content: center; text-align: center; }
   .bnum { font-size: 30pt; font-weight: 800; letter-spacing: .04em; }
@@ -550,6 +555,33 @@ const doc = (title, body, pageCss = '', tailScript = '') => `<!DOCTYPE html><htm
 <title>${esc(title)}</title><style>${CSS}${pageCss}</style></head><body>${body}${tailScript}</body></html>`;
 
 // 인물 시트는 면마다 남는 자리가 달라, 인쇄 직전에 각 면이 스스로 줄 간격을 늘린다.
+// 단서 카드는 넘치는 장만 골라 글자와 QR 을 조금 줄인다.
+const CARD_FIT = `<script>
+/* 넘치는 카드만 골라 담기는 데까지 줄인다. QR 은 0.8 배(16.8mm)까지도 잘 읽힌다. */
+(function () {
+  var MIN = 0.78;
+  function over(el) { return el.scrollHeight - el.clientHeight > 1; }
+  function fit() {
+    var cards = document.querySelectorAll(".card");
+    for (var i = 0; i < cards.length; i++) {
+      var el = cards[i];
+      el.style.removeProperty("--cf");
+      if (!over(el)) continue;
+      var lo = MIN, hi = 1;
+      for (var n = 0; n < 10; n++) {
+        var mid = (lo + hi) / 2;
+        el.style.setProperty("--cf", mid.toFixed(3));
+        if (over(el)) hi = mid; else lo = mid;
+      }
+      el.style.setProperty("--cf", lo.toFixed(3));
+    }
+  }
+  if (document.readyState === "complete") fit();
+  else window.addEventListener("load", fit);
+  window.addEventListener("beforeprint", fit);
+})();
+</script>`;
+
 const FIT_SCRIPT = `<script>
 /* 면마다 남는 자리를 글자 사이로 돌려준다.
    A4 가로에 뽑아 보니 면마다 채움이 62~100% 로 들쭉날쭉했다 — 대본 면 아래가 비는데,
@@ -612,9 +644,11 @@ async function buildQR(list) {
     QR[`Q:${q.code}`] = await QRCode.toString(`${siteUrl}/unlock#${q.code}`,
       { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
   }
-  // 휴대폰·다이어리·성경책 — 카드 한 장에 QR 하나. 속은 /clue 화면에서 넘겨 본다.
+  // 휴대폰·다이어리·성경책은 카드 한 장에 QR 하나 — 속은 /clue 화면에서 넘겨 본다.
+  //   사진이 붙던 카드도 마찬가지다. 27mm 로 줄여 놓으면 약통 라벨도 손목의 멍도 안 보이는데,
+  //   그 47장 때문에 서른여덟 면을 통째로 컬러로 뽑아야 했다. 찍어서 크게 보는 편이 낫다.
   for (const c of allClues) {
-    if (!isScreen(c) || QR[c.code]) continue;
+    if ((!isScreen(c) && !c.image) || QR[c.code]) continue;
     QR[c.code] = await QRCode.toString(`${siteUrl}/clue#${c.code}`,
       { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
   }
@@ -703,11 +737,15 @@ function clueCards() {
   };
   const deck = (list, meta) => {
     const isCC = meta.letter === 'V';
+    // 무엇을 찍는지 한 줄로 알려 준다 — 장면인지, 넘겨 볼 속인지, 사진인지.
+    const qrLabel = (c) => (isCC ? '찍으면 이 장면이 열린다'
+      : isScreen(c) ? '찍으면 속을 넘겨 본다'
+      : '찍으면 사진이 크게 열린다');
     const front = (c) => `<div class="card" style="border-color:${meta.color}">
       <div class="chd"><span class="no" style="background:${meta.color}">${esc(unitNum.get(c))}</span>
         ${badges(c)}</div>
       <div class="ct">${esc(c.title)}</div>
-      ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">찍으면 이 장면이 열린다</div></div>`
+      ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">${qrLabel(c)}</div></div>`
         : c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
       <div class="cd${c.small ? ' sm' : ''}">${esc(c.detail || c.description || '')}</div>
       ${c.locked ? `<div class="lock">🔒 <b>이벤트 ②</b>(통신 기록 영장)을 읽은 뒤부터다.
@@ -747,7 +785,7 @@ function clueCards() {
   for (const p of PLACES) if (bag[p.id].length) body += deck(bag[p.id], p);
   if (special.length) body += deck(special, SPECIAL);
   body += lockCards();
-  return { filename: '보드_단서카드.html', html: doc('보드게임 단서 카드', body) };
+  return { filename: '보드_단서카드.html', html: doc('보드게임 단서 카드', body, '', CARD_FIT) };
 }
 
 // ── 2. 인물 시트 — A4 한 장에 한 사람, 가로로 반 접는다 ──────────────────────
@@ -812,7 +850,7 @@ function charCards() {
         <div>③ 자기 차례에 <b>위 내용만</b> 자기 말로 소개합니다 — 30초.</div>
         <div class="covWarn">접힌 안쪽은 게임이 끝날 때까지 <b>절대 보여 주지 않습니다.</b></div></div>
     </div>
-    <div class="covFoot"><b>A4 가로</b>로 양면 인쇄해 가운데 점선을 세로로 접으세요.
+    <div class="covFoot"><b>A4 가로</b>로 양면 인쇄(<b>짧은 쪽 넘김</b>)해 가운데 점선을 세로로 접으세요.
       접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
 
   // 자기 폰에 지워진 대화방이 있는 사람만 번호가 있다. 없는 사람에게는 아무것도 안 찍는다.
@@ -967,7 +1005,7 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
           여섯은 서로의 방을 뒤지며 자기 물건이 남의 손에 들리는 것을 감수하지만, 형사에게는 그런 것이 없습니다.
           조사·토론·지목은 나머지와 똑같이 합니다.</p></div>
     </div>
-    <div class="covFoot">여섯이 하면 이 장을 빼세요. <b>A4 가로</b>로 양면 인쇄해 가운데 점선을 세로로 접습니다.</div>`;
+    <div class="covFoot">여섯이 하면 이 장을 빼세요. <b>A4 가로</b>로 양면 인쇄(<b>짧은 쪽 넘김</b>)해 가운데 점선을 세로로 접습니다.</div>`;
   const inner = `<h1>${esc(d.name)} 형사 <span class="muted">— 당신이 아는 것 (본인만)</span></h1>
     <h2>당신의 정체</h2><p>${esc(d.identity)}</p>
     <h2>당신의 그날</h2>
