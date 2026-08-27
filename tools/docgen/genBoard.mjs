@@ -841,10 +841,19 @@ function charCards() {
     const breakOn = new Set(b.knowsWhatBreaks === false ? []
       : (INTERROGATION[SID[name]]?.statements || [])
         .filter((x) => x.contradict).flatMap((x) => x.contradict.codes || []));
+    // 무너지는 카드에는 무너질 때 할 말이 있어야 한다. 앞면 상자에서 그 대사를 떼어 카드 번호만
+    //   남겼더니, 표는 「첫마디입니다」라고 약속해 놓고 정작 가장 중요한 네 칸이 비었다 —
+    //   진범이 자백하는 자리에서 즉흥으로 지어내게 된다. 심문 정본의 붕괴 대사를 여기로 옮긴다.
+    const breakLine = {};
+    for (const x of (d?.statements || [])) {
+      const ct = x.contradict;
+      if (!ct) continue;
+      for (const c of (ct.codes || [])) breakLine[c] = ct.textBy?.[c] || ct.text || '';
+    }
     const rows = [...new Map([...soft, ...Object.entries(s.onCard)]).entries()];
     for (const c of breakOn) if (!rows.some(([k]) => k === c)) rows.push([c, '']);
     const line = (c, t) => {
-      const txt = esc(String(t).replace(/<[^>]+>/g, ''));
+      const txt = esc(String(t || (breakOn.has(c) ? breakLine[c] : '') || '').replace(/<[^>]+>/g, ''));
       return breakOn.has(c)
         ? `${txt}${txt ? ' ' : ''}<b class="brk">⚠ 여기서 인정합니다.</b>` : txt;
     };
@@ -991,8 +1000,8 @@ function runSheets() {
         <td>한 사람이 <b>소리 내어 읽습니다.</b> 여기까지가 전원이 아는 전부입니다.</td></tr>
       <tr><td class="stn">4</td><td><b>자기소개</b></td>
         <td>인물 시트 <b>겉면</b>에 적힌 것을 자기 말로. 한 사람에 30초.</td></tr>
-      <tr><td class="stn">5</td><td><b>「기본 규칙」 앞·뒷장</b></td>
-        <td>다 함께 훑습니다. 3분. 판 옆에 계속 펴 둡니다 — 헷갈리면 그때 봅니다.</td></tr>
+      <tr><td class="stn">5</td><td><b>「기본 규칙」 세 면</b></td>
+        <td>다 함께 훑습니다. 3분. <b>앞장 한 면</b>만 알면 1라운드가 돕니다. 판 옆에 계속 펴 둡니다.</td></tr>
       <tr><td class="stn">6</td><td><b>1라운드 시작</b></td>
         <td>조사 → 토론 10분 → 라운드 끝. 이것을 여섯 번(일곱이면 다섯 번) 반복합니다.</td></tr>
       <tr><td class="stn">7</td><td><b>라운드가 끝날 때마다</b></td>
@@ -1008,7 +1017,7 @@ function runSheets() {
   <div class="page">${stage('헷갈릴 때')}<h1>이 종이는 무엇인가 <span class="muted">— 헷갈리면 여기를 보세요</span></h1>
     <table><tr><th style="width:26%">무엇</th><th>어떤 물건인가</th></tr>
       <tr><td><b>진행 물품</b><br><span class="muted">지금 보는 이 책자</span></td>
-        <td>사건 브리핑 · 탁자 배치 · 기본 규칙 · 라운드 트랙 · 사건 기록판 · 이벤트 카드.
+        <td>사건 브리핑 · 탁자 배치 · 기본 규칙 세 면 · 라운드 트랙 · 사건 기록판 · 이벤트 카드.
           <b>전원이 함께 씁니다.</b> 장마다 머리에 <b>언제 쓰는 것인지</b>가 적혀 있습니다.</td></tr>
       <tr><td><b>인물 시트</b><br><span class="muted">사람마다 한 장</span></td>
         <td>당신이 맡을 사람의 정체·그날의 행적·대사가 들어 있습니다. A4 한 장을 세로로 접은 것이라
@@ -1029,7 +1038,8 @@ function runSheets() {
       <tr><td><span class="lg">🔒</span></td><td>아직 못 읽는 카드입니다. 영장이 나와야 열립니다</td></tr>
       <tr><td><span class="lg">⚖</span></td><td>여기 적힌 사람은 <b>이 결과를 읽을 수 없습니다.</b> 남이 집어 읽습니다</td></tr>
       <tr><td><span class="lg">🔬</span></td><td>감식실에 낼 수 있는 것입니다. 결과는 <b>낸 사람 아닌 이가</b> 읽습니다</td></tr>
-      <tr><td><span class="lg">⭐</span></td><td>다른 카드와 짝을 맞추면 <b>특수 단서</b>를 가져갑니다. 짝 번호가 카드에 적혀 있습니다</td></tr></table>
+      <tr><td><span class="lg">⭐</span></td><td>다른 카드와 짝을 맞추면 <b>특수 단서</b>를 가져갑니다. 짝 번호가 카드에 적혀 있습니다</td></tr>
+      <tr><td><span class="lg">📢</span></td><td>CCTV 장면입니다. <b>가져오면 그 자리에서 모두에게 소리 내어 읽습니다</b> — 이 더미만 예외입니다</td></tr></table>
 
     <div class="box"><div class="bl">처음 하는 분들이 가장 많이 묻는 것</div>
       <p><b>규칙을 다 알아야 하나요?</b> 아닙니다. 「기본 규칙」 앞장 한 면만 알면 1라운드를 돌 수 있습니다.
@@ -1068,7 +1078,7 @@ function runSheets() {
       </div>
       <div class="tblRow">
         <div class="slot slotSheet">라운드 트랙 <span>말 하나</span></div>
-        <div class="slot slotSheet">기본 규칙 시트 <span>앞·뒷장</span></div>
+        <div class="slot slotSheet">기본 규칙 시트 <span>세 면</span></div>
         <div class="slot slotSheet">사건 기록판 <span>연필</span></div>
         <div class="slot slotSeal">진상 해설서 <span>봉투째 — 끝나기 전엔 열지 않는다</span></div>
       </div>
@@ -1147,11 +1157,32 @@ function runSheets() {
           <b>내는 데는 조사 행동을 쓰지 않습니다.</b> 카드 아래에 결과 번호가 적혀 있습니다.</td></tr>
       <tr><td><span class="lg">⭐</span> <b>조합 재료</b></td>
         <td>다른 카드와 함께 모으면 <b>특수 단서(S)</b> 를 가져갑니다. 무엇과 묶는지는 카드 아래에 적혀 있습니다.
-          <b>가진 사람이 달라도 됩니다</b> — 합의해서 판 가운데에 공개하면 함께 가져갑니다.</td></tr></table>
+          <b>가진 사람이 달라도 됩니다</b> — 합의해서 판 가운데에 공개하면 함께 가져갑니다.</td></tr>
+      <tr><td><span class="lg">📢</span> <b>모두에게 낭독</b></td>
+        <td>CCTV 장면입니다. <b>가져오면 그 자리에서 모두에게 소리 내어 읽습니다.</b>
+          다른 모든 카드는 혼자 읽고 말할지 말지를 정하지만, 이 더미만은 아닙니다.</td></tr></table>
 
     <h2>특수 단서</h2>
-    <p>카드에 적힌 조합(⭐)을 손에 다 모으면, 특수 더미에서 그 번호를 <b>말없이 가져갑니다.</b>
-      무엇으로 얻었는지는 특수 카드 앞면에 적혀 있습니다.</p>
+    <p>카드에 적힌 조합(⭐)을 다 모으면 그 카드들을 <b>판 가운데에 공개하고</b>, 특수 더미에서 그 번호를 가져옵니다.
+      <b>가진 사람이 달라도 됩니다</b> — 둘이 합의하면 됩니다.<br>
+      <b>가져온 특수 단서는 한 사람이 소리 내어 읽습니다.</b> 조합은 판이 함께 만든 것이라 판이 함께 압니다 —
+      누가 갖는지는 정하지 않아도 됩니다. 무엇으로 얻었는지는 카드 앞면에 적혀 있습니다.</p>
+  </div>
+
+  <div class="page">${stage('첫 라운드 전에 · 계속 펴 둡니다')}<h1>기본 규칙 <span class="muted">— 셋째 장</span></h1>
+    <h2>휴대폰 안에는 잠긴 것이 있습니다</h2>
+    <p>휴대폰 카드의 QR 을 찍으면 <b>앱 목록</b>이 뜹니다 — 연락처 · 인터넷 · 카카오톡 · 사진.
+      대부분은 그냥 열리지만, <b>카카오톡의 대화방 하나가 「🔒 삭제된 대화」로 잠겨 있습니다.</b></p>
+    <p>1. 그 방을 누르면 <b>네 자리 숫자</b>를 넣는 칸이 뜹니다.<br>
+      2. <b>맞는 숫자를 넣으면 그 자리에서 대화가 되살아납니다.</b> 틀리면 아무것도 안 나옵니다.<br>
+      3. <b>그 숫자는 다른 단서 안에 적혀 있습니다.</b> 누군가의 다이어리, 목사님의 일기장,
+      사진 속의 번호 — 폰을 가진 사람과 숫자를 아는 사람은 대개 다릅니다. <b>물어야 열립니다.</b><br>
+      4. 세 번 틀리면 화면이 <b>힌트를 한 줄</b> 줍니다.</p>
+    <p class="muted">복구된 화면은 <b>찍은 사람의 폰에만</b> 뜹니다 — 무엇을 봤는지 말할지 말지는 그 사람이 정합니다.
+      「내가 그 숫자를 안다」고 말할지 말지도 마찬가지입니다.<br>
+      <b>목사님 휴대폰의 「인터넷」 앱에는 조회 화면이 하나 더 있습니다.</b> 번호를 넣으면 결과가 나옵니다 —
+      그 번호도 같은 폰 어딘가에 있습니다.</p>
+
     <h2>감식 — 낸 사람과 읽는 사람이 다르다</h2>
     <p>🔬 표시가 있는 카드는 <b>채취물</b>입니다. 감식실이 열린 뒤부터,</p>
     <p>1. 채취물을 가진 사람이 라운드 끝에 그 카드를 <b>앞면으로 감식실 옆에 내려놓습니다.</b>
