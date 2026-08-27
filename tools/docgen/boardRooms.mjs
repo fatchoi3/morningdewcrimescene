@@ -60,8 +60,10 @@ export function labRoomHTML(results, unitNo, src) {
       <div class="labZone labOut">
         <div class="labTt">결과는 여기서 집습니다 — <b>낸 사람 아닌 이가</b></div>
         <div class="labRow">${results.map((c) => slot(esc(unitNo(c)))).join('')}</div>
-        <div class="labSub">다음 라운드 <b>시작</b>에 소리 내어 읽습니다 · 읽은 뒤 그 카드는 읽은 사람이 갖습니다<br>
-          <b>⚖</b> 가 붙은 결과는 카드에 적힌 사람이 읽을 수 없습니다</div>
+        <div class="labSub">다음 라운드 <b>시작</b>에 소리 내어 읽습니다 · 결과 카드는 읽은 사람이 갖고
+          <b>낸 채취물은 낸 사람에게 돌아옵니다</b>(조합에 다시 쓸 수 있습니다)<br>
+          <b>⚖</b> 가 붙은 결과는 카드에 적힌 사람이 읽을 수 없습니다 —
+          낸 사람도 못 읽으니, 둘 다 아닌 사람이 집습니다</div>
       </div>
     </div>
   </div>`;

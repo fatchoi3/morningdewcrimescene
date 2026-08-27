@@ -566,11 +566,13 @@ export const evidenceMap = withAssetBase(resolveTokens({
             { name: '{{S1.short|이/}}', direction: 'in', time: '12:38', duration: '38초' },
             { name: '{{S2}} 팀장', direction: 'missed', time: '12:35' },
             { name: '{{S5}} 총무', direction: 'missed', time: '11:52' },
-            { name: '아내', direction: 'out', time: '11:20', duration: '6분 04초' },
             { name: '{{S6}} 회장', direction: 'missed', time: '10:47' },
             { name: '{{S3}} 회계', direction: 'missed', time: '10:12' },
             { name: '{{S1.short|이/}}', direction: 'in', time: '09:38', duration: '1분 52초' },
-            { name: '{{S5}} 총무', direction: 'out', time: '09:05', duration: '1분 12초' }
+            { name: '{{S5}} 총무', direction: 'out', time: '09:05', duration: '1분 12초' },
+            { name: '아내', direction: 'out', time: '08:40', duration: '6분 04초' },
+            { name: '{{S4}} 전도사', direction: 'missed', time: '전날 19:40' },
+            { name: '{{S2}} 팀장', direction: 'missed', time: '전날 20:15' }
           ]
         },
         {
