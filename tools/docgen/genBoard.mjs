@@ -85,7 +85,7 @@ const HAND_CARDS = () => {
   return opts.map((o, i) => ({
     no: `Q6-${i + 1}`, code: `HAND${i + 1}`, hand: true,
     title: `필적 대조 — ${o.who}`,
-    need: at(o.requires)?.title || `${o.who} 의 손글씨가 있는 카드`,
+    need: at(o.requires)?.title || `${o.who} 의 다이어리`,
     hint: `통 라벨의 글씨를 ${o.who} 의 것과 맞춰 본다.`,
   }));
 };
@@ -110,6 +110,8 @@ const line = (a, b) => (b ? `${a}\n${b}` : a);
 // 지워진 대화방이 실제로 있는 폰만 잠금 카드가 필요하다.
 const hasDeleted = (c) => (c.phone?.apps || [])
   .some((a) => (a.chats || []).some((ch) => ch.deleted));
+// 길잡이.svg 는 물음표 하나짜리 자리표시다 — 어느 카드에 붙어도 같은 그림이라 카드에서는 뺀다.
+const realImg = (c) => (c.image && !/길잡이\.svg$/.test(c.image) ? c.image : null);
 const isScreen = (c) => !!(c.phone?.apps?.length
   || (c.pages?.length && /다이어리|일기장|성경책/.test(c.title)));
 
@@ -151,7 +153,9 @@ function explode(c) {
     return [one({
       detail: line(c.detail,
         '대조할 수 있는 사람: ' + c.handwriting.options.map((o) => o.who).join(', ')
-        + '\n→ 판 옆의 Q6-1 ~ Q6-7 중 대조할 사람의 카드를 찍는다. 그 사람의 손글씨가 있는 카드가 손에 있어야 한다.'),
+        + '\n→ 판 옆의 Q6-1 ~ Q6-7 중 대조할 사람의 카드를 찍는다.'
+        + '\n그 사람의 다이어리 카드가 판에 공개된 뒤라야 대조할 수 있다 — 누구 손에 있는지는 상관없다.'
+        + '\n한 라운드에 세 명까지 대조한다. 조사로 가져가는 카드 수와는 별개다.'),
     })];
   }
   return [one({})];
@@ -652,7 +656,7 @@ async function buildQR(list) {
   //   사진이 붙던 카드도 마찬가지다. 27mm 로 줄여 놓으면 약통 라벨도 손목의 멍도 안 보이는데,
   //   그 47장 때문에 서른여덟 면을 통째로 컬러로 뽑아야 했다. 찍어서 크게 보는 편이 낫다.
   for (const c of allClues) {
-    if ((!isScreen(c) && !c.image) || QR[c.code]) continue;
+    if ((!isScreen(c) && !realImg(c)) || QR[c.code]) continue;
     QR[c.code] = await QRCode.toString(`${siteUrl}/clue#${c.code}`,
       { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
   }
@@ -667,14 +671,15 @@ function lockCards() {
     <div class="qr">${QR[`Q:${q.code}`] || ''}<div class="qrl">${q.hand ? '찍으면 대조 결과가 나온다' : '찍으면 입력 화면이 열린다'}</div></div>
     <div class="cd">${esc(q.hint)}</div>
     <div class="hint"><div>이 카드는 <b>아무도 가져갈 수 없다.</b> 판 옆에 펴 두고 누구나 찍는다.<br>
-      ${q.hand ? `대조하려면 <b>${esc(q.need)}</b>가 손에 있어야 한다.` : '잠긴 것은 카드가 아니라 <b>숫자</b>다.'}</div></div>
+      ${q.hand ? `<b>${esc(q.need)}</b>가 판에 공개된 뒤라야 찍을 수 있다.<br>한 라운드에 세 명까지.` : '잠긴 것은 카드가 아니라 <b>숫자</b>다.'}</div></div>
   </div>`;
   return `<div class="page"><h1>필적 대조 카드 — ${allQ().length}장
       <span class="muted">Q6-1 ~ Q6-${HANDS.length}</span></h1>
     <p class="muted">앞면이 보이게 판 옆에 펴 둡니다. <b>가져가는 카드가 아닙니다.</b>
       휴대폰 카메라로 QR 을 찍으면 화면이 열리고, 그 사람만 결과를 봅니다.<br>
       통 라벨의 글씨를 그 사람의 것과 맞춰 봅니다 —
-      <b>그 사람의 손글씨가 있는 카드를 손에 넣은 사람만</b> 찍을 수 있습니다.
+      <b>그 사람의 다이어리 카드가 판에 공개된 뒤라야</b> 찍을 수 있습니다(누구 손에 있는지는 상관없습니다).<br>
+      <b>한 라운드에 세 명까지</b> 대조합니다 — <b>조사로 가져가는 두 장과는 별개</b>입니다.
       한 장이 한 사람이라, 누가 어느 카드를 찍는지가 그대로 보입니다.<br>
       <span class="muted">지워진 대화방과 수료증 조회는 카드가 따로 없습니다 —
       그 휴대폰 카드의 QR 을 찍어 들어간 <b>폰 화면 안에서</b> 엽니다.</span></p>
@@ -750,7 +755,7 @@ function clueCards() {
         ${badges(c)}</div>
       <div class="ct">${esc(c.title)}</div>
       ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">${qrLabel(c)}</div></div>`
-        : c.image ? `<img class="cimg" src="${esc(img(c.image))}" alt="">` : ''}
+        : realImg(c) ? `<img class="cimg" src="${esc(img(realImg(c)))}" alt="">` : ''}
       <div class="cd${c.small ? ' sm' : ''}">${esc(c.detail || c.description || '')}</div>
       ${c.locked ? `<div class="lock">🔒 <b>이벤트 ②</b>(통신 기록 영장)을 읽은 뒤부터다.
         가져가는 것은 지금도 되지만, 그때까지는 아무도 못 읽는다.<br>
@@ -1192,7 +1197,8 @@ function runSheets() {
       <tr><td><b>단서 카드</b><br><span class="muted">잘라 둔 카드 뭉치</span></td>
         <td>장소별로 따로 쌓아 둡니다. <b>뒷면(번호)이 보이게</b> 쌓고, 가져간 사람이 앞면을 혼자 읽습니다.</td></tr>
       <tr><td><b>필적 대조 카드</b><br><span class="muted">Q6 일곱 장</span></td>
-        <td>앞면이 보이게 펴 둡니다. <b>가져가는 카드가 아닙니다</b> — 그 자리에서 QR 만 찍습니다.</td></tr>
+        <td>앞면이 보이게 펴 둡니다. <b>가져가는 카드가 아닙니다</b> — 그 자리에서 QR 만 찍습니다.<br>
+          그 사람의 <b>다이어리가 판에 공개된 뒤</b>라야 찍을 수 있고, <b>한 라운드에 세 명까지</b>입니다(조사와 별개).</td></tr>
       <tr><td><b>진상 해설서</b><br><span class="muted">봉투 안</span></td>
         <td><b>끝나기 전엔 아무도 열지 않습니다.</b> 지목이 끝난 뒤에 엽니다.</td></tr></table>
 
