@@ -366,9 +366,9 @@ export const evidenceMap = withAssetBase(resolveTokens({
     person: '{{S1}}'
   },
   'HJIN-43': { // 코드 끝2자리(43)≠시각(10:20) — 코드 유지
-    title: '[CCTV 장면] 10:20 {{S3}}',
+    title: '[CCTV 장면] 10:20~24 {{S3}}',
     description: '',
-    detail: '10:20경 목사 방 방향으로 사라짐.',
+    detail: '10:20경 목사 방 방향으로 사라졌다 10:24경 다시 나타나 자기 방 쪽으로 걸어감.',
     image: '',
     type: '보통',
     person: '{{S3}}'
@@ -382,9 +382,9 @@ export const evidenceMap = withAssetBase(resolveTokens({
     person: '{{S6}}'
   },
   'CDRK-00': { // 코드 끝2자리(00)≠시각(12:40) — 코드 유지
-    title: '[CCTV 장면] 12:40 {{S1}}',
+    title: '[CCTV 장면] 12:40~41 {{S1}}',
     description: '',
-    detail: '12:40경 음료를 들고 목사 방 방향으로 사라짐.',
+    detail: '12:40경 음료를 들고 목사 방 방향으로 사라졌다 12:41경 빈손으로 다시 나타나 자기 방으로 들어감.',
     image: '',
     type: '보통',
     person: '{{S1}}'
