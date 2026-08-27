@@ -564,7 +564,13 @@ export const evidenceMap = withAssetBase(resolveTokens({
           calls: [
             { name: '{{S4}} 전도사', direction: 'missed', time: '13:16' },
             { name: '{{S1.short|이/}}', direction: 'in', time: '12:38', duration: '38초' },
-            { name: '아내', direction: 'out', time: '11:20', duration: '6분 04초' }
+            { name: '{{S2}} 팀장', direction: 'missed', time: '12:35' },
+            { name: '{{S5}} 총무', direction: 'missed', time: '11:52' },
+            { name: '아내', direction: 'out', time: '11:20', duration: '6분 04초' },
+            { name: '{{S6}} 회장', direction: 'missed', time: '10:47' },
+            { name: '{{S3}} 회계', direction: 'missed', time: '10:12' },
+            { name: '{{S1.short|이/}}', direction: 'in', time: '09:38', duration: '1분 52초' },
+            { name: '{{S5}} 총무', direction: 'out', time: '09:05', duration: '1분 12초' }
           ]
         },
         {
@@ -776,6 +782,17 @@ export const evidenceMap = withAssetBase(resolveTokens({
     phone: {
       owner: '{{S5}}의 핸드폰',
       apps: [
+        {
+          // 목사가 먼저 걸었다 — 통장을 확인한 직후, 면담을 부르는 전화다.
+          id: 'calls',
+          type: 'calls',
+          name: '전화',
+          calls: [
+            { name: '담임목사님', direction: 'out', time: '11:52', duration: '연결 안 됨' },
+            { name: '담임목사님', direction: 'in', time: '09:05', duration: '1분 12초' },
+            { name: '{{S3.short}} 언니', direction: 'in', time: '전날 23:40', duration: '21분 15초' }
+          ]
+        },
         {
           id: 'contacts',
           type: 'contacts',
@@ -1013,6 +1030,17 @@ export const evidenceMap = withAssetBase(resolveTokens({
       owner: '{{S1}}의 핸드폰',
       apps: [
         {
+          // 등산 약속을 맞춘 통화 — 목사가 받은 마지막 통화 중 하나다.
+          id: 'calls',
+          type: 'calls',
+          name: '전화',
+          calls: [
+            { name: '담임목사님', direction: 'out', time: '12:38', duration: '38초' },
+            { name: '담임목사님', direction: 'out', time: '09:38', duration: '1분 52초' },
+            { name: '{{S5.short}} 총무', direction: 'in', time: '전날 22:10', duration: '3분 07초' }
+          ]
+        },
+        {
           id: 'contacts',
           type: 'contacts',
           name: '연락처',
@@ -1194,6 +1222,16 @@ export const evidenceMap = withAssetBase(resolveTokens({
     phone: {
       owner: '{{S3}}의 핸드폰',
       apps: [
+        {
+          // 10:12 발신이 안 받혔다 — 목사는 등산 중이었다.
+          id: 'calls',
+          type: 'calls',
+          name: '전화',
+          calls: [
+            { name: '담임목사님', direction: 'out', time: '10:12', duration: '연결 안 됨' },
+            { name: '{{S5.short}}', direction: 'out', time: '전날 23:40', duration: '21분 15초' }
+          ]
+        },
         {
           id: 'contacts',
           type: 'contacts',
@@ -1541,6 +1579,17 @@ export const evidenceMap = withAssetBase(resolveTokens({
       owner: '{{S2}}의 핸드폰',
       apps: [
         {
+          // 12:35 발신이 안 받히고, 6분 뒤 직접 방으로 갔다.
+          id: 'calls',
+          type: 'calls',
+          name: '전화',
+          calls: [
+            { name: '담임목사님', direction: 'out', time: '12:35', duration: '연결 안 됨' },
+            { name: '담임목사님', direction: 'out', time: '전날 20:15', duration: '연결 안 됨' },
+            { name: '친구 (동기)', direction: 'in', time: '어제', duration: '12분 40초' }
+          ]
+        },
+        {
           id: 'contacts',
           type: 'contacts',
           name: '연락처',
@@ -1806,6 +1855,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
           calls: [
             { name: '112 (긴급신고)', direction: 'out', time: '13:34', duration: '2분 41초' },
             { name: '민석', direction: 'out', time: '11:48', duration: '연결 안 됨' },
+            { name: '{{victim.full}}', direction: 'out', time: '10:47', duration: '연결 안 됨' },
             { name: '민석', direction: 'missed', time: '이틀 전' }
           ]
         }

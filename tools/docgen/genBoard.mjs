@@ -695,7 +695,9 @@ function clueCards() {
       <b>뒷면(번호)이 보이게</b> 쌓고, ${isCC
         ? '가져간 사람이 <b>앞면을 모두에게 소리 내어 읽는다.</b>'
         : '가져간 사람이 앞면을 읽는다.'}</p>
-      ${isCC ? `<p class="muted"><b>뒷면의 색점이 그 장면에 찍힌 사람입니다.</b> 자기 색도 가져갈 수 있습니다 —
+      ${isCC ? `<p class="muted"><b>여기서만 한 번에 세 장을 봅니다.</b> 다른 장소는 두 장입니다 —
+        화면은 가져가는 것이 아니라 이어 보는 것이라서입니다.<br>
+        <b>뒷면의 색점이 그 장면에 찍힌 사람입니다.</b> 자기 색도 가져갈 수 있습니다 —
         다만 가져오면 소리 내어 읽어야 하므로, 자기 장면을 집는 것은 <b>먼저 해명하겠다는 선언</b>이 됩니다.
         여기서만은 카드를 가져가는 것이 곧 공개라, 무엇을 집었는지 감출 수 없습니다.</p>` : ''}</div>`
       + paginate(list, front, back);
@@ -868,10 +870,15 @@ function charCards() {
     }
     const rows = [...new Map([...soft, ...Object.entries(s.onCard)]).entries()];
     for (const c of breakOn) if (!rows.some(([k]) => k === c)) rows.push([c, '']);
+    // 한 카드에 둘 다 걸리는 경우가 있다 — 폰에는 무해한 통화 기록과 복구되는 대화방이 같이 있다.
+    //   무엇을 들이미느냐에 따라 할 말이 다르므로 두 줄로 갈라 놓는다. 위가 버티는 첫마디,
+    //   아래가 더는 못 버티는 자리다.
+    const strip = (x) => esc(String(x || '').replace(/<[^>]+>/g, ''));
     const line = (c, t) => {
-      const txt = esc(String(t || (breakOn.has(c) ? breakLine[c] : '') || '').replace(/<[^>]+>/g, ''));
-      return breakOn.has(c)
-        ? `${txt}${txt ? ' ' : ''}<b class="brk">⚠ 여기서 인정합니다.</b>` : txt;
+      const txt = strip(t);
+      if (!breakOn.has(c)) return txt;
+      const brk = strip(breakLine[c]);
+      return `${txt}${txt ? '<br>' : ''}<b class="brk">⚠</b> ${brk}${brk ? ' ' : ''}<b class="brk">여기서 인정합니다.</b>`;
     };
     return `<h1>${esc(name)} <span class="muted">— 이 상황에서는 이렇게 (본인만)</span></h1>
       <h2>말투</h2><p>${s.tone}</p>
@@ -1020,7 +1027,8 @@ function runSheets() {
       <tr><td class="stn">5</td><td><b>「기본 규칙」 세 면</b></td>
         <td>다 함께 훑습니다. 3분. <b>앞장 한 면</b>만 알면 1라운드가 돕니다. 판 옆에 계속 펴 둡니다.</td></tr>
       <tr><td class="stn">6</td><td><b>1라운드 시작</b></td>
-        <td>조사 → 토론 10분 → 라운드 끝. 이것을 여섯 번(일곱이면 다섯 번) 반복합니다.</td></tr>
+        <td>조사(장소 하나에서 <b>2장</b>, CCTV 열람실만 <b>3장</b>) → 토론 10분 → 라운드 끝.
+          이것을 여섯 번(일곱이면 다섯 번) 반복합니다.</td></tr>
       <tr><td class="stn">7</td><td><b>라운드가 끝날 때마다</b></td>
         <td><b>「라운드 트랙」</b>의 말을 한 칸 옮기고, 이벤트 칸이면 그 카드를 뒤집어 읽습니다.
           <b>「사건 기록판」</b>에 한 줄 적습니다.</td></tr>
@@ -1119,6 +1127,8 @@ function runSheets() {
     <h2>한 라운드</h2>
     <p>①<b>조사</b> — 순서대로 한 명씩, 열려 있는 장소 <b>하나</b>를 골라 그 장소의 남은 번호 중
       <b>2장</b>을 가져갑니다. 가져간 번호는 남이 못 가집니다. 내용은 자기만 읽습니다.<br>
+      &nbsp;&nbsp;<b>단 CCTV 열람실(V)만 한 번에 세 장을 봅니다</b> — 가져가는 것이 아니라
+      화면을 이어 보는 것이라서입니다. 세 장 다 그 자리에서 소리 내어 읽습니다.<br>
       &nbsp;&nbsp;시작 플레이어는 <b>라운드마다 한 칸씩 돕니다.</b><br>
       &nbsp;&nbsp;<b>가져오면 그 자리에서 읽습니다 — 소리 내지 말고 혼자서.</b> 남은 번호만 봅니다.<br>
       &nbsp;&nbsp;<span class="muted">읽고 나서 토론에 들어갑니다. 안 읽고 넘어가면 그 라운드 조사가
@@ -1176,8 +1186,8 @@ function runSheets() {
         <td>다른 카드와 함께 모으면 <b>특수 단서(S)</b> 를 가져갑니다. 무엇과 묶는지는 카드 아래에 적혀 있습니다.
           <b>가진 사람이 달라도 됩니다</b> — 합의해서 판 가운데에 공개하면 함께 가져갑니다.</td></tr>
       <tr><td><span class="lg">📢</span> <b>모두에게 낭독</b></td>
-        <td>CCTV 장면입니다. <b>가져오면 그 자리에서 모두에게 소리 내어 읽습니다.</b>
-          다른 모든 카드는 혼자 읽고 말할지 말지를 정하지만, 이 더미만은 아닙니다.</td></tr></table>
+        <td>CCTV 장면입니다. <b>한 번에 세 장을 보고, 그 자리에서 모두에게 소리 내어 읽습니다.</b>
+          다른 모든 카드는 두 장씩 가져가 혼자 읽지만, 이 더미만은 아닙니다.</td></tr></table>
 
     <h2>특수 단서</h2>
     <p>카드에 적힌 조합(⭐)을 다 모으면 그 카드들을 <b>판 가운데에 공개하고</b>, 특수 더미에서 그 번호를 가져옵니다.
@@ -1233,7 +1243,7 @@ function runSheets() {
           ? '<span class="cellTag">마지막</span>' : ''}</div>
         <div class="cellOpen">${opened ? `<b>여기서 열립니다</b><br>${opened}`
           : '<span class="muted">새로 열리는 곳 없음</span>'}</div>
-        <div class="cellDo">조사 2장<br>토론 10분</div>
+        <div class="cellDo">조사 2장<br><span class="muted">CCTV 는 3장</span><br>토론 10분</div>
         ${ev ? `<div class="evSlot">이벤트 ${ev}<div class="evSlotSub">라운드 끝에 뒤집는다</div></div>`
           : '<div class="pawnSlot">말 자리</div>'}
       </div>`;
@@ -1296,8 +1306,10 @@ function runSheets() {
       `<p>숙소 2층 복도 CCTV 원본을 확보했습니다. 그날 누가 언제 움직였는지가 남아 있습니다.</p>
       <p><b>CCTV 열람실(V)이 열립니다.</b> 더미를 <b>뒷면이 보이게</b> 판 옆에 놓습니다.<br>
         <span class="muted">방 안은 찍히지 않습니다. 복도만입니다.</span></p>
-      <p><b>여기는 규칙이 다릅니다 — <span style="text-decoration:underline">가져온 장면은 그 자리에서
-        모두에게 소리 내어 읽습니다.</span></b> 혼자 읽고 덮어 두지 못합니다.<br>
+      <p><b>여기는 규칙이 둘 다릅니다.</b><br>
+        · <b>한 번에 세 장을 봅니다.</b> 다른 장소는 두 장이지만 화면은 이어 보는 것이라서입니다.<br>
+        · <b><span style="text-decoration:underline">본 장면은 그 자리에서 모두에게 소리 내어 읽습니다.</span></b>
+        혼자 읽고 덮어 두지 못합니다.<br>
         뒷면의 <b>색점</b>은 그 장면에 찍힌 사람입니다. 자기 색도 가져갈 수 있지만, 가져오면 읽어야 합니다.<br>
         <span class="muted">화면은 감출 수 있는 물건이 아닙니다. 수사팀이 확보한 원본을 한 사람이
         혼자 보고 덮는 일은 없습니다.</span></p>`)}
