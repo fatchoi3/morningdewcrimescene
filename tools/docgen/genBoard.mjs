@@ -416,6 +416,9 @@ const CSS = `
   h1 { font-size: 19pt; margin: 0 0 3mm; }
   h2 { font-size: 13pt; margin: 6mm 0 2mm; padding-bottom: 1.2mm; border-bottom: 1.2px solid #14120f; }
   .page { padding: 14mm 14mm 12mm; page-break-after: always; }
+  /* 마지막 장까지 개행을 걸면 뒤에 빈 면이 한 장 더 나온다 — 인쇄물마다 한 장씩 버려지고 있었다.
+     맞춤 스크립트가 본문 끝에 붙는 문서가 있어 :last-child 로는 안 잡힌다. */
+  .page:last-of-type, .sheet:last-of-type { page-break-after: auto; }
   .brief h2 { font-size: 12pt; margin: 4mm 0 1.6mm; }
   .brief p { font-size: 9.6pt; line-height: 1.62; }
   table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
@@ -563,6 +566,33 @@ const doc = (title, body, pageCss = '', tailScript = '') => `<!DOCTYPE html><htm
 <title>${esc(title)}</title><style>${CSS}${pageCss}</style></head><body>${body}${tailScript}</body></html>`;
 
 // 인물 시트는 면마다 남는 자리가 달라, 인쇄 직전에 각 면이 스스로 줄 간격을 늘린다.
+// 배치·트랙은 A3 가로에 얹고, 남는 자리만큼 장마다 통째로 확대한다.
+const WIDE_FIT = `<script>
+/* 글씨를 키운 뒤 혹 넘치는 장이 있으면 담기는 데까지 되돌린다. 넘치지 않으면 손대지 않는다.
+   A3 가로는 폭만 두 배이고 높이는 A4 와 같아서, 확대가 아니라 글씨로 자리를 쓴다. */
+(function () {
+  var MAX = 2.2;
+  function fit() {
+    var pages = document.querySelectorAll(".page.board");
+    for (var i = 0; i < pages.length; i++) {
+      var p = pages[i], w = p.firstElementChild;
+      if (!w) continue;
+      w.style.transform = "";
+      var cs = getComputedStyle(p);
+      /* .page 는 제 내용만큼 늘어나므로 그 높이로 재면 언제나 100% 다 — 종이 크기로 잰다. */
+      var mm = 96 / 25.4;
+      var bw = 297 * mm - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      var bh = 420 * mm - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      var k = Math.min(bw / w.scrollWidth, bh / w.scrollHeight, MAX);
+      if (k < 1) w.style.transform = "scale(" + k.toFixed(3) + ")";
+    }
+  }
+  if (document.readyState === "complete") fit();
+  else window.addEventListener("load", fit);
+  window.addEventListener("beforeprint", fit);
+})();
+</script>`;
+
 // 단서 카드는 넘치는 장만 골라 글자와 QR 을 조금 줄인다.
 const CARD_FIT = `<script>
 /* 넘치는 카드만 골라 담기는 데까지 줄인다. QR 은 0.8 배(16.8mm)까지도 잘 읽힌다. */
@@ -1158,21 +1188,22 @@ function runSheets() {
     <p class="muted">각 종이가 무엇인지는 <b>다음 장</b>에 한 줄씩 적어 두었습니다.
       지금은 이 표만 보고 1번부터 하면 됩니다.</p>
     <table><tr><th style="width:7%">순</th><th style="width:30%">무엇을</th><th>누가 · 어떻게</th></tr>
-      <tr><td class="stn">1</td><td><b>「탁자에 이렇게 놓습니다」</b><br><span class="muted">이 책자 셋째 장</span></td>
+      <tr><td class="stn">1</td><td><b>「탁자에 이렇게 놓습니다」</b><br><span class="muted">인쇄물 <b>「보드_배치와트랙」</b>의 첫 면 (A3 가로)</span></td>
         <td>한 사람이 읽으며 <b>카드와 종이를 자리에 놓습니다.</b> 10분. 나머지는 거들면 됩니다.</td></tr>
       <tr><td class="stn">2</td><td><b>인물 시트를 하나씩</b></td>
         <td>제비뽑기든 합의든 좋습니다. 받으면 <b>혼자서 5분간 읽습니다.</b>
           접힌 안쪽은 절대 보여 주지 않습니다.</td></tr>
-      <tr><td class="stn">3</td><td><b>「사건 브리핑」</b></td>
+      <tr><td class="stn">3</td><td><b>「사건 브리핑」</b><br><span class="muted">이 책자에서 머리에 <b>「시작할 때」</b>라고 적힌 면</span></td>
         <td>한 사람이 <b>소리 내어 읽습니다.</b> 여기까지가 전원이 아는 전부입니다.</td></tr>
       <tr><td class="stn">4</td><td><b>자기소개</b></td>
         <td>인물 시트 <b>겉면</b>에 적힌 것을 자기 말로. 한 사람에 30초.</td></tr>
-      <tr><td class="stn">5</td><td><b>「기본 규칙」 세 면</b></td>
+      <tr><td class="stn">5</td><td><b>「기본 규칙」 세 면</b><br><span class="muted">이 책자에서 머리에 <b>「첫 라운드 전에 · 계속 펴 둡니다」</b>라고 적힌 면들</span></td>
         <td>다 함께 훑습니다. 3분. <b>앞장 한 면</b>만 알면 1라운드가 돕니다. 판 옆에 계속 펴 둡니다.</td></tr>
       <tr><td class="stn">6</td><td><b>1라운드 시작</b></td>
         <td>조사(장소 하나에서 <b>2장</b>, CCTV 열람실만 <b>3장</b>) → <b>토론</b> → 라운드 끝.
           토론은 <b>할 말이 끝날 때까지</b> 합니다. 이것을 여섯 번(일곱이면 다섯 번) 반복합니다.</td></tr>
-      <tr><td class="stn">7</td><td><b>라운드가 끝날 때마다</b></td>
+      <tr><td class="stn">7</td><td><b>라운드가 끝날 때마다</b><br><span class="muted">「라운드 트랙」은 인쇄물 <b>「보드_배치와트랙」</b>의 둘째 면,
+        「사건 기록판」은 이 책자의 <b>「라운드마다」</b> 면</span></td>
         <td><b>「라운드 트랙」</b>의 말을 한 칸 옮기고, 이벤트 칸이면 그 카드를 뒤집어 읽습니다.
           <b>「사건 기록판」</b>에 한 줄 적습니다.</td></tr>
       <tr><td class="stn">8</td><td><b>최종 토론 · 지목</b></td>
@@ -1221,6 +1252,7 @@ function runSheets() {
         <b>휴대폰이 필요한가요?</b> 각자 한 대씩 필요합니다. 카드에 붙은 QR 을 찍어야 하는 것이 있습니다.</p></div>
   </div>
 
+  <!--WIDE-->
   <div class="page board">${stage('준비할 때')}<h1>탁자에 이렇게 놓습니다</h1>
     <p class="muted">가운데에 현장 판을 깔고, 장소마다 카드를 따로 쌓습니다.
       <b>카드는 판 위에 올리지 않습니다</b> — 판은 어디를 고를지 보는 그림이고, 카드는 그 옆에 쌓입니다.</p>
@@ -1260,6 +1292,7 @@ function runSheets() {
 
 
 
+  <!--/WIDE-->
   <div class="page brief">${stage('시작할 때')}<h1>사건 브리핑</h1>
     <p class="muted"><b>순서 3.</b> 인물 시트를 각자 읽은 뒤, 한 사람이 소리 내어 읽습니다.
       한 절씩 돌아가며 읽어도 좋습니다. <b>여기까지가 전원이 아는 전부입니다.</b></p>${pages}
@@ -1376,6 +1409,7 @@ function runSheets() {
       그래서 낸 사람은 자기 결과를 못 읽습니다. 반대로 "내 물건이라 아예 못 낸다"고 해 두면
       그 카드가 영영 잠기므로, 넘겨서 내는 길을 열어 둡니다.</p></div>
 
+  <!--WIDE-->
   <div class="page board">${stage('라운드마다')}<h1>라운드 트랙 <span class="muted">— 인원에 맞는 것 하나만 펴 두세요</span></h1>
     <p class="muted">라운드가 끝날 때마다 <b>말을 한 칸 옮깁니다.</b> 말은 동전이든 무엇이든 됩니다.
       <b>①②③④ 자리에 이벤트 카드를 접어 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.<br>
@@ -1421,6 +1455,7 @@ function runSheets() {
       <b>일곱이면 형사도 한 표를 던집니다.</b> 다만 아무도 형사를 지목하지 않습니다.</p>
   </div>
 
+  <!--/WIDE-->
   <div class="page">${stage('라운드마다')}<h1>사건 기록판 <span class="muted">— 판 가운데에 펴 두세요</span></h1>
     <p class="muted">진행자가 없으니 판이 무엇을 확정했는지 아무도 기록하지 않습니다. 그러면 같은 질문이
       네 번 반복되고, 시간표를 매 라운드 다시 계산하게 됩니다. <b>라운드가 끝날 때마다 한 줄씩</b>
@@ -1477,7 +1512,44 @@ function runSheets() {
   </div>`;
 
 
-  return { filename: '보드_진행물.html', html: doc('보드게임 진행 물품', body) };
+  // 표시해 둔 두 장을 떼어 A3 가로로 따로 뽑는다. 나머지는 A4 그대로다.
+  const WIDE = /<!--WIDE-->([\s\S]*?)<!--\/WIDE-->/g;
+  const wide = [...body.matchAll(WIDE)].map((m) => m[1]).join('');
+  const rest = body.replace(WIDE, '');
+  const a3land = `@page { size: A3 portrait; margin: 0; }
+  .page { padding: 14mm 14mm 12mm; }
+  .wrap { transform-origin: top left; }
+  /* A4 두 장을 이어 붙인 크기다 — 가로 297mm · 세로 420mm. 가로세로 다 1.41 배가 되므로
+     글씨도 그만큼 키운다. 이 두 장은 판을 눈으로 훑는 종이라, 작으면 매번 얼굴을 들이밀게 된다. */
+  .page.board h1 { font-size: 30pt; }
+  .page.board .muted { font-size: 12.4pt; line-height: 1.55; }
+  .page.board .slot { font-size: 18pt; min-height: 26mm; padding: 4mm 3.4mm; }
+  .page.board .slot span { font-size: 11.6pt; line-height: 1.45; }
+  .page.board .slotMap { font-size: 22pt; min-height: 46mm; }
+  .page.board .tbl { gap: 4mm; padding: 6mm; }
+  .page.board .tblRow { gap: 4mm; }
+  .page.board .cellN { font-size: 25pt; }
+  .page.board .cellTag { font-size: 7.2pt; }
+  .page.board .cellTop { min-height: 10mm; }
+  .page.board .cellOpen { font-size: 8.6pt; min-height: 12mm; padding: 1.6mm 0; }
+  .page.board .cellDo { font-size: 8.8pt; }
+  .page.board .evSlot { font-size: 9.4pt; min-height: 16mm; }
+  .page.board .evSlotSub { font-size: 6.8pt; }
+  .page.board .pawnSlot { width: 15mm; height: 15mm; font-size: 7pt; }
+  .page.board .endStep { font-size: 9pt; padding: 2.4mm 2mm; }
+  .page.board .endArrow { font-size: 13pt; }
+  .page.board .trN { font-size: 19pt; }
+  .page.board .trL { font-size: 9pt; }
+  .page.board .trX { font-size: 8.2pt; }`;
+  // 장마다 속을 한 겹 싸 둔다 — 확대는 그 한 겹을 통째로 키우는 것이라 감쌀 상자가 필요하다.
+  const wrapped = wide.split('<div class="page board">').filter((x) => x.trim()).map((seg) => {
+    const end = seg.lastIndexOf('</div>');                  // 그 장을 닫는 태그
+    return `<div class="page board"><div class="wrap">${seg.slice(0, end)}</div></div>`;
+  }).join('\n');
+  return [
+    { filename: '보드_진행물.html', html: doc('보드게임 진행 물품', rest) },
+    { filename: '보드_배치와트랙.html', html: doc('보드게임 배치와 트랙', wrapped, a3land, WIDE_FIT) },
+  ];
 }
 
 /**
@@ -1493,5 +1565,5 @@ export async function genBoardDocs(data, opts = {}) {
   img = (p) => base + p;
   if (opts.siteUrl) siteUrl = opts.siteUrl;
   await buildQR(buildBoard().bag.CC);        // V 카드 QR 을 먼저 만들어 둔다
-  return [charCards(), clueCards(), placeBoard(), runSheets()];
+  return [charCards(), clueCards(), placeBoard(), ...runSheets()];
 }

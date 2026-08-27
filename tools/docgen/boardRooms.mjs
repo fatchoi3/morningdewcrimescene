@@ -91,16 +91,17 @@ export const ROOM_CSS = `
             line-height: 1; text-shadow: 0 0 0.5mm #00000066; }
   /* 감식실 — 내는 자리와 읽는 자리. */
   /* 감식실 그림의 작업대 자리 — 가운데 아래쪽에 두 구역을 나란히 */
-  .labZones { position: absolute; inset: 46% 7% 6%; display: grid;
+  .labZones { position: absolute; inset: 44% 5% 5%; display: grid;
               grid-template-columns: 1fr 1fr; gap: 4mm; }
   .labZone { background: #f7f4ecec; border: 0.7mm solid #2f2b24; border-radius: 2.4mm;
              padding: 3.4mm 3mm; display: flex; flex-direction: column; gap: 2.4mm; }
   .labIn { border-color: #265a66; }
   .labOut { border-color: #5a5a5a; }
   .labTt { font-size: 11pt; font-weight: 800; }
-  .labRow { display: flex; flex-wrap: wrap; gap: 2mm; }
-  .labSlot { width: 15mm; height: 21mm; border: 0.5mm dashed #8a8375; border-radius: 1.4mm;
+  .labRow { display: flex; flex-wrap: wrap; gap: 2.4mm; }
+  /* 올려놓을 물건이 카드이므로 자리도 카드 비율(63:88)로 둔다 — 한 줄에 다섯 장씩 들어간다. */
+  .labSlot { width: 23mm; height: 32mm; border: 0.6mm dashed #8a8375; border-radius: 1.8mm;
              background: #fffdf8; display: flex; align-items: center; justify-content: center;
-             font-size: 10pt; font-weight: 800; color: #8a8375; }
+             font-size: 12pt; font-weight: 800; color: #8a8375; }
   .labSub { font-size: 8pt; color: #4a453c; line-height: 1.5; margin-top: auto; }
 `;

@@ -37,6 +37,16 @@ function marginFor(name) {
 // 가로로 뽑을 문서 — 인물 시트는 A4 가로를 세로로 접는 형식이고, 결과 제출지는 두 벌이 나란히 있다.
 const LANDSCAPE = /^(보드_인물카드|결과제출지)/;
 
+// 문서가 @page 로 선언한 종이 크기를 그대로 PDF 에 전한다.
+//   format 을 넘기면 CSS 의 size 가 무시되어, A3 로 짠 판이 A4 로 줄어든 채 나온다.
+const PAPER = { A4: [210, 297], A3: [297, 420], A5: [148, 210] };
+function paperOf(html, name) {
+  const m = html.match(/@page\s*\{[^}]*size:\s*([A-Za-z][A-Za-z0-9]*)(?:\s+(landscape|portrait))?/);
+  const [w, h] = PAPER[(m?.[1] || 'A4').toUpperCase()] || PAPER.A4;
+  const land = m ? m[2] === 'landscape' : LANDSCAPE.test(name);
+  return land ? { width: `${h}mm`, height: `${w}mm` } : { width: `${w}mm`, height: `${h}mm` };
+}
+
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
 async function main() {
@@ -86,7 +96,8 @@ async function main() {
   for (const d of docs) {
     const pdfName = d.filename.replace(/\.html$/, '.pdf');
     await page.goto('file:///' + join(HTML_DIR, d.filename).replace(/\\/g, '/'), { waitUntil: 'networkidle0', timeout: 30000 });
-    await page.pdf({ path: join(PDF_DIR, pdfName), format: 'A4', landscape: LANDSCAPE.test(d.filename), printBackground: true, margin: marginFor(d.filename) });
+    await page.pdf({ path: join(PDF_DIR, pdfName), ...paperOf(d.html, d.filename),
+      printBackground: true, margin: marginFor(d.filename) });
     console.log('  PDF:', pdfName);
   }
   await browser.close();
