@@ -571,7 +571,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
             { name: '{{S1.short|이/}}', direction: 'in', time: '09:38', duration: '1분 52초' },
             { name: '{{S5}} 총무', direction: 'out', time: '09:05', duration: '1분 12초' },
             { name: '아내', direction: 'out', time: '08:40', duration: '6분 04초' },
-            { name: '{{S4}} 전도사', direction: 'missed', time: '전날 19:40' },
+            { name: '{{S4}} 전도사', direction: 'in', time: '전날 19:40', duration: '4분 12초' },
             { name: '{{S2}} 팀장', direction: 'missed', time: '전날 20:15' }
           ]
         },
@@ -1535,10 +1535,10 @@ export const evidenceMap = withAssetBase(resolveTokens({
   // =============================================
   // 강지후 (감정 동기 의혹 · 무고 · 발작 촉진 가능성만) — 보통 단서
   // =============================================
-  'BXCI-79': { // 12:41~12:45 CCTV 컷 + 별도 목격 진술 병행 (코드 끝2자리≠시각, 코드 유지)
+  'BXCI-79': { // 12:45 나오는 컷. 들어가는 컷(EJIN-08 · 12:41)과 한 쌍이다 (코드 끝2자리≠시각, 코드 유지)
     title: '[CCTV 장면] 12:45 {{S2}}',
     description: '',
-    detail: 'CCTV: 12:41경 목사 방 방향으로 사라졌다 12:45경 다시 나타나 빠르게 빠져나감. 목격자 진술로 방에서 큰 소리와 언쟁이 있었다고 한다.',
+    detail: '12:45경 목사 방 방향에서 다시 나타나 숙소 쪽으로 빠르게 빠져나감. 들어가는 장면은 다른 컷에 있다.',
     image: '',
     type: '보통',
     person: '{{S2}}'
@@ -1911,7 +1911,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'DISC-11': { // 자동 해금 — 목사 폰 톡서랍(0419) 복구 열람 + 세린 폰 카톡 열람 두 흔적이 모이면 App이 자동 부여
     title: '사라진 대화방',
     description: '',
-    detail: '목사님 폰엔 {{S6.short|과/와}} 나눈 대화가 그대로 남아 있는데, {{S6.short}} 폰엔 그 대화방만 통째로 사라졌다. 한쪽만 지워진 것이다. 왜 이 대화만 지웠는지 {{S6.short}}에게 직접 물어보자.',
+    detail: '목사님 폰에서 복구한 대화가 {{S6.short}} 폰엔 아예 없다. 목사님 쪽은 지워졌다가 복구됐고, {{S6.short}} 쪽은 방 자체가 없다 — 양쪽을 다 지운 손이 하나 있다는 뜻이다. {{S6.short}}에게 직접 물어보자.',
     image: '/images/길잡이.svg',
     type: '특수',
     person: '{{S6}}',
