@@ -854,6 +854,11 @@ function charCards() {
       접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
 
   // 자기 폰에 지워진 대화방이 있는 사람만 번호가 있다. 없는 사람에게는 아무것도 안 찍는다.
+  // 네 자리의 출처가 사람마다 다르다. 남이 스스로 알아낼 수 있는 번호는 그렇다고 적어 준다.
+  const RECOVER_OPEN = {
+    'YJWR-74': `다만 이 네 자리는 <b>그 수료증의 발급번호 뒷자리</b>입니다.
+      수료증을 본 사람이 있다면, <b>당신이 안 알려 줘도 열립니다.</b>`,
+  };
   const myPhone = (who) => {
     const mine = allClues.find((c) => c.person === who && /핸드폰/.test(c.title || '')
       && (c.phone?.apps || []).some((a) => (a.chats || []).some((ch) => ch.deleted)));
@@ -861,7 +866,8 @@ function charCards() {
     if (!num) return '';
     return `<div class="box"><div class="bl">내 휴대폰 — 톡서랍 복구 번호 ${esc(num)}</div>
       <p>내 폰(<b>${esc(no(mine.code))}</b>)의 카카오톡에는 <b>내가 지운 대화방</b>이 있습니다.
-        되살리려면 이 네 자리가 필요하고, <b>그 번호를 아는 사람은 나뿐입니다.</b></p>
+        되살리려면 이 네 자리가 필요하고, <b>그 번호를 아는 사람은 나뿐입니다.</b>
+        ${RECOVER_OPEN[mine.code] ? `<br>${RECOVER_OPEN[mine.code]}` : ''}</p>
       <p class="muted">남이 내 폰을 가져가 「비밀번호가 뭐냐」고 물으면 — 알려 줄지, 모른다고 할지,
         엉뚱한 번호를 댈지는 <b>당신이 정합니다.</b> 다만 끝까지 안 알려 주면 그것도 판에 보입니다.</p></div>`;
   };
