@@ -506,14 +506,17 @@ ${ROOM_CSS}
              font-size: 6pt; color: #b3aa99; background: #fff; padding: 0 1.5mm; }
   .fold h1 { font-size: 13pt; margin: 0 0 1.6mm; }
   .fold h1 .muted { font-size: 8pt; }
-  .fold h2 { font-size: 8.6pt; margin: 1.8mm 0 0.9mm; padding-bottom: 0.7mm;
+  .fold h2 { font-size: 8.6pt; margin: calc(1.8mm * var(--fit)) 0 calc(0.9mm * var(--fit)); padding-bottom: 0.7mm;
              border-bottom: 0.8px solid #14120f; break-after: avoid; }
   .fold h2:first-of-type { margin-top: 0; }
-  .fold p { font-size: 6.9pt; line-height: 1.46; margin: 0 0 1.2mm; }
-  .fold .muted { font-size: 6.6pt; line-height: 1.45; }
+  /* --fit 은 면마다 인쇄 직전에 정해진다(아래 fitScript). 1 이면 원래대로, 크면 넉넉해진다. */
+  .half { --fit: 1; }
+  .fold p { font-size: 6.9pt; line-height: calc(1.46 * var(--fit)); margin: 0 0 calc(1.2mm * var(--fit)); }
+  .fold .muted { font-size: 6.6pt; line-height: calc(1.45 * var(--fit)); }
   .fold table { font-size: 7.6pt; }
   .fold th, .fold td { padding: 1mm 1.4mm; }
-  .fold ul { font-size: 6.8pt; line-height: 1.4; margin: 0 0 1mm 3.4mm; }
+  .fold ul { font-size: 6.8pt; line-height: calc(1.4 * var(--fit)); margin: 0 0 calc(1mm * var(--fit)) 3.4mm; }
+  .fold li { margin-bottom: calc(0.5mm * (var(--fit) - 1)); }
   .fold .cname { font-size: 6pt; }
   .sy { font-size: 5.6pt; font-weight: 800; padding: 0.2mm 1mm; border-radius: 0.8mm;
         border: 0.25mm solid; vertical-align: 1px; white-space: nowrap; }
@@ -521,12 +524,12 @@ ${ROOM_CSS}
   .syH { color: #7d6116; border-color: #cfae5e; background: #fdf7e6; }
   .syL { color: #8a3b3b; border-color: #c98a8a; background: #fdf0ee; }
   /* 묻고 답하는 대목 — 표는 좁은 면에서 칸이 뭉개져서, 대신 블록으로 쌓는다. */
-  .qa { font-size: 6.9pt; line-height: 1.34; margin: 0 0 0.75mm; }
+  .qa { font-size: 6.9pt; line-height: calc(1.34 * var(--fit)); margin: 0 0 calc(0.75mm * var(--fit)); }
   .qa > b { color: #4a4436; }
   .qa > b::after { content: ' — '; font-weight: 400; color: #a49b88; }
   .qa > span { display: inline; }
   .qa .press { display: block; }
-  .fold .press { margin-top: 0.8mm; font-size: 6.6pt; }
+  .fold .press { margin-top: calc(0.8mm * var(--fit)); font-size: 6.6pt; }
   .fold .box { border: 0.4mm solid #8a3b3b; border-radius: 1.5mm; padding: 1.6mm 2.2mm;
                margin-top: 1.4mm; background: #fdf6f4; }
   .fold .bl { font-size: 8pt; font-weight: 800; color: #8a3b3b; margin-bottom: 0.9mm; }
@@ -537,14 +540,50 @@ ${ROOM_CSS}
   .covHow > b { display: block; color: #8a6d1f; margin-bottom: 1.2mm; }
   .covHow > div { margin-bottom: 0.8mm; }
   .covWarn { margin-top: 1.6mm; padding-top: 1.6mm; border-top: 0.3mm dashed #cfc7b6; color: #8a3b3b; }
-  .fold .box p { font-size: 6.8pt; line-height: 1.45; margin-bottom: 0.8mm; }
+  .fold .box p { font-size: 6.8pt; line-height: calc(1.45 * var(--fit)); margin-bottom: calc(0.8mm * var(--fit)); }
   .cover { justify-content: space-between; }
   .covName { font-size: 30pt; font-weight: 800; letter-spacing: .02em; }
   .covSub { font-size: 9pt; color: #6b6760; margin-top: 1.5mm; }
   .covFoot { font-size: 6.8pt; color: #8a8375; border-top: 0.3mm solid #ded7c7; padding-top: 2mm; }
 `;
-const doc = (title, body, pageCss = '') => `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
-<title>${esc(title)}</title><style>${CSS}${pageCss}</style></head><body>${body}</body></html>`;
+const doc = (title, body, pageCss = '', tailScript = '') => `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+<title>${esc(title)}</title><style>${CSS}${pageCss}</style></head><body>${body}${tailScript}</body></html>`;
+
+// 인물 시트는 면마다 남는 자리가 달라, 인쇄 직전에 각 면이 스스로 줄 간격을 늘린다.
+const FIT_SCRIPT = `<script>
+/* 면마다 남는 자리를 글자 사이로 돌려준다.
+   A4 가로에 뽑아 보니 면마다 채움이 62~100% 로 들쭉날쭉했다 — 대본 면 아래가 비는데,
+   일괄로 키우면 이미 꽉 찬 면이 잘린다. 그래서 각 면이 스스로 잰다. 넘치지 않는 선까지만
+   --fit 을 올리고, 못 늘리는 면은 1 로 남는다. 인쇄와 PDF 모두 이 스크립트가 돈 뒤에 찍힌다. */
+(function () {
+  var MAX = 1.45, TARGET = 0.97;
+  function fill(h) {
+    var cs = getComputedStyle(h);
+    var box = h.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var kids = h.children, top = h.getBoundingClientRect().top + parseFloat(cs.paddingTop), bot = top;
+    for (var i = 0; i < kids.length; i++) bot = Math.max(bot, kids[i].getBoundingClientRect().bottom);
+    return box > 0 ? (bot - top) / box : 1;
+  }
+  function fit() {
+    var halves = document.querySelectorAll(".half:not(.cover)");
+    for (var i = 0; i < halves.length; i++) {
+      var h = halves[i];
+      if (fill(h) >= TARGET) continue;
+      /* 이분법으로 가장 큰 배율을 찾는다 — 열 번이면 소수 셋째 자리까지 좁혀진다 */
+      var lo = 1, hi = MAX;
+      for (var n = 0; n < 10; n++) {
+        var mid = (lo + hi) / 2;
+        h.style.setProperty("--fit", mid.toFixed(3));
+        if (fill(h) <= TARGET) lo = mid; else hi = mid;
+      }
+      h.style.setProperty("--fit", lo.toFixed(3));
+    }
+  }
+  if (document.readyState === "complete") fit();
+  else window.addEventListener("load", fit);
+  window.addEventListener("beforeprint", fit);
+})();
+</script>`;
 
 // 3x3 면 단위로 자르고, 뒷면은 행마다 좌우를 뒤집어 양면 인쇄를 맞춘다.
 function paginate(items, front, back) {
@@ -906,7 +945,7 @@ function charCards() {
     sheet(cover(s), secret(s), 'cover') + sheet(lines(s.name), moments(s.name))).join('');
   const landscape = '@page { size: A4 landscape; margin: 0; }';
   return { filename: '보드_인물카드.html',
-    html: doc('보드게임 인물 시트', body + detectiveCard(named, sheet, qa), landscape) };
+    html: doc('보드게임 인물 시트', body + detectiveCard(named, sheet, qa), landscape, FIT_SCRIPT) };
 }
 
 // ── 7인 모드 · 형사 시트 ─────────────────────────────────────────────────────
