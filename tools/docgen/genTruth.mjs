@@ -8,9 +8,10 @@ const TRUTH_CSS = `
 body{font-family:'Malgun Gothic','Apple SD Gothic Neo',serif;font-size:10.5pt;line-height:1.85;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 /* @page 에 여백을 주면 브라우저가 그 자리에 날짜·제목·주소·쪽번호를 찍는다. 여백은 본문이 든다. */
 @page{margin:0}
-body{padding:8mm 18mm}
+body{padding:14mm 16mm}
 .ch{padding-top:18mm}
-.cover{background:#0f0e0c;color:#e8e4dc;padding:90px 56px;page-break-after:always;min-height:100vh}
+/* 인쇄에서 100vh 는 종이 전체(297mm)다 — 본문이 든 위아래 여백 28mm 를 빼야 한 면에 담긴다. */
+.cover{background:#0f0e0c;color:#e8e4dc;padding:70px 48px;page-break-after:always;min-height:calc(100vh - 28mm)}
 .ct{font-size:8pt;letter-spacing:.25em;color:#5f5e5a;text-transform:uppercase;margin-bottom:22px}
 .ctitle{font-size:34pt;font-weight:800;line-height:1.2;margin-bottom:16px}
 .csub{font-size:13pt;color:#9c9a92;margin-bottom:40px}

@@ -27,7 +27,8 @@ function marginFor(name) {
   if (name.startsWith('보드_') || name.startsWith('결과제출지')) return M(0, 0, 0, 0);
   if (name.startsWith('배우레퍼런스')) return M(14, 14, 16, 14);
   if (name.startsWith('단서배치')) return M(16, 15, 18, 15);
-  if (name.startsWith('진상해설서')) return M(20, 18, 22, 18);
+  // 진상해설서는 다른 인쇄물처럼 여백을 본문이 든다 — 여기서 또 주면 표지가 한 면을 넘는다.
+  if (name.startsWith('진상해설서')) return M(0, 0, 0, 0);
   if (name.startsWith('이미지생성')) return M(12, 12, 12, 12);
   if (name.startsWith('QR_인쇄시트')) return M(8, 8, 8, 8);
   if (name.startsWith('QR_')) return M(14, 14, 16, 14);
