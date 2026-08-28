@@ -50,7 +50,7 @@ export function genPrompts() {
 
   const css = `
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0a0908;font-family:'Malgun Gothic',sans-serif;color:#e8e4dc;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{background:#0a0908;font-family:'Noto Sans KR','Malgun Gothic',sans-serif;color:#e8e4dc;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 /* @page 에 여백을 주면 브라우저가 그 자리에 날짜·제목·주소·쪽번호를 찍는다. 여백은 본문이 든다. */
 @page{margin:0}
 body{padding:7mm 12mm}

@@ -16,7 +16,7 @@ export function genResultSheet() {
   /* @page 에 여백을 주면 브라우저가 그 자리에 날짜·제목·주소·쪽번호를 찍는다. 여백은 본문이 든다. */
   @page { margin: 0; }
   * { box-sizing: border-box; }
-  body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; color: #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'Noto Sans KR','Malgun Gothic', '맑은 고딕', sans-serif; margin: 0; color: #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .wrap { display: flex; }
   .form { flex: 1; padding: 12mm 10mm; }
   .form:first-child { border-right: 1.4px dashed #aaa; }

@@ -5,7 +5,7 @@ let V = '김호치 목사';
 
 const TRUTH_CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Malgun Gothic','Apple SD Gothic Neo',serif;font-size:10.5pt;line-height:1.85;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',serif;font-size:10.5pt;line-height:1.85;color:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 /* @page 에 여백을 주면 브라우저가 그 자리에 날짜·제목·주소·쪽번호를 찍는다. 여백은 본문이 든다. */
 @page{margin:0}
 body{padding:14mm 16mm}

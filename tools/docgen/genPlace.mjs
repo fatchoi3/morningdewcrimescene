@@ -31,7 +31,7 @@ table.mv .mvc{color:#555;line-height:1.45}
 .floor rect.room{fill:#f3f1ec;stroke:#cfc8ba;stroke-width:1.5}
 .floor rect.victim{fill:#fdeaea;stroke:#c98}
 .floor rect.hall{fill:#eef1f5;stroke:#cfd6df;stroke-width:1}
-.floor text{font-family:'Malgun Gothic',sans-serif;font-size:11px;fill:#333;text-anchor:middle;font-weight:700}
+.floor text{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;font-size:11px;fill:#333;text-anchor:middle;font-weight:700}
 .floor .cam{font-size:9px;fill:#a06ec8}
 `;
 

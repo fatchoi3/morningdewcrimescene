@@ -356,7 +356,7 @@ const CSS = `
      찍을 자리를 아예 없앤다. */
   @page { margin: 0; }
   * { box-sizing: border-box; }
-  body { font-family: 'Malgun Gothic','맑은 고딕',sans-serif; margin: 0; color: #14120f;
+  body { font-family: 'Noto Sans KR','Malgun Gothic','맑은 고딕',sans-serif; margin: 0; color: #14120f;
          -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .sheet { display: grid; grid-template-columns: repeat(3, 63mm); grid-auto-rows: 88mm;
            justify-content: center; align-content: start; page-break-after: always;
@@ -612,6 +612,35 @@ const CARD_FIT = `<script>
         if (over(el)) hi = mid; else lo = mid;
       }
       el.style.setProperty("--cf", lo.toFixed(3));
+    }
+  }
+  if (document.readyState === "complete") fit();
+  else window.addEventListener("load", fit);
+  window.addEventListener("beforeprint", fit);
+})();
+</script>`;
+
+// 진행 물품은 장마다 길이가 제각각이다 — 종이보다 긴 장만 담기는 데까지 줄인다.
+const PAGE_FIT = `<script>
+/* 종이보다 긴 장만 담기는 데까지 줄인다. 줄이면 글이 다시 흘러 조금 더 짧아지므로 두어 번 다시 잰다.
+   transform 이 아니라 zoom 을 쓰는 이유 — transform 은 겉모습만 줄이고 장 높이는 그대로라
+   쪽 나눔이 안 바뀐다. 이벤트 카드 장은 원래 두 면에 걸치게 둔 것이라 건드리지 않는다(.spill). */
+(function () {
+  var MIN = 0.82, H = 297 / 25.4 * 96;
+  function fit() {
+    var pages = document.querySelectorAll(".page:not(.spill)");
+    for (var i = 0; i < pages.length; i++) {
+      var el = pages[i];
+      el.style.zoom = "";
+      if (el.getBoundingClientRect().height <= H) continue;
+      var k = 1;
+      for (var n = 0; n < 6; n++) {
+        var h = el.getBoundingClientRect().height;
+        if (h <= H) break;
+        k = Math.max(MIN, k * H / h);
+        el.style.zoom = k.toFixed(4);
+        if (k === MIN) break;
+      }
     }
   }
   if (document.readyState === "complete") fit();
@@ -1469,7 +1498,7 @@ function runSheets() {
     <p class="muted">근거 번호를 꼭 같이 적으세요. "누가 그렇게 말했다"와 "어느 카드에 그렇게 적혀 있다"는
       다릅니다 — 이 판에서 사람이 속는 자리가 정확히 거기입니다.</p></div>
 
-  <div class="page">${stage('준비할 때 오려 둡니다')}<h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
+  <div class="page spill">${stage('준비할 때 오려 둡니다')}<h1>이벤트 카드 <span class="muted">— 잘라서 접어 두세요</span></h1>
     <p class="muted">준비할 때 네 장을 잘라 접어서, 라운드 트랙의 ①②③④ 자리에 <b>뒷면이 보이게</b> 얹어 둡니다.
       그 라운드가 끝나면 뒤집어 한 사람이 소리 내어 읽습니다. <b>미리 읽지 마세요.</b></p>
     ${ev('①', whenEv('①'), '현장 통제 해제',
@@ -1547,7 +1576,7 @@ function runSheets() {
     return `<div class="page board"><div class="wrap">${seg.slice(0, end)}</div></div>`;
   }).join('\n');
   return [
-    { filename: '보드_진행물.html', html: doc('보드게임 진행 물품', rest) },
+    { filename: '보드_진행물.html', html: doc('보드게임 진행 물품', rest, '', PAGE_FIT) },
     { filename: '보드_배치와트랙.html', html: doc('보드게임 배치와 트랙', wrapped, a3land, WIDE_FIT) },
   ];
 }
