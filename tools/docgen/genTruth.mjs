@@ -48,14 +48,19 @@ export function genTruth(data) {
   <div class="ctitle">크라임씬<br>사건의 전말</div>
   <div class="csub">인물별 시점으로 풀어낸 진실 — 게임 종료 후 공개용</div>
   <div class="cbar"></div>
-  <div class="cinfo">
+  <div class="warn-cover">⚠ 이 문서는 <b>사건의 답</b>입니다. <b>여기까지만 보고 봉투에 넣어 봉하세요.</b><br>이 종이를 봉투에 넣는 사람도 다음 장부터는 보지 않습니다 — 준비를 맡았다는 이유로 혼자 답을 알고 시작하게 됩니다.<br>여는 순간은 진행 순서의 <b>9번</b> — 최종 토론과 동시 지목이 끝난 뒤입니다. 한 사람이 처음부터 소리 내어 읽으면 됩니다.</div>
+</div>
+
+<div class="ch">
+  <div class="eye" style="color:#9c9a92">한눈에</div>
+  <div class="cht">사건의 답</div>
+  <div class="cinfo" style="color:#4a453c">
     피해자<span>${V} (58세) — 베개 질식사</span><br>
     직접 범인<span>서지안 (전도사) — 베개 질식</span><br>
     별개 범행<span>한다영 · 한소미 · 문세린 — 서로 몰랐고 진범과도 공모하지 않았다</span><br>
     무고<span>최종현 · 강지후</span><br>
     구성<span>피해자 + 용의자 6인, 각 인물의 시점과 진실</span>
   </div>
-  <div class="warn-cover">⚠ 이 문서는 사건의 답입니다. <b>봉투에 넣어 봉하고, 지목이 끝날 때까지 아무도 열지 않습니다.</b><br>여는 순간은 진행 순서의 <b>9번</b> — 최종 토론과 동시 지목이 끝난 뒤입니다. 한 사람이 처음부터 소리 내어 읽으면 됩니다.</div>
 </div>
 
 <div class="ch">

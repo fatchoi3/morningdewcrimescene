@@ -131,8 +131,12 @@ function explode(c) {
         ? '카카오톡에 지워진 대화방이 있다 — 이 QR 을 찍어 들어간 화면 안에서, 그 방을 열고 네 자리 숫자를 넣으면 되살아난다.\n그 네 자리는 다른 단서 안에 적혀 있다. 세 번 틀리면 화면이 어디를 볼지 일러 준다.'
         : '',
     ].filter(Boolean).join('\n');
-    // 휴대폰은 이벤트 ② 뒤부터 각 방에서 가져갈 수 있다. 다이어리·성경책은 처음부터.
-    return [one({ screen: true, image: null, detail: body, locked: phone ? 3 : 0 })];
+    // 이벤트 ② 뒤에 더미에 들어오는 것 — 일곱 대의 휴대폰과, 목사님 방의 기록(일기장)이다.
+    //   목사님 방은 현장(D1~D10)이 ① 뒤, 기록이 ② 뒤로 나뉜다. 그 사실이 더미 머리말에만
+    //   있으면 준비할 때 골라낼 수가 없다 — 카드 자신이 말해야 한다.
+    //   다른 사람의 다이어리·성경책은 처음부터 그 방에 있다.
+    const record = phone || (c.person === '목사' && c.pages?.length);
+    return [one({ screen: true, image: null, detail: body, locked: record ? 3 : 0, phone })];
   }
 
   if (c.pages?.length) {
@@ -832,9 +836,9 @@ function clueCards() {
       ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">${qrLabel(c)}</div></div>`
         : realImg(c) ? `<img class="cimg" src="${esc(img(realImg(c)))}" alt="">` : ''}
       <div class="cd${c.small ? ' sm' : ''}">${esc(c.detail || c.description || '')}</div>
-      ${c.locked ? `<div class="lock">🔒 <b>이벤트 ②</b>(통신 기록 영장)을 읽은 뒤부터다.
-        가져가는 것은 지금도 되지만, 그때까지는 아무도 못 읽는다.<br>
-        <b>자기 방에는 못 들어가므로 자기 휴대폰도 못 가져간다.</b></div>` : ''}
+      ${c.locked ? `<div class="lock">🔒 <b>준비할 때 이 카드를 빼서 따로 둡니다.</b>
+        <b>이벤트 ②</b>(통신 기록 영장)를 읽을 때 이 더미에 넣습니다 — 그전에는 더미에 없습니다.${
+        c.phone ? '<br><b>자기 방에는 못 들어가므로 자기 휴대폰은 남이 읽습니다.</b>' : ''}</div>` : ''}
       ${mine(c) ? `<div class="lock">⚖ 이 결과는 <b>${esc(mine(c))}</b> 에게 걸린다.
         <b>${esc(mine(c))}</b> 은(는) 이 결과를 읽을 수 없다 — 다른 사람이 집어 소리 내어 읽는다.</div>` : ''}
       ${isCC ? '<div class="lock">📢 이 장면은 <b>가져오는 즉시 소리 내어 읽는다.</b> 혼자 읽고 덮어 두지 못한다.</div>' : ''}
@@ -1240,7 +1244,8 @@ function runSheets() {
           접힌 안쪽은 절대 보여 주지 않습니다.</td></tr>
       <tr><td class="stn">3</td><td><b>「사건 브리핑」</b><br><span class="muted">이 책자에서 머리에 <b>「시작할 때」</b>라고 적힌 면</span></td>
         <td>한 사람이 <b>소리 내어 읽습니다.</b> 여기까지가 전원이 아는 전부입니다.</td></tr>
-      <tr><td class="stn">4</td><td><b>자기소개</b></td>
+      <tr><td class="stn">4</td><td><b>자기소개</b><br>
+        <span class="muted">먼저 소개한 사람이 <b>1라운드 시작 플레이어</b>가 됩니다</span></td>
         <td>인물 시트 <b>겉면</b>에 적힌 것을 자기 말로. 한 사람에 30초.</td></tr>
       <tr><td class="stn">5</td><td><b>「기본 규칙」 세 면</b><br><span class="muted">이 책자에서 머리에 <b>「첫 라운드 전에 · 계속 펴 둡니다」</b>라고 적힌 면들</span></td>
         <td>다 함께 훑습니다. 3분. <b>앞장 한 면</b>만 알면 1라운드가 돕니다. 판 옆에 계속 펴 둡니다.</td></tr>
@@ -1252,7 +1257,10 @@ function runSheets() {
         <td><b>「라운드 트랙」</b>의 말을 한 칸 옮기고, 이벤트 칸이면 그 카드를 뒤집어 읽습니다.
           <b>「사건 기록판」</b>에 한 줄 적습니다.</td></tr>
       <tr><td class="stn">8</td><td><b>최종 토론 · 지목</b></td>
-        <td>마지막 라운드가 끝나면 충분히 토론하고 <b>동시에</b> 한 명씩 지목합니다.</td></tr>
+        <td>마지막 라운드가 끝나면 충분히 토론하고 <b>동시에</b> 한 명씩 지목합니다.<br>
+          <b>표가 가장 많이 몰린 사람이 판의 결론</b>입니다.
+          봉투를 열어 <b>맞았으면 시민이, 틀렸으면 진범이 이깁니다</b> — <b>동표면 진범이 이깁니다.</b><br>
+          <span class="muted">자기 자신은 지목할 수 없습니다.</span></td></tr>
       <tr><td class="stn">9</td><td><b>진상 해설서</b></td>
         <td>봉투를 엽니다. 한 사람이 소리 내어 읽습니다. 그리고 10분쯤 이야기를 나눕니다.</td></tr></table>
 
@@ -1494,7 +1502,9 @@ function runSheets() {
       <div class="endArrow">→</div>
       <div class="endStep"><b>지목</b> 한 명씩 동시에</div>
       <div class="endArrow">→</div>
-      <div class="endStep"><b>진상 해설서</b> 봉투를 연다</div>
+      <div class="endStep"><b>진상 해설서</b> 봉투를 연다<br>
+        <span class="muted">표가 가장 많이 몰린 사람이 판의 결론입니다.<br>
+        맞았으면 <b>시민</b>이, 틀렸으면 <b>진범</b>이 이깁니다 — <b>동표면 진범이 이깁니다.</b></span></div>
       <div class="endArrow">→</div>
       <div class="endStep"><b>감상전</b> 10분</div>
     </div>
