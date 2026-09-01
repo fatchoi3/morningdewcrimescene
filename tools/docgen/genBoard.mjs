@@ -1446,7 +1446,12 @@ function runSheets() {
       마지막 라운드 하나를 남기고 넷을 다 읽습니다.</p>
     ${TRACKS.map(({ label, rounds, evAt }) => `
     <h2>${label}</h2>
-    <div class="trk trk${rounds}">${Array.from({ length: rounds }, (_, i) => i + 1).map((n) => {
+    <div class="trk trk${rounds}">${(() => {
+      // 열람실은 ③ 을 읽은 다음 라운드부터 갈 수 있다. 「CCTV 는 3장」을 칸마다 똑같이 박아 두면
+      //   아직 갈 수도 없는 곳의 예외 규칙이 1라운드 칸에 떠 있게 되어, 처음 하는 사람은
+      //   「CCTV 가 어디 있지」부터 찾는다. 열린 뒤 칸에만 붙인다.
+      const r3 = Number(Object.keys(evAt).find((k) => evAt[k] === '③'));
+      return Array.from({ length: rounds }, (_, i) => i + 1).map((n) => {
       const ev = evAt[n];
       // 그 라운드 '시작'에 무엇이 열려 있는지 — 직전 라운드 끝에 읽은 이벤트가 연 것이다.
       const opened = { '①': '목사님의 방<br>— 현장',
@@ -1457,11 +1462,12 @@ function runSheets() {
           ? '<span class="cellTag">마지막</span>' : ''}</div>
         <div class="cellOpen">${opened ? `<b>여기서 열립니다</b><br>${opened}`
           : '<span class="muted">새로 열리는 곳 없음</span>'}</div>
-        <div class="cellDo">조사 2장<br><span class="muted">CCTV 는 3장</span><br>토론</div>
+        <div class="cellDo">조사 2장${n > r3 ? '<br><span class="muted">CCTV 열람실만 3장</span>' : ''}<br>토론</div>
         ${ev ? `<div class="evSlot">이벤트 ${ev}<div class="evSlotSub">라운드 끝에 뒤집는다</div></div>`
           : '<div class="pawnSlot">말 자리</div>'}
       </div>`;
-    }).join('')}</div>`).join('')}
+    }).join('');
+    })()}</div>`).join('')}
     <p class="muted"><b>여는 순서는 여섯이나 일곱이나 같습니다.</b> 다른 것은 2차 부검(④) 하나뿐입니다 —
       여섯은 라운드가 하나 더 있으므로 그만큼 뒤로 미룹니다. <b>어느 쪽이든 부검 뒤에 조사할 라운드가
       한 번 남습니다</b> — 그때서야 값이 생기는 카드가 있기 때문입니다.<br>
