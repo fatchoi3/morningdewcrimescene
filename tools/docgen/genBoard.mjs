@@ -358,9 +358,17 @@ const CSS = `
   * { box-sizing: border-box; }
   body { font-family: 'Noto Sans KR','Malgun Gothic','맑은 고딕',sans-serif; margin: 0; color: #14120f;
          -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* 개행은 판을 감싼 .sheetPage 가 맡는다 — 판 자체에 걸면 머리글과 판 사이에서 또 끊긴다. */
+  .sheetPage { page-break-after: always; }
+  /* 뒷면의 빈 자리 — 앞면 카드와 좌우를 맞추려면 자리를 비워 두어야 한다. 아무것도 안 찍는다. */
+  .cardGap { }
+  .sheetPage:last-of-type { page-break-after: auto; }
   .sheet { display: grid; grid-template-columns: repeat(3, 63mm); grid-auto-rows: 88mm;
-           justify-content: center; align-content: start; page-break-after: always;
-           padding: 12mm 0; }
+           justify-content: center; align-content: start; padding: 3mm 0 0; }
+  /* 덱 머리글 — 카드 세 줄(264mm)을 빼면 한 면에 30mm 쯤 남는다. 그 안에 들어가야 한다. */
+  .deckHd { padding: 6mm 14mm 0; }
+  .deckHd h1 { font-size: 13pt; margin: 0 0 1mm; }
+  .deckHd .muted { font-size: 6.8pt; line-height: 1.4; margin: 0; }
   /* --cf 는 넘치는 카드에만 인쇄 직전에 1 미만으로 정해진다(아래 cardFit). */
   .card { --cf: 1; border: 0.3mm dashed #bbb; padding: 3.2mm; overflow: hidden; position: relative;
           display: flex; flex-direction: column; }
@@ -418,7 +426,7 @@ const CSS = `
   .page { padding: 14mm 14mm 12mm; page-break-after: always; }
   /* 마지막 장까지 개행을 걸면 뒤에 빈 면이 한 장 더 나온다 — 인쇄물마다 한 장씩 버려지고 있었다.
      맞춤 스크립트가 본문 끝에 붙는 문서가 있어 :last-child 로는 안 잡힌다. */
-  .page:last-of-type, .sheet:last-of-type { page-break-after: auto; }
+  .page:last-of-type { page-break-after: auto; }
   .brief h2 { font-size: 12pt; margin: 4mm 0 1.6mm; }
   .brief p { font-size: 9.6pt; line-height: 1.62; }
   table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
@@ -685,14 +693,22 @@ const FIT_SCRIPT = `<script>
 </script>`;
 
 // 3x3 면 단위로 자르고, 뒷면은 행마다 좌우를 뒤집어 양면 인쇄를 맞춘다.
-function paginate(items, front, back) {
+function paginate(items, front, back, head = '') {
   let out = '';
   for (let i = 0; i < items.length; i += 9) {
     const page = items.slice(i, i + 9);
-    out += `<div class="sheet">${page.map(front).join('')}</div>`;
+    // 머리글은 그 덱의 첫 판과 같은 면에 얹는다. 따로 한 면을 주면 앞면이 짝수 면으로 밀려
+    //   양면 인쇄에서 카드의 앞뒤가 다른 종이에 찍힌다.
+    out += `<div class="sheetPage">${i === 0 ? head : ''}<div class="sheet">${page.map(front).join('')}</div></div>`;
+    // 모자란 줄은 빈 칸으로 세 칸을 채운 뒤에 뒤집는다 — 안 그러면 그 줄만 좌우가 안 맞는다.
     const mirrored = [];
-    for (let r = 0; r < page.length; r += 3) mirrored.push(...page.slice(r, r + 3).reverse());
-    out += `<div class="sheet">${mirrored.map(back).join('')}</div>`;
+    for (let r = 0; r < page.length; r += 3) {
+      const row = page.slice(r, r + 3);
+      while (row.length < 3) row.push(null);
+      mirrored.push(...row.reverse());
+    }
+    out += `<div class="sheetPage"><div class="sheet">${
+      mirrored.map((c) => (c ? back(c) : '<div class="cardGap"></div>')).join('')}</div></div>`;
   }
   return out;
 }
@@ -732,7 +748,7 @@ function lockCards() {
     <div class="hint"><div>이 카드는 <b>아무도 가져갈 수 없다.</b> 판 옆에 펴 두고 누구나 찍는다.<br>
       ${q.hand ? `<b>${esc(q.need)}</b>가 판에 공개된 뒤라야 찍을 수 있다.<br>한 라운드에 세 명까지.` : '잠긴 것은 카드가 아니라 <b>숫자</b>다.'}</div></div>
   </div>`;
-  return `<div class="page"><h1>필적 대조 카드 — ${allQ().length}장
+  return `<div class="sheetPage"><div class="deckHd"><h1>필적 대조 카드 — ${allQ().length}장
       <span class="muted">Q6-1 ~ Q6-${HANDS.length}</span></h1>
     <p class="muted">앞면이 보이게 판 옆에 펴 둡니다. <b>가져가는 카드가 아닙니다.</b>
       휴대폰 카메라로 QR 을 찍으면 화면이 열리고, 그 사람만 결과를 봅니다.<br>
@@ -741,7 +757,7 @@ function lockCards() {
       <b>한 라운드에 세 명까지</b> 대조합니다 — <b>조사로 가져가는 두 장과는 별개</b>입니다.
       한 장이 한 사람이라, 누가 어느 카드를 찍는지가 그대로 보입니다.<br>
       <span class="muted">지워진 대화방과 수료증 조회는 카드가 따로 없습니다 —
-      그 휴대폰 카드의 QR 을 찍어 들어간 <b>폰 화면 안에서</b> 엽니다.</span></p>
+      그 휴대폰 카드의 QR 을 찍어 들어간 <b>폰 화면 안에서</b> 엽니다.</span></p></div>
     <div class="sheet">${allQ().map(face).join('')}</div></div>`;
 }
 
@@ -836,7 +852,7 @@ function clueCards() {
         ? '<div class="bsci">🔬 감식실에 낼 수 있는 카드</div>' : ''}
       ${c.locked ? `<div class="block">🔒 <b>이벤트 ②</b> 뒤<div class="bsub">준비할 때 빼서 따로 둔다</div></div>` : ''}</div>`;
     };
-    return `<div class="page"><h1>${esc(meta.name)} — ${list.length}장
+    const head = `<div class="deckHd"><h1>${esc(meta.name)} — ${list.length}장
       <span class="muted">${meta.letter}1 ~ ${meta.letter}${list.length}</span></h1>
       <p class="muted">${esc(meta.open || '조건을 채우면 이 더미에서 가져간다')} ·
       <b>뒷면(번호)이 보이게</b> 쌓고, ${isCC
@@ -846,8 +862,8 @@ function clueCards() {
         화면은 가져가는 것이 아니라 이어 보는 것이라서입니다.<br>
         <b>뒷면의 색점이 그 장면에 찍힌 사람입니다.</b> 자기 색도 가져갈 수 있습니다 —
         다만 가져오면 소리 내어 읽어야 하므로, 자기 장면을 집는 것은 <b>먼저 해명하겠다는 선언</b>이 됩니다.
-        여기서만은 카드를 가져가는 것이 곧 공개라, 무엇을 집었는지 감출 수 없습니다.</p>` : ''}</div>`
-      + paginate(list, front, back);
+        여기서만은 카드를 가져가는 것이 곧 공개라, 무엇을 집었는지 감출 수 없습니다.</p>` : ''}</div>`;
+    return paginate(list, front, back, head);
   };
   let body = '';
   for (const p of PLACES) if (bag[p.id].length) body += deck(bag[p.id], p);
