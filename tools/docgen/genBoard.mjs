@@ -539,6 +539,17 @@ ${ROOM_CSS}
   .fold h2:first-of-type { margin-top: 0; }
   /* --fit 은 면마다 인쇄 직전에 정해진다(아래 fitScript). 1 이면 원래대로, 크면 넉넉해진다. */
   .half { --fit: 1; }
+  /* 접으면 바깥으로 나오는 면. 남이 봐도 되는 것만 있어야 한다. */
+  .blankHalf { height: 100%; display: flex; align-items: flex-end; justify-content: center;
+               padding-bottom: 10mm; font-size: 7pt; color: #b3aa99; }
+  .ownerTab { height: 100%; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+  .ownerTab .covName { font-size: 26pt; font-weight: 800; }
+  .ownerTab .covSub { font-size: 10pt; color: #6b6760; margin-top: 2mm; }
+  .ownerTab .cbar2 { width: 26mm; height: 0.8mm; background: #b8912c; margin: 6mm auto; }
+  .ownerTab p { font-size: 8.4pt; line-height: 1.7; color: #5b5140; }
+  .ownerTab .covWarn { margin-top: 8mm; font-size: 8pt; font-weight: 800; color: #8a3b3b; }
+  .memoLines { margin-top: 3mm; }
+  .memoLine { border-bottom: 0.3mm solid #ddd6c8; height: 7.2mm; }
   .fold p { font-size: 6.9pt; line-height: calc(1.46 * var(--fit)); margin: 0 0 calc(1.2mm * var(--fit)); }
   .fold .muted { font-size: 6.6pt; line-height: calc(1.45 * var(--fit)); }
   .fold table { font-size: 7.6pt; }
@@ -938,8 +949,10 @@ function charCards() {
           <b>나이에 몰두하여 연기해 주세요.</b></div>
         <div class="covWarn">게임이 끝날 때까지 <b>자신의 카드를 절대 보여 주지 않습니다.</b></div></div>
     </div>
-    <div class="covFoot"><b>A4 가로</b>로 양면 인쇄(<b>짧은 쪽 넘김</b>)해 가운데 점선을 세로로 접으세요.
-      접으면 이 면만 보입니다 — 안쪽 세 면은 본인만 폅니다.</div>`;
+    <div class="covFoot">한 사람에 <b>A4 가로 두 장</b>입니다. 두 장 다 양면 인쇄(<b>짧은 쪽 넘김</b>)해
+      가운데 점선을 세로로 접으세요 — <b>안쪽이 서로 마주 보게</b> 접습니다.
+      그러면 바깥으로 나오는 것은 <b>이 겉면과 이름표, 그리고 백지 둘뿐</b>입니다.
+      안쪽 네 면(비밀 시나리오 · 대본 · 이 상황에서는 이렇게 · 메모)은 본인만 폅니다.</div>`;
 
   // 자기 폰에 지워진 대화방이 있는 사람만 번호가 있다. 없는 사람에게는 아무것도 안 찍는다.
   // 네 자리의 출처가 사람마다 다르다. 남이 스스로 알아낼 수 있는 번호는 그렇다고 적어 준다.
@@ -1091,13 +1104,31 @@ const PUSH_AS_MOMENT = {
 `;
   };
 
-  const sheet = (left, right, leftCls = '') => `<div class="fold">
+  const sheet = (left, right, leftCls = '', rightCls = '') => `<div class="fold">
     <div class="half ${leftCls}">${left}</div>
     <div class="foldline"></div><div class="foldtag">세로로 접는 선</div>
-    <div class="half">${right}</div></div>`;
+    <div class="half ${rightCls}">${right}</div></div>`;
 
+  // 접었을 때 바깥으로 나오는 면. 아무것도 없어야 남이 봐도 되는 면이 된다.
+  const blank = (note) => `<div class="blankHalf">${note || ''}</div>`;
+  // 둘째 장의 겉면 — 누구 것인지는 알아야 하는데, 이름은 어차피 공개된 것이다.
+  const ownerTab = (s) => `<div class="ownerTab">
+    <div class="covName">${esc(s.name)}</div>
+    <div class="covSub">둘째 장 — 본인만 봅니다</div>
+    <div class="cbar2"></div>
+    <p>안쪽 두 면에 <b>이 상황에서는 이렇게</b>와 <b>메모 칸</b>이 있습니다.<br>
+      첫째 장과 함께 접어서 겹쳐 두세요.</p>
+    <div class="covWarn">펴서 남에게 보이지 않습니다.</div></div>`;
+  const memo = () => `<h1>메모 <span class="muted">— 본인만</span></h1>
+    <p class="muted">들은 것, 이상했던 것, 아직 답을 못 받은 질문. 라운드마다 한 줄씩이면 됩니다.</p>
+    <div class="memoLines">${Array.from({ length: 22 }, () => '<div class="memoLine"></div>').join('')}</div>`;
+
+  // 한 사람에 두 장. 바깥 넷은 겉면·이름표·백지 둘 — 어느 쪽으로 접어도 비밀이 밖을 보지 않는다.
   const body = suspects.map((s) =>
-    sheet(cover(s), secret(s), 'cover') + sheet(lines(s.name), moments(s.name))).join('');
+    sheet(cover(s), blank('둘째 장이 따로 있습니다'), 'cover', 'cover')
+    + sheet(secret(s), lines(s.name))
+    + sheet(ownerTab(s), blank(), 'cover', 'cover')
+    + sheet(moments(s.name), memo())).join('');
   const landscape = '@page { size: A4 landscape; margin: 0; }';
   return { filename: '보드_인물카드.html',
     html: doc('보드게임 인물 시트', body + detectiveCard(named, sheet, qa), landscape, FIT_SCRIPT) };
@@ -1122,7 +1153,8 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
           여섯은 서로의 방을 뒤지며 자기 물건이 남의 손에 들리는 것을 감수하지만, 형사에게는 그런 것이 없습니다.
           조사·토론·지목은 나머지와 똑같이 합니다.</p></div>
     </div>
-    <div class="covFoot">여섯이 하면 이 장을 빼세요. <b>A4 가로</b>로 양면 인쇄(<b>짧은 쪽 넘김</b>)해 가운데 점선을 세로로 접습니다.</div>`;
+    <div class="covFoot">여섯이 하면 이 <b>한 장</b>을 빼세요. <b>A4 가로</b>로 양면 인쇄(<b>짧은 쪽 넘김</b>)해
+      <b>안쪽이 서로 마주 보게</b> 세로로 접습니다 — 형사는 숨길 시나리오가 없어 한 장이면 됩니다.</div>`;
   const inner = `<h1>${esc(d.name)} 형사 <span class="muted">— 당신이 아는 것 (본인만)</span></h1>
     <h2>당신의 정체</h2><p>${esc(d.identity)}</p>
     <h2>당신의 그날</h2>
@@ -1142,7 +1174,8 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
       <p>아무도 당신을 의심하지 않으니 마음껏 물을 수 있습니다. 그런데 그 편함으로 판을
         정리해 버리면 <b>나머지 여섯이 구경꾼이 됩니다.</b> 묻고, 짚고, 기다리세요.
         답은 저들의 입에서 나와야 합니다.</p></div>`;
-  return sheet(cover, inner, 'cover') + sheet(back, '<p class="muted">(비워 둡니다 — 형사에게는 숨길 시나리오가 없습니다.)</p>');
+  return sheet(cover, '<div class="blankHalf">둘째 장이 따로 있습니다</div>', 'cover', 'cover')
+    + sheet(inner, back);
 }
 
 // ── 3. 장소 판 + 공개 단서 ───────────────────────────────────────────────────
