@@ -25,3 +25,5 @@ public/images/people/*.jpeg
 # 플레이테스트 시뮬레이션이 만든 임시 덤프 — 비밀 시나리오와 단서 본문이 그대로 들어 있다
 _*.json
 _*.txt
+tools/_*.mjs
+tools/_*.json
