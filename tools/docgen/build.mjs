@@ -97,6 +97,12 @@ async function main() {
   for (const d of docs) {
     const pdfName = d.filename.replace(/\.html$/, '.pdf');
     await page.goto('file:///' + join(HTML_DIR, d.filename).replace(/\\/g, '/'), { waitUntil: 'networkidle0', timeout: 30000 });
+    // 문서마다 인쇄 직전에 스스로 크기를 맞추는 스크립트가 있다. 그것들은 load 와 beforeprint
+    //   양쪽에 걸려 있는데, load 때는 아직 화면 모드라 인쇄 배치와 다르다 — 인쇄에서만 넘치는
+    //   장을 못 잡는다. 사람이 브라우저에서 인쇄하면 beforeprint 가 알아서 뜨지만
+    //   page.pdf() 는 그 사건을 안 띄운다. 인쇄 모드로 바꾼 뒤 직접 띄워 준다.
+    await page.emulateMediaType('print');
+    await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
     await page.pdf({ path: join(PDF_DIR, pdfName), ...paperOf(d.html, d.filename),
       printBackground: true, margin: marginFor(d.filename) });
     console.log('  PDF:', pdfName);

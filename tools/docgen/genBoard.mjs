@@ -589,10 +589,10 @@ const doc = (title, body, pageCss = '', tailScript = '') => `<!DOCTYPE html><htm
 <title>${esc(title)}</title><style>${CSS}${pageCss}</style></head><body>${body}${tailScript}</body></html>`;
 
 // 인물 시트는 면마다 남는 자리가 달라, 인쇄 직전에 각 면이 스스로 줄 간격을 늘린다.
-// 배치·트랙은 A3 가로에 얹고, 남는 자리만큼 장마다 통째로 확대한다.
+// 배치·트랙은 A3 세로에 얹고, 남는 자리만큼 글씨를 키운다.
 const WIDE_FIT = `<script>
 /* 글씨를 키운 뒤 혹 넘치는 장이 있으면 담기는 데까지 되돌린다. 넘치지 않으면 손대지 않는다.
-   A3 가로는 폭만 두 배이고 높이는 A4 와 같아서, 확대가 아니라 글씨로 자리를 쓴다. */
+   A3 세로는 가로세로가 다 1.41 배라 글씨를 그만큼 키웠다 — 넘치면 여기서 되돌린다. */
 (function () {
   var MAX = 2.2;
   function fit() {
@@ -1175,7 +1175,8 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
       <p>아무도 당신을 의심하지 않으니 마음껏 물을 수 있습니다. 그런데 그 편함으로 판을
         정리해 버리면 <b>나머지 여섯이 구경꾼이 됩니다.</b> 묻고, 짚고, 기다리세요.
         답은 저들의 입에서 나와야 합니다.</p></div>`;
-  return sheet(cover, '<div class="blankHalf">둘째 장이 따로 있습니다</div>', 'cover', 'cover')
+  // 형사는 숨길 시나리오가 없어 한 장이다 — 없는 둘째 장을 가리키지 않는다.
+  return sheet(cover, '<div class="blankHalf">형사는 이 한 장뿐입니다</div>', 'cover', 'cover')
     + sheet(inner, back);
 }
 
@@ -1275,8 +1276,10 @@ function runSheets() {
           둘째 장부터가 답입니다.</td></tr>
       <tr><td class="stn">2</td><td><b>보드_인물카드</b></td><td>A4 <b>가로</b></td><td>26</td>
         <td>양면 · <b>짧은 쪽 넘김</b></td>
-        <td>13장(한 사람에 두 장, 형사만 한 장). 뽑는 즉시 <b>읽지 말고</b> 안쪽이 마주 보게 접어
-          겉면만 보이게 엎어 둡니다. 여섯이 하면 형사 한 장은 뺍니다.</td></tr>
+        <td>13장(한 사람에 두 장, 형사만 한 장). <b>이것도 혼자 있을 때 뽑으세요</b> —
+          스물여섯 면 중 절반이 남의 비밀입니다. 나온 그대로 집어 <b>읽지 말고</b>
+          안쪽이 마주 보게 접어 겉면만 보이게 엎어 둡니다. 여섯이 하면 형사 한 장은 뺍니다
+          (문서 <b>맨 뒤</b> 두 면입니다 — 미리 알면 1~24면만 뽑아 한 장을 아낍니다).</td></tr>
       <tr><td class="stn">3</td><td><b>보드_장소판</b></td><td><b>A3</b> 세로</td><td>4</td>
         <td>단면</td>
         <td>4장. <b>A4 로 줄이지 마세요</b> — 번호 옆 물건 이름이 안 읽힙니다.</td></tr>
@@ -1287,10 +1290,10 @@ function runSheets() {
         <td>양면 · <b>긴 쪽 넘김</b></td>
         <td>14장. <b>가장 오래 걸립니다</b> — 한 면에 3×3, 모두 97장을 자릅니다.
           마지막 장은 뒷면이 비는 것이 정상입니다(필적 대조 카드는 뒷면이 없습니다).</td></tr>
-      <tr><td class="stn">6</td><td><b>보드_진행물</b></td><td>A4 세로</td><td>10</td>
+      <tr><td class="stn">6</td><td><b>보드_진행물</b></td><td>A4 세로</td><td>11</td>
         <td>단면</td>
-        <td>10장(이 책자입니다). <b>이벤트 카드 넉 장</b>이 마지막 두 면에 걸쳐 있습니다 — 넉 장을 다 오렸는지 세어 보세요.</td></tr></table>
-    <p class="muted"><b>A4 42장 · A3 6장.</b> 여기에 <b>봉투 하나 · 연필 한 자루 · 동전 하나</b>(트랙의 말),
+        <td>11장(이 책자입니다). <b>이벤트 카드 넉 장</b>이 마지막 두 면에 걸쳐 있습니다 — 넉 장을 다 오렸는지 세어 보세요.</td></tr></table>
+    <p class="muted"><b>A4 50장 · A3 6장.</b> 여기에 <b>봉투 하나 · 연필 한 자루 · 동전 하나</b>(트랙의 말),
       그리고 사람마다 <b>카메라 되는 휴대폰</b>이 필요합니다 — 카드에 QR 이 78장 붙어 있습니다.</p>
 
     <h2>모든 인쇄에서 — 이 셋을 반드시</h2>
@@ -1303,7 +1306,12 @@ function runSheets() {
       세로로 짠 것(단서카드)은 <b>긴 쪽</b>, 가로로 짠 것(인물카드)은 <b>짧은 쪽</b>이라야 앞뒤가 맞습니다.
       A3 두 가지를 인쇄소에 맡긴다면 <b>「PDF 크기 그대로, 회전·축소 없이」</b>라고 말하면 됩니다.</p>
 
-    <h2>뽑은 뒤 — 자르기 전에 확인</h2>
+  </div>
+
+  <div class="page">${stage('뽑은 뒤 · 자르기 전에')}<h1>뽑은 뒤 이렇게 합니다
+    <span class="muted">— 자르고 접기</span></h1>
+
+    <h2>자르기 전에 확인</h2>
     <p><b>① 카드 한 장을 자로 재세요. 63 × 88mm</b> 가 아니면 배율이 잘못된 것입니다.
       여기서 안 잡으면 97장을 다 자른 뒤에 압니다.<br>
       <b>② 단서카드 한 장을 빛에 비춰</b> 뒷면 번호가 앞면 카드와 겹치는지 보세요.
@@ -1330,7 +1338,7 @@ function runSheets() {
     <p class="muted">각 종이가 무엇인지는 <b>다음 장</b>에 한 줄씩 적어 두었습니다.
       지금은 이 표만 보고 1번부터 하면 됩니다.</p>
     <table><tr><th style="width:7%">순</th><th style="width:30%">무엇을</th><th>누가 · 어떻게</th></tr>
-      <tr><td class="stn">1</td><td><b>「탁자에 이렇게 놓습니다」</b><br><span class="muted">인쇄물 <b>「보드_배치와트랙」</b>의 첫 면 (A3 가로)</span></td>
+      <tr><td class="stn">1</td><td><b>「탁자에 이렇게 놓습니다」</b><br><span class="muted">인쇄물 <b>「보드_배치와트랙」</b>의 첫 면 (A3 세로)</span></td>
         <td>한 사람이 읽으며 <b>카드와 종이를 자리에 놓습니다.</b> 10분. 나머지는 거들면 됩니다.</td></tr>
       <tr><td class="stn">2</td><td><b>인물 시트를 하나씩</b></td>
         <td>제비뽑기든 합의든 좋습니다. 받으면 <b>혼자서 5분간 읽습니다.</b>
@@ -1414,7 +1422,7 @@ function runSheets() {
         <div class="slot slotBox">D<br><span>목사님의 방<br>현장 ① 뒤 · 기록 ② 뒤</span></div>
       </div>
       <div class="tblRow">
-        <div class="slot slotWide slotMap">현장 판 <span>숙소 2층 평면도 · A3 가로</span></div>
+        <div class="slot slotWide slotMap">현장 판 <span>숙소 2층 평면도 · A3 세로</span></div>
         <div class="slot slotBox">V<br><span>CCTV 열람실<br>이벤트 ③ 뒤 · <b>판 있음</b></span></div>
       </div>
       <div class="tblRow">
@@ -1565,7 +1573,9 @@ function runSheets() {
       여느 때처럼 낸 사람 아닌 이가 읽습니다.<br>
       <span class="muted"><b>두 라운드는 그 카드를 손에 넣은 라운드부터 셉니다.</b>
       감식실이 열리기 전에 얻은 카드는 <b>감식실이 열린 라운드부터</b> 셉니다 —
-      낼 수 없던 라운드까지 세면 억울하기 때문입니다.</span><br>
+      낼 수 없던 라운드까지 세면 억울하기 때문입니다.
+      <b>감식실이 열린 라운드는 이벤트 ②를 읽은 그 라운드입니다</b>(여섯이면 2라운드) —
+      그 라운드 끝에 이미 낼 수 있기 때문입니다.</span><br>
       4. <b>마지막 라운드에 낸 것은 최종 토론이 시작될 때 읽습니다.</b> 마지막 라운드라고 해서
       버려지지 않습니다 — 늦게라도 내는 것이 안 내는 것보다 낫습니다.</p>
     <p class="muted">결과를 읽는 손과 결과가 걸린 목이 같으면 그 카드는 증거가 아니라 증언이 됩니다.
@@ -1683,7 +1693,7 @@ function runSheets() {
   </div>`;
 
 
-  // 표시해 둔 두 장을 떼어 A3 가로로 따로 뽑는다. 나머지는 A4 그대로다.
+  // 표시해 둔 두 장을 떼어 A3 세로로 따로 뽑는다. 나머지는 A4 그대로다.
   const WIDE = /<!--WIDE-->([\s\S]*?)<!--\/WIDE-->/g;
   const wide = [...body.matchAll(WIDE)].map((m) => m[1]).join('');
   const rest = body.replace(WIDE, '');
