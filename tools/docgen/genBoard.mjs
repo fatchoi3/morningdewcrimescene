@@ -415,6 +415,9 @@ const CSS = `
            border: 0.5mm solid #c98a8a; background: #fdf0ee; border-radius: 1.6mm;
            padding: 1.6mm 3mm; }
   .bsub { font-size: 6.4pt; font-weight: 600; color: #a06a6a; margin-top: 0.6mm; }
+  /* 뒷면의 ⭐ 짝 — 재료가 다 나왔는지 남들도 번호만 보고 알 수 있어야 한다. */
+  .bstar { margin-top: 2.2mm; font-size: 7.2pt; font-weight: 800; color: #7d6116;
+           line-height: 1.35; text-align: center; }
   .bsci { margin-top: 2.5mm; font-size: 7.4pt; font-weight: 800; color: #265a66;
           border: 0.4mm solid #85b3bd; background: #edf6f8; border-radius: 1.4mm; padding: 1mm 2.4mm; }
   /* CCTV 뒷면의 인물 색점 — 뽑기 전에 누구 장면인지 보이게 하는 것이 전부다.
@@ -522,7 +525,7 @@ ${ROOM_CSS}
   .art .note { position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
                background: #fffffff2; font-size: 9.4pt; font-weight: 700;
                padding: 0.7mm 1.8mm; border-radius: 1mm; border: 0.4mm solid; }
-  /* A4 반접이 인물 시트 — 한 사람이 A4 가로 한 장에 들어가고, 가운데를 세로로 접는다.
+  /* A4 반접이 인물 시트 — 한 사람이 A4 가로 두 장이고, 각각 가운데를 세로로 접는다.
      접으면 A5 세로 책자가 된다. 세로 4장을 들고 있으면 남의 눈에 뭐가 보이는지 신경 쓰게 된다.
      접어서 한 장이면 공개 프로필만 겉으로 두고 탁자에 놓아 두면 된다. */
   .fold { width: 297mm; height: 210mm; page-break-after: always; display: flex;
@@ -784,6 +787,12 @@ function clueCards() {
   const hints = buildHints(num, partNum);
   // 안내는 번호로 걸려 있다 — 조합 조건이 가리키는 바로 그 장에만 찍힌다.
   const hintFor = (c) => hints[unitNum.get(c)];
+  // 뒷면에 찍을 ⭐ 짝. 앞면 안내에서 설명 문구를 떼고 번호만 남긴다 —
+  //   재료가 다 나온 순간을 판이 알아보려면 남에게 보이는 면에도 있어야 한다.
+  const starOf = (c) => {
+    const h = (hintFor(c) || []).find((x) => x.trim().startsWith('⭐'));
+    return h ? h.replace(/<span class="hnote">[\s\S]*?<\/span>/g, '').replace(/\.\s*$/, '').trim() : '';
+  };
   // 특수 카드에는 '무엇 + 무엇으로 얻었는지'를 적는다. 나중에 남에게 근거로 보일 때 필요하다.
   const origin = (c) => {
     const board = BOARD_UNLOCK[c.code];
@@ -867,6 +876,7 @@ function clueCards() {
         <div class="bdotl">이 장면에 찍힌 사람 — 색과 이름 끝 글자</div>` : ''}
       ${(hintFor(c) || []).some((h) => h.includes('🔬'))
         ? '<div class="bsci">🔬 감식실에 낼 수 있는 카드</div>' : ''}
+      ${starOf(c) ? `<div class="bstar">${starOf(c)}</div>` : ''}
       ${c.locked ? `<div class="block">🔒 <b>이벤트 ②</b> 뒤<div class="bsub">준비할 때 빼서 따로 둔다</div></div>` : ''}</div>`;
     };
     const head = `<div class="deckHd"><h1>${esc(meta.name)} — ${list.length}장
@@ -1378,9 +1388,11 @@ function runSheets() {
       <tr><td><b>진행 물품</b><br><span class="muted">지금 보는 이 책자</span></td>
         <td>사건 브리핑 · 탁자 배치 · 기본 규칙 세 면 · 라운드 트랙 · 사건 기록판 · 이벤트 카드.
           <b>전원이 함께 씁니다.</b> 장마다 머리에 <b>언제 쓰는 것인지</b>가 적혀 있습니다.</td></tr>
-      <tr><td><b>인물 시트</b><br><span class="muted">사람마다 한 장</span></td>
-        <td>당신이 맡을 사람의 정체·그날의 행적·대사가 들어 있습니다. A4 한 장을 세로로 접은 것이라
-          <b>겉면만 남에게 보이고 안쪽 세 면은 본인만</b> 봅니다.</td></tr>
+      <tr><td><b>인물 시트</b><br><span class="muted">사람마다 <b>두 장</b>(형사만 한 장)</span></td>
+        <td>당신이 맡을 사람의 정체·그날의 행적·대사가 들어 있습니다. A4 가로 두 장을 각각
+          가운데에서 <b>안쪽이 마주 보게</b> 접습니다 — 바깥으로 나오는 것은 <b>겉면·이름표·백지</b>뿐이고,
+          <b>안쪽 네 면</b>(비밀 시나리오·대본·이 상황에서는 이렇게·메모)은 본인만 봅니다.<br>
+          <span class="muted">나눠 줄 때 <b>두 장이 한 벌</b>인지 확인하세요 — 한 장만 가면 비밀 시트가 탁자에 남습니다.</span></td></tr>
       <tr><td><b>현장 판</b><br><span class="muted">큰 종이 한 장</span></td>
         <td>숙소 2층 평면도. 방마다 <b>번호와 물건 이름</b>이 적혀 있습니다 — 「A3 풀」처럼.
           조사할 때 이 판을 보고 어디를 뒤질지 고릅니다.<br>
@@ -1446,7 +1458,7 @@ function runSheets() {
         <div class="slot slotSeal">진상 해설서 <span>봉투째 — 끝나기 전엔 열지 않는다</span></div>
       </div>
     </div>
-    <p class="muted"><b>사람마다 손에 드는 것</b> — 인물 시트 한 장(접어서 겉면만 보이게)과
+    <p class="muted"><b>사람마다 손에 드는 것</b> — 인물 시트 <b>두 장</b>(접어서 겉면만 보이게)과
       휴대폰 하나. 가져간 카드는 자기 앞에 <b>번호가 보이게</b> 늘어놓습니다 —
       무엇을 몇 장 가졌는지는 서로 보이고, 그 내용만 자기 것입니다.</p>
   </div>
@@ -1545,7 +1557,9 @@ function runSheets() {
       판이 함께 얻는 것이라 판이 함께 봅니다.
       읽히고 나면 <b>도로 자기 앞으로 가져갑니다</b> — 내주는 것이 아닙니다.<br>
       <span class="muted">그래서 조합은 무겁습니다. 말로는 무엇이든 할 수 있지만, 공개한 카드에는
-      거짓을 섞을 수 없습니다. 감추고 싶은 것이 적힌 카드를 재료로 내놓아야 할 때가 이 판의 고비입니다.</span></p>
+      거짓을 섞을 수 없습니다. <b>감추고 싶은 카드가 재료라면, 그것이 남의 손에 들어간 순간
+      이미 끝난 것입니다</b> — 내놓을지 말지를 고르는 자리가 아닙니다.
+      고비는 그 전에 있습니다. 열리기 전에 무엇을 먼저 말해 둘 것인가.</span></p>
 
   </div>
 
@@ -1589,7 +1603,8 @@ function runSheets() {
       그 카드들을 <b>판 가운데에 공개하고</b> 특수 더미에서 그 번호를 가져옵니다.
       <b>합의하지 않아도 되고, 거부할 수도 없습니다.</b><br>
       <span class="muted">가져간 카드는 자기 앞에 번호가 보이게 늘어놓으므로, 재료 번호가 다 나온 순간을
-      판이 함께 압니다. 감추고 싶은 카드가 재료일 때가 이 판의 고비입니다 — 그때는 이미 늦었습니다.</span><br>
+      판이 함께 압니다. <b>짝 번호는 카드 뒷면에도 찍혀 있습니다</b> — 그래서 재료를 손에 안 든 사람도
+      번호만 보고 압니다. 감추고 싶은 카드가 재료라면, 그것이 남의 손에 들어간 순간 이미 끝난 것입니다.</span><br>
       <b>가져온 특수 단서는 한 사람이 소리 내어 읽습니다.</b> 조합은 판이 함께 만든 것이라 판이 함께 압니다 —
       누가 갖는지는 정하지 않아도 됩니다. 무엇으로 얻었는지는 카드 앞면에 적혀 있습니다.</p>
   </div>
@@ -1611,7 +1626,7 @@ function runSheets() {
       const ev = evAt[n];
       // 그 라운드 '시작'에 무엇이 열려 있는지 — 직전 라운드 끝에 읽은 이벤트가 연 것이다.
       const opened = { '①': '목사님의 방<br>— 현장',
-        '②': '목사님의 방 — 기록<br>🔒 휴대폰 · 감식실 L',
+        '②': '목사님의 방 — 기록<br>🔒 휴대폰<br><span class="muted">감식실 L 은 ② 를 읽는 즉시</span>',
         '③': 'CCTV 열람실 V' }[evAt[n - 1]];
       return `<div class="cell${ev ? ' cellEv' : ''}${n === rounds ? ' cellLast' : ''}">
         <div class="cellTop"><span class="cellN">${n}</span>${n === rounds
