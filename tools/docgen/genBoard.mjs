@@ -150,7 +150,8 @@ function explode(c) {
   if (c.wallet?.items?.length) {
     const body = c.wallet.items
       .map((it) => `· ${it.label} — ${(it.detail || '').replace(/\s+/g, ' ').trim()}`).join('\n');
-    return [one({ image: c.wallet.items.find((it) => it.image)?.image || c.image || null, detail: body })];
+    // 사진은 카드에 박지 않는다 — QR 을 찍어 /clue 에서 크게 본다.
+    return [one({ image: null, detail: body })];
   }
   if (c.handwriting?.options?.length) {
     // 결과를 카드에 다 실으면 일치하는 사람이 첫눈에 드러나 대조가 아니라 정답 공개가 된다.
@@ -366,6 +367,10 @@ const CSS = `
   .sheetPage { page-break-after: always; }
   /* 뒷면의 빈 자리 — 앞면 카드와 좌우를 맞추려면 자리를 비워 두어야 한다. 아무것도 안 찍는다. */
   .cardGap { }
+  /* 아홉 칸이 안 차는 면에만 — 빈 종이로 알고 버리는 것을 막는다. 남는 자리에 크게. */
+  .sparseNote { margin: 12mm auto 0; width: 189mm; text-align: center; font-size: 13pt;
+                font-weight: 700; color: #6b4a1e; background: #fdf6e6;
+                border: 0.6mm dashed #c9a24a; border-radius: 2mm; padding: 6mm 4mm; }
   .sheetPage:last-of-type { page-break-after: auto; }
   .sheet { display: grid; grid-template-columns: repeat(3, 63mm); grid-auto-rows: 88mm;
            justify-content: center; align-content: start; padding: 3mm 0 0; }
@@ -407,6 +412,9 @@ const CSS = `
   .qr { text-align: center; margin-bottom: calc(1.4mm * var(--cf)); }
   .qr svg { width: calc(21mm * var(--cf)); height: calc(21mm * var(--cf)); }
   .qrl { font-size: 6.2pt; color: #6b6760; margin-top: 0.6mm; }
+  /* 방 더미에서 혼자 QR 이 없는 카드 — 인쇄가 빠진 것이 아님을 카드가 스스로 말한다. */
+  .noqr { margin: 1.2mm 0 0.6mm; padding: 1mm 1.6mm; font-size: 6.6pt; color: #6b6760;
+          background: #f4f1ea; border: 0.25mm dashed #bdb6a6; border-radius: 1mm; text-align: center; }
   .cback { align-items: center; justify-content: center; text-align: center; }
   .bnum { font-size: 30pt; font-weight: 800; letter-spacing: .04em; }
   .bplace { font-size: 8.5pt; font-weight: 700; margin-top: 3mm; opacity: .8; }
@@ -718,7 +726,15 @@ function paginate(items, front, back, head = '') {
     const page = items.slice(i, i + 9);
     // 머리글은 그 덱의 첫 판과 같은 면에 얹는다. 따로 한 면을 주면 앞면이 짝수 면으로 밀려
     //   양면 인쇄에서 카드의 앞뒤가 다른 종이에 찍힌다.
-    out += `<div class="sheetPage">${i === 0 ? head : ''}<div class="sheet">${page.map(front).join('')}</div></div>`;
+    // 한 줄도 다 못 채우는 면은 통째로 빈 종이처럼 보인다 — L10 은 여덟 칸이 비어 혼자 있다.
+    //   그 면을 버리면 그 카드는 영영 안 나온다. 남은 자리에 크게 적어 둔다.
+    //   넉 장 이상이면 두 줄 이상이 차서 빈 종이로 보이지 않고, 세 줄이 차는 면(7~8장)에
+    //   이 안내를 얹으면 264mm 위에 30mm 가 더 붙어 A4 를 넘긴다.
+    const sparse = page.length <= 3
+      ? `<p class="sparseNote">이 면에서는 카드가 <b>${page.length}장</b>만 나옵니다.`
+        + ` 빈 종이가 아닙니다 — <b>버리지 마세요.</b></p>`
+      : '';
+    out += `<div class="sheetPage">${i === 0 ? head : ''}<div class="sheet">${page.map(front).join('')}</div>${sparse}</div>`;
     // 모자란 줄은 빈 칸으로 세 칸을 채운 뒤에 뒤집는다 — 안 그러면 그 줄만 좌우가 안 맞는다.
     const mirrored = [];
     for (let r = 0; r < page.length; r += 3) {
@@ -727,7 +743,7 @@ function paginate(items, front, back, head = '') {
       mirrored.push(...row.reverse());
     }
     out += `<div class="sheetPage"><div class="sheet">${
-      mirrored.map((c) => (c ? back(c) : '<div class="cardGap"></div>')).join('')}</div></div>`;
+      mirrored.map((c) => (c ? back(c) : '<div class="cardGap"></div>')).join('')}</div>${sparse}</div>`;
   }
   return out;
 }
@@ -750,7 +766,9 @@ async function buildQR(list) {
   //   사진이 붙던 카드도 마찬가지다. 27mm 로 줄여 놓으면 약통 라벨도 손목의 멍도 안 보이는데,
   //   그 47장 때문에 서른여덟 면을 통째로 컬러로 뽑아야 했다. 찍어서 크게 보는 편이 낫다.
   for (const c of allClues) {
-    if ((!isScreen(c) && !realImg(c)) || QR[c.code]) continue;
+    // 지갑도 QR 로 연다. 예전에는 지갑 속 사진 한 장을 카드에 그대로 박았는데, 그 한 장
+    //   때문에 덱 전체가 컬러 인쇄를 강요당했다 — 카드에서 사진을 뺀 이유와 같은 이유다.
+    if ((!isScreen(c) && !realImg(c) && !c.wallet?.items?.length) || QR[c.code]) continue;
     QR[c.code] = await QRCode.toString(`${siteUrl}/clue#${c.code}`,
       { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
   }
@@ -850,13 +868,18 @@ function clueCards() {
     // 무엇을 찍는지 한 줄로 알려 준다 — 장면인지, 넘겨 볼 속인지, 사진인지.
     const qrLabel = (c) => (isCC ? '찍으면 이 장면이 열린다'
       : isScreen(c) ? '찍으면 속을 넘겨 본다'
+      : c.src?.wallet?.items?.length ? '찍으면 지갑 속을 본다'
       : '찍으면 사진이 크게 열린다');
     const front = (c) => `<div class="card" style="border-color:${meta.color}">
       <div class="chd"><span class="no" style="background:${meta.color}">${esc(unitNum.get(c))}</span>
         ${badges(c)}</div>
       <div class="ct">${esc(c.title)}</div>
       ${QR[c.code] ? `<div class="qr">${QR[c.code]}<div class="qrl">${qrLabel(c)}</div></div>`
-        : realImg(c) ? `<img class="cimg" src="${esc(img(realImg(c)))}" alt="">` : ''}
+        : realImg(c) ? `<img class="cimg" src="${esc(img(realImg(c)))}" alt="">`
+        // 방 더미에서 혼자 QR 이 없는 카드는 인쇄 불량으로 오해받는다 — 감식 결과(L)·특수
+        //   단서(S)·필적(Q) 은 원래 글만 있는 더미라 이 말이 필요 없다.
+        : /^[LSQ]/.test(unitNum.get(c) || '') ? ''
+        : '<div class="noqr">이 카드에는 <b>QR 이 없습니다</b> — 적힌 것이 전부입니다.</div>'}
       <div class="cd${c.small ? ' sm' : ''}">${esc(c.detail || c.description || '')}</div>
       ${c.locked ? `<div class="lock">🔒 <b>준비할 때 이 카드를 빼서 따로 둡니다.</b>
         <b>이벤트 ②</b>(통신 기록 영장)를 읽을 때 이 더미에 넣습니다 — 그전에는 더미에 없습니다.${
@@ -1195,8 +1218,6 @@ function detectiveCard(no, sheet, qa) {   // no 는 이름까지 붙은 HTML 을
 // ── 3. 장소 판 + 공개 단서 ───────────────────────────────────────────────────
 function placeBoard() {
   const { bag, open, num, unitNum } = buildBoard();
-  // CCTV 모니터의 색점은 카드 뒷면 색점과 같아야 한다 — 같은 방 색을 쓴다.
-  const personColor = (who) => (ART_ROOMS.find((r) => r.id === ROOM_OF[who]) || {}).color;
   const counts = Object.fromEntries(Object.entries(bag).map(([k, v]) => [k, v.length]));
   // 판 위의 번호마다 물건 이름을 한마디씩 — 「A3 볼게요」가 「A3, 풀이요」가 된다.
   const labels = Object.fromEntries(Object.entries(bag).map(([k, v]) => [k, v.map((u) => shortLabel(u.title))]));
@@ -1239,7 +1260,7 @@ function placeBoard() {
       화면을 눈감고 고르는 일은 없습니다.</p>
     <p class="muted"><b>여기서만 한 번에 세 장을 봅니다.</b> 다른 장소는 두 장입니다.
       그리고 <b>본 장면은 그 자리에서 모두에게 소리 내어 읽습니다</b> — 혼자 읽고 덮어 두지 못합니다.</p>
-    ${cctvRoomHTML(bag.CC, (u) => unitNum.get(u), personColor, img('/images/board/CCTV실.png'))}
+    ${cctvRoomHTML(bag.CC, (u) => unitNum.get(u), img('/images/board/CCTV실.png'))}
     <p class="muted"><b>방 안은 어디도 찍히지 않습니다.</b>
       목사님 방 문 앞은 사각이라, 누가 방에 들어갔는지는 이 화면으로 알 수 없습니다 —
       <b>화면에서 사라져 있던 시간</b>이 그 자리를 대신합니다.</p></div>
@@ -1260,6 +1281,16 @@ function placeBoard() {
 // ── 4. 진행 물품 — 시작 시트 · 라운드 트랙 · 이벤트 카드 ────────────────────
 //   진행자가 없으므로 진행자가 하던 일(브리핑 읽기·이벤트 열기)을 물건이 대신한다.
 function runSheets() {
+  // 「97장」「QR 78장」을 손으로 적어 두면 카드가 하나 늘거나 QR 이 하나 붙을 때마다
+  //   조용히 틀린다 — 실제로 F2 지갑을 QR 로 돌렸을 때 78 이 그대로 남았다. 판에서 센다.
+  // 자르는 것은 방 더미(bag)만이 아니다 — 특수 단서(S)는 special 로, 필적(Q)은 따로 나온다.
+  const { bag: cutBag, special: cutSpecial, unitNum: cutNum } = buildBoard();
+  const cutUnits = [...Object.values(cutBag).flat(), ...cutSpecial];
+  const nCards = cutUnits.length + allQ().length;
+  const nQR = cutUnits.filter((u) => QR[u.code]).length + allQ().length;
+  const noQR = cutUnits.filter((u) => !QR[u.code]);
+  // QR 이 없는 더미의 앞글자(L·S)를 세어 이름으로 적는다 — 한 더미만 예외가 생기면 드러난다.
+  const noQRDecks = [...new Set(noQR.map((u) => String(cutNum.get(u) || '').replace(/[0-9-].*$/, '')))].sort();
   const brief = allClues.find((c) => c.code === 'BRIF-00');
   const pages = (brief?.pages || []).map((pg) =>
     `<h2>${esc(pg.title)}</h2><p style="white-space:pre-wrap">${esc(pg.content)}</p>`).join('');
@@ -1300,13 +1331,15 @@ function runSheets() {
         <td>2장. 판 옆에 계속 펴 둡니다.</td></tr>
       <tr><td class="stn">5</td><td><b>보드_단서카드</b></td><td>A4 세로</td><td>27</td>
         <td>양면 · <b>긴 쪽 넘김</b></td>
-        <td>14장. <b>가장 오래 걸립니다</b> — 한 면에 3×3, 모두 97장을 자릅니다.
+        <td>14장. <b>가장 오래 걸립니다</b> — 한 면에 3×3, 모두 ${nCards}장을 자릅니다.
           마지막 장은 뒷면이 비는 것이 정상입니다(필적 대조 카드는 뒷면이 없습니다).</td></tr>
       <tr><td class="stn">6</td><td><b>보드_진행물</b></td><td>A4 세로</td><td>11</td>
         <td>단면</td>
         <td>11장(이 책자입니다). <b>이벤트 카드 넉 장</b>이 마지막 두 면에 걸쳐 있습니다 — 넉 장을 다 오렸는지 세어 보세요.</td></tr></table>
     <p class="muted"><b>A4 50장 · A3 6장.</b> 여기에 <b>봉투 하나 · 연필 한 자루 · 동전 하나</b>(트랙의 말),
-      그리고 사람마다 <b>카메라 되는 휴대폰</b>이 필요합니다 — 카드에 QR 이 78장 붙어 있습니다.</p>
+      그리고 사람마다 <b>카메라 되는 휴대폰</b>이 필요합니다 — 카드에 QR 이 ${nQR}장 붙어 있습니다.
+      <span class="muted">나머지 ${nCards - nQR}장(${noQRDecks.join('·')} 더미)에는 QR 이 없습니다 —
+      글만 있는 더미이고, 인쇄가 빠진 것이 아닙니다.</span></p>
 
     <h2>모든 인쇄에서 — 이 셋을 반드시</h2>
     <p><b>① 배율 100% ·「실제 크기」.</b> 「페이지에 맞춤」을 끄세요.
@@ -1325,17 +1358,25 @@ function runSheets() {
 
     <h2>자르기 전에 확인</h2>
     <p><b>① 카드 한 장을 자로 재세요. 63 × 88mm</b> 가 아니면 배율이 잘못된 것입니다.
-      여기서 안 잡으면 97장을 다 자른 뒤에 압니다.<br>
+      여기서 안 잡으면 ${nCards}장을 다 자른 뒤에 압니다.
+      <span class="muted">재는 것은 <b>3×3의 한가운데 칸</b>이라야 합니다 — 바깥 여덟 장은
+      종이 테두리를 잘라내기 전이라 아직 큽니다.</span><br>
       <b>② 단서카드 한 장을 빛에 비춰</b> 뒷면 번호가 앞면 카드와 겹치는지 보세요.
       넘김 방향이 틀리면 A1 뒤에 A3 이 옵니다.<br>
       <b>③ QR 하나를 휴대폰으로 찍어</b> 화면이 뜨는지 보세요.<br>
       <span class="muted">가능하면 두꺼운 종이(120g 이상)로 뽑으세요 — 얇으면 카드를 엎어 쌓아도 앞면이 비칩니다.</span></p>
 
     <h2>자르고 접기</h2>
-    <p><b>단서카드</b> — 한 면에 3×3. 세로 두 줄, 가로 두 줄만 그으면 됩니다.
-      자른 뒤 <b>번호 앞글자로 나눕니다</b>(A·B·C·D·E·F·G·V·L·S·Q).<br>
+    <p><b>단서카드</b> — 한 면에 3×3. <b>세로 넉 줄, 가로 넉 줄</b>입니다
+      <span class="muted">— 카드 사이만 그으면 바깥 여덟 장에 종이 테두리가 붙어 나옵니다.
+      먼저 종이 가장자리를 네 번 잘라 테두리를 걷어내고, 그다음 안쪽을 두 줄·두 줄 갈라도 같습니다.</span><br>
+      자른 뒤 <b>번호 앞글자로 나눕니다</b>(A·B·C·D·E·F·G·V·L·S·Q).
+      <b>D 는 두 더미로</b> 나눕니다 — 현장(D1~D10)과 기록(D11·D12).
+      <b>🔒 표시가 붙은 여덟 장</b>은 어느 방 것이든 따로 빼 두세요.<br>
+      <span class="muted"><b>L10 한 장은 자기 면에 혼자 있습니다</b>(그 면은 여덟 칸이 비어 있습니다) —
+      빈 종이로 알고 버리지 마세요.</span><br>
       <b>인물카드</b> — 자르지 않고 <b>가운데를 세로로</b> 접습니다. 두 장 다 <b>안쪽이 마주 보게</b>.<br>
-      <b>이벤트 카드</b> — 이 책자 마지막 면에서 넉 장을 오려 접습니다. <b>넉 장을 다 오렸는지 세어 보세요.</b><br>
+      <b>이벤트 카드</b> — 이 책자 <b>마지막 두 면</b>에서 넉 장을 오려 접습니다. <b>넉 장을 다 오렸는지 세어 보세요.</b><br>
       <b>A3 두 가지</b> — 자르지 않고 그대로 탁자에 놓습니다.</p>
   </div>
 
@@ -1533,7 +1574,8 @@ function runSheets() {
     <h2>카드 위쪽의 표시 — 다섯 가지</h2>
     <table><tr><th style="width:20%">표시</th><th>뜻</th></tr>
       <tr><td><span class="lg">🔒</span> <b>이벤트 ② 뒤</b></td>
-        <td>휴대폰입니다. <b>준비할 때 빼서 따로 두었다가</b>, 이벤트 ② 를 읽을 때 각 방 더미에 섞어 넣습니다.
+        <td>영장이 나와야 열리는 카드입니다 — <b>일곱 대의 휴대폰과 목사님 일기장, 모두 여덟 장.</b>
+          <b>준비할 때 빼서 따로 두었다가</b>, 이벤트 ② 를 읽을 때 <b>여덟 장을 다</b> 각 방 더미에 섞어 넣습니다.
           카드 뒷면에도 같은 표시가 있습니다 — 그걸 보고 골라내세요.</td></tr>
       <tr><td><span class="lg">⚖</span> <b>본인 낭독 불가</b></td>
         <td>그 결과가 걸리는 사람이 카드에 적혀 있습니다. <b>그 사람은 이 결과를 읽을 수 없습니다</b> — 다른 사람이 집어 소리 내어 읽습니다. <b>가져가는 것도, 내는 것도 누구나 됩니다.</b></td></tr>
@@ -1626,7 +1668,7 @@ function runSheets() {
       const ev = evAt[n];
       // 그 라운드 '시작'에 무엇이 열려 있는지 — 직전 라운드 끝에 읽은 이벤트가 연 것이다.
       const opened = { '①': '목사님의 방<br>— 현장',
-        '②': '목사님의 방 — 기록<br>🔒 휴대폰<br><span class="muted">감식실 L 은 ② 를 읽는 즉시</span>',
+        '②': '목사님의 방 — 기록<br>🔒 여덟 장<br><span class="muted">감식실 L 은 ② 를 읽는 즉시</span>',
         '③': 'CCTV 열람실 V' }[evAt[n - 1]];
       return `<div class="cell${ev ? ' cellEv' : ''}${n === rounds ? ' cellLast' : ''}">
         <div class="cellTop"><span class="cellN">${n}</span>${n === rounds
@@ -1690,7 +1732,8 @@ function runSheets() {
     ${ev('②', whenEv('②'), '유품 반출 동의 · 통신 기록 영장',
       `<p>유족이 유품 반출에 동의했고, 통신 기록 영장이 나왔습니다.</p>
       <p><b>목사님의 방 — 기록이 열립니다.</b> 일기장과 휴대폰입니다.<br>
-        그리고 <b>따로 빼 두었던 🔒 휴대폰 카드를 각 방 더미에 섞어 넣습니다.</b>
+        그리고 <b>따로 빼 두었던 🔒 카드 여덟 장을 남김없이 각 방 더미에 섞어 넣습니다</b>
+        — 휴대폰 일곱 대와 <b>목사님 일기장</b>입니다.
         이제부터 각 방에서 그 방 주인의 휴대폰을 가져갈 수 있습니다. 자기 방에는 못 들어가니 <b>자기 폰은 남이 읽습니다.</b></p>
       <p><b>감식실(L)도 함께 열립니다.</b> <b>이 카드를 읽는 지금 바로</b> 채취물을 낼 수 있습니다 — 다음 라운드까지 기다리지 않습니다.<br>
         <span class="muted">🔬 표시가 있는 카드를 가진 사람은 라운드 끝에 감식실 옆에 내려놓으세요.

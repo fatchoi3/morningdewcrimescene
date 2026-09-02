@@ -23,23 +23,29 @@ const startOf = (t) => String(t).split('~')[0];
 /**
  * CCTV 열람실 — 모니터 벽. 한 대가 한 장면이고, 시간 순서로 늘어선다.
  *   시각을 미리 적어 두는 것은 실제 열람에 가깝기 때문이다. 눈먼 뽑기로 화면을 고르는 일은 없다.
- *   대신 「무엇이 찍혔는가」는 카드를 집어야 안다 — 판이 알려 주는 것은 언제·누구까지다.
+ *   대신 「누가·무엇이 찍혔는가」는 카드를 집어야 안다 — 판이 알려 주는 것은 언제까지다.
+ *
+ *   [색점을 판에서 뺀 이유]
+ *   한때 모니터마다 인물 색점과 이름 끝 글자를 함께 찍었다. 그러면 열람실이 열리는 순간
+ *   열여섯 장의 「언제·누가」가 조사 한 번 쓰지 않고 통째로 읽힌다 — 진범의 8분 공백까지.
+ *   기본 규칙도 「판이 알려 주는 것은 번호와 시각까지」라고 못박고 있어 서로 어긋났다.
+ *   색점은 카드 뒷면에만 둔다. 판은 「언제」까지만 말한다.
  */
-export function cctvRoomHTML(cards, unitNo, personColor, src) {
+export function cctvRoomHTML(cards, unitNo, src) {
   const rows = cards
     .map((c) => ({ no: unitNo(c), ...cutOf(c.title) }))
     .sort((a, b) => startOf(a.time).localeCompare(startOf(b.time)));
   const mon = (r) => `<div class="mon">
     <div class="monScr"><span class="monNo">${esc(r.no)}</span>
       <span class="monTm">${esc(r.time)}</span></div>
-    <div class="monDot" style="background:${personColor(r.who) || '#5a6270'}">${esc(r.who.slice(-1))}</div>
   </div>`;
   return `<div class="art art-room">
     <img src="${src}" alt="CCTV 열람실">
     <div class="monWall">${rows.map(mon).join('')}</div>
   </div>
-  <p class="muted">모니터는 <b>시간 순서</b>로 놓여 있습니다. 아래의 색점과 그 안의 글자는
-    <b>그 장면에 찍힌 사람</b>입니다 — 카드 뒷면의 표시와 같습니다. <b>무엇이 찍혔는지는 카드를 집어야 압니다.</b></p>`;
+  <p class="muted">모니터는 <b>시간 순서</b>로 놓여 있습니다. 이 판이 알려 주는 것은
+    <b>번호와 시각까지</b>입니다 — <b>누가·무엇이 찍혔는지는 그 번호의 카드를 집어야 압니다.</b>
+    찍힌 사람은 카드 뒷면의 색점이 알려 줍니다.</p>`;
 }
 
 /**
@@ -83,12 +89,7 @@ export const ROOM_CSS = `
          box-shadow: inset 0 0 3mm #7fd4ff22; }
   .monScr { display: flex; flex-direction: column; align-items: center; gap: 0.6mm; }
   .monNo { font-size: 13pt; font-weight: 800; color: #cfe9ff; letter-spacing: .02em; }
-  .monTm { font-size: 8.4pt; font-weight: 700; color: #7fd4ff; }
-  /* 카드 뒷면과 같은 표시 — 색이 죽어도 글자가 남게. */
-  .monDot { width: 5.4mm; height: 5.4mm; border-radius: 50%;
-            border: 0.4mm solid #ffffffaa; display: flex; align-items: center;
-            justify-content: center; font-size: 9pt; font-weight: 800; color: #fff;
-            line-height: 1; text-shadow: 0 0 0.5mm #00000066; }
+  .monTm { font-size: 9.6pt; font-weight: 700; color: #7fd4ff; }
   /* 감식실 — 내는 자리와 읽는 자리. */
   /* 감식실 그림의 작업대 자리 — 가운데 아래쪽에 두 구역을 나란히 */
   .labZones { position: absolute; inset: 44% 5% 5%; display: grid;

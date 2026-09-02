@@ -46,6 +46,8 @@ if (!c) {
   renderPhone(c);
 } else if (c.pages?.length) {
   renderPages(c);
+} else if (c.wallet?.items?.length) {
+  renderWallet(c);
 } else {
   root.innerHTML = `<div class="box">
     <div class="hd"><div class="tt">${esc(c.title)}</div></div>
@@ -217,6 +219,23 @@ function renderPages(cl) {
       <div class="rn">${esc(p.title || '')}</div>
       <div class="ln">${nl2br(p.content || '')}</div>
       ${p.image ? `<img class="ph" src="${esc(p.image)}" alt="">` : ''}</div>`).join('')}
+    <p class="foot">이 화면을 본 사람은 당신뿐입니다. 무엇을 봤는지 말할지 말지는 당신이 정합니다.</p>
+  </div>`;
+}
+
+// ── 지갑 — 안에 든 것을 하나씩 꺼내 본다 ─────────────────────────────────────
+//   카드에는 물건 이름과 한 줄 설명까지만 적혀 있다. 사진은 여기서만 보인다 —
+//   그 한 장 때문에 덱 전체를 컬러로 뽑던 것을 QR 로 옮겼다.
+//   detail 은 안 쓴다 — 「눌러서 확인할 수 있다」는 앱판 조작 안내라, 네 가지가 이미
+//   다 펼쳐져 있는 이 화면에서는 누를 것이 없다.
+function renderWallet(cl) {
+  root.innerHTML = `<div class="box">
+    <div class="hd"><div class="tt">${esc(cl.title)}</div>
+      <div class="sb">${cl.wallet.items.length}가지가 들어 있습니다</div></div>
+    ${cl.wallet.items.map((it) => `<div class="room">
+      <div class="rn">${esc(it.label || '')}</div>
+      <div class="ln">${nl2br(it.detail || it.value || '')}</div>
+      ${it.image ? `<img class="ph" src="${esc(it.image)}" alt="">` : ''}</div>`).join('')}
     <p class="foot">이 화면을 본 사람은 당신뿐입니다. 무엇을 봤는지 말할지 말지는 당신이 정합니다.</p>
   </div>`;
 }
