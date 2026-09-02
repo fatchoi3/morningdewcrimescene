@@ -792,7 +792,8 @@ export const evidenceMap = withAssetBase(resolveTokens({
           calls: [
             { name: '담임목사님', direction: 'out', time: '11:52', duration: '연결 안 됨' },
             { name: '담임목사님', direction: 'in', time: '09:05', duration: '1분 12초' },
-            { name: '{{S3.short}} 언니', direction: 'in', time: '전날 23:40', duration: '21분 15초' }
+            { name: '{{S3.short}} 언니', direction: 'in', time: '전날 23:40', duration: '21분 15초' },
+            { name: '{{S1.short|이/}}', direction: 'out', time: '전날 22:10', duration: '3분 07초' }
           ]
         },
         {
@@ -1039,7 +1040,8 @@ export const evidenceMap = withAssetBase(resolveTokens({
           calls: [
             { name: '담임목사님', direction: 'out', time: '12:38', duration: '38초' },
             { name: '담임목사님', direction: 'out', time: '09:38', duration: '1분 52초' },
-            { name: '{{S5.short}} 총무', direction: 'in', time: '전날 22:10', duration: '3분 07초' }
+            { name: '{{S5.short}} 총무', direction: 'in', time: '전날 22:10', duration: '3분 07초' },
+            { name: '{{S4}} 전도사', direction: 'out', time: '전날 21:05', duration: '1분 33초' }
           ]
         },
         {
@@ -1469,7 +1471,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
               // 사건 전날 자격 면담 직후 — 압박과 어색해진 관계가 드러난다
               name: '담임목사님',
               messages: [
-                { from: 'them', text: '박 전도사, 오늘 면담은 사적인 감정으로 한 게 아니에요.', time: '전날 14:30' },
+                { from: 'them', text: '{{S4}} 전도사, 오늘 면담은 사적인 감정으로 한 게 아니에요.', time: '전날 14:30' },
                 { from: 'them', text: '수료증 발급 번호가 교단 DB와 맞지 않더군요. 수련회 끝나면 교단에 직접 확인 절차를 밟겠습니다.', time: '전날 14:31' },
                 { from: 'me', text: '목사님, 제가 그동안 얼마나 충성스럽게 사역했는지 아시잖아요.', time: '전날 14:40' },
                 { from: 'me', text: '한 번만 눈감아 주실 수는 없으신가요...', time: '전날 14:41' },
