@@ -1913,7 +1913,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'DISC-11': { // 자동 해금 — 목사 폰 톡서랍(0419) 복구 열람 + 세린 폰 카톡 열람 두 흔적이 모이면 App이 자동 부여
     title: '사라진 대화방',
     description: '',
-    detail: '목사님 폰에서 복구한 대화가 {{S6.short}} 폰엔 아예 없다. 목사님 쪽은 지워졌다가 복구됐고, {{S6.short}} 쪽은 방 자체가 없다 — 양쪽을 다 지운 손이 하나 있다는 뜻이다. {{S6.short}}에게 직접 물어보자.',
+    detail: '목사님 폰에는 지워진 대화방이 있는데, {{S6.short}} 폰에는 그 방 자체가 없다. 양쪽을 다 지운 손이 하나 있다는 뜻이다. {{S6.short}}에게 직접 물어보자.',
     image: '/images/길잡이.svg',
     type: '특수',
     person: '{{S6}}',
