@@ -64,12 +64,12 @@ export function labRoomHTML(results, unitNo, src) {
           사람마다 한 라운드에 한 장</div>
       </div>
       <div class="labZone labOut">
-        <div class="labTt">결과는 여기서 집습니다 — <b>낸 사람 아닌 이가</b></div>
+        <div class="labTt">결과는 여기서 집습니다 — <b>모두에게 알립니다</b></div>
         <div class="labRow">${results.map((c) => slot(esc(unitNo(c)))).join('')}</div>
         <div class="labSub">다음 라운드 <b>시작</b>에 소리 내어 읽습니다 · 결과 카드는 읽은 사람이 갖고
           <b>낸 채취물은 낸 사람에게 돌아옵니다</b>(조합에 다시 쓸 수 있습니다)<br>
-          <b>⚖</b> 가 붙은 결과는 카드에 적힌 사람이 읽을 수 없습니다 —
-          낸 사람도 못 읽으니, 둘 다 아닌 사람이 집습니다</div>
+          <b>⚖</b> 가 붙은 결과는 <b>카드에 적힌 사람만</b> 읽을 수 없습니다 — 다른 사람이 집어 읽습니다.
+          그 밖의 결과는 누가 집어 읽어도 되고, 어느 쪽이든 <b>모두에게 알립니다</b></div>
       </div>
     </div>
   </div>`;
