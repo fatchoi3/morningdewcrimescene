@@ -600,10 +600,10 @@ const doc = (title, body, pageCss = '', tailScript = '') => `<!DOCTYPE html><htm
 <title>${esc(title)}</title><style>${CSS}${pageCss}</style></head><body>${body}${tailScript}</body></html>`;
 
 // 인물 시트는 면마다 남는 자리가 달라, 인쇄 직전에 각 면이 스스로 줄 간격을 늘린다.
-// 배치·트랙은 A3 세로에 얹고, 남는 자리만큼 글씨를 키운다.
+// 배치·트랙은 A4 세로 한 장씩이다. 넘치면 담기는 데까지 되돌린다.
 const WIDE_FIT = `<script>
-/* 글씨를 키운 뒤 혹 넘치는 장이 있으면 담기는 데까지 되돌린다. 넘치지 않으면 손대지 않는다.
-   A3 세로는 가로세로가 다 1.41 배라 글씨를 그만큼 키웠다 — 넘치면 여기서 되돌린다. */
+/* 넘치는 장이 있으면 담기는 데까지 되돌린다. 넘치지 않으면 손대지 않는다.
+   종이는 A4 세로다 — 한때 이 두 장만 A3 였고, 그때 297x420 이 여기 박혀 있었다. */
 (function () {
   var MAX = 2.2;
   function fit() {
@@ -615,8 +615,8 @@ const WIDE_FIT = `<script>
       var cs = getComputedStyle(p);
       /* .page 는 제 내용만큼 늘어나므로 그 높이로 재면 언제나 100% 다 — 종이 크기로 잰다. */
       var mm = 96 / 25.4;
-      var bw = 297 * mm - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-      var bh = 420 * mm - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      var bw = 210 * mm - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      var bh = 297 * mm - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
       var k = Math.min(bw / w.scrollWidth, bh / w.scrollHeight, MAX);
       if (k < 1) w.style.transform = "scale(" + k.toFixed(3) + ")";
     }
@@ -1121,7 +1121,10 @@ const PUSH_AS_MOMENT = {
       const psh = strip(pushBy[c]);
       const head = psh ? `${txt}${txt ? '<br>' : ''}<b class="brk">더 몰리면</b> ${psh}` : txt;
       if (!breakOn.has(c)) return head;
-      const brk = strip(breakLine[c]);
+      // 심문 정본의 붕괴 대사를 그대로 쓰되, 보드판에서만 조건이 달라지는 자리는 덮어쓴다.
+      //   솔로판에서는 코드가 곧 「결과」인데 보드판에서는 같은 번호가 「결과를 보러 가라」는
+      //   안내 카드일 때가 있다 — 그때 바로 자백하면 그 뒤에 놓인 카드들이 통째로 안 쓰인다.
+      const brk = strip(s.breakOver?.[c] ?? breakLine[c]);
       return `${head}${head ? '<br>' : ''}<b class="brk">⚠</b> ${brk}${brk ? ' ' : ''}<b class="brk">여기서 인정합니다.</b>`;
     };
     return `<h1>${esc(name)} <span class="muted">— 이 상황에서는 이렇게 (본인만)</span></h1>
@@ -1237,12 +1240,24 @@ function placeBoard() {
         면담 내용은 이 표에 없다 — 당사자에게 직접 물어야 한다.</p></div>`;
   }).join('');
   const side = PLACES.filter((p) => !ART_ROOMS.some((r) => r.id === p.id));
-  const body = `<div class="page"><div class="stg">준비할 때 깔고 · 조사할 때마다 봅니다</div>
-    <h1>사건 현장 — 숙소 2층</h1>
-    <p class="muted">탁자 가운데에 까는 판이다. <b>A3 세로</b>로 인쇄한다 — A4 로 줄이면 번호 옆 물건 이름이 읽기 어렵다.
+  // 현장 판은 A4 두 장에 걸친다. 줄여서 한 장에 넣으면 번호 옆 물건 이름이 안 읽히는데,
+  //   그 이름이 없으면 눈감고 고르는 조사가 된다. 같은 그림을 두 번 그리고 각각 위쪽·아래쪽만
+  //   보이게 창을 내어, 이어 붙이면 원래 크기가 되게 한다.
+  //   이음매 쪽 여백은 0 이라야 한다 — 위아래로 여백이 남으면 붙였을 때 그림이 끊긴다.
+  const mapArt = illustratedMapHTML(counts, img('/images/board/2층평면.png'), labels);
+  const body = `<div class="page tileA"><div class="stg">준비할 때 깔고 · 조사할 때마다 봅니다</div>
+    <h1>사건 현장 — 숙소 2층 <span class="muted">— 첫째 장</span></h1>
+    <p class="muted">탁자 가운데에 까는 판이다. <b>A4 두 장</b>이다 — 이 장의 <b>아래 끝</b>과
+      둘째 장의 <b>위 끝</b>을 맞대어 테이프로 이어 붙이면 한 장이 된다.
       카드는 판 위에 올리지 않고 장소별로 옆에 쌓는다. 방 안의 번호는 <b>고를 자리</b>이지
       물건이 놓인 위치가 아니다 — "A3 볼게요" 하고 그 번호 카드를 집으면 된다.</p>
-    ${illustratedMapHTML(counts, img('/images/board/2층평면.png'), labels)}
+    <p class="tileNote">↓ 아래쪽은 <b>둘째 장</b>에 이어집니다</p>
+    <div class="tileWin tileWinA"><div class="tileArt">${mapArt}</div></div>
+  </div>
+
+  <div class="page tileB">
+    <div class="tileWin tileWinB"><div class="tileArt">${mapArt}</div></div>
+    <p class="tileNote">↑ 위쪽은 <b>첫째 장</b>에서 이어집니다 — 두 장을 맞대어 붙이세요</p>
     <p class="muted">복도 끝 CCTV는 <b>복도만</b> 비춘다. 방문 앞은 사각이라
       누가 방에 들어갔는지는 찍히지 않는다 — 이 사건의 전제다.<br>
       <b>목사님 방 문에는 작은 유리창이 있다.</b> 복도에 선 채로 안을 들여다볼 수 있다 —
@@ -1277,8 +1292,31 @@ function placeBoard() {
     <p class="muted"><b>두 라운드가 지나도 안 내면</b> 그다음 라운드 끝에 누구든 대신 낼 수 있습니다.
       가진 사람은 거부하지 못합니다 — 카드는 낸 뒤 돌려줍니다.<br>
       <b>마지막 라운드에 낸 것은 최종 토론이 시작될 때 읽습니다.</b></p></div>${openPages}`;
-  const a3 = '@page { size: A3 portrait; margin: 0; }';
-  return { filename: '보드_장소판.html', html: doc('보드게임 장소 판', body, a3) };
+  // A4 가로. 현장 판은 폭을 A3 때와 같은 269mm 로 유지한 채 두 장에 나눠 싣는다 —
+  //   폭이 줄면 방 안 물건 이름이 읽히지 않고, 그 이름이 이 판의 쓸모 전부다.
+  const a4land = `@page { size: A4 landscape; margin: 0; }
+  /* 이음매 쪽 여백을 없앤다. 첫째 장은 아래로, 둘째 장은 위로 종이 끝까지 그림이 간다. */
+  .page.tileA { padding: 14mm 14mm 0; height: 210mm; display: flex; flex-direction: column;
+                overflow: hidden; }
+  .page.tileB { padding: 0 14mm 12mm; height: 210mm; display: flex; flex-direction: column;
+                overflow: hidden; }
+  /* 그림을 잘라 보여 주는 창. 높이를 못박아 두 장의 합이 그림 높이와 딱 맞게 한다. */
+  .tileWin { position: relative; overflow: hidden; width: 269mm; }
+  /* 이음매 안내는 그림 바로 위에 붙어야 한다 — 글 뭉치에 붙여 두면 그림에서 멀어져
+     무엇을 이으라는 말인지 안 보인다. 남는 자리는 안내 위쪽으로 밀어낸다. */
+  .page.tileA .tileNote { margin-top: auto; }
+  .tileWinA { height: 120mm; }
+  .tileWinB { height: 81mm; }
+  .tileArt { position: absolute; left: 0; width: 269mm; }
+  .tileWinA .tileArt { top: 0; }
+  .tileWinB .tileArt { top: -120mm; }
+  .tileNote { font-size: 8pt; color: #8a8375; text-align: center; margin: 1.5mm 0; }
+  /* 열람실·감식실은 A4 가로 한 장에 들어가야 한다 — 본문 높이가 184mm 뿐이다.
+     그림 폭을 줄여 높이를 맞추고, 둘레 글의 줄 간격도 함께 좁힌다. */
+  .page .art-room { width: 168mm; margin-left: auto; margin-right: auto; }
+  .page .art-room + .muted, .page .muted + .art-room { margin-top: 2mm; }
+  .page .art-room ~ .muted { font-size: 8.4pt; line-height: 1.45; margin: 2mm 0 0; }`;
+  return { filename: '보드_장소판.html', html: doc('보드게임 장소 판', body, a4land) };
 }
 
 // ── 4. 진행 물품 — 시작 시트 · 라운드 트랙 · 이벤트 카드 ────────────────────
@@ -1326,10 +1364,10 @@ function runSheets() {
           스물여섯 면 중 절반이 남의 비밀입니다. 나온 그대로 집어 <b>읽지 말고</b>
           안쪽이 마주 보게 접어 겉면만 보이게 엎어 둡니다. 여섯이 하면 형사 한 장은 뺍니다
           (문서 <b>맨 뒤</b> 두 면입니다 — 미리 알면 1~24면만 뽑아 한 장을 아낍니다).</td></tr>
-      <tr><td class="stn">3</td><td><b>보드_장소판</b></td><td><b>A3</b> 세로</td><td>4</td>
+      <tr><td class="stn">3</td><td><b>보드_장소판</b></td><td><b>A4</b> 가로</td><td>5</td>
         <td>단면</td>
-        <td>4장. <b>A4 로 줄이지 마세요</b> — 번호 옆 물건 이름이 안 읽힙니다.</td></tr>
-      <tr><td class="stn">4</td><td><b>보드_배치와트랙</b></td><td><b>A3</b> 세로</td><td>2</td>
+        <td>5장. <b>첫 두 장이 현장 판입니다</b> — 첫 장의 아래 끝과 둘째 장의 위 끝을 맞대어 이어 붙이세요.</td></tr>
+      <tr><td class="stn">4</td><td><b>보드_배치와트랙</b></td><td><b>A4</b> 세로</td><td>2</td>
         <td>단면</td>
         <td>2장. 판 옆에 계속 펴 둡니다.</td></tr>
       <tr><td class="stn">5</td><td><b>보드_단서카드</b></td><td>A4 세로</td><td>27</td>
@@ -1339,7 +1377,8 @@ function runSheets() {
       <tr><td class="stn">6</td><td><b>보드_진행물</b></td><td>A4 세로</td><td>11</td>
         <td>단면</td>
         <td>11장(이 책자입니다). <b>이벤트 카드 넉 장</b>이 마지막 두 면에 걸쳐 있습니다 — 넉 장을 다 오렸는지 세어 보세요.</td></tr></table>
-    <p class="muted"><b>A4 50장 · A3 6장.</b> 여기에 <b>봉투 하나 · 연필 한 자루 · 동전 하나</b>(트랙의 말),
+    <p class="muted"><b>모두 A4 57장</b>(여섯이 하면 56장)<b>.</b> 인쇄소에 맡길 것은 없습니다 — 집에서 다 뽑습니다.
+      여기에 <b>봉투 하나 · 연필 한 자루 · 동전 하나</b>(트랙의 말) · <b>테이프</b>(현장 판 두 장을 잇습니다),
       그리고 사람마다 <b>카메라 되는 휴대폰</b>이 필요합니다 — 카드에 QR 이 ${nQR}장 붙어 있습니다.
       <span class="muted">나머지 ${nCards - nQR}장(${noQRDecks.join('·')} 더미)에는 QR 이 없습니다 —
       글만 있는 더미이고, 인쇄가 빠진 것이 아닙니다.</span></p>
@@ -1352,7 +1391,8 @@ function runSheets() {
       <b>③ 머리글·바닥글 끄기.</b> 안 끄면 카드마다 날짜와 파일 주소가 찍힙니다.</p>
     <p class="muted"><b>넘김 방향이 문서마다 다른 이유</b> — 종이를 넘기는 축이 문서 방향에 따라 반대이기 때문입니다.
       세로로 짠 것(단서카드)은 <b>긴 쪽</b>, 가로로 짠 것(인물카드)은 <b>짧은 쪽</b>이라야 앞뒤가 맞습니다.
-      A3 두 가지를 인쇄소에 맡긴다면 <b>「PDF 크기 그대로, 회전·축소 없이」</b>라고 말하면 됩니다.</p>
+      단면으로 뽑는 넷(진상해설서·장소판·배치와트랙·진행물)은 인쇄 대화상자에서 <b>「단면」인지 한 번 더</b> 보세요 —
+      프린터 기본이 양면이면 진상해설서가 여섯 장으로 나와, 첫 면 뒤에 바로 답이 붙습니다.</p>
 
   </div>
 
@@ -1382,7 +1422,8 @@ function runSheets() {
       빈 종이로 알고 버리지 마세요.</span><br>
       <b>인물카드</b> — 자르지 않고 <b>가운데를 세로로</b> 접습니다. 두 장 다 <b>안쪽이 마주 보게</b>.<br>
       <b>이벤트 카드</b> — 이 책자 <b>마지막 두 면</b>에서 넉 장을 오려 접습니다. <b>넉 장을 다 오렸는지 세어 보세요.</b><br>
-      <b>A3 두 가지</b> — 자르지 않고 그대로 탁자에 놓습니다.</p>
+      <b>장소판·배치와트랙</b> — 자르지 않습니다. 장소판의 <b>첫 두 장만</b> 위아래로 맞대어 테이프로 잇고,
+      나머지는 그대로 탁자에 놓습니다.</p>
   </div>
 
   <div class="page">${stage('뽑고 나서 · 처음 모였을 때')}<h1>여기서부터 <span class="muted">— 이 게임을 처음 하는 분들께</span></h1>
@@ -1396,7 +1437,7 @@ function runSheets() {
     <p class="muted">각 종이가 무엇인지는 <b>다음 장</b>에 한 줄씩 적어 두었습니다.
       지금은 이 표만 보고 1번부터 하면 됩니다.</p>
     <table><tr><th style="width:7%">순</th><th style="width:30%">무엇을</th><th>누가 · 어떻게</th></tr>
-      <tr><td class="stn">1</td><td><b>「탁자에 이렇게 놓습니다」</b><br><span class="muted">인쇄물 <b>「보드_배치와트랙」</b>의 첫 면 (A3 세로)</span></td>
+      <tr><td class="stn">1</td><td><b>「탁자에 이렇게 놓습니다」</b><br><span class="muted">인쇄물 <b>「보드_배치와트랙」</b>의 첫 면 (A4 세로)</span></td>
         <td>한 사람이 읽으며 <b>카드와 종이를 자리에 놓습니다.</b> 10분. 나머지는 거들면 됩니다.</td></tr>
       <tr><td class="stn">2</td><td><b>인물 시트를 하나씩</b></td>
         <td>제비뽑기든 합의든 좋습니다. 받으면 <b>혼자서 5분간 읽습니다.</b>
@@ -1436,13 +1477,15 @@ function runSheets() {
           <b>전원이 함께 씁니다.</b> 장마다 머리에 <b>언제 쓰는 것인지</b>가 적혀 있습니다.</td></tr>
       <tr><td><b>인물 시트</b><br><span class="muted">사람마다 <b>두 장</b>(형사만 한 장)</span></td>
         <td>당신이 맡을 사람의 정체·그날의 행적·대사가 들어 있습니다. A4 가로 두 장을 각각
-          가운데에서 <b>안쪽이 마주 보게</b> 접습니다 — 바깥으로 나오는 것은 <b>겉면·이름표·백지</b>뿐이고,
+          가운데에서 <b>안쪽이 마주 보게</b> 접습니다 — 바깥으로 나오는 것은
+          <b>겉면 ·「둘째 장이 따로 있습니다」· 이름표 · 백지 하나</b> 넉 면뿐이고,
           <b>안쪽 네 면</b>(비밀 시나리오·대본·이 상황에서는 이렇게·메모)은 본인만 봅니다.<br>
           <span class="muted">나눠 줄 때 <b>두 장이 한 벌</b>인지 확인하세요 — 한 장만 가면 비밀 시트가 탁자에 남습니다.</span></td></tr>
-      <tr><td><b>현장 판</b><br><span class="muted">큰 종이 한 장</span></td>
-        <td>숙소 2층 평면도. 방마다 <b>번호와 물건 이름</b>이 적혀 있습니다 — 「A3 풀」처럼.
-          조사할 때 이 판을 보고 어디를 뒤질지 고릅니다.<br>
-          <b>같은 종이에 CCTV 열람실과 감식실 판도 있습니다</b> — 그 이벤트가 열릴 때 꺼내 펴 둡니다.</td></tr>
+      <tr><td><b>장소 판</b><br><span class="muted">인쇄물 「보드_장소판」 · A4 다섯 장</span></td>
+        <td><b>첫 두 장을 이어 붙인 것이 현장 판</b>입니다 — 숙소 2층 평면도. 방마다
+          <b>번호와 물건 이름</b>이 적혀 있습니다(「A3 풀」처럼). 조사할 때 이 판을 보고 어디를 뒤질지 고릅니다.<br>
+          <b>셋째 장이 CCTV 열람실, 넷째 장이 감식실, 다섯째 장이 목사님 일정표</b>입니다 —
+          앞의 둘은 그 이벤트가 열릴 때, 일정표는 이벤트 ① 때 꺼내 펴 둡니다.</td></tr>
       <tr><td><b>단서 카드</b><br><span class="muted">잘라 둔 카드 뭉치</span></td>
         <td>장소별로 따로 쌓아 둡니다. <b>뒷면(번호)이 보이게</b> 쌓고, 가져간 사람이 앞면을 혼자 읽습니다.</td></tr>
       <tr><td><b>필적 대조 카드</b><br><span class="muted">Q6 일곱 장</span></td>
@@ -1483,7 +1526,7 @@ function runSheets() {
         <div class="slot slotBox">D<br><span>목사님의 방<br>현장 ① 뒤 · 기록 ② 뒤</span></div>
       </div>
       <div class="tblRow">
-        <div class="slot slotWide slotMap">현장 판 <span>숙소 2층 평면도 · A3 세로</span></div>
+        <div class="slot slotWide slotMap">현장 판 <span>숙소 2층 평면도 · A4 두 장을 이어 붙인 것</span></div>
         <div class="slot slotBox">V<br><span>CCTV 열람실<br>이벤트 ③ 뒤 · <b>판 있음</b></span></div>
       </div>
       <div class="tblRow">
@@ -1657,7 +1700,8 @@ function runSheets() {
   </div>
 
   <!--WIDE-->
-  <div class="page board">${stage('라운드마다')}<h1>라운드 트랙 <span class="muted">— 인원에 맞는 것 하나만 펴 두세요</span></h1>
+  ${/* 두 표가 한 면에 인쇄된다 — 「하나만 펴 두세요」는 자르지 않는 한 지킬 수 없는 말이었다. */''}
+  <div class="page board">${stage('라운드마다')}<h1>라운드 트랙 <span class="muted">— 두 표가 한 면에 있습니다. 인원에 맞는 쪽만 보세요</span></h1>
     <p class="muted">라운드가 끝날 때마다 <b>말을 한 칸 옮깁니다.</b> 말은 동전이든 무엇이든 됩니다.
       <b>①②③④ 자리에 이벤트 카드를 접어 얹어 두고</b>, 그 라운드가 끝나면 뒤집어 함께 읽습니다.<br>
       이벤트가 붙는 라운드는 인원에 따라 다릅니다. <b>순서와 내용은 같습니다</b> —
@@ -1769,35 +1813,35 @@ function runSheets() {
   </div>`;
 
 
-  // 표시해 둔 두 장을 떼어 A3 세로로 따로 뽑는다. 나머지는 A4 그대로다.
+  // 표시해 둔 두 장을 떼어 따로 뽑는다 — 판 옆에 계속 펴 두는 종이라 책자와 섞이면 안 된다.
   const WIDE = /<!--WIDE-->([\s\S]*?)<!--\/WIDE-->/g;
   const wide = [...body.matchAll(WIDE)].map((m) => m[1]).join('');
   const rest = body.replace(WIDE, '');
-  const a3land = `@page { size: A3 portrait; margin: 0; }
-  .page { padding: 14mm 14mm 12mm; }
+  // A4 세로 한 장씩. 예전에는 이 두 장만 A3 세로로 뽑고 글씨를 1.41 배로 키웠는데,
+  //   이제 인쇄물이 모두 A4 라 키우지 않는다 — 넘치는 만큼은 아래 맞춤 스크립트가 되돌린다.
+  const a3land = `@page { size: A4 portrait; margin: 0; }
+  .page { padding: 12mm 12mm 10mm; }
   .wrap { transform-origin: top left; }
-  /* A4 두 장을 이어 붙인 크기다 — 가로 297mm · 세로 420mm. 가로세로 다 1.41 배가 되므로
-     글씨도 그만큼 키운다. 이 두 장은 판을 눈으로 훑는 종이라, 작으면 매번 얼굴을 들이밀게 된다. */
-  .page.board h1 { font-size: 30pt; }
-  .page.board .muted { font-size: 12.4pt; line-height: 1.55; }
-  .page.board .slot { font-size: 18pt; min-height: 26mm; padding: 4mm 3.4mm; }
-  .page.board .slot span { font-size: 11.6pt; line-height: 1.45; }
-  .page.board .slotMap { font-size: 22pt; min-height: 46mm; }
-  .page.board .tbl { gap: 4mm; padding: 6mm; }
-  .page.board .tblRow { gap: 4mm; }
-  .page.board .cellN { font-size: 25pt; }
-  .page.board .cellTag { font-size: 7.2pt; }
-  .page.board .cellTop { min-height: 10mm; }
-  .page.board .cellOpen { font-size: 8.6pt; min-height: 12mm; padding: 1.6mm 0; }
-  .page.board .cellDo { font-size: 8.8pt; }
-  .page.board .evSlot { font-size: 9.4pt; min-height: 16mm; }
-  .page.board .evSlotSub { font-size: 6.8pt; }
-  .page.board .pawnSlot { width: 15mm; height: 15mm; font-size: 7pt; }
-  .page.board .endStep { font-size: 9pt; padding: 2.4mm 2mm; }
-  .page.board .endArrow { font-size: 13pt; }
-  .page.board .trN { font-size: 19pt; }
-  .page.board .trL { font-size: 9pt; }
-  .page.board .trX { font-size: 8.2pt; }`;
+  .page.board h1 { font-size: 19pt; }
+  .page.board .muted { font-size: 8.6pt; line-height: 1.5; }
+  .page.board .slot { font-size: 12pt; min-height: 17mm; padding: 2.6mm 2.2mm; }
+  .page.board .slot span { font-size: 7.6pt; line-height: 1.4; }
+  .page.board .slotMap { font-size: 14pt; min-height: 30mm; }
+  .page.board .tbl { gap: 2.6mm; padding: 4mm; }
+  .page.board .tblRow { gap: 2.6mm; }
+  .page.board .cellN { font-size: 16pt; }
+  .page.board .cellTag { font-size: 5.4pt; }
+  .page.board .cellTop { min-height: 7mm; }
+  .page.board .cellOpen { font-size: 6.2pt; min-height: 8.5mm; padding: 1.1mm 0; }
+  .page.board .cellDo { font-size: 6.4pt; }
+  .page.board .evSlot { font-size: 6.8pt; min-height: 11mm; }
+  .page.board .evSlotSub { font-size: 5pt; }
+  .page.board .pawnSlot { width: 10mm; height: 10mm; font-size: 5pt; }
+  .page.board .endStep { font-size: 6.4pt; padding: 1.7mm 1.4mm; }
+  .page.board .endArrow { font-size: 9pt; }
+  .page.board .trN { font-size: 13pt; }
+  .page.board .trL { font-size: 6.4pt; }
+  .page.board .trX { font-size: 5.8pt; }`;
   // 장마다 속을 한 겹 싸 둔다 — 확대는 그 한 겹을 통째로 키우는 것이라 감쌀 상자가 필요하다.
   const wrapped = wide.split('<div class="page board">').filter((x) => x.trim()).map((seg) => {
     const end = seg.lastIndexOf('</div>');                  // 그 장을 닫는 태그
