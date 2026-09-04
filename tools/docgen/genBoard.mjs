@@ -1251,13 +1251,17 @@ function placeBoard() {
       둘째 장의 <b>위 끝</b>을 맞대어 테이프로 이어 붙이면 한 장이 된다.
       카드는 판 위에 올리지 않고 장소별로 옆에 쌓는다. 방 안의 번호는 <b>고를 자리</b>이지
       물건이 놓인 위치가 아니다 — "A3 볼게요" 하고 그 번호 카드를 집으면 된다.</p>
-    <p class="tileNote">↓ 아래쪽은 <b>둘째 장</b>에 이어집니다</p>
+    <p class="tileNote">↓ 아래쪽은 <b>둘째 장</b>에 이어집니다 —
+      <b>▲ 선을 따라 자르고</b> 둘째 장의 같은 선과 맞대어 붙이세요</p>
     <div class="tileWin tileWinA"><div class="tileArt">${mapArt}</div></div>
+    <div class="cutLine"></div>
   </div>
 
   <div class="page tileB">
+    <div class="cutLine"></div>
     <div class="tileWin tileWinB"><div class="tileArt">${mapArt}</div></div>
-    <p class="tileNote">↑ 위쪽은 <b>첫째 장</b>에서 이어집니다 — 두 장을 맞대어 붙이세요</p>
+    <p class="tileNote">↑ 위쪽은 <b>첫째 장</b>에서 이어집니다 —
+      <b>▲ 선을 따라 자르고</b> 첫째 장의 같은 선과 맞대어 붙이세요</p>
     <p class="muted">복도 끝 CCTV는 <b>복도만</b> 비춘다. 방문 앞은 사각이라
       누가 방에 들어갔는지는 찍히지 않는다 — 이 사건의 전제다.<br>
       <b>목사님 방 문에는 작은 유리창이 있다.</b> 복도에 선 채로 안을 들여다볼 수 있다 —
@@ -1295,11 +1299,20 @@ function placeBoard() {
   // A4 가로. 현장 판은 폭을 A3 때와 같은 269mm 로 유지한 채 두 장에 나눠 싣는다 —
   //   폭이 줄면 방 안 물건 이름이 읽히지 않고, 그 이름이 이 판의 쓸모 전부다.
   const a4land = `@page { size: A4 landscape; margin: 0; }
-  /* 이음매 쪽 여백을 없앤다. 첫째 장은 아래로, 둘째 장은 위로 종이 끝까지 그림이 간다. */
-  .page.tileA { padding: 14mm 14mm 0; height: 210mm; display: flex; flex-direction: column;
+  /* 이음매 쪽에 8mm 를 남기고 그 자리에 재단선을 긋는다.
+     한때 여기를 0 으로 두어 그림이 종이 끝까지 갔는데, 집 복합기는 가장자리 3~5mm 에
+     잉크를 못 찍는다 — 두 장 다 이음매 쪽이 잘려 나가 맞대도 그림이 어긋났다.
+     선을 안쪽으로 들여 긋고 그 선에서 자르게 하면 프린터가 못 찍는 폭과 상관없이 맞는다. */
+  .page.tileA { padding: 14mm 14mm 8mm; height: 210mm; display: flex; flex-direction: column;
                 overflow: hidden; }
-  .page.tileB { padding: 0 14mm 12mm; height: 210mm; display: flex; flex-direction: column;
+  .page.tileB { padding: 8mm 14mm 12mm; height: 210mm; display: flex; flex-direction: column;
                 overflow: hidden; }
+  /* 재단선 — 창 바로 바깥에 붙는다. 자리를 먹지 않게 높이를 0 으로 두고 테두리만 그린다. */
+  .cutLine { position: relative; height: 0; border-top: 0.4mm dashed #a2937a; }
+  .cutLine::before, .cutLine::after { position: absolute; top: -2.4mm; font-size: 9pt;
+                                      color: #a2937a; line-height: 1; }
+  .cutLine::before { content: "▲"; left: -6mm; }
+  .cutLine::after { content: "▲"; right: -6mm; }
   /* 그림을 잘라 보여 주는 창. 높이를 못박아 두 장의 합이 그림 높이와 딱 맞게 한다. */
   .tileWin { position: relative; overflow: hidden; width: 269mm; }
   /* 이음매 안내는 그림 바로 위에 붙어야 한다 — 글 뭉치에 붙여 두면 그림에서 멀어져
@@ -1383,12 +1396,14 @@ function runSheets() {
       <span class="muted">나머지 ${nCards - nQR}장(${noQRDecks.join('·')} 더미)에는 QR 이 없습니다 —
       글만 있는 더미이고, 인쇄가 빠진 것이 아닙니다.</span></p>
 
-    <h2>모든 인쇄에서 — 이 셋을 반드시</h2>
+    <h2>모든 인쇄에서 — 이 넷을 반드시</h2>
     <p><b>① 배율 100% ·「실제 크기」.</b> 「페이지에 맞춤」을 끄세요.
       켜 두면 카드가 63×88mm 로 안 나오고 앞뒤 재단선이 밀립니다.<br>
       <b>② 배경 그래픽 켜기.</b> 브라우저에서 뽑는다면 인쇄 대화상자에서 켜세요 —
       끄면 장소 색·표 음영·카드 테두리가 통째로 사라집니다.<br>
-      <b>③ 머리글·바닥글 끄기.</b> 안 끄면 카드마다 날짜와 파일 주소가 찍힙니다.</p>
+      <b>③ 머리글·바닥글 끄기.</b> 안 끄면 카드마다 날짜와 파일 주소가 찍힙니다.<br>
+      <b>④ 여백 「없음」.</b> 여백을 두면 배율이 100% 여도 카드 3×3(189×264mm)이 밀리고,
+      현장 판 두 장의 이음매도 어긋납니다.</p>
     <p class="muted"><b>넘김 방향이 문서마다 다른 이유</b> — 종이를 넘기는 축이 문서 방향에 따라 반대이기 때문입니다.
       세로로 짠 것(단서카드)은 <b>긴 쪽</b>, 가로로 짠 것(인물카드)은 <b>짧은 쪽</b>이라야 앞뒤가 맞습니다.
       단면으로 뽑는 넷(진상해설서·장소판·배치와트랙·진행물)은 인쇄 대화상자에서 <b>「단면」인지 한 번 더</b> 보세요 —
@@ -1409,6 +1424,8 @@ function runSheets() {
       <b>② 단서카드 한 장을 빛에 비춰</b> 뒷면 번호가 앞면 카드와 겹치는지 보세요.
       넘김 방향이 틀리면 A1 뒤에 A3 이 옵니다.<br>
       <b>③ QR 하나를 휴대폰으로 찍어</b> 화면이 뜨는지 보세요.<br>
+      <b>④ 현장 판 두 장을 이어 붙인 뒤</b> 복도 아래 벽선이 <b>한 줄로 이어지는지</b> 보세요.
+      어긋나면 배율이 100% 가 아니거나 여백이 남아 있는 것입니다.<br>
       <span class="muted">가능하면 두꺼운 종이(120g 이상)로 뽑으세요 — 얇으면 카드를 엎어 쌓아도 앞면이 비칩니다.</span></p>
 
     <h2>자르고 접기</h2>
@@ -1472,9 +1489,15 @@ function runSheets() {
 
   <div class="page">${stage('헷갈릴 때')}<h1>이 종이는 무엇인가 <span class="muted">— 헷갈리면 여기를 보세요</span></h1>
     <table><tr><th style="width:26%">무엇</th><th>어떤 물건인가</th></tr>
+      <tr><td><b>배치와 트랙</b><br><span class="muted">인쇄물 「보드_배치와트랙」 · A4 두 장</span></td>
+        <td><b>첫 장이 탁자 배치도</b>입니다 — 무엇을 어디에 놓는지 그림으로 있습니다.
+          <b>둘째 장이 라운드 트랙</b>이고, 여섯이 할 때와 일곱이 할 때 두 표가 한 면에 있습니다 —
+          인원에 맞는 쪽만 보세요. 두 장 다 <b>판 옆에 계속 펴 둡니다.</b></td></tr>
       <tr><td><b>진행 물품</b><br><span class="muted">지금 보는 이 책자</span></td>
-        <td>사건 브리핑 · 탁자 배치 · 기본 규칙 세 면 · 라운드 트랙 · 사건 기록판 · 이벤트 카드.
-          <b>전원이 함께 씁니다.</b> 장마다 머리에 <b>언제 쓰는 것인지</b>가 적혀 있습니다.</td></tr>
+        <td>인쇄 순서 · 자르고 접기 · 읽는 순서 · 이 표 · 사건 브리핑 · 기본 규칙 세 면 ·
+          사건 기록판 · 이벤트 카드.
+          <b>전원이 함께 씁니다.</b> 장마다 머리에 <b>언제 쓰는 것인지</b>가 적혀 있습니다.
+          <span class="muted">탁자 배치와 라운드 트랙은 이 책자가 아니라 <b>「보드_배치와트랙」</b>에 있습니다.</span></td></tr>
       <tr><td><b>인물 시트</b><br><span class="muted">사람마다 <b>두 장</b>(형사만 한 장)</span></td>
         <td>당신이 맡을 사람의 정체·그날의 행적·대사가 들어 있습니다. A4 가로 두 장을 각각
           가운데에서 <b>안쪽이 마주 보게</b> 접습니다 — 바깥으로 나오는 것은
