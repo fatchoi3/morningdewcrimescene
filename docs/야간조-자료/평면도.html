@@ -46,6 +46,8 @@
       <path d="M0,0 L8,3 L0,6 z" fill="#b8860b"/></marker>
     <marker id="arb" markerWidth="8" markerHeight="8" refX="7" refY="2.6" orient="auto">
       <path d="M0,0 L7,2.6 L0,5.2 z" fill="#185FA5"/></marker>
+    <marker id="arp" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 z" fill="#7a3b9c"/></marker>
   </defs>
 
   <text x="360" y="44" class="zone" text-anchor="middle">← 서 쪽 2/3 · 사람이 많은 곳 —————</text>
@@ -134,6 +136,15 @@
   <text x="515" y="432" class="rtag" text-anchor="middle">집품 랙 — 랙 안쪽이라 주통로가 안 보인다</text>
   <circle cx="374" cy="370" r="11" fill="#1a1a1a"/><text x="374" y="375" class="num" text-anchor="middle">8</text>
 
+  <!-- ★ 지게차 경로 (03:15~03:17) : 충전소 → 자동문 → 갈림 → 현장 -->
+  <g stroke="#7a3b9c" stroke-width="2.5" fill="none" stroke-dasharray="8 5" opacity="0.85">
+    <path d="M330 274 L330 300 L672 300" marker-end="url(#arp)"/>
+    <path d="M688 300 L800 300 L800 182" marker-end="url(#arp)"/>
+  </g>
+  <text x="192" y="352" style="font:700 11px sans-serif;fill:#7a3b9c">보라 점선 = 지게차가 간 길 (03:15~03:17)</text>
+  <text x="192" y="366" style="font:700 11px sans-serif;fill:#7a3b9c">③ → 자동문 → 갈림 → ⑪</text>
+  <text x="192" y="380" style="font:600 11px sans-serif;fill:#7a3b9c">D구역엔 가지 않았다</text>
+
   <!-- 동쪽 : C통로 -->
   <rect x="772" y="88" width="56" height="196" fill="#fff6e0"/>
   <line x1="772" y1="88" x2="772" y2="284" stroke="#c9a84c" stroke-width="2" stroke-dasharray="9 5"/>
@@ -145,12 +156,18 @@
   <text x="742" y="272" class="rtag" text-anchor="middle">랙 3단</text>
   <text x="858" y="272" class="rtag" text-anchor="middle">랙 1단</text>
   <text x="800" y="80" class="rtag" text-anchor="middle">막다른 끝</text>
-  <text x="800" y="160" text-anchor="middle" style="font:800 30px sans-serif;fill:#a3231f">✕</text>
-  <circle cx="898" cy="154" r="11" fill="#a3231f"/><text x="898" y="159" class="num" text-anchor="middle">11</text>
+  <!-- 넘어진 파렛트 : 1단에서 통로 쪽으로 밀려 나옴 -->
+  <rect x="828" y="142" width="34" height="30" fill="#c9a84c" stroke="#7a6a3a" stroke-width="1.6"/>
+  <rect x="794" y="146" width="36" height="26" fill="#d9c58a" stroke="#7a6a3a" stroke-width="1.6" transform="rotate(-14 812 159)"/>
+  <text x="800" y="166" text-anchor="middle" style="font:800 26px sans-serif;fill:#a3231f">✕</text>
+  <circle cx="898" cy="164" r="11" fill="#a3231f"/><text x="898" y="169" class="num" text-anchor="middle">11</text>
+
 
   <path d="M800 284 L770 190 L830 190 Z" fill="#a3231f" opacity="0.12"/>
   <rect x="790" y="284" width="20" height="20" fill="#d9d2c4" stroke="#2f2b24" stroke-width="1.6"/>
+  <rect x="788" y="272" width="24" height="16" fill="#8a6b4a" stroke="#4a3a24" stroke-width="1.4"/>
   <circle cx="800" cy="284" r="9" fill="#a3231f"/><text x="800" y="288" class="cnum" text-anchor="middle">E</text>
+  <text x="822" y="296" style="font:800 11px sans-serif;fill:#a3231f">↑ 박스로 가려짐</text>
   <text x="800" y="324" class="rname" text-anchor="middle">갈림 J</text>
   <circle cx="746" cy="324" r="11" fill="#1a1a1a"/><text x="746" y="329" class="num" text-anchor="middle">10</text>
 
@@ -226,7 +243,9 @@
       <tr><td class="k"><span class="pill">10</span></td><td class="n">갈림 J</td>
           <td>자동문 동쪽 15m. 여기서 <b>북쪽이 C통로, 남쪽이 D구역</b>으로 갈린다.</td></tr>
       <tr><td class="k"><span class="pill r">11</span></td><td class="n">현장 ✕</td>
-          <td>갈림에서 20m 안. <b>C통로는 막다른 길</b>이라 출구가 갈림 하나뿐이다. 갈림에 서면 넘어진 파렛트까지만 보이고 <b>그 아래 사람은 다가가야 보인다</b>.</td></tr>
+          <td>갈림에서 <b>20m 안</b>. 노란 사각형이 <b>1단 랙에서 통로 쪽으로 밀려 넘어진 파렛트</b>, ✕가 그 아래 조장이다. <b>C통로는 막다른 길</b>이라 출구가 갈림 하나뿐이고, 갈림에 서면 <b>넘어진 파렛트까지만 보이고 그 아래 사람은 다가가야 보인다</b>.</td></tr>
+      <tr><td class="k" style="color:#7a3b9c;font-weight:800">━</td><td class="n" style="color:#7a3b9c">지게차 경로</td>
+          <td>보라 점선. <b>충전소 ③ → 주통로 → 자동문 → 갈림 → 현장 ⑪</b>. 03:15에 몰고 나가 03:17에 파렛트를 밀고, 시동을 켠 채 <b>C통로 입구</b>에 두고 걸어 나왔다. <b class="hl">D구역에는 간 적이 없다</b> — 사건은 갈림 기준 반대편(북쪽)에서 일어났다.</td></tr>
       <tr><td class="k"><span class="pill">12</span></td><td class="n">반품 랙</td>
           <td>두 열이 작업대와 갈림 사이를 가로막는다. <b class="hl">흐엉의 작업대에서는 갈림도 C통로도 보이지 않는다</b> — 소리만 온다.</td></tr>
       <tr><td class="k"><span class="pill">13</span></td><td class="n">뒷문</td>
@@ -246,7 +265,7 @@
       <tr><td class="k"><span class="pill r">D</span></td><td class="n">L-1 탈의실</td>
           <td>입구 출입만. 야식 시간엔 흐엉 하나뿐이다.</td></tr>
       <tr><td class="k"><span class="pill r">E</span></td><td class="n">C-3 갈림</td>
-          <td>C통로 전체 + D 입구. <b>00:30~04:11 박스로 가려져 있다</b> — 살인이 그 안에 들어 있다.</td></tr>
+          <td><b>이것이 오정숙이 가린 카메라다</b>(도면의 갈색 박스). 원래 D구역 반품 절도를 잡으려고 단 것이라 기둥 <b>북쪽 면</b>에 붙어 C통로를 향한다. 그녀는 자기 D구역만 가린 줄 알았지 <b class="hl">C통로가 같이 지워지는 줄 몰랐다</b>. <b>00:30~04:11 검은 화면</b> — 살인이 그 안에 들어 있다.</td></tr>
       <tr><td class="k"><span class="pill r">F</span></td><td class="n">출고 리프트</td>
           <td>지게차가 파렛트를 올려놓는 자리. 이상 없음.</td></tr>
     </table>
