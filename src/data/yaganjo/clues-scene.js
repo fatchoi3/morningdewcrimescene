@@ -227,7 +227,7 @@ export const cluesScene = {
     title: '여권 보관함',
     description: '사물함 아래 칸에 들어 있던 플라스틱 정리함.',
     detail: '칸이 셋이고, 칸마다 종이에 볼펜으로 쓴 이름표가 붙어 있다.\n\n두 칸에는 여권과 외국인등록증이 한 벌씩 들어 있다.\n\n세 번째 칸은 비어 있다. 그 칸의 이름표에 「응우옌 티 흐엉」.',
-    image: '/images/yaganjo/p1-passport-box.jpg',
+    image: '', // 여권 보관함은 안전 필터로 생성 불가 — 카드 문면이 대신한다
     type: '보통',
     person: '조장',
   },
