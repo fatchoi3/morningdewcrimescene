@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <link rel="icon" href="/favicon2.png" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>단서 열람 — 야간조</title>
+    <style>
+      /* ─────────────────────────────────────────────────────────────────────
+         야간조 QR 화면 — 폰 여섯 · 조장 폰 · 조장 태블릿(T1).
+
+         뼈대는 clue.html 과 같다(같은 저장소의 같은 손). 다른 것은 셋이다.
+           · 강조색이 새벽이슬의 보라(#5a3f8a)가 아니라 물류센터 야간의 강철/호박색이다.
+           · 잠금 화면 — 폰 다섯이 네 자리를 묻는다. 키패드를 직접 그린다(모바일 키보드가
+             뜨면 네 자리 폰 잠금처럼 보이지 않고, 숫자 외 글자가 들어온다).
+           · 태블릿 — 전표 목록이 넓게 펴져야 읽힌다. .box.wide 가 그 한 장을 위한 폭이다.
+         ───────────────────────────────────────────────────────────────────── */
+      :root {
+        color-scheme: dark;
+        --bg: #0a0d12;         /* 창고 야간 */
+        --fg: #e6e2d8;
+        --dim: #8b97a8;
+        --line: #24303f;
+        --card: #131a24;
+        --accent: #2f5d8a;     /* 강철 */
+        --amber: #e0a938;      /* 안전 표지 */
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+             font-family: 'Noto Sans KR','Malgun Gothic', '맑은 고딕', system-ui, sans-serif; }
+      .box { max-width: 520px; margin: 0 auto; }
+      .box.wide { max-width: 760px; }   /* 태블릿 한 장 — 전표 목록이 접히지 않게 */
+      h1 { font-size: 1.25rem; margin: 0 0 10px; }
+      .hd { border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 16px; }
+      .tt { font-size: 1.15rem; font-weight: 800; }
+      .sb { font-size: .85rem; color: var(--dim); margin-top: 3px; }
+      .body { font-size: .95rem; line-height: 1.8; white-space: pre-wrap; }
+      .msg { font-size: .95rem; line-height: 1.7; }
+      .sub, .foot { color: var(--dim); font-size: .82rem; line-height: 1.6; margin-top: 14px; }
+      code { background: #1b2430; padding: 1px 6px; border-radius: 4px; }
+      .ph { width: 100%; margin-top: 8px; border-radius: 8px; border: 1px solid var(--line); }
+      /* 자산이 아직 없는 자리 — 깨진 이미지 대신 자리를 남긴다(설명 줄이 곧 내용이다) */
+      .phx { margin-top: 8px; padding: 18px; border-radius: 8px; border: 1px dashed #33445a;
+             background: #10161f; color: #6c7a8c; font-size: .8rem; text-align: center; }
+
+      .room { margin-bottom: 14px; padding: 12px; border-radius: 10px;
+              background: var(--card); border: 1px solid var(--line); }
+      .rn { font-weight: 800; margin-bottom: 8px; font-size: .95rem; }
+      .ln { font-size: .9rem; line-height: 1.7; color: #cfc8ba; }
+      .ln b { color: var(--amber); font-weight: 700; margin-right: 6px; }
+
+      .pad label { display: block; font-size: .85rem; color: var(--dim); margin-bottom: 6px; }
+      .pad input { width: 100%; padding: 14px; font-size: 1.3rem; letter-spacing: .25em;
+                   text-align: center; border-radius: 10px; border: 1px solid #33445a;
+                   background: var(--card); color: var(--fg); }
+      .pad button { width: 100%; margin-top: 10px; padding: 13px; font-size: 1rem; font-weight: 700;
+                    border-radius: 10px; border: 0; background: var(--accent); color: #fff; }
+      .err { margin-top: 10px; padding: 9px 11px; border-radius: 8px; background: #2a1a1a;
+             border: 1px solid #7a4444; color: #d9b3b3; font-size: .85rem; text-align: center; }
+      .ok { margin-bottom: 12px; padding: 9px 11px; border-radius: 8px; background: #14261d;
+            border: 1px solid #2f6b4a; color: #9ed8b6; font-size: .85rem; }
+      .warn { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #2a1a1a;
+              border: 1px solid #7a4444; color: #d9b3b3; font-size: .85rem; line-height: 1.6; }
+      .knote { margin-top: 16px; color: var(--dim); font-size: .78rem; line-height: 1.6; }
+
+      /* ── 기기(폰·태블릿) 껍데기 ──────────────────────────────────────────── */
+      .phone { border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+               background: #0f141c; box-shadow: 0 6px 24px #0008; }
+      .pbar { display: flex; justify-content: space-between; padding: 7px 14px;
+              font-size: .72rem; color: var(--dim); background: #0c1118; }
+      .pnav { display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+              background: var(--card); border-bottom: 1px solid var(--line); }
+      .pnt { font-weight: 800; font-size: .95rem; flex: 1; text-align: center; }
+      .pback { background: none; border: 0; color: var(--dim); font-size: 1.3rem;
+               line-height: 1; padding: 0 6px; cursor: pointer; }
+      .pscr { padding: 12px; min-height: 320px; }
+      .phome { text-align: center; }
+      .pown { font-weight: 800; margin-top: 14px; }
+      .psub { color: var(--dim); font-size: .82rem; margin: 4px 0 18px; }
+      .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 8px; }
+      .pic { background: none; border: 0; color: var(--fg); display: flex;
+             flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+      .picb { width: 52px; height: 52px; border-radius: 15px; background: #1b2430;
+              border: 1px solid #2b3a4c; display: flex; align-items: center;
+              justify-content: center; font-size: 1.5rem; }
+      .picl { font-size: .74rem; color: #b9c2ce; }
+
+      /* ── 잠금 화면 — 네 자리 ─────────────────────────────────────────────── */
+      .lock { text-align: center; padding: 22px 6px 10px; }
+      .lki { font-size: 1.8rem; }
+      .lkt { font-weight: 800; margin-top: 8px; font-size: 1.02rem; }
+      .lkd { color: var(--dim); font-size: .84rem; margin-top: 5px; line-height: 1.6; }
+      .lkh { margin-top: 10px; color: var(--amber); font-size: .86rem; }
+      .dots { display: flex; justify-content: center; gap: 14px; margin: 20px 0 6px; }
+      .dot { width: 13px; height: 13px; border-radius: 50%;
+             border: 1px solid #4a5b70; background: transparent; }
+      .dot.on { background: var(--fg); border-color: var(--fg); }
+      .dots.bad .dot { border-color: #7a4444; }
+      .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+              max-width: 280px; margin: 18px auto 0; }
+      .key { padding: 15px 0; font-size: 1.3rem; font-weight: 700; border-radius: 12px;
+             border: 1px solid #2b3a4c; background: #1b2430; color: var(--fg); cursor: pointer; }
+      .key.fn { font-size: 1rem; background: transparent; border-color: transparent; color: var(--dim); }
+      .key:active { background: #26313f; }
+
+      /* ── 대화 목록 · 통화 기록 · 연락처 ──────────────────────────────────── */
+      .klist { display: flex; flex-direction: column; }
+      .krow { width: 100%; display: flex; gap: 11px; align-items: center; text-align: left;
+              background: none; border: 0; border-bottom: 1px solid #1c2531;
+              padding: 11px 4px; color: var(--fg); cursor: pointer; }
+      .kav { width: 42px; height: 42px; border-radius: 14px; background: #f7e14b;
+             color: #3a3320; display: flex; align-items: center; justify-content: center;
+             font-weight: 800; flex: none; }
+      .krow.sms .kav { background: #3a5a7a; color: #dbeaff; }
+      .krow.call .kav { border-radius: 50%; background: #2b4a35; color: #a6e6bd; }
+      .krow.call.out .kav { background: #2b3b5a; color: #a8c8ff; }
+      .krow.call.missed .kav { background: #4a2b2b; color: #ffb4b4; }
+      .kbody { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+      .kname { font-weight: 700; font-size: .9rem; }
+      .ktag { font-style: normal; margin-left: 7px; font-size: .68rem; font-weight: 700;
+              color: #d9b3b3; border: 1px solid #7a4444; border-radius: 4px; padding: 0 5px; }
+      .kprev { font-size: .8rem; color: var(--dim); overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
+
+      /* 대화방 — 카톡은 노란 말풍선, 문자는 파란 말풍선 */
+      .kchat { display: flex; flex-direction: column; gap: 7px; padding: 10px 4px;
+               background: #91a3b8; border-radius: 10px; }
+      .kchat.sms { background: #7d8a9c; }
+      .kmsg { display: flex; flex-direction: column; max-width: 82%; }
+      .kmsg.them { align-self: flex-start; align-items: flex-start; }
+      .kmsg.me { align-self: flex-end; align-items: flex-end; }
+      .kwho { font-size: .72rem; color: #2c3644; margin: 0 4px 3px; }
+      .kbub { background: #fff; color: #17202b; padding: 8px 12px;
+              border-radius: 13px; font-size: .88rem; line-height: 1.55; }
+      .kmsg.them .kbub { border-top-left-radius: 4px; }
+      .kmsg.me .kbub { background: #fae100; border-top-right-radius: 4px; }
+      .kchat.sms .kmsg.me .kbub { background: #cfe3ff; }
+      .ktime { font-size: .68rem; color: #3a4654; margin: 3px 4px 0; }
+
+      /* ── 사진 ────────────────────────────────────────────────────────────── */
+      .psec { margin: 16px 0 8px; font-size: .82rem; font-weight: 700; color: var(--dim);
+              border-top: 1px solid #1c2531; padding-top: 12px; }
+      .pcap { font-size: .86rem; line-height: 1.65; color: #cfc8ba; margin-top: 8px; }
+      .pcap b { color: var(--amber); }
+
+      /* ── 태블릿 전표 목록과 관리자 조회 ─────────────────────────────────── */
+      .slipbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+      .sliptt { font-weight: 800; font-size: .95rem; flex: 1; }
+      .admbtn { padding: 9px 12px; font-size: .84rem; font-weight: 700; border-radius: 8px;
+                border: 1px solid var(--amber); background: transparent; color: var(--amber);
+                cursor: pointer; flex: none; }
+      .slip { margin-bottom: 10px; padding: 11px 12px; border-radius: 9px;
+              background: var(--card); border: 1px solid var(--line); }
+      .slipq { font-weight: 700; font-size: .88rem; margin-bottom: 6px; }
+      .slipd { font-size: .82rem; line-height: 1.65; color: #b9c2ce; }
+      .slipst { margin-top: 7px; font-size: .82rem; color: var(--dim); }
+      .slip.cx { border-color: #7a4444; }
+      .slip.cx .slipq { text-decoration: line-through; text-decoration-color: #c96a6a;
+                        text-decoration-thickness: 2px; color: #d9b3b3; }
+      .slip.cx .slipst { color: #d9b3b3; }
+      .strike { text-decoration: line-through; text-decoration-color: #c96a6a;
+                text-decoration-thickness: 2px; }
+      .adm { padding: 8px 2px; }
+      .admrow { margin-bottom: 14px; }
+      .log { margin-bottom: 4px; padding: 12px; border-radius: 10px;
+             background: #171c14; border: 1px solid #3e4a2f; }
+      .log .rn { color: var(--amber); }
+      .logln { font-size: .87rem; line-height: 1.8; color: #cfc8ba; }
+    </style>
+  </head>
+  <body>
+    <div id="clue-root"></div>
+    <script type="module" src="/src/yaganjo/clue/main.js"></script>
+  </body>
+</html>
