@@ -60,13 +60,13 @@ export const cluesABE = {
   'GYQV-38': { // A6 · 잠금 네 자리 → secrets.phoneLocks['GYQV-38']. 출처는 A3(TXCD-86)·B2(MLPZ-57)
     title: '{{S1}}의 휴대폰',
     description: '작업복 안주머니에서 나온 휴대폰. 보호 필름 모서리가 들려 있다.',
-    detail: '잠금 화면에 네 자리를 넣는 칸이 떠 있다. 힌트 줄은 없다.\n\n안에 든 것 — 연락처 · 카카오톡 · 사진 · 최근 삭제된 항목.',
+    detail: '잠금 화면에 네 자리를 넣는 칸이 떠 있다. 그 아래 비밀번호 힌트가 한 줄 — 「그 문서번호」.\n\n안에 든 것 — 연락처 · 카카오톡 · 사진 · 최근 삭제된 항목.',
     image: '',
     type: '보통',
     person: '{{S1}}',
     phone: {
       owner: '{{S1}}의 휴대폰',
-      lock: { digits: 4 },   // 답은 secrets 쪽 phoneLocks 로 분리한다
+      lock: { digits: 4, hint: '그 문서번호' },   // 답은 secrets 쪽 phoneLocks 로 분리한다
       apps: [
         {
           id: 'contacts',
