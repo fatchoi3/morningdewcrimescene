@@ -276,6 +276,13 @@ function renderDevice(c) {
     return '<div class="msg">비어 있습니다.</div>';
   }
 
+  // 지워진 한 방울 — 보낸 사람이 도로 가져간 메시지.
+  //   말풍선을 비워 두면 화면에 빈 칸만 뜬다. 카드 앞면은 「회색 한 줄」을 약속하므로
+  //   그 한 줄을 여기서 그린다. **내용은 어디에도 없다 — 복원 수단을 두지 않는다.**
+  //   text 가 있는 deleted 는 건드리지 않는다(복구된 대화의 본문이다).
+  const DELETED = '삭제된 메시지입니다';
+  const isGone = (m) => !!(m && m.deleted && !m.text);
+
   // 대화 — 목록에서 방을 고르고, 방에서는 말풍선으로 읽는다.
   function chatHTML(a) {
     const chats = a.chats || [];
@@ -290,7 +297,8 @@ function renderDevice(c) {
           <span class="kav">${locked ? '🔒' : esc((ch.name || '?').replace(/\s.*$/, '').slice(0, 1))}</span>
           <span class="kbody">
             <span class="kname">${esc(ch.name)}${ch.deleted ? '<em class="ktag">삭제됨</em>' : ''}</span>
-            <span class="kprev">${locked ? '삭제된 대화 — 이 판에는 복구 수단이 없습니다' : esc(last?.text || '')}</span>
+            <span class="kprev">${locked ? '삭제된 대화 — 이 판에는 복구 수단이 없습니다'
+              : (isGone(last) ? DELETED : esc(last?.text || ''))}</span>
           </span></button>`;
       }).join('')}</div>`;
     }
@@ -299,7 +307,7 @@ function renderDevice(c) {
     return `<div class="kchat ${kind}">${(ch.messages || []).map((m) => `
       <div class="kmsg ${m.from === 'me' ? 'me' : 'them'}">
         ${m.from !== 'me' ? `<span class="kwho">${esc(m.who || ch.name || '')}</span>` : ''}
-        <span class="kbub">${esc(m.text || '')}</span>
+        <span class="kbub${isGone(m) ? ' gone' : ''}">${isGone(m) ? DELETED : esc(m.text || '')}</span>
         ${m.time ? `<span class="ktime">${esc(m.time)}</span>` : ''}
       </div>`).join('')}</div>`;
   }
