@@ -16,8 +16,8 @@
 //   발급표(dp-mapping.md §11)에서 더미 글자로 골라낸 것이고, 합이 82장이다.
 //
 //     ROOM-A 6 · ROOM-B 5 · ROOM-C 6 · ROOM-D 6 · ROOM-E 6 · ROOM-F 5   = 34
-//     ROOM-X 10 · ROOM-P 3                                              = 13
-//     ROOM-W 6 · ROOM-N 5 · ROOM-J 5 · ROOM-U 5                         = 21
+//     ROOM-X 10 · ROOM-P 2                                              = 12
+//     ROOM-W 6 · ROOM-N 5 · ROOM-J 5 · ROOM-U 6                         = 22
 //     ROOM-V 14                                                         = 14
 //                                                                     ───────
 //                                                                        82
@@ -160,8 +160,9 @@ export const rooms = {
     person: '조장',
     room: {
       label: '조장의 칸',
-      // P1 여권 보관함 · P2 각서 다발 · P3 감사 진술 초안
-      objects: ['GZME-70', 'XNHC-45', 'NWVL-86'],
+      // P1 여권 보관함 · P2 각서 다발
+      //   옛 P3(감사 진술 초안 · NWVL-86)은 1차 플레이테스트 ㈏-H 로 ROOM-U 의 U6 이 됐다.
+      objects: ['GZME-70', 'XNHC-45'],
       showBody: false,
       people: [],
     },
@@ -216,8 +217,9 @@ export const rooms = {
     person: '공용',
     room: {
       label: '2층 — 사무실 · 관제실 · 계단',
-      // U1 지난달 순찰 일지 묶음 · U2 열쇠함 · U3 관제실 · U4 심야조 명부 · U5 사무실과 계단
-      objects: ['ATQK-74', 'OPGY-02', 'ASWY-11', 'KVUN-12', 'OWBV-26'],
+      // U1 지난달 순찰 일지 묶음 · U2 열쇠함 · U3 관제실 · U4 심야조 명부 · U5 사무실과 계단 ·
+      // U6 감사 진술 초안(옛 P3)
+      objects: ['ATQK-74', 'OPGY-02', 'ASWY-11', 'KVUN-12', 'OWBV-26', 'NWVL-86'],
       showBody: false,
       people: [],
     },
