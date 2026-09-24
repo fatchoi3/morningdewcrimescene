@@ -45,7 +45,7 @@ jobs:
       #   (S3 REST 오리진 + OAC 라 디렉터리 index 가 자동으로 안 붙는다. 이 방식이면
       #    CloudFront Function 없이 같은 주소를 만들 수 있다.)
       #   위 sync 가 --delete 라 매 배포마다 지워졌다 다시 올라간다 — 순서가 중요하다.
-      - name: Pretty URL (/solo-play, /board-kit, /cctv, /unlock, /clue)
+      - name: Pretty URL (/solo-play, /board-kit, /cctv, /unlock, /clue, /yaganjo-*)
         run: |
           set -e
           REGION=$(aws s3api get-bucket-location --bucket "$BUCKET" --query 'LocationConstraint' --output text)
@@ -59,6 +59,13 @@ jobs:
           aws s3 cp dist/unlock.html "s3://$BUCKET/unlock" \
             --content-type "text/html; charset=utf-8" --region "$REGION"
           aws s3 cp dist/clue.html "s3://$BUCKET/clue" \
+            --content-type "text/html; charset=utf-8" --region "$REGION"
+          # 야간조 — 카드 QR 이 확장자 없는 주소를 가리킨다. 이 셋이 없으면 QR 열아홉 장이 404.
+          aws s3 cp dist/yaganjo-board.html "s3://$BUCKET/yaganjo-kit" \
+            --content-type "text/html; charset=utf-8" --region "$REGION"
+          aws s3 cp dist/yaganjo-clue.html "s3://$BUCKET/yaganjo-clue" \
+            --content-type "text/html; charset=utf-8" --region "$REGION"
+          aws s3 cp dist/yaganjo-cctv.html "s3://$BUCKET/yaganjo-cctv" \
             --content-type "text/html; charset=utf-8" --region "$REGION"
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
