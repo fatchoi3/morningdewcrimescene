@@ -8,7 +8,9 @@
     "preview": "vite preview",
     "start:server": "node server.js",
     "docs": "node tools/docgen/build.mjs",
-    "docs:html": "node tools/docgen/build.mjs --html"
+    "docs:html": "node tools/docgen/build.mjs --html",
+    "docs:yaganjo": "node tools/docgen/yaganjo/buildY.mjs",
+    "docs:yaganjo:html": "node tools/docgen/yaganjo/buildY.mjs --html"
   },
   "dependencies": {
     "jsqr": "^1.4.0",

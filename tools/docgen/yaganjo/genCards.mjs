@@ -137,10 +137,15 @@ const markBadges = (marks) => (marks.length
 //     data.qr[code] = await QRCode.toString(url, { type: 'svg', margin: 0 })
 //   없으면 카드에 주소를 글자로 적어 둔다. 빈 자리로 두면 인쇄가 빠진 것인지
 //   원래 QR 이 없는 카드인지 구별이 안 된다.
+
+//   QR 이 실제로 찍히는 조건. 머리글의 장수와 qrBlock 이 **같은 것**을 봐야 한다 —
+//   두 곳에 따로 적으면 조건이 갈라져 종이와 숫자가 어긋난다.
+const wantsQr = (card) =>
+  card.lines.some((l) => /QR/.test(l.label)) || card.marks.includes('🔒');
+
 function qrBlock(card, data) {
   const code = data?.codeOf?.[card.no];
-  const wantsQr = card.lines.some((l) => /QR/.test(l.label)) || card.marks.includes('🔒');
-  if (!wantsQr) return '';
+  if (!wantsQr(card)) return '';
   if (!code) {
     return '<div class="noqr">이 카드의 단서 코드가 사상표에 없습니다 — QR 을 넣지 못했습니다</div>';
   }
@@ -310,7 +315,7 @@ export function genCards(parsed, data = {}) {
   const cards = pickCards(parsed).map(norm).filter((c) => c.no && (c.title || c.body));
 
   const n = cards.length;
-  const nQr = cards.filter((c) => data?.qr?.[data?.codeOf?.[c.no]]).length;
+  const nQr = cards.filter((c) => wantsQr(c) && data?.qr?.[data?.codeOf?.[c.no]]).length;
   const counts = {};
   for (const c of cards) {
     const d = deckOf(c.no) || '?';

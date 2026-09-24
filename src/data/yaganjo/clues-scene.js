@@ -129,7 +129,7 @@ export const cluesScene = {
     person: '조장',
     phone: {
       owner: '{{victim}} 조장의 휴대폰',
-      lock: { digits: 4, hint: '네 자리 숫자를 묻는다.' },
+      lock: { digits: 4 },
       apps: [
         {
           id: 'contacts',

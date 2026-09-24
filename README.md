@@ -92,6 +92,28 @@ main 에 push 할 때마다 자동 배포하려면 Variables 에 `ENABLE_PAGES =
 
 ---
 
+## 「야간조」 — 같은 저장소에 든 두 번째 크라임씬
+
+심야 물류센터가 무대인 별도의 한 벌입니다. 진행자 없이 여섯이 둘러앉아 인쇄물로 도는 보드게임판이
+본체이고, 카드의 QR 이 가리키는 웹 화면 둘이 그것을 거듭니다. 위의 새벽이슬과는 데이터도 진입점도
+갈라져 있어, 한쪽을 고쳐도 다른 쪽은 움직이지 않습니다.
+
+- **주소 셋** — `/yaganjo-kit`(인쇄물 키트) · `/yaganjo-clue`(🔒 카드 QR, 폰·태블릿) ·
+  `/yaganjo-cctv`(V 카드 QR, 카메라). 확장자 없는 주소이므로 `vite.config.js` 의 `prettyPaths` 항목이
+  빠지면 카드 QR 열아홉 장이 전부 404 가 됩니다.
+- **인쇄물 뽑는 두 길** — 웹 `/yaganjo-kit` 에서 내려받거나, 명령 `npm run docs:yaganjo`
+  (= `node tools/docgen/yaganjo/buildY.mjs`). 나가는 자리는 `tools/docgen/output/yaganjo/{html,pdf}` 로,
+  새벽이슬의 `tools/docgen/output/` 과 갈라 두었습니다. Chrome·puppeteer 가 없는 기기에서는
+  `npm run docs:yaganjo:html` 로 HTML 만 뽑습니다.
+- **고칠 자리 넷** — 등장인물 `src/scenarios/yaganjo/cast.js` · 설정 `src/scenarios/yaganjo/config.js` ·
+  단서 데이터 `src/data/yaganjo/` · 정답 `src/data/secrets.yaganjo.js`.
+  위 "저장소를 고쳐서 쓰기"의 네 파일은 새벽이슬 것이라 야간조에는 해당하지 않습니다.
+- **감사기** — `node tools/audit/yaganjo.mjs`. 카드 QR·단서 코드·문서의 어긋남을 훑고
+  하나라도 어긋나면 0 이 아닌 값으로 떨어집니다.
+- 정본 대본은 `docs/야간조.md`, 종이 규칙서는 `docs/야간조-보드게임/룰북.md` 입니다.
+
+---
+
 ## 개인정보 (중요)
 
 - 실제 사람 얼굴 사진은 **저장소에 커밋되지 않습니다**(`.gitignore` 가 `public/images/people/*.png|*.jpg` 제외).
