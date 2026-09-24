@@ -40,6 +40,13 @@ import { gameConfig } from './config.js';
 //   브라우저 진입점(src/yaganjo/clue/main.js)은 반대로 **별칭을 쓴다** — 그쪽은 Vite 를
 //   반드시 거치고, 별칭이라야 secrets.yaganjo.js 가 없는 저장소에서 example 로 폴백한다.
 //   둘은 같은 파일을 가리키므로 값이 갈리지 않는다.
+//
+//   ★ **이 import 는 폴백하지 않는다.** 정적 import 라 파일이 없으면 폴백이 아니라
+//     해석 실패다 — 야간조 셋만이 아니라 새벽이슬 일곱까지 빌드가 통째로 죽는다.
+//     그래서 src/data/secrets.yaganjo.js 는 **항상 있어야 하는 파일**이다.
+//     정답을 저장소에서 빼려면 지우지 말고 **내용을 secrets.example.js 로 덮어쓴다.**
+//     데모 빌드(VITE_DEMO=1)에서는 vite.config.js 의 정규식 별칭이 이 경로를
+//     secrets.yaganjo.demo.js 로 갈아 끼운다 — 그래서 데모 번들에는 정답이 없다.
 import secrets from '../../data/secrets.yaganjo.js';
 
 // ── 토큰 해석 ────────────────────────────────────────────────────────────────

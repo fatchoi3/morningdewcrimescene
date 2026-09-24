@@ -3,9 +3,14 @@
 //
 //   vite.config.js 의 '@yaganjo-secrets' 별칭이 이 파일을 먼저 찾고, 없으면
 //   src/scenarios/yaganjo/secrets.example.js(플레이스홀더)로 떨어진다.
-//   새벽이슬 secrets.js 와 같은 방침이다 — .gitignore 머리말이 적어 둔 대로,
-//   기본은 커밋해서 「가져다 쓰면 바로 도는 키트」로 둔다. 정답을 저장소에서
-//   빼고 싶으면 .gitignore 에 이 파일을 더하면 그대로 example 로 폴백한다.
+//   새벽이슬 secrets.js 와 같은 방침이다 — 기본은 커밋해서 「가져다 쓰면 바로 도는
+//   키트」로 둔다.
+//
+//   ★ **이 파일은 지우면 안 된다.** 새벽이슬 secrets.js 와 달리 여기는 폴백이 없다 —
+//     src/scenarios/yaganjo/index.js 가 상대경로로 정적 import 하기 때문에, 지우면
+//     저장소 전체 빌드가 죽는다(새벽이슬 일곱 진입점까지). 정답을 저장소에서 빼려면
+//     **지우지 말고 내용을 src/scenarios/yaganjo/secrets.example.js 로 덮어쓴다.**
+//     공개 데모 빌드는 따로 있다 — VITE_DEMO=1 이면 secrets.yaganjo.demo.js 가 번들된다.
 //
 //   ★ 종이와 화면은 같은 값을 써야 한다. 여기 네 자리는 전부 보드판 카드에
 //     이미 인쇄돼 있는 값이다(docs/야간조-보드게임/카드.md). 한쪽만 고치면

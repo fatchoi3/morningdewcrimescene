@@ -20,9 +20,20 @@ const secretsPath = demo
 //   '@secrets/' 로 시작하므로 위의 '@secrets' 별칭이 먼저 잡아 <secrets.js경로>/야간조 라는
 //   없는 경로로 바꿔 버린다 — 에러가 엉뚱한 곳을 가리켜 한참 헤맨다.
 const realYaganjoSecrets = resolvePath('./src/data/secrets.yaganjo.js');
-const yaganjoSecretsPath = existsSync(realYaganjoSecrets)
-  ? realYaganjoSecrets
-  : resolvePath('./src/scenarios/yaganjo/secrets.example.js');
+const yaganjoSecretsPath = demo
+  ? resolvePath('./src/data/secrets.yaganjo.demo.js')
+  : (existsSync(realYaganjoSecrets)
+      ? realYaganjoSecrets
+      : resolvePath('./src/scenarios/yaganjo/secrets.example.js'));
+
+// 야간조 시나리오 조립부(src/scenarios/yaganjo/index.js)는 별칭이 아니라 **상대경로로**
+// 실팩을 문다 — raw node 로 그 파일을 읽는 tools/audit · tools/docgen 이 별칭을 못 풀기
+// 때문이다. 그래서 위 별칭만으로는 **데모 빌드에도 실팩이 그대로 섞여 들어간다.**
+// 그 경로까지 같이 갈아 끼운다. plugin-alias 는 정규식이면 **맞은 부분만** 치환하므로
+// 지정자 전체를 무는 `^.*` 로 써야 한다 — 안 그러면 앞의 `../../data` 가 남아 경로가 깨진다.
+const yaganjoRelAlias = demo
+  ? [{ find: /^.*secrets\.yaganjo\.js$/, replacement: yaganjoSecretsPath }]
+  : [];
 
 // 배포 위치. 도메인 루트면 '/' (기본), GitHub Pages 프로젝트 사이트처럼
 // 하위 경로에 놓이면 VITE_BASE='/저장소이름/' 을 주면 된다.
@@ -54,10 +65,13 @@ export default defineConfig({
   server: { host: true, allowedHosts: true },
   preview: { host: true, allowedHosts: true },
   resolve: {
-    alias: {
-      '@secrets': secretsPath,
-      '@yaganjo-secrets': yaganjoSecretsPath,
-    },
+    // 배열 꼴이라야 정규식 별칭을 섞을 수 있다. 순서가 곧 우선순위이므로
+    // 정규식을 앞에 두어 상대경로 import 가 먼저 잡히게 한다.
+    alias: [
+      ...yaganjoRelAlias,
+      { find: '@secrets', replacement: secretsPath },
+      { find: '@yaganjo-secrets', replacement: yaganjoSecretsPath },
+    ],
   },
   // 멀티페이지: QR 게임(index.html) + 솔로 추리게임(solo.html)
   //   + 운영자 캐스팅 편집(cast.html) + 보드게임 인쇄물 키트(board.html)

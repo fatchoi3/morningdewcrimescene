@@ -112,6 +112,18 @@ main 에 push 할 때마다 자동 배포하려면 Variables 에 `ENABLE_PAGES =
 2. `git rm --cached src/data/secrets.js`
 3. 로컬에만 `secrets.js` 유지 — `secrets.js`가 없으면 앱/문서는 `secrets.example.js`(플레이스홀더)로 자동 폴백
 
+**야간조(`src/data/secrets.yaganjo.js`)는 방식이 다릅니다 — 지우면 안 됩니다.**
+`src/scenarios/yaganjo/index.js` 가 상대경로로 정적 import 하므로, 파일이 없으면 폴백이 아니라
+**빌드 전체가 죽습니다**(야간조 셋만이 아니라 새벽이슬 일곱 진입점까지). 정답을 빼려면
+지우지 말고 내용을 덮어쓰세요.
+
+```bash
+cp src/scenarios/yaganjo/secrets.example.js src/data/secrets.yaganjo.js
+```
+
+공개 데모 빌드(`VITE_DEMO=1`)는 `src/data/secrets.yaganjo.demo.js` 를 자동으로 대신 번들합니다 —
+데모 번들에는 야간조 정답이 들어가지 않습니다.
+
 ---
 
 ## 공개 데모 빌드

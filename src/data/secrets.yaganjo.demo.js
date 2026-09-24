@@ -1,31 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// 야간조 secrets.example — 비밀팩 템플릿(플레이스홀더). **실제 정답을 담지 않는다.**
-//   src/data/secrets.example.js(새벽이슬)와 같은 모양이고, 키 하나가 더 있다(phoneLocks).
+// 야간조 데모 비밀팩 — **실제 정답을 담지 않는다.**
 //
-//   ── 실제 값이 사는 자리 ───────────────────────────────────────────────────
-//     **src/data/secrets.yaganjo.js** 다. src/scenarios/ 가 아니다 —
-//     vite.config.js 와 src/scenarios/yaganjo/index.js 가 둘 다 그 경로를 본다.
-//     기본 저장소에는 그 파일이 실제 값으로 **이미 커밋돼 있다.**
+//   VITE_DEMO=1 빌드에서 src/data/secrets.yaganjo.js 대신 번들된다.
+//   새벽이슬 src/data/secrets.demo.js 와 같은 자리이고 같은 이유다 — 공개 시연용
+//   번들에 정답이 섞여 나가지 않게 한다.
 //
-//   ── 정답을 저장소에서 빼려면 ──────────────────────────────────────────────
-//     cp src/scenarios/yaganjo/secrets.example.js src/data/secrets.yaganjo.js
-//     그리고 로컬에만 실제 값을 채워 둔다.
-//
-//     **지우면 안 된다.** index.js 가 상대경로로 정적 import 하므로, 파일이 없으면
-//     폴백이 아니라 빌드 전체가 죽는다(새벽이슬 일곱 진입점까지).
-//     새벽이슬 secrets.js 와 다른 점이 바로 여기다.
-//
-//   ── 공개 데모 빌드 ────────────────────────────────────────────────────────
-//     VITE_DEMO=1 이면 src/data/secrets.yaganjo.demo.js 가 대신 번들된다.
-//
-//   별칭 이름이 '@secrets/yaganjo' 가 **아닌** 이유는 dp-architecture §2 에 있다 —
-//   Vite 의 별칭 매칭이 접두사 일치라 '@secrets/…' 는 기존 '@secrets' 가 먼저 낚아채
-//   「없는 경로」로 바꿔 버린다. '@yaganjo-secrets' 는 충돌하지 않는다.
-//
-//   ※ 이 파일에는 **정답을 적지 않는다.** 자리와 주석만 둔다.
-//     자리표시 값으로 판을 돌리면 감식 아홉이 전부 '0000' 으로 열리고 태블릿 조회가
-//     'CHANGE-ME' 로 열린다 — 동작은 하되 게임은 성립하지 않는다는 뜻이다.
-//   ※ 코드 키는 src/data/yaganjo/ 의 단서 코드와 일치해야 한다.
+//   값은 secrets.example.js 와 같다(네 자리는 전부 0000, 조회는 CHANGE-ME).
+//   동작은 하되 게임은 성립하지 않는다 — 그것이 데모 빌드가 원하는 상태다.
 // ─────────────────────────────────────────────────────────────────────────────
 export default {
   // ── 감식 결과 열람 비번 아홉(L1~L9) ────────────────────────────────────────
@@ -45,11 +26,15 @@ export default {
   },
 
   // ── 폰 화면 잠금 다섯 ──────────────────────────────────────────────────────
-  // 보드판 QR 화면(src/yaganjo/clue/main.js)이 이 값을 직접 읽어 잠금 화면을 연다.
-  //   mergeSecrets 의 주입 경로는 passwords · recover · lookups 셋뿐이라 phoneLocks 는
-  //   그 길로 가지 않는다 — clue/main.js 가 비밀팩을 따로 물어 제 손으로 맞춰 본다.
-  //   (한때 「아직 아무도 읽지 않는 키」였고 잠긴 폰이 그냥 열렸는데, 지금은 아니다.)
-phoneLocks: {
+  // ★ **아직 아무도 읽지 않는 키다.** mergeSecrets 의 주입 경로는 passwords ·
+  //   recover · lookups 셋뿐이고(src/data/mergeSecrets.js), PhoneModal 에도 잠금
+  //   화면이 없다. 그래서 지금은 잠긴 폰 다섯이 앱에서 그냥 열린다.
+  //   데이터 쪽 phone.lock({ digits, hint })은 이미 다섯 장에 들어 있으므로,
+  //   mergeSecrets 에 분기 한 줄 + localProvider 에 verifyPhoneLock + PhoneModal 에
+  //   잠금 화면(GamsikModal 의 입력 UI를 본뜬다)이 붙는 순간 그대로 작동한다.
+  //   자리를 미리 잡아 두는 이유는, 나중에 값을 넣을 때 어느 코드였는지 다시
+  //   찾지 않게 하기 위해서다. (dp-mapping §4-2 · dp-lint 「남은 문제」 1)
+  phoneLocks: {
     'GYQV-38': '0000', // A6 · 서장현의 휴대폰
     'DMYX-34': '0000', // C6 · 오정숙의 폰
     'LIPT-58': '0000', // D6 · 흐엉의 폰
