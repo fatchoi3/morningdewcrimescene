@@ -104,6 +104,8 @@ export const cluesCDF = {
               messages: [
                 { from: 'me', text: '조장이 오늘부터 한 명씩 부른다더라. 빨리 와.', time: '22:45' },
                 { from: 'them', text: '아주머니 어디세요 잠깐 얘기해요', time: '00:05' },
+                // 00:06 에 답하고 00:07 에 지웠다. 지운 쪽 화면에도 자국만 남는다(복원 불가).
+                { from: 'me', text: '', time: '00:06', deleted: true },
               ],
             },
             {
