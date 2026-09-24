@@ -379,6 +379,20 @@ p { margin: 0 0 1.8mm; line-height: 1.62; }
 .yfoot { position: absolute; left: 15mm; right: 15mm; bottom: 5mm; font-size: 6.4pt;
          color: #b3aa99; display: flex; justify-content: space-between; }
 .note { font-size: 8.4pt; color: #6b6760; line-height: 1.5; }
+/* 라운드 트랙 — 말 하나를 올려 두고 라운드마다 한 칸 옮긴다. 인원별로 두 줄. */
+.rtWrap { margin: 6mm 0 4mm; }
+.rtHead { font-size: 9.5pt; font-weight: 700; margin: 0 0 1.6mm;
+          padding-bottom: 0.8mm; border-bottom: 0.5mm solid #14120f; }
+table.rt { width: 100%; border-collapse: collapse; table-layout: fixed; }
+table.rt td.rtc { border: 0.4mm solid #14120f; padding: 0; height: 34mm;
+                  vertical-align: top; text-align: center; }
+table.rt td.rtLast { background: #f3efe6; }
+.rtN { font-size: 15pt; font-weight: 700; padding: 1.6mm 0 0; }
+.rtE { height: 11mm; font-size: 6.6pt; color: #7a6f5c; line-height: 1.25; }
+.rtEv { font-size: 12pt; color: #14120f; }
+.rtEvT { letter-spacing: 0.2mm; }
+.rtBox { margin: 0 1.4mm 1.4mm; height: 13mm; border: 0.25mm dashed #b9b0a0; }
+.rtNote { font-size: 7.6pt; color: #4a4437; line-height: 1.55; margin: 2.4mm 0 0; }
 .warn { border: 0.4mm solid #8a3b3b; background: #fdf0ee; border-radius: 1.6mm;
         padding: 2.4mm 3mm; margin: 2.5mm 0; font-size: 9pt; color: #6b2d2d; line-height: 1.58; }
 `;
@@ -388,7 +402,10 @@ p { margin: 0 0 1.8mm; line-height: 1.62; }
    쪽 나눔이 안 바뀐다. 일부러 두 면에 걸치게 둔 장(.spill)은 건드리지 않는다. */
 export const PAGE_FIT = `<script>
 (function () {
-  var MIN = 0.80;
+  /* 0.80 이었는데 기본 규칙 시트 앞면이 그 바닥에서 297.64mm 가 되어 A4 를 0.64mm 넘겼다.
+     넘친 꼬리가 한 면을 더 먹어 「마지막 두 면만 뽑으세요」가 앞면을 통째로 빠뜨렸다.
+     0.78 이면 290mm 로 떨어진다. 2차 감사. */
+  var MIN = 0.78;
   function H(el) {
     /* 가로 문서는 297 이 아니라 210mm 가 높이다. 장이 스스로 말하게 한다. */
     var mm = (el.getAttribute("data-h") || 297) - 5;
@@ -399,6 +416,7 @@ export const PAGE_FIT = `<script>
     for (var i = 0; i < pages.length; i++) {
       var el = pages[i], lim = H(el);
       el.style.zoom = "";
+      el.removeAttribute("data-over");
       if (el.getBoundingClientRect().height <= lim) continue;
       var k = 1;
       for (var n = 0; n < 6; n++) {
@@ -407,6 +425,13 @@ export const PAGE_FIT = `<script>
         k = Math.max(MIN, k * lim / h);
         el.style.zoom = k.toFixed(4);
         if (k === MIN) break;
+      }
+      /* 바닥에서도 안 담기면 조용히 넘어가지 않는다 — 표시를 남긴다.
+         이 도구의 가장 위험한 퇴행이 「조용히 성공하는 인쇄」다.
+         **인쇄 맥락에서만 뜻이 있다** — 화면에서는 .ypage 가 종이 크기로 묶이지 않아
+         전 장이 넘친 것으로 나온다. 그래서 매 회 지우고 다시 단다(위 removeAttribute). */
+      if (el.getBoundingClientRect().height > lim) {
+        el.setAttribute("data-over", Math.round(el.getBoundingClientRect().height - lim) + "px");
       }
     }
   }

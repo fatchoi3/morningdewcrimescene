@@ -139,7 +139,7 @@ export function genProgress(parsed, data = {}) {
   for (const p of parts) {
     if (IS_DETECTIVE.test(p.title)) continue;                    // 인물 시트로 간다
     if (IS_START.test(p.title)) body += startSheet(p);
-    else if (IS_EVENT.test(p.title)) body += eventCards(p);
+    else if (IS_EVENT.test(p.title)) body += eventCards(p) + roundTrack();
     else if (IS_RECORD.test(p.title)) body += recordBoard(p);
     else if (IS_BASIC.test(p.title)) body += basicSheet(p);
     else if (!numbered.test(p.title)) body = coverPage(p, parts) + body;   // 문서 제목 → 표지
@@ -164,7 +164,9 @@ function coverPage(part, parts) {
        ${has(IS_START) ? '<tr><td><b>시작 시트</b> — 사건 브리핑</td><td>A4 세로 · 단면</td>'
          + '<td>한 벌. 한 사람이 한 절씩 소리 내어 돌려 읽습니다</td></tr>' : ''}
        ${has(IS_EVENT) ? '<tr><td><b>이벤트 카드 4장</b></td><td>A4 세로 · 단면</td>'
-         + '<td>한 벌(넉 장). <b>오려서 접습니다</b> — 라운드 트랙 ①②③④ 자리에 뒷면이 보이게 얹어 둡니다</td></tr>' : ''}
+         + '<td>한 벌(넉 장). <b>오려서 글이 안으로 오게 접습니다</b> — 접으면 바깥이 백지라, 라운드 트랙 ①②③④ 자리에 그대로 얹어 두면 아무것도 안 보입니다</td></tr>' : ''}
+       ${has(IS_EVENT) ? '<tr><td><b>라운드 트랙</b></td><td>A4 세로 · 단면</td>'
+         + '<td>한 벌. <b>인원에 맞는 줄 하나만</b> 씁니다 — 여섯이면 6칸, 일곱이면 5칸</td></tr>' : ''}
        ${has(IS_RECORD) ? '<tr><td><b>사건 기록판</b></td><td>A4 세로 · 단면</td>'
          + '<td>한 벌. 손으로 적는 종이라 <b>여유 있게 뽑아 두면 좋습니다</b></td></tr>' : ''}
        ${has(IS_BASIC) ? '<tr><td><b>기본 규칙 시트</b></td><td>A4 <b>양면</b></td>'
@@ -187,17 +189,26 @@ function startSheet(part) {
 
 // 2. 이벤트 카드 4장 — 한 장에 한 카드. 앞면과 뒷면을 위아래로 앉히고 가운데를 접는다.
 //
-//   단면 인쇄 한 장을 **산접기**(인쇄면이 바깥으로) 하면 두 면이 앞뒤가 된다.
-//   그때 아래 칸은 위아래가 뒤집힌 채로 뒤에 붙으므로, **위아래로 넘겨야** 바로 읽힌다.
-//   그 한 줄을 안 적으면 좌우로 뒤집어 보고 「뒷면이 거꾸로 찍혔다」고 한다.
+//   **골접기**(인쇄된 면이 안으로)다. 단면 인쇄라 접으면 **바깥 두 면이 백지**가 되고,
+//   그래서 「뒷면이 보이게 얹어 두고 미리 읽지 마세요」가 실제로 지켜진다.
+//
+//   한때 산접기(인쇄면이 바깥으로)였다. 그러면 접어도 바깥 두 면이 전부 본문이고,
+//   위를 향하는 것이 하필 읽어서는 안 되는 쪽이 된다 — 이벤트 ③ 뒷면, 즉 이 판의
+//   물리 법칙(정문만 얼굴이 식별된다 · 자동문은 안전모와 어깨만 · 갈림은 검은 화면)이
+//   **준비 단계부터 탁자에 펴진 채로** 시작됐다. 2차 감사가 잡았다.
+//   새벽이슬(tools/docgen/genBoard.mjs)은 한 면만 인쇄해 백지가 위로 왔는데,
+//   야간조가 면을 둘로 늘리면서 그 백지를 잃고 문구만 그대로 물려받은 것이었다.
+//
+//   골접기라 펼치면 앞면과 뒷면이 위아래로 한 번에 드러난다 — 위부터 읽으면 순서가 맞다.
 function eventCards(part) {
   const { lead, parts } = splitBy(part.blocks, 2);
   let out = page(
     `<h1>${inline(part.title)}</h1>${renderBlocks(lead)}
      <div class="warn"><b>오리고 접는 법</b> — 다음 넉 장이 이벤트 카드입니다. 한 장에 한 카드이고,
-       <b>바깥 테두리를 따라 오려</b> 가운데 점선을 <b>산접기</b>(인쇄된 면이 바깥으로)하면
-       앞뒤 두 면이 됩니다. 뒤집을 때는 <b>위아래로</b> 넘기세요 — 좌우로 넘기면 뒷면이 거꾸로 보입니다.<br>
-       접은 넉 장은 라운드 트랙의 ①②③④ 자리에 <b>뒷면이 보이게</b> 얹어 둡니다. 미리 읽지 마세요.</div>`,
+       <b>바깥 테두리를 따라 오려</b> 가운데 점선을 <b>글이 안으로 오게</b> 접습니다.
+       접으면 <b>바깥 두 면이 백지</b>라 아무것도 안 보입니다.<br>
+       접은 넉 장을 라운드 트랙의 ①②③④ 자리에 그대로 얹어 두고,
+       그 라운드가 끝나면 <b>펼쳐서 위(앞면)부터 아래(뒷면)로</b> 읽습니다.</div>`,
     { stage: '준비할 때 오려 둡니다', foot: '야간조 · 이벤트 카드' },
   );
 
@@ -217,13 +228,46 @@ function eventCards(part) {
         <div class="evTop"><div class="evTitle">${inline(ev.title)}</div>
           <div class="evWhen">${renderBlocks(when)}</div></div>
         ${box('앞면', sub(fr, '앞면'), fr?.blocks)}
-        <div class="evFold">— 여기를 접습니다 (인쇄면이 바깥으로) —</div>
+        <div class="evFold">— 여기를 접습니다 (글이 안으로) —</div>
         ${box('뒷면', sub(bk, '뒷면'), [...(bk?.blocks || []), ...other.flatMap((o) => [{ type: 'h', level: 4, text: o.title }, ...o.blocks])])}
       </div>`,
       { cls: 'evPage', foot: '야간조 · 이벤트 카드' },
     );
   }
   return out;
+}
+
+// 3. 라운드 트랙 — 룰북이 「인원별로 둘이 인쇄된다」고 못 박은 종이.
+//
+//   한동안 그 약속만 있고 종이가 없었다(2차 감사). 준비를 맡은 사람은 체크리스트 한 줄을
+//   영영 못 채우고, 이벤트 카드 넉 장을 얹을 ①②③④ 자리가 없어 6인 6칸 / 7인 5칸이라는
+//   **인원별 차이가 종이에서 사라졌다.** 새벽이슬은 genBoard.mjs 가 같은 면을 그린다.
+//
+//   이벤트는 여섯이든 일곱이든 1·2·3·4 라운드 끝에 같이 터진다 — 7인은 5라운드뿐이라
+//   ④ 다음이 곧 마지막 라운드다. 그 촉박함이 트랙에 눈으로 보여야 한다.
+function roundTrack() {
+  const cell = (n, ev, last) => `<td class="rtc${last ? ' rtLast' : ''}">
+      <div class="rtN">${n}</div>
+      <div class="rtE">${ev ? `<span class="rtEv">${ev}</span><br><span class="rtEvT">이벤트 카드</span>` : ''}</div>
+      <div class="rtBox"></div></td>`;
+  const row = (label, cols, evs) => `<div class="rtWrap">
+      <div class="rtHead">${label}</div>
+      <table class="rt"><tr>${Array.from({ length: cols }, (_, i) =>
+        cell(i + 1, evs[i] || '', i === cols - 1)).join('')}</tr></table></div>`;
+  return page(
+    `<h1>라운드 트랙</h1>
+     <p>쓰는 쪽 하나만 씁니다. <b>말 하나를 1칸에 올려</b> 두고 라운드가 끝날 때마다 한 칸 옮깁니다.</p>
+     <div class="warn"><b>이벤트 카드 넉 장은 ①②③④ 칸에 접은 채로 얹어 둡니다.</b>
+       글이 안으로 오게 접혀 있어 바깥은 백지입니다. 그 라운드가 끝나면 <b>펼쳐서 앞면 → 뒷면</b>으로 읽습니다.</div>
+     ${row('여섯이서 — 6라운드', 6, ['①', '②', '③', '④'])}
+     ${row('일곱이서(재해조사관 포함) — 5라운드', 5, ['①', '②', '③', '④'])}
+     <p class="rtNote"><b>일곱이서 하면 ④ 다음이 곧 마지막 라운드입니다.</b>
+       2차 부검이 판을 뒤집고 나서 손에 남는 것이 한 라운드뿐이라, 여섯이서 할 때보다 훨씬 급합니다.
+       그 차이가 이 두 줄의 전부입니다.</p>
+     <p class="rtNote">아래 빈 칸은 그 라운드에 <b>무엇이 열렸는지</b> 적는 자리입니다 —
+       더미가 열리거나 카드가 섞여 들어온 것을 한 줄로 적어 두면 나중에 되짚기 쉽습니다.</p>`,
+    { stage: '준비 순서 1 · 판 가운데에 폅니다', foot: '야간조 · 라운드 트랙' },
+  );
 }
 
 // 4. 사건 기록판 — 손으로 적는 종이다. 칸마다 한 장씩 준다(⑵ 동쪽 인원은 줄이 길다).
