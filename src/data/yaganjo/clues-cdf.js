@@ -340,7 +340,7 @@ export const cluesCDF = {
   'ZFDF-11': {
     title: '운전면허증과 접힌 통지서',
     description: '지갑 뒤쪽 칸에서 나왔다.',
-    detail: '운전면허증 한 장. 1종 보통.\n\n그 뒤에 네 번 접힌 종이 한 장이 끼워져 있다. 올해 4월자 「운전면허 정지 처분 통지서」. 정지 기간 1년.\n\n접은 자국이 여러 번 덧나 있고 모서리가 해졌다.',
+    detail: '운전면허증 한 장. 1종 보통.\n\n그 뒤에 네 번 접힌 종이 한 장이 끼워져 있다. 올해 4월자 「운전면허 취소처분 통지서」. 결격기간 1년.\n\n접은 자국이 여러 번 덧나 있고 모서리가 해졌다.',
     image: '/images/yaganjo/f2-license-suspension.jpg',
     type: '보통',
     person: '{{S6}}',
