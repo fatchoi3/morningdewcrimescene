@@ -5,7 +5,8 @@
 //     일정표형(ScheduleModal) / 필적대조형(HandwritingModal) / 기본형.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react';
-import { getClue, provider, locations } from '../content.js';
+import { getClue, provider, locations, soloContent } from '../content.js';
+import { isPhoneLocked, verifyPhoneLock } from '../services.js';
 import { Shell } from '../ui/overlays.jsx';
 
 // 카메라 14장 — 관제실 열람대(ROOM-V)에서 연다.
@@ -37,7 +38,10 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
   const [page, setPage] = useState(0);
 
   // 열람 시 확보(신규면 수집 + 특수 연쇄)
-  useEffect(() => { if (!isBody && !collectedSet.has(code)) onCollect(code); /* eslint-disable-next-line */ }, [code]);
+  // 열람 시 확보. 단, 잠긴 폰은 **잠금을 풀어야** 확보한다 — 집기만 해서 가진 것으로 치면
+  //   네 자리를 모르는 형사도 그 폰으로 자백을 연다(1회차 시뮬레이션 #59).
+  const lockedPhone = !isBody && isPhoneLocked(code) && !collectedSet.has(code);
+  useEffect(() => { if (!isBody && !lockedPhone && !collectedSet.has(code)) onCollect(code); /* eslint-disable-next-line */ }, [code]);
 
   if (isBody) {
     return <Shell title={BODY?.label || '시신'} onClose={onClose}><p className="s-detail">{BODY?.detail || '사인·채취 결과는 개별 감식 단서로 확인하세요.'}</p></Shell>;
@@ -97,7 +101,7 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
 
   // 폰형
   if (c.phone) {
-    return <PhoneModal code={code} clue={c} collectedSet={collectedSet} onClose={onClose} />;
+    return <PhoneModal code={code} clue={c} collectedSet={collectedSet} onClose={onClose} onCollect={onCollect} />;
   }
 
   // 지갑형 — 항목을 눌러 내용물 확인
@@ -221,7 +225,7 @@ const isChatApp = (t) => t === 'kakao' || t === 'sms';
 // 톡서랍 복구 힌트 — 야간조에는 아직 복구 비번이 걸린 폰이 없다(secrets.recover 가 비어 있다).
 //   폰 잠금 네 자리의 출처는 폰마다 다르고, 그 출처는 카드 본문이 말한다.
 const recoverHint = () => '네 자리 숫자입니다 — 그 사람이 잊지 않는 날짜를 단서에서 찾아보세요';
-function PhoneModal({ code, clue, onClose }) {
+function PhoneModal({ code, clue, collectedSet, onClose, onCollect }) {
   const apps = clue.phone.apps || [];
   const [appId, setAppId] = useState(null);   // null = 홈 화면
   const [chatIdx, setChatIdx] = useState(null); // 카톡: null = 대화 목록
@@ -232,6 +236,15 @@ function PhoneModal({ code, clue, onClose }) {
   const [lookup, setLookup] = useState('');
   const [lookupRes, setLookupRes] = useState(null);
   const [zoom, setZoom] = useState(null); // 사진 확대
+  // 네 자리 잠금 — 확보(collected)가 곧 「풀었다」다. 한 번 풀면 다시 묻지 않는다.
+  const [open, setOpen] = useState(() => !isPhoneLocked(code) || collectedSet.has(code));
+  const [pin, setPin] = useState('');
+  const [pinMsg, setPinMsg] = useState('');
+  const [pinFails, setPinFails] = useState(0);
+  const tryPin = async () => {
+    if (await verifyPhoneLock(code, pin)) { setOpen(true); setPinMsg(''); onCollect?.(code); }
+    else { setPinFails((n) => n + 1); setPinMsg('잠금이 풀리지 않습니다.'); setPin(''); }
+  };
   const app = appId ? apps.find((a) => a.id === appId) : null;
   const recoverProtected = provider.isRecoverProtected(code);
 
@@ -240,9 +253,17 @@ function PhoneModal({ code, clue, onClose }) {
     if (ok) { setRecovered(true); setMsg(''); setFails(0); }
     else { setFails((n) => n + 1); setMsg('비밀번호가 맞지 않습니다.'); }
   };
+  const [lookupFails, setLookupFails] = useState(0);
   const tryLookup = async () => {
     const res = await provider.verifyLookup(code, lookup);
-    setLookupRes(res.ok ? (res.result || '조회 결과가 확인되었습니다.') : (app?.lookup?.notFound || '조회되지 않습니다.'));
+    if (res.ok) {
+      setLookupRes(res.result || '조회 결과가 확인되었습니다.');
+      // 조회에 성공하면 그 화면이 기록으로 들어온다 — 그래야 인물에게 들이밀 수 있다.
+      if (code === 'ZVLJ-37' && !collectedSet.has(soloContent.lookupCode)) onCollect?.(soloContent.lookupCode);
+    } else {
+      setLookupFails((n) => n + 1);
+      setLookupRes(app?.lookup?.notFound || '조회되지 않습니다.');
+    }
   };
   // 대화방까지 들어가면 홈(앱 목록)이 두 겹 위라 나올 때마다 두 번 눌러야 했다 — 한 번에 나가는 길을 따로 둔다.
   const home = () => { setAppId(null); setChatIdx(null); };
@@ -255,7 +276,21 @@ function PhoneModal({ code, clue, onClose }) {
       <div className="s-phone" onClick={(e) => e.stopPropagation()}>
         <div className="s-phone-status"><span>9:41</span><span className="pst-r">•••• 📶 🔋</span></div>
 
-        {!app ? (
+        {!open ? (
+          <div className="s-phone-screen s-phone-home" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+            <div className="s-phone-owner">🔒 {clue.phone.owner || clue.title}</div>
+            <div className="s-phone-sub">잠겨 있습니다 · 네 자리 숫자</div>
+            <div className="s-pw" style={{ justifyContent: 'center' }}>
+              <input inputMode="numeric" maxLength={4} value={pin} autoFocus
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                onKeyDown={(e) => { if (e.key === 'Enter' && pin.length === 4) tryPin(); }}
+                placeholder="● ● ● ●" style={{ textAlign: 'center', letterSpacing: '.4em', width: 140 }} />
+              <button className="s-btn sm" disabled={pin.length !== 4} onClick={tryPin}>열기</button>
+            </div>
+            {pinMsg && <div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{pinMsg}</div>}
+            {pinFails >= 3 && <div className="kkr-hint">힌트: {recoverHint(clue)}</div>}
+          </div>
+        ) : !app ? (
           <div className="s-phone-screen s-phone-home">
             <div className="s-phone-owner">📱 {clue.phone.owner || clue.title}</div>
             <div className="s-phone-sub">압수 휴대폰 · 앱을 눌러 확인하세요</div>
@@ -302,7 +337,16 @@ function PhoneModal({ code, clue, onClose }) {
                       <div className="pbr-site">🌐 {app.lookup.site}</div>
                       <div className="pbr-desc">{app.lookup.desc}</div>
                       <div className="s-pw"><input value={lookup} onChange={(e) => setLookup(e.target.value)} placeholder={app.lookup.placeholder || app.lookup.label} /><button className="s-btn sm" onClick={tryLookup}>조회</button></div>
-                      {lookupRes && <p className="pbr-res">{lookupRes}</p>}
+                      {lookupRes && (typeof lookupRes === 'string'
+                        ? <p className="pbr-res">{lookupRes}</p>
+                        : <div className="pbr-res">
+                            {lookupRes.title && <div style={{ fontWeight: 800, marginBottom: 6 }}>{lookupRes.title}</div>}
+                            {(lookupRes.lines || []).map((ln, i) => <div key={i} style={{ fontVariantNumeric: 'tabular-nums' }}>{ln}</div>)}
+                          </div>)}
+                      {/* 막힌 사람만 돕는다 — 정본 §10: 조장 비번은 폰 잠금과 같은 번호다 */}
+                      {lookupFails >= 3 && typeof lookupRes === 'string' && code === 'ZVLJ-37' && (
+                        <div className="kkr-hint">힌트: 사번은 사원증에 있습니다. 네 자리는 조장 휴대폰 잠금과 같은 번호입니다.</div>
+                      )}
                     </div>
                   )}
                 </div>

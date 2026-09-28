@@ -141,7 +141,7 @@ export default function SoloApp() {
 
   // ── 2차 사건 — 모든 조사·1차 심문이 끝나(2차 개방) 정밀 부검 결과(LONS-62)가 도착 ──
   if (state.eventSeen && !state.event2Seen && !state.admin && progressStage >= 3 && !suspectId && !sceneId) {
-    return <EventVN2 onDone={() => { collect('LONS-62'); update({ event2Seen: true }); }} />;
+    return <EventVN2 onDone={() => { collect(soloContent.autopsyCode); update({ event2Seen: true }); }} />;
   }
 
   // ── 메인(허브/장면/용의자) ────────────────────────────────────────────────
@@ -310,7 +310,7 @@ export default function SoloApp() {
             update({ collected: [...new Set([...state.collected, ...ALL_CODES])] }); showToast('📦 모든 단서를 확보했습니다');
           }}
           // 비우기는 단서만 지우는 게 아니다 — computeStage 가 매번 재계산이라 3막이 2막으로 되돌아가고,
-          //   중간 사건으로 받은 LONS-62 는 unlockedBy 가 비어 있어 event2Seen 을 함께 풀지 않으면 영영 못 받는다.
+          //   2차 심문 연출로 받은 2차 부검 소견(AUTOPSY-2)은 unlockedBy 가 없어 event2Seen 을 함께 풀지 않으면 영영 못 받는다.
           onClearClues={async () => {
             const yes = await dlg.confirm({
               title: '단서 비우기',

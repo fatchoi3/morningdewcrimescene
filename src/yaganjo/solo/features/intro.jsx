@@ -68,15 +68,21 @@ export function BriefingVN({ onDone }) {
   );
 }
 
-// ── 중간 사건 — 1차 심문 완료 후 부검 소견 도착(살인 전환) 연출 ───────────────
+// ── 중간 점검 — 1차 탐문을 마치면 현장이 열린다 ────────────────────────────
+//   보드판 이벤트 ①(현장 개방) + ②의 첫째 영장(2층·태블릿) + ③(CCTV 원본)을 한 번에 연다.
+//   **질식도 살인도 한 글자도 말하지 않는다.** 보드판에서 이 시점의 사인은 여전히 압사이고,
+//   질식은 마지막 이벤트 ④에서야 나온다. 여기서 먼저 말하면 차민우의 「내가 죽였다」,
+//   흐엉·임기석의 「지게차가 비어 있었다」, 서장현의 「사고라고 생각했습니다」가
+//   전부 무게를 잃는다(1회차 시뮬레이션 #21).
 export function EventVN({ onDone }) {
   const beats = [
-    { loc: '무전', text: t('"…수사관님, 국과수입니다. {{victim.full}} 1차 부검 소견이 나왔습니다."') },
-    { loc: '부검 소견', text: '"사인은 단순 심장 발작이 아닙니다. 코와 입 주변의 압박흔, 안면의 점상출혈 — 질식 소견입니다."' },
-    { loc: '수사 전환', text: '단순 발작사가 아니다. 사건은 지금부로 살인 사건으로 전환된다.' },
-    { text: '통제 중이던 C통로가 개방되었다. 공용 공간과 관제실 열람대, 감식 의뢰실도 열렸다.' },
-    { text: '감식반이 합류했다. 채취물을 가져가면 감식 의뢰실에서 분석을 맡길 수 있다 — 단, 결과가 나오기까지는 시간이 걸린다.' },
-    { text: '…낮의 진술들을 물증으로 검증할 차례다. 거짓말은 반드시 무너진다.' },
+    { loc: '무전', text: '"…수사관님, 현장 감식 끝났습니다. C통로와 동쪽 구역, 조사 목적으로 들어가셔도 됩니다."' },
+    { loc: '현장', text: '"치운 건 파렛트와 시신뿐입니다. 바닥의 자국, 랙 1단에 나와 있던 것, 3단에 얹혀 있던 것, 시신 옆에 떨어져 있던 종이는 그날 새벽 그대로입니다."' },
+    { loc: '영장', text: '압수수색 영장이 나왔다. 2층 사무실·관제실·계단, 그리고 조장의 칸을 볼 수 있다.' },
+    { loc: 'CCTV', text: '본사 보안업체에서 카메라 여섯 대의 원본이 왔다. 그날 밤 전 구간이다. 이 센터의 카메라는 사람이 아니라 물건과 사고를 보려고 달았다 — 얼굴이 남는 것은 정문 G-1 하나뿐이고, 자동문 M-2는 문 위에서 수직으로 내려다봐 안전모와 어깨만 남는다.' },
+    { text: '감식반이 합류했다. 채취물을 가져가면 감식 의뢰실에서 분석을 맡길 수 있다 — 결과가 나오기까지는 시간이 걸린다.' },
+    { loc: '1차 소견', text: '"사인은 아직 압사로 보고 있습니다. 정밀 부검은 의뢰만 해 둔 상태입니다."' },
+    { text: '…1차 탐문에서 들은 말을 물증으로 검증할 차례다.' },
   ];
   const [i, setI] = useState(0);
   const dlgRef = useRef(null);
@@ -88,7 +94,7 @@ export function EventVN({ onDone }) {
       <div className="aa-stage" style={{ background: 'radial-gradient(120% 100% at 50% 0%, #2a1214 0%, #140a0c 55%, #07050a 100%)' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 40% at 50% 30%, #c0585822, transparent 70%)', animation: 'aablink 2.2s ease-in-out infinite' }} />
       </div>
-      <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 중간 사건 · 부검 소견</div>
+      <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 중간 점검 · 현장 개방</div>
       <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
@@ -98,13 +104,17 @@ export function EventVN({ onDone }) {
   );
 }
 
-// ── 2차 사건 — 2차 심문 개시 직전, 정밀(2차) 부검 결과가 급히 도착 ──────────────
+// ── 2차 심문 개시 — 휴대전화 영장 · 감식 결과 · 2차 부검이 한꺼번에 온다 ─────────
+//   보드판 이벤트 ②의 셋째 영장(휴대폰) + 감식 결과 + ④(2차 부검)다. 문장은 진행물 카드 그대로.
+//   끝나면 「2차 부검 소견」(AUTOPSY-2)이 사건 기록에 들어온다 — 인물에게 들이밀 수 있게.
 export function EventVN2({ onDone }) {
   const beats = [
     { loc: '복도', text: '"잠깐, 수사관님!" — 젊은 형사가 서류 봉투를 들고 달려온다.' },
-    { loc: '2차 부검', text: '"국과수 정밀(2차) 부검 결과입니다. 방금 나왔어요. 이건 꼭 보셔야 합니다."' },
-    { loc: '2차 부검', text: '"베개에서 나온 솜·섬유가 피해자 기도에서도 검출됐습니다. 압박 방향과 힘까지 — 타살에 의한 질식사, 확정입니다."' },
-    { text: '「2차 부검」 소견이 사건 기록에 등록되었다. 이제 이 확정된 사인으로 용의자들을 다시 몰아붙일 수 있다.' },
+    { loc: '영장', text: '"휴대전화 압수수색영장이 나왔습니다. 압수한 휴대폰 일곱 대를 포렌식으로 열 수 있습니다. 누가 누구에게 몇 시에 보냈는지까지는 통신사에 있지만, 무슨 말을 했는지는 폰을 열어야 보입니다."' },
+    { loc: '감식', text: '"맡기신 감식 결과도 도착했습니다. 그리고 — 국과수 2차 부검입니다."' },
+    { loc: '2차 부검', text: '"사인은 질식입니다. 얼굴에 랩이 감겨 있었습니다. 후두부를 뒤에서 맞으셨고요."' },
+    { loc: '2차 부검', text: '"돌아가신 시각은 03:00에서 03:30 사이, 1차 소견과 같습니다. 파렛트에 눌린 흔적은 사후입니다."' },
+    { text: '「깔렸다」를 전제로 들은 말이 있으면, 그 말은 이제 사실이 아니다. 「2차 부검 소견」이 사건 기록에 등록되었다.' },
   ];
   const [i, setI] = useState(0);
   const dlgRef = useRef(null);
@@ -139,7 +149,7 @@ export function EndingScreen({ result, onNewCase }) {
           <div style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)', fontWeight: 800, marginTop: 6 }}>
             {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : `✗ 당신의 지목: ${suspects.find((s) => s.id === r.pick)?.name || '—'}`}
           </div>
-          <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>{cast.S4.name}</b> · 직접 사인 <b style={{ color: '#fff' }}>베개 질식</b></div>
+          <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>{cast.S1.name}</b> · 직접 사인 <b style={{ color: '#fff' }}>후두부 가격 뒤 스트레치 랩 질식</b></div>
         </div>
         <div className="s-reveal">
           <h2 style={{ textAlign: 'center' }}>사건의 전말</h2>

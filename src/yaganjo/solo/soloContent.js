@@ -25,6 +25,34 @@ const testimonyByCode = Object.fromEntries(
   Object.entries(TESTIMONY).map(([code, t]) => [code, { code, title: t.title, type: '증언', person: t.person, desc: t.detail, detail: t.detail }]),
 );
 
+// ── 솔로에서 새로 생기는 기록 두 장 ─────────────────────────────────────────
+//   보드판에서는 사람이 소리 내어 읽으면 그만인 것이, 앱에서는 「들고 있는 것」이어야
+//   인물에게 들이밀 수 있다. 그래서 두 장을 기록으로 만든다. 본문은 지어내지 않는다 —
+//   하나는 태블릿 lookup.result 그대로, 하나는 보드판 이벤트 ④ 카드 문장 그대로다.
+const tabletLookup = byCode['ZVLJ-37']?.phone?.apps?.find((a) => a.type === 'browser')?.lookup;
+const NL = String.fromCharCode(10);
+export const LOOKUP_CODE = 'LOOKUP-ZVLJ-37';
+export const AUTOPSY_CODE = 'AUTOPSY-2';
+const DERIVED = {
+  [LOOKUP_CODE]: {
+    code: LOOKUP_CODE, type: '보통', person: '조장',
+    title: '조장 태블릿 — 관리자 조회 결과',
+    description: '관리자 사번과 네 자리로 연 「전표 상태 · 조회 이력」 화면.',
+    detail: (tabletLookup?.result?.lines || []).join(NL),
+  },
+  [AUTOPSY_CODE]: {
+    code: AUTOPSY_CODE, type: '보통', person: '조장',
+    title: '2차 부검 소견',
+    description: '국과수 정밀 부검 결과. 1차 소견(압사)이 뒤집혔다.',
+    // 보드판 진행물 「④ 2차 부검」 앞면·뒷면 문장. 텀블러 성분 한 줄은 결정 대기라 뺐다.
+    detail: [
+      '사인은 질식입니다. 얼굴에 랩이 감겨 있었습니다. 후두부를 뒤에서 맞으셨고요.',
+      '돌아가신 시각은 03:00에서 03:30 사이. 1차 소견과 같습니다.',
+      '파렛트에 눌린 흔적은 사후입니다. 얼굴과 코 주변에서 필름 점착 성분이 나왔고, 손톱 밑에서 랩 조각이 나왔습니다.',
+    ].join(NL + NL),
+  },
+};
+
 // 2차 심문에 도착하는 기록 대조 7장(보드판 Q1~Q7). 1·2단계에서는 장소에 뿌리지 않는다.
 const RECORD_CODES = ['MCAD-69', 'GELH-98', 'MKYI-94', 'NPQD-05', 'KBPA-97', 'KFTR-79', 'TEWB-88'];
 const recordSet = new Set(RECORD_CODES);
@@ -117,9 +145,13 @@ const briefing = {
   lines: [
     'GH로지스 3센터. 심야조 스물다섯이 밤새 돌아가는 물류창고입니다.',
     `04:10, 동쪽 C통로 안쪽에서 심야조 조장 ${scenario.victim.name}(47)이 넘어진 파렛트 아래에서 발견되었습니다.`,
-    '1차 소견은 압사이고, 사망 추정 시각은 03:00~03:30입니다. 사고로 보입니다.',
-    '그러나 C-3 카메라는 00:30부터 04:11까지 검은 화면이었고, 지게차는 70분간 자리를 비웠으며, 잠겨 있어야 할 사무실이 열려 있었습니다.',
-    '그날 밤 동쪽에 닿을 수 있었던 여섯 명이 용의자입니다. 각 칸과 현장을 탐색해 단서를 모으고, 여섯을 심문해, 누가·어떻게·왜 죽였는지 밝혀내세요.',
+    '1차 소견은 압사이고, 사망 추정 시각은 03:00~03:30입니다. 사고로 보고 있습니다.',
+    // 아래 두 줄은 보드판 6인 시작 시트 절③·⑦ 문장이다. 「지게차 70분」·「잠겨 있어야 할
+    //   사무실」은 틀린 말이라 뺐다 — 지게차가 자리를 비운 것은 30분이고(70분은 기사 본인),
+    //   사무실은 원래 잠그지 않는다. C-3 의 검은 화면은 중간 점검 때 카메라 원본이 알려 준다.
+    '최초 발견자는 오정숙입니다. 04:11 비명을 듣고 사람들이 모였고, 04:15 서장현 안전관리자가 112와 119에 신고했습니다.',
+    '정문 기록에 22:30 이후 04:15까지 출입이 없습니다. 스물다섯 중 열여덟은 그 밤 공정 기록이 한 번도 끊기지 않았습니다. 단말을 들지 않는 자리 셋과 기록에 공백이 있는 넷 — 그중 한 사람이 죽었습니다. 남는 사람은 여섯입니다.',
+    '각 칸과 현장을 탐색해 단서를 모으고, 여섯을 심문해, 누가·어떻게·왜 죽였는지 밝혀내세요.',
   ],
 };
 
@@ -136,7 +168,7 @@ const METHODS = [
   { id: 'm_kill', label: '뒤에서 가격하고 파렛트를 넘어뜨려 사고로 위장' },
   { id: 'm_tumbler', label: '조장 텀블러에 약을 타 졸게 만듦' },
   { id: 'm_lens', label: 'C-3 카메라에 빈 상자를 얹어 렌즈를 가림' },
-  { id: 'm_key', label: '마스터키를 가져가 사무실을 열어 둠' },
+  { id: 'm_key', label: '사무실 열쇠함에서 사물함 마스터키를 가져감' },
   { id: 'm_void', label: '조장 계정으로 반출 전표 3건을 취소' },
   { id: 'm_absent', label: '지게차를 70분간 비우고 배터리실에서 잠' },
   { id: 'm_none', label: '한 일이 없음(무관)' },
@@ -176,7 +208,9 @@ export const soloContent = {
   recordCodes: RECORD_CODES.filter((c) => byCode[c]),
   isRecordCode: (code) => recordSet.has(code),
   caseKey: { roles: ROLES, methods: METHODS, motives: MOTIVES, answers: caseAnswers },
-  getClue: (code) => byCode[code] || testimonyByCode[code] || null,
+  getClue: (code) => byCode[code] || testimonyByCode[code] || DERIVED[code] || null,
+  lookupCode: LOOKUP_CODE,
+  autopsyCode: AUTOPSY_CODE,
   clueIcon,
   computeAutoUnlocked: (codeSet) => provider.computeAutoUnlocked(codeSet),
   gamsikCodes: new Set(all.filter((c) => c.type === '감식').map((c) => c.code)),

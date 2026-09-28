@@ -29,5 +29,16 @@ export const provider = createLocalProvider({
   adminCloseCode: scenario.config.adminCloseCode,
 });
 
+// ── 폰 잠금 네 자리 ──────────────────────────────────────────────────────────
+//   새벽이슬 폰에는 잠금 화면이 없었다(톡서랍 복구만 있었다). 그 모달을 물려받은 탓에
+//   야간조 폰 일곱 대의 네 자리가 통째로 건너뛰어졌다 — 누르면 바로 다 열렸다.
+//   번호는 비밀팩(secrets.phoneLocks)에 있고, 그 출처는 카드 본문이 말한다.
+const PHONE_LOCKS = scenario.secrets?.phoneLocks || {};
+export const isPhoneLocked = (code) => PHONE_LOCKS[code] != null;
+export async function verifyPhoneLock(code, pin) {
+  const want = PHONE_LOCKS[code];
+  return want == null || String(pin).replace(/\D/g, '') === String(want);
+}
+
 export { scenario };
 export default { provider, scenario };
