@@ -45,7 +45,7 @@ const base = (process.env.VITE_BASE || '/').replace(/\/*$/, '/');
 //   운영(S3+CloudFront)에서는 배포 워크플로가 solo.html 을 'solo-play' 키로 한 번 더 올려 같은 주소를 만든다.
 const prettyPaths = () => {
   //   야간조 세 줄 — 카드 QR 이 확장자 없는 주소를 가리키므로 이 항목이 없으면 QR 열아홉 장이 전부 404 다.
-  const MAP = { '/solo-play': '/solo.html', '/solo-play/': '/solo.html', '/cast-edit': '/cast.html', '/board-kit': '/board.html', '/cctv': '/cctv.html', '/unlock': '/unlock.html', '/clue': '/clue.html', '/yaganjo-kit': '/yaganjo-board.html', '/yaganjo-clue': '/yaganjo-clue.html', '/yaganjo-cctv': '/yaganjo-cctv.html' };
+  const MAP = { '/solo-play': '/solo.html', '/solo-play/': '/solo.html', '/cast-edit': '/cast.html', '/board-kit': '/board.html', '/cctv': '/cctv.html', '/unlock': '/unlock.html', '/clue': '/clue.html', '/yaganjo-kit': '/yaganjo-board.html', '/yaganjo-clue': '/yaganjo-clue.html', '/yaganjo-cctv': '/yaganjo-cctv.html', '/yaganjo-solo': '/yaganjo-solo.html', '/yaganjo-solo/': '/yaganjo-solo.html' };
   // 값을 반환하면 Vite가 '내부 미들웨어 뒤에 붙일 후처리 훅'으로 오해한다(use()는 connect 앱을
   //   돌려주는데 그것도 함수라서). 중괄호로 감싸 반환값을 버린다.
   const rewrite = (server) => {
@@ -89,6 +89,9 @@ export default defineConfig({
         yaganjoBoard: resolvePath('./yaganjo-board.html'),
         yaganjoClue: resolvePath('./yaganjo-clue.html'),
         yaganjoCctv: resolvePath('./yaganjo-cctv.html'),
+        // 야간조 혼자 하는 추리 — 새벽이슬 solo 와 **별도 진입점**이다. 청크가 갈려야
+        //   한쪽을 하러 온 사람에게 다른 쪽 정답이 전송되지 않는다(시나리오 레지스트리 §1·§6).
+        yaganjoSolo: resolvePath('./yaganjo-solo.html'),
       },
     },
   },
