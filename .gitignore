@@ -27,3 +27,9 @@ _*.json
 _*.txt
 tools/_*.mjs
 tools/_*.json
+
+# 야간조 인물 사진도 같은 규칙이다 — 단서 사진은 커밋하되 얼굴은 커밋하지 않는다.
+# (public/images/yaganjo/README-인물.txt 참고)
+public/images/yaganjo/person-*.png
+public/images/yaganjo/person-*.jpg
+public/images/yaganjo/person-*.jpeg
