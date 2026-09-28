@@ -122,7 +122,7 @@ export const cluesScene = {
     // 잠금 네 자리는 이 파일에 적지 않는다 — secrets 의 phoneLocks['KZBP-76'] 이 답을 가진다.
     // 출처는 X4(TUTI-57) 딸 사진 뒷면과 W6(NQGX-52) 포상금 신청서 가족란 두 곳이다.
     title: '{{victim}} 폰',
-    description: '시신의 작업복 주머니에서 나온 휴대폰. 화면이 잠겨 있고 네 자리 숫자를 묻는다.',
+    description: '시신의 작업복 주머니에서 나온 휴대폰. 화면이 잠겨 있고 네 자리 숫자를 묻는다. 숫자판 뒤로 흐리게 비치는 배경은 교복 입은 여학생 사진이다.',
     detail: '잠금 화면에 부재중 전화가 없다. 마지막 알림은 02:48에 온 메시지 한 건이다.\n\n안에 든 것 — 연락처 · 카카오톡 · 메시지 · 사진 · 통화 기록',
     image: '/images/yaganjo/x10-phone.jpg',
     type: '보통',
