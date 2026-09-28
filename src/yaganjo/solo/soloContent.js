@@ -246,6 +246,8 @@ export const soloContent = {
   clueIcon,
   computeAutoUnlocked: (codeSet) => provider.computeAutoUnlocked(codeSet),
   gamsikCodes: new Set(all.filter((c) => c.type === '감식').map((c) => c.code)),
+  // 맡기는 즉시 도착하는 감식 — 질식·흉기·랩·시신을 말하지 않는 셋(텀블러·약봉투·보온병)
+  earlyLab: new Set(['IJEO-08', 'FBWD-37', 'PNOQ-92']),
   gamsikReady: (code, collected) => {
     const s = new Set(collected);
     provider.computeAutoUnlocked(s);

@@ -60,10 +60,14 @@ export default function SoloApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
 
-  // 2차 심문 개방 시: 의뢰해 둔 감식 결과 일괄 도착
+  // 감식 결과 도착 — 질식을 말하지 않는 셋(텀블러·약봉투·보온병)은 **맡기는 즉시**, 나머지는 2차 심문 때.
+  //   보드판은 이벤트 ② 부터 감식 결과를 읽는다. 솔로가 전부 2차 부검과 같은 순간에 주면
+  //   정본 §6-2 가 노린 「차민우가 먼저 자백하고 판이 『약 + 지게차 사고』로 끌려가는」 함정이
+  //   한 번도 서지 않는다(2회차 시뮬레이션 O3). 흉기·랩·시신을 가리키는 감식은 그대로 2차 심문 때다.
   useEffect(() => {
-    if (stage < 3) return;
-    const pending = (state.labReq || []).filter((c) => !collectedSet.has(c) && gamsikReady(c, state.collected));
+    if (stage < 2) return;
+    const pending = (state.labReq || []).filter((c) => !collectedSet.has(c) && gamsikReady(c, state.collected)
+      && (stage >= 3 || soloContent.earlyLab.has(c)));
     if (!pending.length) return;
     const set = new Set(state.collected);
     pending.forEach((c) => set.add(c));
@@ -262,7 +266,7 @@ export default function SoloApp() {
               stage,
               requested: (code) => (state.labReq || []).includes(code),
               ready: (code) => gamsikReady(code, state.collected),
-              request: (code) => { update({ labReq: [...new Set([...(state.labReq || []), code])] }); showToast('🔬 감식 의뢰 접수 — 결과는 2차 심문이 열리면 도착합니다'); },
+              request: (code) => { update({ labReq: [...new Set([...(state.labReq || []), code])] }); showToast(soloContent.earlyLab.has(code) || stage >= 3 ? '🔬 감식 의뢰 접수 — 결과가 곧 도착합니다' : '🔬 감식 의뢰 접수 — 결과는 2차 심문이 열리면 도착합니다'); },
             }}
             // 3막 진행도는 '2차 심문을 몇 명과 했는가'로 잰다 — 열리는 질문 수가 인물마다 달라
             //   물어본 질문 수로는 셀 수 없다. 여기(대화 시작)가 유일한 심문 진입점이다.
