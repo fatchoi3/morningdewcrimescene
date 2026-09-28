@@ -1,12 +1,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // features/clues — 단서 열람 모달.
 //   ClueModal이 진입점 — 타입별로 분기:
-//     페이지형 / 폰형(PhoneModal) / 지갑형(WalletModal) /
+//     카메라형(야간조 열람 화면) / 페이지형 / 폰형(PhoneModal) / 지갑형(WalletModal) /
 //     일정표형(ScheduleModal) / 필적대조형(HandwritingModal) / 기본형.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react';
-import { getClue, provider } from '../content.js';
+import { getClue, provider, locations } from '../content.js';
 import { Shell } from '../ui/overlays.jsx';
+
+// 카메라 14장 — 관제실 열람대(ROOM-V)에서 연다.
+const CAMERA_CODES = new Set(provider.getCctvClueCodes());
+// 시신 — 데이터팩의 현장 방(showBody)이 준 문구를 그대로 쓴다. 솔로가 따로 지어내지 않는다.
+const BODY = locations.rooms.find((r) => r.showBody)?.body || null;
+const cameraSrc = (code) => `${import.meta.env.BASE_URL || '/'}yaganjo-cctv.html#${encodeURIComponent(code)}`;
 
 const PAGE_IMG_H = 170;   // 그림이 있는 쪽·없는 쪽의 높이를 맞추려고 늘 잡아 두는 자리
 
@@ -34,12 +40,29 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
   useEffect(() => { if (!isBody && !collectedSet.has(code)) onCollect(code); /* eslint-disable-next-line */ }, [code]);
 
   if (isBody) {
-    return <Shell title="시신" onClose={onClose}><p className="s-detail">침대 위에서 숨진 채 발견되었습니다. 얼굴에 눌린 자국 · 협심증 발작 직후 정황. 성분·접촉흔은 개별 감식으로 확인하세요.</p></Shell>;
+    return <Shell title={BODY?.label || '시신'} onClose={onClose}><p className="s-detail">{BODY?.detail || '사인·채취 결과는 개별 감식 단서로 확인하세요.'}</p></Shell>;
   }
   if (!c) return <Shell title="?" onClose={onClose}><p>단서를 찾을 수 없습니다.</p></Shell>;
 
   const tag = c.type && c.type !== '보통' ? <span className="s-tag">{c.type}</span> : null;
   const person = c.person && c.person !== '공용' ? <span className="s-tag">{c.person}</span> : null;
+
+  // 카메라형 — 보드판 V 카드 QR 이 여는 **바로 그 화면**(/yaganjo-cctv)을 모달 안에 띄운다.
+  //   야간조 카메라는 평면도 위 동선이 아니라 「시각 · 방향 · 무엇」의 통행 기록표이고,
+  //   그 화면은 일부러 줄 번호도 합계도 없다(세는 것은 형사의 일이다). 새로 그리지 않고
+  //   같은 화면을 쓰면 종이 판과 앱 판의 카메라가 한 글자도 다르지 않다.
+  //   그 페이지 청크에는 카메라 14장과 cast 만 실린다 — 비밀팩도 다른 더미 코드도 없다.
+  if (CAMERA_CODES.has(code)) {
+    return (
+      <Shell title={<>{c.title}{tag}</>} onClose={onClose}>
+        <iframe
+          src={cameraSrc(code)}
+          title={c.title}
+          style={{ width: '100%', height: 'min(72vh, 760px)', border: 0, borderRadius: 10, background: '#090c11', display: 'block' }}
+        />
+      </Shell>
+    );
+  }
 
   // 페이지형
   if (Array.isArray(c.pages) && c.pages.length) {

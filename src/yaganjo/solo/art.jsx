@@ -135,21 +135,32 @@ function CrimeScene({ p }) {
 }
 
 // ── CCTV 열람실 ──
+// 관제실 모니터 여섯 — U3 카드의 라벨 순서.
+const CCTV_WALL = ['G-1', 'M-1', 'M-2', 'L-1', 'W-1', 'C-3'];
+
 function CctvRoom({ p }) {
   return (
     <>
       <rect x="0" y="0" width="800" height="480" fill="#0a0f14" />
       <rect x="0" y="0" width="800" height="480" fill="url(#vin)" />
-      {/* 모니터 벽 */}
-      {[0, 1, 2].map((r) => [0, 1, 2, 3].map((c) => (
-        <g key={`${r}-${c}`} transform={`translate(${70 + c * 175},${40 + r * 120})`}>
-          <rect x="0" y="0" width="150" height="96" rx="4" fill="#0d1c26" stroke="#1d3a4a" strokeWidth="2" />
-          <rect x="6" y="6" width="138" height="84" fill="#12303e" opacity={0.5 + ((r + c) % 3) * 0.15} />
-          <line x1="6" y1={20 + ((r * c) % 60)} x2="144" y2={20 + ((r * c) % 60)} stroke="#3fa0c9" strokeWidth="1.5" opacity="0.5" />
-          <circle cx="130" cy="14" r="3" fill="#e05555" />
-          <text x="10" y="86" fontSize="8" fontFamily="monospace" fill="#5fd0f0" opacity="0.7">CAM-{r * 4 + c + 1}</text>
-        </g>
-      )))}
+      {/* 모니터 벽 — 야간조 관제실은 여섯 대다(U3 관제실 카드). 라벨 순서도 카드 그대로,
+          여섯 번째 C-3 만 검다. 새벽이슬판은 열두 대였다. */}
+      {CCTV_WALL.map((cam, i) => {
+        const r = Math.floor(i / 3), c = i % 3;
+        return (
+          <g key={cam} transform={`translate(${110 + c * 200},${50 + r * 150})`}>
+            <rect x="0" y="0" width="180" height="116" rx="4" fill="#0d1c26" stroke="#1d3a4a" strokeWidth="2" />
+            {cam === 'C-3'
+              ? <rect x="6" y="6" width="168" height="104" fill="#020304" />
+              : <>
+                  <rect x="6" y="6" width="168" height="104" fill="#12303e" opacity={0.55 + (i % 3) * 0.12} />
+                  <line x1="6" y1={26 + i * 11} x2="174" y2={26 + i * 11} stroke="#3fa0c9" strokeWidth="1.5" opacity="0.45" />
+                  <circle cx="160" cy="16" r="3" fill="#e05555" />
+                </>}
+            <text x="10" y="106" fontSize="10" fontFamily="monospace" fill={cam === 'C-3' ? '#3a4a55' : '#5fd0f0'} opacity="0.8">{cam}</text>
+          </g>
+        );
+      })}
       <rect x="0" y="400" width="800" height="80" fill="#0d151c" />
       <rect x="120" y="410" width="560" height="16" rx="4" fill="#16232e" />
     </>

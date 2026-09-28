@@ -10,7 +10,8 @@ import { getClue } from '../content.js';
 import { HallBg } from '../art.jsx';
 import { cast } from '../../../scenarios/yaganjo/cast.js';
 
-// main.jpg 위 방문 위치(%): 좌벽 근→원, 우벽 근→원 (배경 16:9를 16:9 무대에 cover)
+// 야간조의 「칸」은 탈의실 사물함이다 — 복도 양쪽 벽에 여섯, 끝에 조장의 칸.
+// main.jpg 위 위치(%): 좌벽 근→원, 우벽 근→원 (배경 16:9를 16:9 무대에 cover)
 // person 은 방 데이터와 맞춰야 하는 조회 키라 cast 에서 이름을 뽑는다.
 const HALL_DOORS = [
   { person: cast.S1.name, x: 14, y: 58 },
@@ -71,13 +72,25 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
   const pastor = locations.rooms.find((l) => l.showBody);
   const tool = (id) => locations.all.find((l) => l.id === id);
-  const cctv = tool('LOC-CCTV'), lab = tool('LOC-LAB');
+  const lab = tool('LOC-LAB');
+  // 조장의 칸(P) — 조장 소유지만 현장이 아니라 사물함이다. 복도 끝에 둔다.
+  const bossLocker = locations.rooms.find((l) => l.person === '조장' && !l.showBody);
+  // 공용 공간 넷과 관제실 열람대 — 왼쪽으로 가면 나온다. 위치는 센터 배치(서→동, 2층은 위)를 따른다.
+  const COMMON_SPOTS = [
+    { id: 'ROOM-W', x: 16, y: 54, icon: '☕' },
+    { id: 'ROOM-N', x: 34, y: 60, icon: '🔋' },
+    { id: 'ROOM-U', x: 50, y: 34, icon: '🗄' },
+    { id: 'ROOM-V', x: 66, y: 60, icon: '📹' },
+    { id: 'ROOM-J', x: 84, y: 54, icon: '🚪' },
+  ];
+  const commons = COMMON_SPOTS.map((c) => ({ ...c, loc: tool(c.id) })).filter((c) => c.loc);
+  const floorAlerts = () => commons.reduce((n, c) => n + alertsOf(c.loc).total, 0) + (lab ? alertsOf(lab).total : 0);
 
   const subOf = (loc, isCrime) => {
     if (loc.stage > stage) return isCrime ? '통제 중' : loc.stage === 2 ? '사건 후 개방' : '2차 개방';
     // inner 가 있는 시설(CCTV 열람실)도 진척을 보여준다 — 열람대 하나만 세면 첫 진입에 '✓ 탐색완료'가
     //   되는데, 정작 2·3막 모순 대부분은 그 안의 컷들이라 화면이 '다 봤다'고 거짓말을 하게 된다.
-    const counted = loc.kind === 'room' || loc.inner ? [...loc.objects, ...(loc.inner || [])] : null;
+    const counted = loc.kind === 'room' || loc.kind === 'cctv' || loc.inner ? [...loc.objects, ...(loc.inner || [])] : null;
     if (!counted) return '열람';
     // 휴대폰은 2차 심문(stage 3)에 해금 — 그 전엔 방 탐색 진척도에서 제외
     const reach = counted.filter((c) => stage >= 3 || !getClue(c)?.phone);
@@ -91,8 +104,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   };
   const here = view === 'main' ? '탈의실 앞 복도 — 인물들의 칸'
     : view === 'pastor' ? '동쪽 끝 — C통로 (사건 현장)'
-    : view === 'floor1' ? '1층 — CCTV 열람실'
-    : '건물 밖 — 감식 의뢰실';
+    : view === 'floor1' ? '센터 안 — 공용 공간 · 관제실 열람대'
+    : '감식 의뢰실';
 
   return (
     <div className="aa-fs">
@@ -106,19 +119,25 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
               sub={subOf(loc, false)} locked={loc.stage > stage} {...alertProps(loc)}
               recommend={recommendPerson === d.person} onClick={() => enter(loc, false)} />;
           })}
+          {view === 'main' && bossLocker && (
+            <HallHot x={50} y={50} icon="🗄" label={bossLocker.label}
+              sub={subOf(bossLocker, false)} locked={bossLocker.stage > stage} {...alertProps(bossLocker)}
+              onClick={() => enter(bossLocker, false)} />
+          )}
           {view === 'main' && (
-            <button className="hall-cctv" style={{ left: '50%', top: '20%' }} aria-label="복도 CCTV"
-              onClick={() => onToast('복도 끝에 CCTV가 있다. 확인하려면 1층 CCTV 열람실로 가야겠다.')}>📹</button>
+            <button className="hall-cctv" style={{ left: '50%', top: '20%' }} aria-label="탈의실 입구 카메라"
+              onClick={() => onToast('탈의실 입구 위에 카메라가 하나 있다. 녹화는 관제실 열람대에서 볼 수 있다.')}>📹</button>
           )}
           {view === 'pastor' && pastor && (
             <HallHot x={50} y={50} icon="⚰️" tone="crime" label={pastor.label}
               sub={subOf(pastor, true)} locked={pastor.stage > stage} {...alertProps(pastor)}
               onClick={() => enter(pastor, true)} />
           )}
-          {view === 'floor1' && cctv && (
-            <HallHot x={50} y={52} icon="📹" label={cctv.label} sub={subOf(cctv)} locked={cctv.stage > stage}
-              {...alertProps(cctv)} onClick={() => enter(cctv)} />
-          )}
+          {view === 'floor1' && commons.map((c) => (
+            <HallHot key={c.id} x={c.x} y={c.y} icon={c.icon} label={c.loc.label}
+              sub={subOf(c.loc, false)} locked={c.loc.stage > stage} {...alertProps(c.loc)}
+              onClick={() => enter(c.loc, false)} />
+          ))}
           {view === 'lab' && lab && (
             <HallHot x={43} y={56} icon="🔬" label={lab.label} sub={subOf(lab)} locked={lab.stage > stage}
               {...alertProps(lab)} onClick={() => enter(lab)} />
@@ -146,8 +165,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
 
       <div className="hall-nav-row">
         {view === 'main' ? <>
-          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 그쪽에 갈 일은 없어 보인다. 먼저 인물들의 방을 둘러보고 이야기부터 나눠보자.') : onView('floor1')}>
-            {(alertsOf(cctv).total + alertsOf(lab).total) > 0 && <span className="s-alert" title="1층 쪽에 볼 것이 남아 있다">!</span>}◀ 왼쪽 · 1층</button>
+          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 그쪽에 갈 일은 없어 보인다. 먼저 인물들의 칸을 둘러보고 이야기부터 나눠보자.') : onView('floor1')}>
+            {floorAlerts() > 0 && <span className="s-alert" title="공용 공간 쪽에 볼 것이 남아 있다">!</span>}◀ 왼쪽 · 공용 공간</button>
           <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 현장에 갈 필요는 없다. 지금은 인물들부터 만나보자.') : onView('pastor')}>
             {alertsOf(pastor).total > 0 && <span className="s-alert" title="현장에 볼 것이 남아 있다">!</span>}오른쪽 · C통로 현장 ▶</button>
         </> : view === 'floor1' ? <>
@@ -155,7 +174,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
           {lab && <button className="hall-arrow" onClick={() => onView('lab')}>
             {alertsOf(lab).total > 0 && <span className="s-alert" title="감식 의뢰실에 처리할 것이 있다">!</span>}감식 의뢰실 ▶</button>}
         </> : <>
-          <button className="hall-arrow" onClick={() => onView(view === 'lab' ? 'floor1' : 'main')}>◀ {view === 'lab' ? '1층으로' : '복도로'}</button>
+          <button className="hall-arrow" onClick={() => onView(view === 'lab' ? 'floor1' : 'main')}>◀ {view === 'lab' ? '공용 공간으로' : '복도로'}</button>
           <span />
         </>}
       </div>
