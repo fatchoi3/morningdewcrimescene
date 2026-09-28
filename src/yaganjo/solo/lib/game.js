@@ -307,7 +307,12 @@ export const isUiTap = (e) => !!e.target.closest('button, .aa-ask, .aa-present, 
 
 // 채점 — 범인 한 명만 지목(S1 = 서장현, 진범)
 //   야간조는 공범이 없다. 나머지 다섯은 구멍을 냈을 뿐이라 지목 대상이 아니다.
+// 정답/오답은 범인으로 가른다. 수법·동기는 진범(S1)의 것과 맞는지 따로 적는다 — 엔딩이 ✓/✗ 로 보인다.
 export function scoreCase(casefile) {
-  const pick = casefile?.culprit || null;   // 범인 한 명만 지목
-  return { culpritRight: pick === 'S1', pick }; // S1 = 서장현(진범)
+  const pick = casefile?.culprit || null;   // S1 = 서장현(진범)
+  return {
+    culpritRight: pick === 'S1', pick,
+    method: casefile?.method || null, methodRight: casefile?.method === 'm_kill',
+    motive: casefile?.motive || null, motiveRight: casefile?.motive === 'mo_draft',
+  };
 }

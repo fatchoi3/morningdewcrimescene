@@ -66,9 +66,9 @@ export function TutorialFinale({ onClose }) {
       <div className="tut-finale">
         <div className="tf-badge">🎓 튜토리얼 완료</div>
         <h3>수사의 기본을 익혔습니다</h3>
-        <p>이제 복도를 오가며 <b>용의자 6명의 방을 모두 조사하고 심문</b>하세요.<br />
+        <p>이제 복도를 오가며 <b>용의자 6명의 칸을 모두 조사하고 심문</b>하세요.<br />
           확보한 단서는 <b>사건 기록</b>에서 인물·유형별로 확인할 수 있습니다.<br />
-          사건이 <b>살인</b>으로 전환되면 C통로 현장·공용 공간·관제실 열람대·감식 의뢰실이 열립니다.<br />
+          여섯 명을 <b>한 번씩 다 만나면</b> C통로 현장·공용 공간·관제실 열람대·감식 의뢰실이 열립니다.<br />
           충분히 조사했다면 <b>사건 파일</b>을 제출해 사건을 마무리하세요.</p>
         <button className="s-btn" onClick={onClose}>수사 시작</button>
       </div>

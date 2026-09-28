@@ -181,18 +181,19 @@ export default function SoloApp() {
   //   (수첩·단서 모달처럼 위에 덮이는 화면도 각자 안내를 갖는다).
   let coach = null;
   if (!state.tutorialSeen && !casefileOpen && !adminOpen) {
-    const jhObjs = locations.rooms.find((l) => l.id === 'ROOM-JH')?.objects || [];
+    // 첫 방은 진범의 칸(ROOM-A) — 새벽이슬판의 ROOM-JH 를 그대로 두면 안에 들어가도 「나가기」만 가리켰다
+    const jhObjs = locations.rooms.find((l) => l.id === 'ROOM-A')?.objects || [];
     const jhExamined = jhObjs.some((c) => collectedSet.has(c));
     if (recordOpen) coach = { sel: '.s-sheet-back', text: '사건 개요를 봤으면 ← 로 나가세요' };
     else if (modalCode) coach = { sel: '.s-modal .mx', text: '단서를 확보했습니다. ✕ 로 닫고 계속하세요' };
     else if (suspectId) coach = null;      // 심문 안에서는 그 화면이 직접 안내한다(아래 CrossExamView)
     else if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
-    else if (!sceneId) coach = { sel: '[data-tut="door"]', text: t('이제 {{S1.short}}방을 눌러 들어가세요') };
-    else if (sceneId !== 'ROOM-JH') coach = { sel: '.aa-dlg-act', text: t('먼저 {{S1.short}}방부터 봅시다 — 나가기를 눌러 복도로') };
+    else if (!sceneId) coach = { sel: '[data-tut="door"]', text: t('이제 {{S1}}의 칸을 눌러 들어가세요') };
+    else if (sceneId !== 'ROOM-A') coach = { sel: '.aa-dlg-act', text: t('먼저 {{S1}}의 칸부터 봅시다 — 나가기를 눌러 복도로') };
     else if (!jhExamined) coach = { sel: '.aa-track .s-zone', text: '테두리가 빛나는 물건을 눌러 단서를 조사하세요' };
     // 배경에 인물이 그려진 방은 .s-talkzone, 떠 있는 스탠딩은 .s-figure — 둘 다 잡아야 한다
     //   (예전엔 .s-figure 만 봐서 종현방에선 코치마크가 통째로 사라졌다)
-    else coach = { sel: '.s-talkzone, .s-figure', text: t('{{S1.short}}을 눌러 이야기를 시작하세요') };
+    else coach = { sel: '.s-talkzone, .s-figure', text: t('{{S1|을/를}} 눌러 이야기를 시작하세요') };
   }
   // 라벨·목표·단계표시는 '실제 진행도(progressStage)' 기준 — 가이드 모드가 단계를 3으로 올려도 1차엔 1차로 보이게
   const p2Count = (state.p2Met || []).filter((id) => suspectIds.includes(id)).length;
@@ -296,7 +297,7 @@ export default function SoloApp() {
       )}
       {casefileOpen && (
         <SheetOverlay title="🔍 범인 지목" onClose={() => setCasefileOpen(false)}>
-          <CaseFileView state={state} onPick={(sid) => update({ casefile: { culprit: sid } })}
+          <CaseFileView state={state} onPick={(cf) => update({ casefile: cf })}
             // 제출은 되돌릴 수 없다(엔딩의 「새 사건」은 clearSave라 기록까지 사라진다) — 확인창에서
             //   '얼마나 조사하고 지목하는지'를 숫자로 보여준 뒤 물어본다.
             onSubmit={async () => {
@@ -306,6 +307,10 @@ export default function SoloApp() {
                 body: (
                   <>
                     <p><b>{pickName}</b> — 이 사람을 범인으로 지목합니다.</p>
+                    <p style={{ fontSize: '.88rem', lineHeight: 1.7 }}>
+                      수법 · {soloContent.caseKey.methods.find((m) => m.id === state.casefile?.method)?.label}<br />
+                      동기 · {soloContent.caseKey.motives.find((m) => m.id === state.casefile?.motive)?.label}
+                    </p>
                     <p>제출하면 사건이 종결되고 전말이 공개됩니다. <b>수사로 돌아올 수 없습니다.</b></p>
                     <p style={{ fontSize: '.82rem', color: 'var(--muted)', lineHeight: 1.7 }}>
                       지금까지 — 2차 심문 {p2Count}/{suspectIds.length}명 · 추리 단서 ⭐ {specialGot}/{SPECIAL_CODES.length}

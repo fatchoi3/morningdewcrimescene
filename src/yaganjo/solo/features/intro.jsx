@@ -6,7 +6,7 @@
 //   EndingScreen: 엔딩(정/오답 + 사건 전말 + 타임라인)
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState } from 'react';
-import { briefing, victim, suspects } from '../content.js';
+import { briefing, victim, suspects, soloContent } from '../content.js';
 import { cast, t } from '../../../scenarios/yaganjo/cast.js';
 import { isUiTap, REVEAL, TIMELINE } from '../lib/game.js';
 import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
@@ -149,6 +149,13 @@ export function EndingScreen({ result, onNewCase }) {
           <div className="big" style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)' }}>{r.culpritRight ? '정답' : '오답'}</div>
           <div style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)', fontWeight: 800, marginTop: 6 }}>
             {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : `✗ 당신의 지목: ${suspects.find((s) => s.id === r.pick)?.name || '—'}`}
+          </div>
+          <div style={{ marginTop: 12, fontSize: '.86rem', lineHeight: 1.8, textAlign: 'left', display: 'inline-block' }}>
+            {[['수법', r.methodRight, r.method, soloContent.caseKey.methods], ['동기', r.motiveRight, r.motive, soloContent.caseKey.motives]].map(([k, ok, id, list]) => (
+              <div key={k} style={{ color: ok ? 'var(--ok)' : 'var(--danger)' }}>
+                {ok ? '✓' : '✗'} {k} — {list.find((m) => m.id === id)?.label || '고르지 않음'}
+              </div>
+            ))}
           </div>
           <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>{cast.S1.name}</b> · 직접 사인 <b style={{ color: '#fff' }}>후두부 가격 뒤 스트레치 랩 질식</b></div>
         </div>
