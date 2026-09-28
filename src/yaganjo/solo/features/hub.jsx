@@ -14,12 +14,12 @@ import { cast } from '../../../scenarios/yaganjo/cast.js';
 // main.jpg 위 위치(%): 좌벽 근→원, 우벽 근→원 (배경 16:9를 16:9 무대에 cover)
 // person 은 방 데이터와 맞춰야 하는 조회 키라 cast 에서 이름을 뽑는다.
 const HALL_DOORS = [
-  { person: cast.S1.name, x: 14, y: 58 },
-  { person: cast.S6.name, x: 30, y: 55 },
-  { person: cast.S2.name, x: 38, y: 53 },
-  { person: cast.S4.name, x: 62, y: 53 },
-  { person: cast.S3.name, x: 70.5, y: 55 },
-  { person: cast.S5.name, x: 86.5, y: 58 },
+  { person: cast.S1.name, x: 10, y: 60 },
+  { person: cast.S6.name, x: 24, y: 56 },
+  { person: cast.S2.name, x: 37, y: 50 },
+  { person: cast.S4.name, x: 63, y: 50 },
+  { person: cast.S3.name, x: 76, y: 56 },
+  { person: cast.S5.name, x: 90, y: 60 },
 ];
 
 // 모순이 남은 방만 붉게 — 잡담·주울 것만 남은 방은 호박색 '!'. solo.css 는 이 파일 소관이 아니라 인라인으로 둔다.

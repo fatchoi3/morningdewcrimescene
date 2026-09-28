@@ -375,8 +375,10 @@ function BriefingSVG({ fill }) {
       {[[40, 120], [130, 80], [210, 150], [300, 100], [520, 110], [610, 70], [690, 140]].map(([x, h], i) => (
         <rect key={i} x={x} y={260 - h} width="70" height={h} fill="#000000" opacity="0.5" />
       ))}
-      {/* 십자가(교회) */}
-      <g transform="translate(400,60)"><rect x="-4" y="0" width="8" height="60" fill="#c9a84c" /><rect x="-20" y="16" width="40" height="8" fill="#c9a84c" /></g>
+      {/* 물류센터 — 길고 낮은 창고 한 동, 하역장 셔터 불빛 */}
+      <rect x="200" y="96" width="400" height="104" fill="#141824" />
+      <rect x="200" y="92" width="400" height="6" fill="#1f2533" />
+      {[0, 1, 2, 3, 4].map((i) => <rect key={i} x={226 + i * 76} y="150" width="46" height="50" fill="#c9a84c" opacity={i === 2 ? 0.75 : 0.22} />)}
       {/* 창문 불빛 */}
       {[[60, 170], [150, 200], [320, 180], [540, 190], [700, 160]].map(([x, y], i) => <rect key={i} x={x} y={y} width="10" height="12" fill="#c9a84c" opacity="0.7" />)}
       {/* 비 */}
