@@ -32,12 +32,14 @@ export function sceneClueCount(state) {
 export function computeStage(state) {
   if (interrogatedCount(state) < suspectIds.length) return 1;   // 6인 모두 심문해야 중간점검
   if (sceneClueCount(state) < SCENE_NEEDED) return 2;           // 현장 조사해야 2부(폰)
+  // 감식을 한 건도 안 맡기고 넘어가면 차민우가 먼저 자백하는 함정(정본 §6-2)이 서지 않는다 — 3회차 #6
+  if (!(state.labReq || []).length) return 2;
   return 3;
 }
 export const stageHint = (locStage) => locStage === 2
   ? `🔒 1차 심문 후 개방 — 용의자 ${suspectIds.length}명을 모두 심문하세요`
   : locStage === 3
-    ? `🔒 2차 심문 때 개방 — C통로 현장에서 단서 ${SCENE_NEEDED}개를 찾으세요`
+    ? `🔒 2차 심문 때 개방 — C통로 현장에서 단서 ${SCENE_NEEDED}개를 찾고 감식을 한 건 이상 맡기세요`
     : '🔒 잠김';
 
 // 난이도 선택은 없앴다 — 규칙은 하나(비번·연결을 스스로 푼다).
@@ -103,6 +105,46 @@ export const ROOM_HOTSPOTS = {
     'MLPZ-57': { x: 70.5, y: 51 },  // B2 문에 꽂힌 종이
     'IYPZ-09': { x: 47, y: 70 },  // B4 손목 보호대·학생증
     'TLBI-94': { x: 55, y: 83 },  // B5 휴대폰
+  },
+  'ROOM-C': {
+    'VSTN-59': { x: 58, y: 35 },  // C1 윗선반 화장품 세트
+    'YTDK-27': { x: 44, y: 44 },  // C2 흰 봉투
+    'QYHA-34': { x: 74.5, y: 50 },  // C3 문 안쪽 일정표
+    'EFJB-22': { x: 43, y: 82 },  // C4 초록 장바구니 가방
+    'XWNR-11': { x: 63.5, y: 75 },  // C5 앞치마
+    'DMYX-34': { x: 56.5, y: 85 },  // C6 앞치마 위 휴대폰
+  },
+  'ROOM-D': {
+    'EBEZ-58': { x: 54, y: 30 },  // D4 사진 액자
+    'CHOH-86': { x: 54, y: 43 },  // D5 상담 카드
+    'GOCI-93': { x: 64.5, y: 43 },  // D3 붉은 여권
+    'OIXS-24': { x: 79.5, y: 52 },  // D1 문 안쪽 열쇠 꾸러미(마스터키)
+    'HIEV-34': { x: 62, y: 72 },  // D2 작업화 한 짝
+    'LIPT-58': { x: 54.5, y: 86 },  // D6 휴대폰
+  },
+  'ROOM-F': {
+    'LHMX-66': { x: 27.5, y: 48 },  // F1 문 안쪽 지게차 키
+    'ZFDF-11': { x: 47, y: 28 },  // F2 지갑·접힌 통지서
+    'LKQM-22': { x: 60, y: 30 },  // F3 귀마개·약통
+    'VRVO-38': { x: 48, y: 66 },  // F4 보온병
+    'DMKO-85': { x: 58, y: 70 },  // F5 휴대폰
+  },
+  'ROOM-P': {
+    'GZME-70': { x: 44, y: 37 },  // P1 칸 나뉜 보관함
+    'XNHC-45': { x: 56.5, y: 41 },  // P2 각서 다발
+  },
+  // C통로 현장 — 폰(X10)은 그림에 없어 빈자리로 떨어진다
+  'ROOM-X': {
+    'ITYT-34': { x: 47, y: 64 },  // X1 넘어진 파렛트
+    '__body__': { x: 39, y: 76 },  // 파렛트 아래
+    'JZXT-21': { x: 56, y: 93 },  // X2 바닥 자국
+    'PIMY-01': { x: 49, y: 82.5 },  // X3 수첩(표식 3)
+    'TUTI-57': { x: 57, y: 79.5 },  // X4 소지품(표식 4)
+    'HFIQ-89': { x: 64, y: 76 },  // X9 시신 채취(표식 5)
+    'ATXE-85': { x: 70.5, y: 85.5 },  // X5 흩어진 전표
+    'VXHP-68': { x: 20, y: 77 },  // X6 파렛트 잭
+    'HPUZ-03': { x: 12, y: 80 },  // X7 랩 롤
+    'OZRC-07': { x: 23.5, y: 20 },  // X8 랙 위 랩 덩어리
   },
   // 관제실 열람대 — 카드 14장인데 자동 배치 앵커가 9개라 10~14번째가 앞과 겹쳤다.
   //   모니터 여섯 칸(art.jsx CctvRoom 의 2줄×3칸, U3 카드 라벨 순서)에 그 카메라의 카드를 모은다.
@@ -307,12 +349,14 @@ export const isUiTap = (e) => !!e.target.closest('button, .aa-ask, .aa-present, 
 
 // 채점 — 범인 한 명만 지목(S1 = 서장현, 진범)
 //   야간조는 공범이 없다. 나머지 다섯은 구멍을 냈을 뿐이라 지목 대상이 아니다.
-// 정답/오답은 범인으로 가른다. 수법·동기는 진범(S1)의 것과 맞는지 따로 적는다 — 엔딩이 ✓/✗ 로 보인다.
+// 정답/오답은 범인으로 가른다. 수법·동기는 범인을 맞혔을 때만 진범(S1)의 것과 맞는지 매긴다 —
+//   범인을 틀리고 「✓ 수법」이 뜨면 부분 점수처럼 보이지만 아무것도 가르지 못했다(3회차 #2).
 export function scoreCase(casefile) {
   const pick = casefile?.culprit || null;   // S1 = 서장현(진범)
+  const right = pick === 'S1';
   return {
-    culpritRight: pick === 'S1', pick,
-    method: casefile?.method || null, methodRight: casefile?.method === 'm_kill',
-    motive: casefile?.motive || null, motiveRight: casefile?.motive === 'mo_draft',
+    culpritRight: right, pick,
+    method: casefile?.method || null, methodRight: right && casefile?.method === 'm_kill',
+    motive: casefile?.motive || null, motiveRight: right && casefile?.motive === 'mo_draft',
   };
 }

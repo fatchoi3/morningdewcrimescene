@@ -80,7 +80,8 @@ export default function SoloApp() {
 
   // 기록 대조 7장 — 보드판처럼 **2차 심문 + 심야조 명부(U4)** 가 갖춰지면 도착한다.
   //   명부에 그 밤 스물다섯의 사번이 있어야 본사 서버 조회가 된다(진행물 이벤트 ②).
-  //   Q2 의 둘째 구간(6/3~7/28)은 따로 — 「없어진 두 달」(S7)이 선 뒤에야 연다.
+  //   Q2 의 둘째 구간(6/3~7/28)은 여기서 주지 않는다 — 찢긴 두 달(AOBI-88)을 서장현에게 들이밀 때
+  //   심문에서 들어온다(interrogation S1 p2two.soft). 저절로 오면 일곱 장 가운데 그의 것만 짚였다(3회차 #5).
   //   stage 가 아니라 **실제 진행도**로 판정한다 — 운영자 모드가 단계를 올려도 배달은 앞당기지 않는다.
   useEffect(() => {
     if (progressStage < 3 && !state.admin) return;
@@ -88,19 +89,13 @@ export default function SoloApp() {
     if (collectedSet.has(soloContent.recordGate)) {
       for (const c of soloContent.recordCodes) if (!collectedSet.has(c)) want.push(c);
     }
-    const q2ok = collectedSet.has(soloContent.q2segGate)
-      && (collectedSet.has('GELH-98') || want.includes('GELH-98'));
-    if (q2ok && getClue(soloContent.q2segCode) && !collectedSet.has(soloContent.q2segCode)) want.push(soloContent.q2segCode);
     if (!want.length) return;
     const set = new Set(state.collected);
     want.forEach((c) => set.add(c));
     soloContent.computeAutoUnlocked(set);
     for (const g of gamsikCodes) if (!collectedSet.has(g) && !(state.labReq || []).includes(g)) set.delete(g);
     update({ collected: [...set] });
-    const recs = want.filter((c) => c !== soloContent.q2segCode).length;
-    showToast(recs
-      ? `🗂 본사 서버 기록 대조 ${recs}건 도착 — 수첩에서 확인하세요`
-      : '🗂 기록 대조 — 서장현 · 6/3~7/28 구간이 열렸습니다');
+    showToast(`🗂 본사 서버 기록 대조 ${want.length}건 도착 — 수첩에서 확인하세요`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progressStage, state.collected.length]);
 
@@ -205,10 +200,10 @@ export default function SoloApp() {
   const progressText = progressStage >= 3
     ? `2차 심문 ${p2Count}/${suspectIds.length} · 감식 ${gamsikGot}/${gamsikCodes.size} · 폰 ${phoneGot}/${PHONE_CODES.length}`
     : `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}`
-      + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED}` : '');
+      + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED} · 감식 의뢰 ${Math.min((state.labReq || []).length, 1)}/1` : '');
   // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
-    : progressStage < 3 ? `C통로 현장에서 단서 ${SCENE_NEEDED}개를 찾으면 2차 심문이 열립니다`
+    : progressStage < 3 ? `C통로 현장에서 단서 ${SCENE_NEEDED}개를 찾고 감식을 한 건 이상 맡기면 2차 심문이 열립니다`
     : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요';
   const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
 
@@ -308,8 +303,8 @@ export default function SoloApp() {
                   <>
                     <p><b>{pickName}</b> — 이 사람을 범인으로 지목합니다.</p>
                     <p style={{ fontSize: '.88rem', lineHeight: 1.7 }}>
-                      수법 · {soloContent.caseKey.methods.find((m) => m.id === state.casefile?.method)?.label}<br />
-                      동기 · {soloContent.caseKey.motives.find((m) => m.id === state.casefile?.motive)?.label}
+                      수법 · {soloContent.caseKey.choiceMethods.find((m) => m.id === state.casefile?.method)?.label}<br />
+                      동기 · {soloContent.caseKey.choiceMotives.find((m) => m.id === state.casefile?.motive)?.label}
                     </p>
                     <p>제출하면 사건이 종결되고 전말이 공개됩니다. <b>수사로 돌아올 수 없습니다.</b></p>
                     <p style={{ fontSize: '.82rem', color: 'var(--muted)', lineHeight: 1.7 }}>

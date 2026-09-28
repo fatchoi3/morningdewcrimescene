@@ -80,7 +80,7 @@ export function EventVN({ onDone }) {
     { loc: '현장', text: '"치운 건 파렛트와 시신뿐입니다. 바닥의 자국, 랙 1단에 나와 있던 것, 3단에 얹혀 있던 것, 시신 옆에 떨어져 있던 종이는 그날 새벽 그대로입니다."' },
     { loc: '영장', text: '압수수색 영장이 나왔다. 2층 사무실·관제실·계단을 볼 수 있다. 조장의 칸은 자물쇠가 걸려 있다 — 사물함 열쇠가 있어야 열린다.' },
     { loc: 'CCTV', text: '본사 보안업체에서 카메라 여섯 대의 원본이 왔다. 그날 밤 전 구간이다. 이 센터의 카메라는 사람이 아니라 물건과 사고를 보려고 달았다 — 얼굴이 남는 것은 정문 G-1 하나뿐이고, 자동문 M-2는 문 위에서 수직으로 내려다봐 안전모와 어깨만 남는다.' },
-    { text: '감식반이 합류했다. 채취물을 가져가면 감식 의뢰실에서 분석을 맡길 수 있다 — 결과가 나오기까지는 시간이 걸린다.' },
+    { text: '감식반이 합류했다. 들고 있는 채취물이 있으면 감식 의뢰실에 먼저 맡겨 두라 — 간단한 성분 검사는 맡기는 즉시 나오고, 정밀 감식은 시간이 걸린다.' },
     { loc: '1차 소견', text: '"사인은 아직 압사로 보고 있습니다. 정밀 부검은 의뢰만 해 둔 상태입니다."' },
     { text: '…1차 탐문에서 들은 말을 물증으로 검증할 차례다.' },
   ];
@@ -151,9 +151,10 @@ export function EndingScreen({ result, onNewCase }) {
             {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : `✗ 당신의 지목: ${suspects.find((s) => s.id === r.pick)?.name || '—'}`}
           </div>
           <div style={{ marginTop: 12, fontSize: '.86rem', lineHeight: 1.8, textAlign: 'left', display: 'inline-block' }}>
-            {[['수법', r.methodRight, r.method, soloContent.caseKey.methods], ['동기', r.motiveRight, r.motive, soloContent.caseKey.motives]].map(([k, ok, id, list]) => (
-              <div key={k} style={{ color: ok ? 'var(--ok)' : 'var(--danger)' }}>
-                {ok ? '✓' : '✗'} {k} — {list.find((m) => m.id === id)?.label || '고르지 않음'}
+            {[['수법', r.methodRight, r.method, soloContent.caseKey.choiceMethods], ['동기', r.motiveRight, r.motive, soloContent.caseKey.choiceMotives]].map(([k, ok, id, list]) => (
+              // 범인을 틀렸으면 수법·동기는 매기지 않는다 — 회색 「—」
+              <div key={k} style={{ color: !r.culpritRight ? 'var(--muted)' : ok ? 'var(--ok)' : 'var(--danger)' }}>
+                {!r.culpritRight ? '—' : ok ? '✓' : '✗'} {k} — {list.find((m) => m.id === id)?.label || '고르지 않음'}
               </div>
             ))}
           </div>
