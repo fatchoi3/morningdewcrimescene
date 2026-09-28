@@ -25,32 +25,55 @@ const testimonyByCode = Object.fromEntries(
   Object.entries(TESTIMONY).map(([code, t]) => [code, { code, title: t.title, type: '증언', person: t.person, desc: t.detail, detail: t.detail }]),
 );
 
-// ── 솔로에서 새로 생기는 기록 두 장 ─────────────────────────────────────────
+// ── 솔로에서 새로 생기는 기록 ───────────────────────────────────────────────
 //   보드판에서는 사람이 소리 내어 읽으면 그만인 것이, 앱에서는 「들고 있는 것」이어야
-//   인물에게 들이밀 수 있다. 그래서 두 장을 기록으로 만든다. 본문은 지어내지 않는다 —
-//   하나는 태블릿 lookup.result 그대로, 하나는 보드판 이벤트 ④ 카드 문장 그대로다.
+//   인물에게 들이밀 수 있다. 그래서 기록으로 만든다. **본문은 지어내지 않는다** —
+//   전부 데이터팩이나 보드판 진행물의 문장 그대로다.
 const tabletLookup = byCode['ZVLJ-37']?.phone?.apps?.find((a) => a.type === 'browser')?.lookup;
+const q2seg = byCode['GELH-98']?.segment2;
 const NL = String.fromCharCode(10);
 export const LOOKUP_CODE = 'LOOKUP-ZVLJ-37';
+export const AUTOPSY1_CODE = 'AUTOPSY-1';
 export const AUTOPSY_CODE = 'AUTOPSY-2';
+export const Q2SEG_CODE = 'GELH-98-2';
 const DERIVED = {
+  // 태블릿 lookup.result 그대로 — 관리자 조회에 성공하면 들어온다
   [LOOKUP_CODE]: {
     code: LOOKUP_CODE, type: '보통', person: '조장',
     title: '조장 태블릿 — 관리자 조회 결과',
     description: '관리자 사번과 네 자리로 연 「전표 상태 · 조회 이력」 화면.',
     detail: (tabletLookup?.result?.lines || []).join(NL),
   },
+  // 보드판 6인 시작 시트 절 ④-1 그대로 — 시작부터 사건 기록에 있다. 2차 부검 뒤에 다시 읽을 자리다.
+  [AUTOPSY1_CODE]: {
+    code: AUTOPSY1_CODE, type: '보통', person: '조장',
+    title: '1차 검안 소견서',
+    description: '여섯 줄. 판단은 붙어 있지 않다. 검안의는 압사라고 적었다.',
+    detail: [
+      '1. 사망 추정 03:00~03:30. 직장 온도와 강직 정도로 잡은 범위다.',
+      '2. 후두부에 타박흔 하나. 함몰은 없다. 검안의는 「전도 시 2차 충격 가능」으로 적었다.',
+      '3. 얼굴 전면에 옅고 고른 눌림 자국. 검안의는 「판재 압박흔으로 추정」으로 적었다.',
+      '4. 양쪽 눈꺼풀 안쪽에 점상 출혈. 검안의는 「흉부 압박에 의한 것으로 추정」으로 적었다.',
+      '5. 손톱 밑에 투명한 조각. 현장에 랩이 널려 있어 채취만 하고 판단은 보류했다.',
+      '6. 안전화는 제대로 신겨져 있었고 끈이 묶여 있었다.',
+      '',
+      '소지품은 수첩 · 무전기 · 사원증 · 휴대폰 · 사무실 열쇠 · 담배와 라이터. 현재까지 없어진 것은 없다고 보고 있다.',
+    ].join(NL),
+  },
+  // 보드판 진행물 「④ 2차 부검」 앞면·뒷면 그대로 — 2차 심문이 열릴 때 들어온다
   [AUTOPSY_CODE]: {
     code: AUTOPSY_CODE, type: '보통', person: '조장',
     title: '2차 부검 소견',
     description: '국과수 정밀 부검 결과. 1차 소견(압사)이 뒤집혔다.',
-    // 보드판 진행물 「④ 2차 부검」 앞면·뒷면 문장. 텀블러 성분 한 줄은 결정 대기라 뺐다.
     detail: [
       '사인은 질식입니다. 얼굴에 랩이 감겨 있었습니다. 후두부를 뒤에서 맞으셨고요.',
       '돌아가신 시각은 03:00에서 03:30 사이. 1차 소견과 같습니다.',
+      '텀블러에서 나온 성분은 사인과 관계없습니다. …뒤에서 오는 건 멀쩡한 사람도 못 봤을 겁니다.',
       '파렛트에 눌린 흔적은 사후입니다. 얼굴과 코 주변에서 필름 점착 성분이 나왔고, 손톱 밑에서 랩 조각이 나왔습니다.',
     ].join(NL + NL),
   },
+  // 데이터팩 GELH-98.segment2 그대로 — 「없어진 두 달」(AOBI-88)이 선 뒤에 들어온다
+  ...(q2seg ? { [Q2SEG_CODE]: { code: Q2SEG_CODE, type: '보통', person: byCode['GELH-98'].person, ...q2seg } } : {}),
 };
 
 // 2차 심문에 도착하는 기록 대조 7장(보드판 Q1~Q7). 1·2단계에서는 장소에 뿌리지 않는다.
@@ -121,6 +144,9 @@ function buildLocations() {
       showBody: !!r.room?.showBody,
       body: r.room?.body || null,
       objects,
+      // 조장의 칸 — 보드판 이벤트 ② 「사물함은 자물쇠가 걸려 있고 열쇠가 나오지 않아 아직 열지 못했다」.
+      //   흐엉의 칸에서 나오는 사물함 마스터키(D1)가 있어야 연다.
+      ...(r.code === 'ROOM-P' ? { lockedBy: 'OIXS-24', lockedMsg: '🔒 조장의 칸은 자물쇠가 걸려 있다 — 열쇠가 아직 나오지 않았다' } : {}),
     };
   });
 
@@ -151,6 +177,7 @@ const briefing = {
     //   사무실은 원래 잠그지 않는다. C-3 의 검은 화면은 중간 점검 때 카메라 원본이 알려 준다.
     '최초 발견자는 오정숙입니다. 04:11 비명을 듣고 사람들이 모였고, 04:15 서장현 안전관리자가 112와 119에 신고했습니다.',
     '정문 기록에 22:30 이후 04:15까지 출입이 없습니다. 스물다섯 중 열여덟은 그 밤 공정 기록이 한 번도 끊기지 않았습니다. 단말을 들지 않는 자리 셋과 기록에 공백이 있는 넷 — 그중 한 사람이 죽었습니다. 남는 사람은 여섯입니다.',
+    '1차 검안 소견서 여섯 줄은 사건 기록에 들어 있습니다. 판단은 붙어 있지 않습니다 — 지금 결론 내리지 말고, 나중에 다시 읽으세요.',
     '각 칸과 현장을 탐색해 단서를 모으고, 여섯을 심문해, 누가·어떻게·왜 죽였는지 밝혀내세요.',
   ],
 };
@@ -203,7 +230,7 @@ export const soloContent = {
   crimeSceneCodes: (_locations.rooms.find((r) => r.id === 'ROOM-X')?.objects) || [],
   suspectIds: suspects.map((s) => s.id),
   // 시작 시 사건 기록에 기본 수록되는 단서(공개 게시물 2장)
-  startingClues: _locations.starting || [],
+  startingClues: [...(_locations.starting || []), AUTOPSY1_CODE],
   // 2차 심문 개방 때 도착하는 기록 대조 7장
   recordCodes: RECORD_CODES.filter((c) => byCode[c]),
   isRecordCode: (code) => recordSet.has(code),
@@ -211,6 +238,11 @@ export const soloContent = {
   getClue: (code) => byCode[code] || testimonyByCode[code] || DERIVED[code] || null,
   lookupCode: LOOKUP_CODE,
   autopsyCode: AUTOPSY_CODE,
+  q2segCode: Q2SEG_CODE,
+  // 기록 대조가 배달되는 조건 — 보드판처럼 **2차 심문 + 심야조 명부(U4)**. 명부에 사번이 있어야 조회가 된다.
+  recordGate: 'KVUN-12',
+  // Q2 둘째 구간이 배달되는 조건 — 「없어진 두 달」(S7)
+  q2segGate: 'AOBI-88',
   clueIcon,
   computeAutoUnlocked: (codeSet) => provider.computeAutoUnlocked(codeSet),
   gamsikCodes: new Set(all.filter((c) => c.type === '감식').map((c) => c.code)),

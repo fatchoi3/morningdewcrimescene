@@ -86,8 +86,11 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   const commons = COMMON_SPOTS.map((c) => ({ ...c, loc: tool(c.id) })).filter((c) => c.loc);
   const floorAlerts = () => commons.reduce((n, c) => n + alertsOf(c.loc).total, 0) + (lab ? alertsOf(lab).total : 0);
 
+  // 열쇠가 있어야 여는 곳(조장의 칸) — 단계가 열려도 그 열쇠를 쥐기 전에는 못 들어간다
+  const keyLocked = (loc) => !!loc.lockedBy && !collectedSet.has(loc.lockedBy);
   const subOf = (loc, isCrime) => {
     if (loc.stage > stage) return isCrime ? '통제 중' : loc.stage === 2 ? '사건 후 개방' : '2차 개방';
+    if (keyLocked(loc)) return '자물쇠';
     // inner 가 있는 시설(CCTV 열람실)도 진척을 보여준다 — 열람대 하나만 세면 첫 진입에 '✓ 탐색완료'가
     //   되는데, 정작 2·3막 모순 대부분은 그 안의 컷들이라 화면이 '다 봤다'고 거짓말을 하게 된다.
     const counted = loc.kind === 'room' || loc.kind === 'cctv' || loc.inner ? [...loc.objects, ...(loc.inner || [])] : null;
@@ -99,7 +102,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   };
   const enter = (loc, isCrime) => {
     if (!loc) return;
-    if (loc.stage > stage) { onToast(isCrime ? '🚧 C통로는 경찰 통제 중입니다 — 부검 소견이 나오면 개방됩니다' : stageHint(loc.stage)); return; }
+    if (loc.stage > stage) { onToast(isCrime ? '🚧 C통로는 경찰 통제 중입니다 — 현장 감식이 끝나면 개방됩니다' : stageHint(loc.stage)); return; }
+    if (keyLocked(loc)) { onToast(loc.lockedMsg || '🔒 잠겨 있다'); return; }
     onEnter(loc.id);
   };
   const here = view === 'main' ? '탈의실 앞 복도 — 인물들의 칸'
@@ -121,7 +125,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
           })}
           {view === 'main' && bossLocker && (
             <HallHot x={50} y={50} icon="🗄" label={bossLocker.label}
-              sub={subOf(bossLocker, false)} locked={bossLocker.stage > stage} {...alertProps(bossLocker)}
+              sub={subOf(bossLocker, false)} locked={bossLocker.stage > stage || keyLocked(bossLocker)} {...alertProps(bossLocker)}
               onClick={() => enter(bossLocker, false)} />
           )}
           {view === 'main' && (

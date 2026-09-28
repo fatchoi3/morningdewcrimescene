@@ -74,6 +74,32 @@ export default function SoloApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, state.labReq]);
 
+  // 기록 대조 7장 — 보드판처럼 **2차 심문 + 심야조 명부(U4)** 가 갖춰지면 도착한다.
+  //   명부에 그 밤 스물다섯의 사번이 있어야 본사 서버 조회가 된다(진행물 이벤트 ②).
+  //   Q2 의 둘째 구간(6/3~7/28)은 따로 — 「없어진 두 달」(S7)이 선 뒤에야 연다.
+  //   stage 가 아니라 **실제 진행도**로 판정한다 — 운영자 모드가 단계를 올려도 배달은 앞당기지 않는다.
+  useEffect(() => {
+    if (progressStage < 3 && !state.admin) return;
+    const want = [];
+    if (collectedSet.has(soloContent.recordGate)) {
+      for (const c of soloContent.recordCodes) if (!collectedSet.has(c)) want.push(c);
+    }
+    const q2ok = collectedSet.has(soloContent.q2segGate)
+      && (collectedSet.has('GELH-98') || want.includes('GELH-98'));
+    if (q2ok && getClue(soloContent.q2segCode) && !collectedSet.has(soloContent.q2segCode)) want.push(soloContent.q2segCode);
+    if (!want.length) return;
+    const set = new Set(state.collected);
+    want.forEach((c) => set.add(c));
+    soloContent.computeAutoUnlocked(set);
+    for (const g of gamsikCodes) if (!collectedSet.has(g) && !(state.labReq || []).includes(g)) set.delete(g);
+    update({ collected: [...set] });
+    const recs = want.filter((c) => c !== soloContent.q2segCode).length;
+    showToast(recs
+      ? `🗂 본사 서버 기록 대조 ${recs}건 도착 — 수첩에서 확인하세요`
+      : '🗂 기록 대조 — 서장현 · 6/3~7/28 구간이 열렸습니다');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progressStage, state.collected.length]);
+
   function collect(code) {
     if (collectedSet.has(code)) return { added: [] };
     const set = new Set(state.collected);

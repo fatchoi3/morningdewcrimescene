@@ -244,7 +244,7 @@ export const cluesScene = {
 
   'NWVL-86': {
     title: '감사 진술 초안',
-    description: '사물함 문 안쪽 서류 꽂이에 끼워져 있던 A4 두 장.',
+    description: '2층 사무실 캐비닛, 지난달 일지 묶음 옆 클리어파일에 끼워져 있던 A4 두 장.',
     detail: '워드로 친 것이고 제목은 「안전 감사 관련 진술서(초안)」. 날짜란과 서명란이 비어 있다.\n\n문단 가운데에 한 줄 — 「작년 12월 컨베이어 끼임 건 재해조사 보고서는 안전관리자가 독단으로 작성한 것으로 판단됨.」\n\n고쳐 쓴 자국은 없다.',
     image: '/images/yaganjo/p3-statement.jpg',
     type: '보통',
