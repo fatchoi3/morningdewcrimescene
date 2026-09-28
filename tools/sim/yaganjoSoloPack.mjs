@@ -46,6 +46,12 @@ for (const c of soloContent.provider.getAllClues()) {
   if (c.type === '방') continue;
   clues[c.code] = strip(c);
 }
+// 솔로가 만든 기록 — 본문은 데이터팩·진행물 문장 그대로다
+const derived = {};
+for (const code of ['AUTOPSY-1', 'AUTOPSY-2', 'LOOKUP-ZVLJ-37', 'GELH-98-2']) {
+  const d = soloContent.getClue(code);
+  if (d) derived[code] = strip(d);
+}
 
 // ── 장소와 단계 ──────────────────────────────────────────────────────────────
 const locations = soloContent.locations.all.map((l) => ({
@@ -79,7 +85,8 @@ const mechanics = `
 
 ## 휴대폰
 - 각 폰은 그 사람의 칸(조장 폰은 C통로 X)에 있다. **단계 3 전에는 방에 아예 안 보인다.**
-- 네 자리 잠금이 걸려 있다(secrets.phoneLocks). 잠금 출처는 카드 본문에서 찾아야 한다.
+- 네 자리 잠금이 걸려 있다(secrets.phoneLocks). **잠금을 풀어야 「가진 것」으로 친다** — 폰을 집기만 해서는 needs/contradict 에 못 쓴다. 잠금 출처는 카드 본문에서 찾아야 한다.
+- 조장 태블릿(ZVLJ-37)은 잠금이 없다. 「관리자 조회」에 사번-네 자리(30112-0519)를 넣어 성공하면 **LOOKUP-ZVLJ-37**(취소 세 줄 · 조회 로그) 기록이 들어온다.
 
 ## 감식
 - 단계 2 부터 감식 의뢰실에서 의뢰할 수 있다 — 단, 그 감식의 **채취물(선행 단서)을 먼저 모아야** 한다.
@@ -89,7 +96,18 @@ const mechanics = `
 - unlockedBy 의 재료를 모두 모으면 **자동으로** 사건 기록에 들어온다.
 
 ## 기록 대조 Q1~Q7
-- **현재 어느 장소에도 없고, 어느 단계에도 배달되지 않는다.** (알려진 결함 — 이미 확인됨)
+- **단계 3 이 열리고 심야조 명부(KVUN-12)를 쥐면** 일곱 장이 한꺼번에 도착한다.
+- Q2 의 둘째 구간(**GELH-98-2**, 6/3~7/28)은 따로 — 「없어진 두 달」(AOBI-88 = 수첩 + 명부)이 선 뒤에 도착한다.
+
+## 솔로가 만든 기록(clues.json 의 derived 에 있다)
+- **AUTOPSY-1** 1차 검안 소견서 — 처음부터 사건 기록에 있다(보드판 시작 시트 절 ④-1)
+- **AUTOPSY-2** 2차 부검 소견 — 단계 3 이 열릴 때 들어온다(보드판 이벤트 ④). 「텀블러 성분은 사인과 무관」 한 줄이 들어 있다
+- **LOOKUP-ZVLJ-37** — 태블릿 관리자 조회 성공 시
+- **GELH-98-2** — 위 기록 대조 둘째 구간
+- 증언(TST-*)은 interrogation 의 GRANTS / contradict.grants 로 들어온다(testimony.json)
+
+## 조장의 칸(ROOM-P)
+- 단계 2 에 열리지만 **사물함 마스터키(OIXS-24, 흐엉의 칸)를 쥐어야** 들어갈 수 있다.
 
 ## 심문 데이터(DATA · TOPICS · CLUE_REACT · GRANTS)가 화면에 뜨는 규칙
 - statement 는 **phase ≤ 현재** 이고, needs 가 없거나 **needs 중 하나라도 들고 있으면** 질문지에 뜬다.
@@ -117,6 +135,7 @@ const pack = {
   canon,
   locations,
   clues,
+  derived,
   solo,
   interrogation: { DATA, TOPICS, CLUE_REACT, GRANTS, TESTIMONY },
 };
