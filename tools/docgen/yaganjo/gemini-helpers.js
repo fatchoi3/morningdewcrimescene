@@ -11,7 +11,8 @@ window.__box = () => document.querySelector('rich-textarea [contenteditable="tru
 window.__put = async (t) => { const b = window.__box(); if (!b) return 'no-box'; b.focus(); document.execCommand('selectAll', false, null); document.execCommand('insertText', false, t); await window.__sleep(400); return (b.innerText || '').length; };
 window.__sendBtn = () => [...document.querySelectorAll('button')].find((b) => /보내기|^Send/i.test(b.getAttribute('aria-label') || '') && !b.disabled) || null;
 window.__ratioBtn = () => [...document.querySelectorAll('button')].find((b) => /가로세로 비율/.test(((b.getAttribute('aria-label') || '') + ' ' + (b.innerText || '')))) || null;
-window.__ratioNow = () => { const b = window.__ratioBtn(); return b ? (b.innerText || '').replace(/\s+/g, ' ').trim() : null; };
+// 비율 칩이 글자 없이 그려질 때가 있다 — 그땐 aria-label(「가로세로 비율, 16:9」)에서 읽는다
+window.__ratioNow = () => { const b = window.__ratioBtn(); if (!b) return null; const t = (b.innerText || '').replace(/\s+/g, ' ').trim(); if (/\d+:\d+/.test(t)) return t.match(/\d+:\d+/)[0]; const a = (b.getAttribute('aria-label') || '').match(/\d+:\d+/); return a ? a[0] : t; };
 window.__limit = () => /한도가 재설정|한도|초과|나중에 다시/.test(document.body.innerText.slice(-3000));
 window.__imgs = () => [...document.querySelectorAll('generated-image img')].filter((x) => x.naturalWidth >= 400);
 window.__modelNow = () => { const b = [...document.querySelectorAll('button')].find((x) => /Flash|Pro/.test(x.innerText || '') && x.getBoundingClientRect().width > 0); return b ? b.innerText.trim() : null; };
@@ -43,11 +44,14 @@ window.__one2 = async function (text, sec) {
     await window.__sleep(250);
     if (window.__imgs().length) { await window.__sleep(2500); return { ok: true }; }
     const tail = document.body.innerText.slice(-4000);
-    if (/지원해 드릴 수 없|생성 요청은 지원|안전 가이드라인/.test(tail)) return { err: 'refused' };
+    if (/지원해 드릴 수 없|생성 요청은 지원|안전 가이드라인|도와드릴 수는 없|도와드릴 수 없/.test(tail)) return { err: 'refused' };
     if (/한도가 재설정/.test(tail)) return { err: 'limit' };
   }
+  // 시간이 넘으면 돌던 생성을 멈춘다 — 안 멈추면 보내기 단추가 안 돌아와 뒤의 것이 전부 「no-send」로 빠진다
+  await window.__stopGen();
   return { err: 'timeout' };
 };
+window.__stopGen = async () => { const s = [...document.querySelectorAll('button')].find((b) => /대답 생성 중지/.test(b.getAttribute('aria-label') || '')); if (s) { s.click(); await window.__sleep(2000); } return !!s; };
 
 // 캔버스로 옮겨 내려받는다(blob 을 fetch 하면 막힌다)
 window.__dump = async (name) => {
