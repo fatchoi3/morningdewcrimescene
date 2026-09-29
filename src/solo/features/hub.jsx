@@ -3,7 +3,7 @@
 //   main : 인물 방 6개 · 오른쪽→목사방 · 왼쪽→1층
 //   pastor : 복도 끝 목사님 방(현장) · floor1 : CCTV·소지품 · lab : 감식 의뢰실
 // ─────────────────────────────────────────────────────────────────────────────
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { stageHint } from '../lib/game.js';
 import { locationAlerts, alertReason } from '../lib/alerts.js';
 import { getClue } from '../content.js';
@@ -94,8 +94,17 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     : view === 'floor1' ? '1층 — CCTV 열람실'
     : '건물 밖 — 감식 의뢰실';
 
+  // 폰 세로에서는 가로 사진을 화면 높이에 맞춰 크게 깔고 좌우로 밀어 본다(방 화면과 같다).
+  //   너비에 맞추면 높이가 화면의 4분의 1뿐이라 방 이름표가 겹쳤다(디자인 점검, 야간조와 같은 수정).
+  //   복도를 바꿀 때마다 가운데로 되돌린다.
+  const camRef = useRef(null);
+  useEffect(() => {
+    const cam = camRef.current;
+    if (cam) cam.scrollLeft = Math.max(0, (cam.scrollWidth - cam.clientWidth) / 2);
+  }, [view]);
   return (
     <div className="aa-fs">
+      <div className="hall-cam" ref={camRef}>
       <div className="hall-fit">
           <HallBg name={view} />
 
@@ -124,6 +133,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
               {...alertProps(lab)} onClick={() => enter(lab)} />
           )}
       </div>
+      </div>
+      <div className="hall-swipe-hint" aria-hidden="true">← 밀어서 둘러보기 →</div>
 
       {/* 복도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
       <div className="hall-hud">
