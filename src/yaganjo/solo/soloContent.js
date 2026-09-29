@@ -227,7 +227,7 @@ const CHOICE_MOTIVES = [
   { id: 'mo_grudge', label: '전환 심사에서 밀려난 원한' },
   { id: 'mo_injury', label: '산재를 각서로 덮은 조장에게 쌓인 원한' },
   { id: 'mo_draft', label: '감사 진술 초안에 자기 이름이 적혀 있었다' },
-  { id: 'mo_license', label: '감사 자료를 정리해 올릴 조장에게 자격 대장의 무면허가 드러날까 봐' },
+  { id: 'mo_license', label: '조장이 감사 자료를 정리해 올리면서 자격 대장까지 올릴까 봐 — 무면허가 드러날 공포' },
   { id: 'mo_passport', label: '조장이 맡아 둔 여권을 되찾으려고' },
 ];
 // id(S1..S6) 기준 정답

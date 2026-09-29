@@ -3,7 +3,7 @@
 //   정답/오답은 범인으로 가른다. 수법·동기는 범인을 맞혔을 때만 따로 ✓/✗ 로 매긴다.
 //   선택지는 정답표(caseKey.methods)가 아니라 살해 가설 목록(caseKey.choiceMethods)이다 —
 //   정답표를 그대로 보이면 다섯 구멍의 요약이 되어 지워 나가기만 해도 풀렸다(3회차 #1).
-//   범인을 「확정」하기 전에는 목록을 띄우지 않는다. 목록을 먼저 훑어 힌트로 쓰지 못하게.
+//   범인을 「확정」하기 전에는 목록을 띄우지 않고, 확정은 한 번 물은 뒤 되돌릴 수 없다 — 목록을 먼저 훑어 힌트로 쓰지 못하게.
 // ─────────────────────────────────────────────────────────────────────────────
 import { suspects, soloContent } from '../content.js';
 import { Avatar } from '../art.jsx';
@@ -28,7 +28,7 @@ function Choice({ title, items, value, onPick }) {
 }
 
 // ── 사건 파일(최종 제출) ──
-export function CaseFileView({ state, onPick, onSubmit }) {
+export function CaseFileView({ state, onPick, onSubmit, onConfirmLock }) {
   const cf = state.casefile || {};
   const pick = cf.culprit || null;
   const locked = !!(pick && cf.locked);
@@ -54,7 +54,8 @@ export function CaseFileView({ state, onPick, onSubmit }) {
             ))}
           </div>
           <div style={{ textAlign: 'center', margin: '20px 0 4px' }}>
-            <button className="s-btn" disabled={!pick} style={!pick ? { opacity: 0.5 } : {}} onClick={() => set({ locked: true })}>
+            {/* 확정 전에 한 번 묻는다 — 확정한 뒤에는 되돌릴 수 없다. 아무나 확정해 목록만 훑고 되돌아가던 길을 막는다(5회차 #3) */}
+            <button className="s-btn" disabled={!pick} style={!pick ? { opacity: 0.5 } : {}} onClick={async () => { if (await onConfirmLock(picked)) set({ locked: true }); }}>
               {pick ? `${picked?.name} — 이 사람으로 확정 →` : '범인을 지목하세요'}
             </button>
           </div>
@@ -64,8 +65,6 @@ export function CaseFileView({ state, onPick, onSubmit }) {
           <div className="s-accuse-row on" style={{ cursor: 'default' }}>
             <Avatar person={picked?.name} image={picked?.image} size={44} />
             <div className="ar-body"><div className="ar-name">{picked?.name}</div><div className="ar-occ">범인으로 확정</div></div>
-            {/* 수법·동기를 하나라도 고른 뒤에는 되돌릴 수 없다 — 확정해 두고 목록만 훑은 뒤 다시 고르는 길을 막는다(4회차 #12) */}
-            {!cf.method && !cf.motive && <button className="s-link" onClick={() => set({ locked: false, method: null, motive: null })}>다시 고르기</button>}
           </div>
           <Choice title="수법 — 어떻게 죽였는가" items={METHODS} value={cf.method} onPick={(id) => set({ method: id })} />
           <Choice title="동기 — 왜 죽였는가" items={MOTIVES} value={cf.motive} onPick={(id) => set({ motive: id })} />
