@@ -81,8 +81,8 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
     <div className="aa-fs">
       {/* 그림을 줄이면 위아래가 빈다 — 같은 그림을 흐리게 깔아 검은 띠 대신 방 분위기로 채운다 */}
       {pannable && <div className="aa-backdrop" aria-hidden="true"><SceneBg location={location} fit="cover" /></div>}
-      <div className="aa-cam" ref={camRef} onScroll={syncCam}>
-        <div className="aa-track" ref={trackRef} style={{ aspectRatio: String(bgRatio) }}>
+      <div className={`aa-cam${bgRatio < 1 ? ' portrait' : ''}`} ref={camRef} onScroll={syncCam}>
+        <div className={`aa-track${bgRatio < 1 ? ' portrait' : ''}`} ref={trackRef} style={{ aspectRatio: String(bgRatio) }}>
           <SceneBg location={location} onRatio={setBgRatio} />
 
       {location.showBody && (
