@@ -3,7 +3,7 @@
 //   main : 인물의 칸 6개 · 오른쪽→C통로 현장 · 왼쪽→공용 공간
 //   pastor : 동쪽 끝 C통로(현장) · floor1 : 공용 공간·관제실 열람대 · lab : 감식 의뢰실
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { stageHint } from '../lib/game.js';
 import { locationAlerts, alertReason } from '../lib/alerts.js';
 import { getClue } from '../content.js';
@@ -114,14 +114,26 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   // 폰 세로에서는 가로 사진을 화면 높이에 맞춰 크게 깔고 좌우로 밀어 본다(방 화면과 같다).
   //   너비에 맞추면 높이가 화면의 4분의 1뿐이라 사물함 이름표가 겹치고 잘렸다(디자인 점검 1).
   //   복도를 바꿀 때마다 가운데로 되돌린다.
+  //   「밀어서 둘러보기」 안내는 3초 뒤 사라지므로, 그쪽에 더 볼 것이 남아 있는 동안은 가장자리 화살표를 띄운다.
   const camRef = useRef(null);
+  const [edge, setEdge] = useState({ l: false, r: false });
+  const syncEdge = () => {
+    const cam = camRef.current;
+    if (!cam) return;
+    const max = cam.scrollWidth - cam.clientWidth;
+    setEdge({ l: cam.scrollLeft > 8, r: cam.scrollLeft < max - 8 });
+  };
   useEffect(() => {
     const cam = camRef.current;
     if (cam) cam.scrollLeft = Math.max(0, (cam.scrollWidth - cam.clientWidth) / 2);
+    syncEdge();
+    window.addEventListener('resize', syncEdge);
+    return () => window.removeEventListener('resize', syncEdge);
   }, [view]);
+  const pan = (dir) => camRef.current?.scrollBy({ left: dir * camRef.current.clientWidth * 0.6, behavior: 'smooth' });
   return (
     <div className="aa-fs">
-      <div className="hall-cam" ref={camRef}>
+      <div className="hall-cam" ref={camRef} onScroll={syncEdge}>
       <div className="hall-fit">
           <HallBg name={view} />
 
@@ -158,6 +170,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
       </div>
       </div>
       <div className="hall-swipe-hint" aria-hidden="true">← 밀어서 둘러보기 →</div>
+      {edge.l && <button className="hall-pan l" aria-label="왼쪽 더 보기" onClick={() => pan(-1)}>‹</button>}
+      {edge.r && <button className="hall-pan r" aria-label="오른쪽 더 보기" onClick={() => pan(1)}>›</button>}
 
       {/* 복도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
       <div className="hall-hud">

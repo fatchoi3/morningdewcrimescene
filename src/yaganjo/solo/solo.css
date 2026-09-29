@@ -702,6 +702,12 @@ button { font-family: inherit; }
 @keyframes hallHint { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .hall-swipe-hint { animation: none; } }
 .hall-arrow { min-height: 44px; }
+/* 좌우로 더 볼 것이 남았다는 표시 — 사진 가장자리에 붙는 화살표(누르면 60% 밀림). 좌우로 밀 수 없는 화면에서는 뜨지 않는다. */
+.hall-pan { position: absolute; top: 50%; transform: translateY(-50%); z-index: 7; width: 44px; height: 72px; border: 1px solid #ffffff38;
+  background: #000000a6; color: #ffe9a8; font-size: 2rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.hall-pan.l { left: 0; border-left: 0; border-radius: 0 12px 12px 0; }
+.hall-pan.r { right: 0; border-right: 0; border-radius: 12px 0 0 12px; }
+.hall-pan:active { background: #000000d0; }
 @media (max-width: 480px) { .hall-arrow { min-height: 44px; padding: 10px 12px; } }
 .hall-cctv { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
 .hall-hud-btn, .aa-hud .hall-hud-btn { width: 44px; height: 44px; }
