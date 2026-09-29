@@ -13,7 +13,12 @@ import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
 import { DialogueBox } from '../vn.jsx';
 
 // ── 시작 화면 — 수사 시작 / 이어하기 ─────────────────────────────────────────
+//   처음부터 다시 하는 두 단추는 한 번 묻는다 — 공개 화면에서 누르면 곧장 지워지던 것(디자인 점검 3).
+//   이 화면은 공용 확인 창이 뜨지 않는 자리라 화면 안에서 묻는다.
 export function StartScreen({ started, continueCount, onStart, onContinue, onReset }) {
+  const [ask, setAsk] = useState(null); // 'start' | 'reset' | null
+  const hasSave = started || continueCount > 0;
+  const guard = (kind, fn) => () => (hasSave ? setAsk(kind) : fn());
   return (
     <div className="solo-wrap">
       <div className="s-start">
@@ -30,14 +35,29 @@ export function StartScreen({ started, continueCount, onStart, onContinue, onRes
         <div className="s-eye">Crime Scene · Solo</div>
         <div className="s-title">{briefing.title}</div>
         <div className="s-sub">{briefing.subtitle}</div>
-        {/* 새 수사 = 저장 초기화 후 처음부터 — 이어하기는 별도 버튼 */}
-        <button className="s-btn" onClick={onStart}>
-          {started ? '새 수사 시작 (처음부터)' : '수사 시작'}
-        </button>
-        {continueCount > 0 && (
-          <button className="s-link" style={{ marginTop: 14 }} onClick={onContinue}>이어하기 (단서 {continueCount})</button>
+        {ask ? (
+          <div className="s-start-ask" role="alertdialog" aria-label="처음부터 다시">
+            <p>지금까지의 수사 기록이 모두 사라집니다. 처음부터 다시 할까요?</p>
+            <div className="s-start-ask-row">
+              <button className="s-btn" onClick={() => { const k = ask; setAsk(null); (k === 'start' ? onStart : onReset)(); }}>처음부터</button>
+              <button className="s-btn ghost" onClick={() => setAsk(null)}>취소</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* 이어하기가 있으면 그게 먼저 — 처음부터는 한 번 묻는다 */}
+            {continueCount > 0 && (
+              <button className="s-btn" onClick={onContinue}>이어하기 (단서 {continueCount})</button>
+            )}
+            <button className={continueCount > 0 ? 's-link' : 's-btn'} style={continueCount > 0 ? { marginTop: 14 } : undefined}
+              onClick={guard('start', onStart)}>
+              {hasSave ? '새 수사 시작 (처음부터)' : '수사 시작'}
+            </button>
+            {hasSave && (
+              <button className="s-link" style={{ marginTop: 8, color: '#8a8880' }} onClick={guard('reset', onReset)}>기록 지우기</button>
+            )}
+          </>
         )}
-        <button className="s-link" style={{ marginTop: 6, color: '#8a8880' }} onClick={onReset}>🔄 저장 초기화 (테스트용)</button>
       </div>
     </div>
   );
@@ -58,7 +78,7 @@ export function BriefingVN({ onDone }) {
   return (
     <div className="aa-fs" onClick={(e) => { if (!isUiTap(e)) dlgRef.current?.tap(); }}>
       <div className="aa-stage"><BriefingArt fill /></div>
-      <div className="aa-loc-chip">사건 브리핑 · {victim.name}({victim.age})</div>
+      <div className="aa-loc-chip">사건 브리핑 · 피해자 {victim.name}({victim.age})</div>
       <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
@@ -151,12 +171,16 @@ export function EndingScreen({ result, onNewCase }) {
             {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : `✗ 당신의 지목: ${suspects.find((s) => s.id === r.pick)?.name || '—'}`}
           </div>
           <div style={{ marginTop: 12, fontSize: '.86rem', lineHeight: 1.8, textAlign: 'left', display: 'inline-block' }}>
-            {[['수법', r.methodRight, r.method, soloContent.caseKey.choiceMethods], ['동기', r.motiveRight, r.motive, soloContent.caseKey.choiceMotives]].map(([k, ok, id, list]) => (
-              // 범인을 틀렸으면 수법·동기는 매기지 않는다 — 회색 「—」
+            {[['수법', r.methodRight, r.method, soloContent.caseKey.choiceMethods, 'm_kill'], ['동기', r.motiveRight, r.motive, soloContent.caseKey.choiceMotives, 'mo_draft']].map(([k, ok, id, list, answer]) => (
+              // 범인을 틀렸으면 수법·동기는 매기지 않는다 — 회색 「—」. 틀린 줄에는 정답을 작게 붙인다(디자인 점검 3)
               <div key={k} style={{ color: !r.culpritRight ? 'var(--muted)' : ok ? 'var(--ok)' : 'var(--danger)' }}>
                 {!r.culpritRight ? '—' : ok ? '✓' : '✗'} {k} — {list.find((m) => m.id === id)?.label || '고르지 않음'}
+                {!ok && <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>정답: {list.find((m) => m.id === answer)?.label}</div>}
               </div>
             ))}
+            {r.culpritRight && r.methodRight && r.motiveRight && (
+              <div style={{ marginTop: 6, color: 'var(--gold)', fontWeight: 800 }}>★ 범인·수법·동기를 모두 밝혔습니다 — 완벽한 해결</div>
+            )}
           </div>
           <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>{cast.S1.name}</b> · 직접 사인 <b style={{ color: '#fff' }}>후두부 가격 뒤 스트레치 랩 질식</b></div>
         </div>

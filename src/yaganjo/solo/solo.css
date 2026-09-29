@@ -680,3 +680,30 @@ button { font-family: inherit; }
 .s-accuse-row .ar-occ { font-size: .76rem; color: var(--muted); margin-top: 2px; }
 .s-accuse-row .ar-radio { font-size: 1.2rem; color: var(--muted); }
 .s-accuse-row.on .ar-radio { color: var(--danger); }
+
+/* ── 디자인 점검(2026-09-29) ─────────────────────────────────────────────────
+   1) 복도: 폰 세로에서는 가로 사진을 화면 높이에 맞춰 크게 깔고 좌우로 민다.
+      너비에 맞추면 높이가 화면의 4분의 1(210px)뿐이라 이름표 일곱이 겹치고 잘렸다.
+   2) 누르는 영역은 44px 이상 — 복도 이동(32px)·카메라(26px)·수첩/메뉴(42px)가 작았다. */
+.hall-cam { position: absolute; inset: 0; overflow: hidden; }
+.hall-swipe-hint { display: none; }
+@media (max-aspect-ratio: 4/5) {
+  .hall-cam { overflow-x: auto; overflow-y: hidden; display: flex; align-items: center; scrollbar-width: none; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .hall-cam::-webkit-scrollbar { display: none; }
+  .hall-fit { position: relative; inset: auto; margin: 0; flex: none; height: 60dvh; width: auto; max-height: none; }
+  .hall-hot-plate { max-width: none; }
+  .hall-swipe-hint { display: block; position: absolute; left: 50%; top: calc(20dvh - 30px); transform: translateX(-50%); z-index: 7;
+    background: #000000ba; color: #ffe9a8; font-size: .74rem; font-weight: 700; padding: 4px 13px; border-radius: 999px; pointer-events: none;
+    animation: hallHint 3.2s ease 1 forwards; }
+}
+@keyframes hallHint { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .hall-swipe-hint { animation: none; } }
+.hall-arrow { min-height: 44px; }
+@media (max-width: 480px) { .hall-arrow { min-height: 44px; padding: 10px 12px; } }
+.hall-cctv { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+.hall-hud-btn, .aa-hud .hall-hud-btn { width: 44px; height: 44px; }
+.hall-hot-sub { font-size: .7rem; }
+/* 시작 화면 — 처음부터 다시 하기 전에 한 번 묻는다 */
+.s-start-ask { max-width: 320px; background: #0b0d12e6; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.s-start-ask p { margin: 0 0 12px; font-size: .9rem; line-height: 1.6; }
+.s-start-ask-row { display: flex; gap: 8px; justify-content: center; }
