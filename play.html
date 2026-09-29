@@ -42,8 +42,6 @@
       .resume { position: absolute; top: 12px; right: 12px; z-index: 1; font-size: .74rem; font-weight: 700; padding: 4px 10px;
         border-radius: 999px; background: rgba(11,13,18,.82); border: 1px solid var(--gold); color: var(--gold); }
       .resume[hidden] { display: none; }
-      footer { margin-top: 22px; text-align: center; font-size: .82rem; color: var(--muted); line-height: 1.7; }
-      footer a { color: var(--gold); display: inline-block; padding: 12px 8px; margin: -12px -8px; } /* 누르는 영역 44px */
       @media (prefers-reduced-motion: reduce) { .story { transition: none; } .story:hover { transform: none; } }
     </style>
   </head>
@@ -75,11 +73,6 @@
         </div>
       </a>
     </main>
-
-    <footer>
-      진행은 사건마다 따로 저장됩니다. 한 사건을 하다가 다른 사건을 해도 서로 지워지지 않아요.<br />
-      여럿이 QR로 하는 판은 <a href="/">여기</a>
-    </footer>
 
     <script>
       // 진행 중인 사건이 있으면 「이어서 하기」를 띄운다 — 저장이 막힌 브라우저(사생활 모드)에서도 화면은 그대로 뜬다
