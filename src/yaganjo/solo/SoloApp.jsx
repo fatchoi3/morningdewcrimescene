@@ -78,6 +78,15 @@ export default function SoloApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, state.labReq]);
 
+  // 2차 부검 보충(텀블러) — 텀블러 감식을 받은 판에만, 2차 부검이 나온 뒤에 붙는다(5회차 #1).
+  //   단계 3 에 텀블러 감식이 뒤늦게 들어와도 그때 붙는다.
+  useEffect(() => {
+    if (!state.event2Seen || !collectedSet.has('IJEO-08') || collectedSet.has(soloContent.autopsyTumblerCode)) return;
+    collect(soloContent.autopsyTumblerCode);
+    showToast('🩺 2차 부검 보충 — 텀블러 성분에 대한 소견이 사건 기록에 들어왔습니다');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.event2Seen, state.collected.length]);
+
   // 기록 대조 7장 — 보드판처럼 **2차 심문 + 심야조 명부(U4)** 가 갖춰지면 도착한다.
   //   명부에 그 밤 스물다섯의 사번이 있어야 본사 서버 조회가 된다(진행물 이벤트 ②).
   //   Q2 의 둘째 구간(6/3~7/28)은 여기서 주지 않는다 — 찢긴 두 달(AOBI-88)을 서장현에게 들이밀 때
@@ -166,7 +175,7 @@ export default function SoloApp() {
 
   // ── 2차 사건 — 모든 조사·1차 심문이 끝나(2차 개방) 정밀 부검 결과(LONS-62)가 도착 ──
   if (state.eventSeen && !state.event2Seen && !state.admin && progressStage >= 3 && !suspectId && !sceneId) {
-    return <EventVN2 onDone={() => { collect(soloContent.autopsyCode); update({ event2Seen: true }); }} />;
+    return <EventVN2 hasTumbler={collectedSet.has('IJEO-08')} onDone={() => { collect(soloContent.autopsyCode); update({ event2Seen: true }); }} />;
   }
 
   // ── 메인(허브/장면/용의자) ────────────────────────────────────────────────

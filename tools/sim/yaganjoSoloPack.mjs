@@ -48,7 +48,7 @@ for (const c of soloContent.provider.getAllClues()) {
 }
 // 솔로가 만든 기록 — 본문은 데이터팩·진행물 문장 그대로다
 const derived = {};
-for (const code of ['AUTOPSY-1', 'AUTOPSY-2', 'LOOKUP-ZVLJ-37', 'GELH-98-2']) {
+for (const code of ['AUTOPSY-1', 'AUTOPSY-2', 'AUTOPSY-2T', 'LOOKUP-ZVLJ-37', 'GELH-98-2']) {
   const d = soloContent.getClue(code);
   if (d) derived[code] = strip(d);
 }
@@ -104,7 +104,8 @@ const mechanics = `
 
 ## 솔로가 만든 기록(clues.json 의 derived 에 있다)
 - **AUTOPSY-1** 1차 검안 소견서 — 처음부터 사건 기록에 있다(보드판 시작 시트 절 ④-1)
-- **AUTOPSY-2** 2차 부검 소견 — 단계 3 이 열릴 때 들어온다(보드판 이벤트 ④). 「텀블러 성분은 사인과 무관」 한 줄이 들어 있다
+- **AUTOPSY-2** 2차 부검 소견 — 단계 3 이 열릴 때 들어온다(보드판 이벤트 ④). 텀블러 문장은 **없다**
+- **AUTOPSY-2T** 2차 부검 보충 — 「텀블러 성분은 사인과 무관」. **텀블러 감식(IJEO-08)을 받은 판에서만**, 단계 3 이 열릴 때(또는 그 뒤 IJEO-08 이 들어올 때) 들어온다. EventVN2 의 텀블러 대사도 같은 조건
 - **LOOKUP-ZVLJ-37** — 태블릿 관리자 조회 성공 시
 - **GELH-98-2** — 위 기록 대조 둘째 구간
 - 증언(TST-*)은 interrogation 의 GRANTS / contradict.grants 로 들어온다(testimony.json)

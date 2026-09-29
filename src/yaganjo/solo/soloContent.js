@@ -35,6 +35,8 @@ const NL = String.fromCharCode(10);
 export const LOOKUP_CODE = 'LOOKUP-ZVLJ-37';
 export const AUTOPSY1_CODE = 'AUTOPSY-1';
 export const AUTOPSY_CODE = 'AUTOPSY-2';
+// 텀블러 감식(IJEO-08)을 받은 판에만 붙는 2차 부검 보충 — 맡기지 않은 사람에게 텀블러 성분을 공짜로 알리던 것(5회차 #1)
+export const AUTOPSY_TUMBLER_CODE = 'AUTOPSY-2T';
 export const Q2SEG_CODE = 'GELH-98-2';
 const DERIVED = {
   // 태블릿 lookup.result 그대로 — 관리자 조회에 성공하면 들어온다
@@ -68,9 +70,14 @@ const DERIVED = {
     detail: [
       '사인은 질식입니다. 얼굴에 랩이 감겨 있었습니다. 후두부를 뒤에서 맞으셨고요.',
       '돌아가신 시각은 03:00에서 03:30 사이. 1차 소견과 같습니다.',
-      '텀블러에서 나온 성분은 사인과 관계없습니다. …뒤에서 오는 건 멀쩡한 사람도 못 봤을 겁니다.',
       '파렛트에 눌린 흔적은 사후입니다. 얼굴과 코 주변에서 필름 점착 성분이 나왔고, 손톱 밑에서 랩 조각이 나왔습니다.',
     ].join(NL + NL),
+  },
+  [AUTOPSY_TUMBLER_CODE]: {
+    code: AUTOPSY_TUMBLER_CODE, type: '보통', person: '조장',
+    title: '2차 부검 보충 — 텀블러',
+    description: '맡긴 텀블러 잔여물 감식과 정밀 부검을 맞대 본 보충 소견.',
+    detail: '텀블러에서 나온 성분은 사인과 관계없습니다. …뒤에서 오는 건 멀쩡한 사람도 못 봤을 겁니다.',
   },
   // 데이터팩 GELH-98.segment2 그대로 — 「없어진 두 달」(AOBI-88)이 선 뒤에 들어온다
   ...(q2seg ? { [Q2SEG_CODE]: { code: Q2SEG_CODE, type: '보통', person: byCode['GELH-98'].person, ...q2seg } } : {}),
@@ -260,6 +267,7 @@ export const soloContent = {
   getClue: (code) => byCode[code] || testimonyByCode[code] || DERIVED[code] || null,
   lookupCode: LOOKUP_CODE,
   autopsyCode: AUTOPSY_CODE,
+  autopsyTumblerCode: AUTOPSY_TUMBLER_CODE,
   q2segCode: Q2SEG_CODE,
   // 기록 대조가 배달되는 조건 — 보드판처럼 **2차 심문 + 심야조 명부(U4)**. 명부에 사번이 있어야 조회가 된다.
   recordGate: 'KVUN-12',
