@@ -2,7 +2,7 @@
   "name": "새벽이슬 크라임씬 — 혼자 하는 추리",
   "short_name": "크라임씬",
   "description": "QR 없이 혼자 처음부터 끝까지 즐기는 웹 추리게임",
-  "start_url": "/solo.html",
+  "start_url": "/solo-play",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

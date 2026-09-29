@@ -40,12 +40,13 @@ const yaganjoRelAlias = demo
 // (Pages 워크플로가 configure-pages 의 base_path 를 그대로 넘겨준다.)
 const base = (process.env.VITE_BASE || '/').replace(/\/*$/, '/');
 
-// 보기 좋은 주소 — /solo-play 로 들어와도 솔로 게임(solo.html)이 열린다.
+// 보기 좋은 주소 — /solo-play 는 「혼자 하는 추리」 갈림길(play.html)이다. 새벽이슬 솔로는 /morningdew-solo,
+//   야간조 솔로는 /yaganjo-solo. 다른 프로젝트의 「크라임씬」 링크가 /solo-play 를 가리키므로 그 주소는 그대로 둔다.
 //   개발·프리뷰 서버에서 경로만 바꿔치기한다(리다이렉트가 아니라 내부 rewrite라 주소가 그대로 남는다).
 //   운영(S3+CloudFront)에서는 배포 워크플로가 solo.html 을 'solo-play' 키로 한 번 더 올려 같은 주소를 만든다.
 const prettyPaths = () => {
   //   야간조 세 줄 — 카드 QR 이 확장자 없는 주소를 가리키므로 이 항목이 없으면 QR 열아홉 장이 전부 404 다.
-  const MAP = { '/solo-play': '/solo.html', '/solo-play/': '/solo.html', '/cast-edit': '/cast.html', '/board-kit': '/board.html', '/cctv': '/cctv.html', '/unlock': '/unlock.html', '/clue': '/clue.html', '/yaganjo-kit': '/yaganjo-board.html', '/yaganjo-clue': '/yaganjo-clue.html', '/yaganjo-cctv': '/yaganjo-cctv.html', '/yaganjo-solo': '/yaganjo-solo.html', '/yaganjo-solo/': '/yaganjo-solo.html' };
+  const MAP = { '/solo-play': '/play.html', '/solo-play/': '/play.html', '/morningdew-solo': '/solo.html', '/morningdew-solo/': '/solo.html', '/cast-edit': '/cast.html', '/board-kit': '/board.html', '/cctv': '/cctv.html', '/unlock': '/unlock.html', '/clue': '/clue.html', '/yaganjo-kit': '/yaganjo-board.html', '/yaganjo-clue': '/yaganjo-clue.html', '/yaganjo-cctv': '/yaganjo-cctv.html', '/yaganjo-solo': '/yaganjo-solo.html', '/yaganjo-solo/': '/yaganjo-solo.html' };
   // 값을 반환하면 Vite가 '내부 미들웨어 뒤에 붙일 후처리 훅'으로 오해한다(use()는 connect 앱을
   //   돌려주는데 그것도 함수라서). 중괄호로 감싸 반환값을 버린다.
   const rewrite = (server) => {
@@ -79,6 +80,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolvePath('./index.html'),
+        // 혼자 하는 추리 갈림길 — 새벽이슬·야간조를 고른다. 번들 없는 정적 페이지다
+        play: resolvePath('./play.html'),
         solo: resolvePath('./solo.html'),
         cast: resolvePath('./cast.html'),
         board: resolvePath('./board.html'),

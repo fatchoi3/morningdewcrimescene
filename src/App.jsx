@@ -220,7 +220,7 @@ function App() {
         </div>
         {/* 두 게임의 갈림길 — 루트(/)는 QR 참가자가 스캔해 들어오는 곳이라 그대로 두고,
             혼자 하는 쪽 입구만 여기에 둔다. 참가자에게는 한 단계도 늘지 않는다. */}
-        <a className="mode-switch" href="/solo-play">
+        <a className="mode-switch" href="/morningdew-solo">
           <span className="ms-ic">🔦</span>
           <span className="ms-tx"><b>혼자 하는 추리</b><small>QR 없이 바로 플레이</small></span>
         </a>
