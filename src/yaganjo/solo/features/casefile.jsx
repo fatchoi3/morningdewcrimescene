@@ -64,7 +64,8 @@ export function CaseFileView({ state, onPick, onSubmit }) {
           <div className="s-accuse-row on" style={{ cursor: 'default' }}>
             <Avatar person={picked?.name} image={picked?.image} size={44} />
             <div className="ar-body"><div className="ar-name">{picked?.name}</div><div className="ar-occ">범인으로 확정</div></div>
-            <button className="s-link" onClick={() => set({ locked: false, method: null, motive: null })}>다시 고르기</button>
+            {/* 수법·동기를 하나라도 고른 뒤에는 되돌릴 수 없다 — 확정해 두고 목록만 훑은 뒤 다시 고르는 길을 막는다(4회차 #12) */}
+            {!cf.method && !cf.motive && <button className="s-link" onClick={() => set({ locked: false, method: null, motive: null })}>다시 고르기</button>}
           </div>
           <Choice title="수법 — 어떻게 죽였는가" items={METHODS} value={cf.method} onPick={(id) => set({ method: id })} />
           <Choice title="동기 — 왜 죽였는가" items={MOTIVES} value={cf.motive} onPick={(id) => set({ motive: id })} />

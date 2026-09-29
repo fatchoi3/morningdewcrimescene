@@ -56,7 +56,7 @@ export const cluesCDF = {
     type: '보통',
     person: '{{S3}}',
     // 🔑 개봉 조건 — OIXS-24(D1 사물함 마스터키). 위 주석 참고.
-    unlockedBy: ['OIXS-24'],
+    unlockedBy: ['OIXS-24', 'CRZR-18'],
   },
 
   'QYHA-34': {

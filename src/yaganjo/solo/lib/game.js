@@ -8,7 +8,7 @@ import { crimeSceneCodes, suspectIds } from '../content.js';
 
 export const STAGE_LABEL = { 1: '제1장 · 1차 탐문 (인물의 칸)', 2: '제2장 · 중간 점검 (현장·카메라·감식)', 3: '제3장 · 2차 심문 (휴대폰·감식·추궁)' };
 export const STAGE_BANNER = {
-  2: '🔓 중간 점검 — 현장 감식이 끝났습니다. C통로 현장·공용 공간·관제실 열람대·감식 의뢰실이 열렸습니다(조장의 칸은 자물쇠 — 사물함 열쇠가 필요합니다). 사인은 아직 압사로 보고 있습니다',
+  2: '🔓 중간 점검 — 현장 감식이 끝났습니다. C통로 현장·공용 공간·관제실 열람대·감식 의뢰실이 열렸습니다(조장의 칸은 자물쇠 — 사물함 열쇠가 필요합니다). 사인은 아직 압사로 보고 있습니다. C통로 현장 단서 셋을 찾고 감식을 한 건 맡긴 뒤 한 사람을 더 심문하면 2차 심문으로 넘어갑니다',
   3: '🔓 2차 심문 — 휴대전화 영장이 나왔고 감식 결과가 도착했습니다. 2차 부검: 사인은 질식. 다시 방을 둘러보고, 물증으로 추궁하세요',
 };
 export const SCENE_NEEDED = 3; // 단계 2→3: C통로 현장 단서 이만큼 확보
@@ -34,12 +34,14 @@ export function computeStage(state) {
   if (sceneClueCount(state) < SCENE_NEEDED) return 2;           // 현장 조사해야 2부(폰)
   // 감식을 한 건도 안 맡기고 넘어가면 차민우가 먼저 자백하는 함정(정본 §6-2)이 서지 않는다 — 3회차 #6
   if (!(state.labReq || []).length) return 2;
+  // 맡기는 순간 넘어가면 텀블러 결과와 2차 부검이 한꺼번에 와 함정이 또 안 선다 — 맡긴 뒤 심문을 한 번 더 마쳐야 한다(4회차 #1)
+  if (!state.talkAfterLab) return 2;
   return 3;
 }
 export const stageHint = (locStage) => locStage === 2
   ? `🔒 1차 심문 후 개방 — 용의자 ${suspectIds.length}명을 모두 심문하세요`
   : locStage === 3
-    ? `🔒 2차 심문 때 개방 — C통로 현장에서 단서 ${SCENE_NEEDED}개를 찾고 감식을 한 건 이상 맡기세요`
+    ? `🔒 2차 심문 때 개방 — C통로 현장 단서 ${SCENE_NEEDED}개 · 감식 한 건을 맡긴 뒤 한 사람을 더 심문하세요`
     : '🔒 잠김';
 
 // 난이도 선택은 없앴다 — 규칙은 하나(비번·연결을 스스로 푼다).

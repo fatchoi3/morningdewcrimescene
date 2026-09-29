@@ -28,6 +28,7 @@ export function defaultState() {
     tutRecordDone: false,       // 튜토리얼: 사건 기록을 한 번 열어봤는가
     tutFinaleSeen: false,       // 튜토리얼: 마무리 멘트를 봤는가
     labReq: [],                 // 감식 의뢰한 코드 — 결과는 2차 심문 개방 때 도착
+    talkAfterLab: false,        // 감식을 맡긴 뒤 심문을 한 번 마쳤는가 — 단계 3 조건
     casefile: {},               // { culprit, locked, method, motive } — 범인 확정 뒤 그 사람의 수법·동기
     submitted: false,
     result: null,               // 채점 결과

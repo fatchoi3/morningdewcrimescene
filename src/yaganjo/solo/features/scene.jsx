@@ -93,7 +93,13 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         const p = hotspotFor(location, code, i);
         const isGamsik = c.type === '감식';
         const req = isGamsik && lab ? lab.requested(code) : false;
+        // 잠긴 물건 — 보통 단서인데 unlockedBy 가 있으면 그 재료를 다 쥐어야 연다(오정숙 칸의 봉투: 마스터키 + 탈의실 사물함 열).
+        //   예전엔 이 조건을 데이터에만 적고 방에서는 안 걸어, 1차 탐문 첫 방에서 그냥 열렸다(4회차 #6)
+        const lockedBy = !isGamsik && c.type !== '특수' && Array.isArray(c.unlockedBy)
+          ? c.unlockedBy.filter((r) => !collectedSet.has(r)) : [];
+        const locked = !have && lockedBy.length > 0;
         const zoneLab = have ? c.title
+          : locked ? '🔒 잠김'
           : isGamsik && lab ? (req ? '🔬 분석 중…' : lab.ready(code) ? '🔬 감식 의뢰' : '채취물 필요')
           : '조사';
         // 핫스팟: w/h가 있으면 물건 크기에 맞춘 상자, poly가 있으면 실루엣 모양.
@@ -119,6 +125,10 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
           ...(p.onPerson ? { zIndex: 11 } : null),
         };
         const onPick = () => {
+          if (locked) {
+            onLockedToast(`🔒 아직 열 수 없다 — 먼저 필요한 것: ${lockedBy.map((r) => getClue(r)?.title || r).join(' · ')}`);
+            return;
+          }
           if (isGamsik && !have) {
             // 감식은 '의뢰 → 2차 심문 때 결과' 흐름 (2차 개방 후엔 즉시 결과)
             if (!lab || !lab.ready(code)) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }

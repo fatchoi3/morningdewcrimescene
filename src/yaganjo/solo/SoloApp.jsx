@@ -200,10 +200,10 @@ export default function SoloApp() {
   const progressText = progressStage >= 3
     ? `2차 심문 ${p2Count}/${suspectIds.length} · 감식 ${gamsikGot}/${gamsikCodes.size} · 폰 ${phoneGot}/${PHONE_CODES.length}`
     : `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}`
-      + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED} · 감식 의뢰 ${Math.min((state.labReq || []).length, 1)}/1` : '');
+      + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED} · 감식 의뢰 ${Math.min((state.labReq || []).length, 1)}/1 · 그 뒤 심문 ${state.talkAfterLab ? 1 : 0}/1` : '');
   // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
-    : progressStage < 3 ? `C통로 현장에서 단서 ${SCENE_NEEDED}개를 찾고 감식을 한 건 이상 맡기면 2차 심문이 열립니다`
+    : progressStage < 3 ? `C통로 현장 단서 ${SCENE_NEEDED}개를 찾고 감식을 한 건 맡긴 뒤, 한 사람을 더 심문하면 2차 심문이 열립니다`
     : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요';
   const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
 
@@ -220,7 +220,11 @@ export default function SoloApp() {
             location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             onOpenRecord={() => setRecordOpen(true)}
-            onExit={() => (sceneId ? setSuspectId(null) : goHub())}
+            onExit={() => {
+              // 감식을 맡긴 뒤 심문을 한 번 마치고 나오면 2차 심문 조건 하나가 선다(4회차 #1)
+              if ((state.labReq || []).length && sceneClueCount(state) >= SCENE_NEEDED && !state.talkAfterLab) update({ talkAfterLab: true });
+              return sceneId ? setSuspectId(null) : goHub();
+            }}
             onPress={(stId) => {
               const r = pressOf(suspectId, stId);
               const pr = { ...(state.pressed || {}) };
