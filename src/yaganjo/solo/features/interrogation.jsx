@@ -96,7 +96,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
   // 「반박」에 들이댈 수 있는 증거 — 관련 코드 + 이 인물 소지품(빗나가면 신뢰도가 깎이는 승부수)
   const rel = sid ? relatedCodes(sid) : new Set();
-  const isRelated = (c) => c.type !== '증언' && (rel.has(c.code) || c.person === suspect?.name);
+  // 증언 카드는 그 인물의 모순·반응에 걸린 것만 올린다 — 예전엔 증언을 통째로 빼서, 증언으로 깨지게 짠
+  //   진술(차민우 야식 · 윤도경 「그분은 그걸 어떻게 아셨습니까」 등)이 하나도 작동하지 않았다(6회차 #1)
+  const isRelated = (c) => (c.type !== '증언' || rel.has(c.code)) && (rel.has(c.code) || c.person === suspect?.name);
   const presentable = collectedClues.filter(isRelated);
 
   // 화제 — 관련 단서를 챙기면 열리는 '이야깃거리'. 고르면 그 안으로 들어가고, 파생 질문은

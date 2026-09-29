@@ -92,10 +92,10 @@ export const cluesABE = {
             {
               name: '아내',
               messages: [
-                { from: 'me', text: '오늘도 늦어. 먼저 자요', time: '21:4x' },
-                { from: 'them', text: '조심히 다녀와요', time: '21:4x' },
-                { from: 'them', text: '[사진] 담요에 싸인 아기', time: '22:1x' },
-                { from: 'them', text: '오늘 두 시간 잤어요', time: '22:1x' },
+                { from: 'me', text: '오늘도 늦어. 먼저 자요', time: '어제 21:4x' },
+                { from: 'them', text: '조심히 다녀와요', time: '어제 21:4x' },
+                { from: 'them', text: '[사진] 담요에 싸인 아기', time: '어제 22:1x' },
+                { from: 'them', text: '오늘 두 시간 잤어요', time: '어제 22:1x' },
               ],
             },
           ],
@@ -193,7 +193,7 @@ export const cluesABE = {
             {
               name: '정숙 아주머니',
               messages: [
-                { from: 'them', text: '조장이 오늘부터 한 명씩 부른다더라. 빨리 와.', time: '22:45' },
+                { from: 'them', text: '조장이 오늘부터 한 명씩 부른다더라. 빨리 와.', time: '어제 22:45' },
                 // 22:45 에 그는 답하지 못한다(대본 S07 인서트 — 입력창에 커서만). 답 줄을 넣지 않는다.
                 // 넣으면 조회 불참 거짓말이 첫 심문에서 끝나고, 상대 폰(DMYX-34)의 같은 방과도 어긋난다.
                 { from: 'me', text: '아주머니 어디세요 잠깐 얘기해요', time: '00:05' },
@@ -205,9 +205,9 @@ export const cluesABE = {
             {
               name: '준영이',
               messages: [
-                { from: 'me', text: '점검한대 미친', time: '22:5x' },
-                { from: 'them', text: '뭔 점검', time: '22:5x' },
-                { from: 'me', text: '몰라 하나씩 부른대 나 낼 시험인데', time: '22:5x' },
+                { from: 'me', text: '점검한대 미친', time: '어제 22:5x' },
+                { from: 'them', text: '뭔 점검', time: '어제 22:5x' },
+                { from: 'me', text: '몰라 하나씩 부른대 나 낼 시험인데', time: '어제 22:5x' },
               ],
             },
           ],
@@ -321,14 +321,14 @@ export const cluesABE = {
                 { from: 'them', text: '빈 파렛트 두 매만 더', time: '작년 8월' },
                 { from: 'them', text: '그 말 아무 데서나 하지 마라', time: '작년 8월' },
                 { from: 'them', text: '이번 주는 건너뛰자', time: '이달 초' },
-                { from: 'them', text: '내일 밤에 잠깐 보자', time: '어제' },
+                { from: 'them', text: '오늘 밤에 잠깐 보자', time: '어제' },
               ],
             },
             {
               name: '여자친구',
               messages: [
                 { from: 'me', text: '오늘 결과 나온대', time: '어제' },
-                { from: 'them', text: '이번엔 된대?', time: '22:5x' },
+                { from: 'them', text: '이번엔 된대?', time: '어제 22:5x' },
               ],
             },
           ],

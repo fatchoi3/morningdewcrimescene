@@ -235,7 +235,7 @@ export default function SoloApp() {
               return sceneId ? setSuspectId(null) : goHub();
             }}
             onPress={(stId) => {
-              const r = pressOf(suspectId, stId);
+              const r = pressOf(suspectId, stId, state.stUnlocked?.[suspectId] || []); // 밝힌 뒤 말투(after)
               const pr = { ...(state.pressed || {}) };
               pr[suspectId] = [...new Set([...(pr[suspectId] || []), stId])];
               const patch = { pressed: pr };
