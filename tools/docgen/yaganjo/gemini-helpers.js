@@ -9,7 +9,8 @@
 window.__sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 window.__box = () => document.querySelector('rich-textarea [contenteditable="true"]');
 window.__put = async (t) => { const b = window.__box(); if (!b) return 'no-box'; b.focus(); document.execCommand('selectAll', false, null); document.execCommand('insertText', false, t); await window.__sleep(400); return (b.innerText || '').length; };
-window.__sendBtn = () => [...document.querySelectorAll('button')].find((b) => /보내기|^Send/i.test(b.getAttribute('aria-label') || '') && !b.disabled) || null;
+// 「공유 및 내보내기」에도 「보내기」가 들어 있다 — 대화방 안에서는 그 단추를 먼저 집어 전송이 안 됐다
+window.__sendBtn = () => [...document.querySelectorAll('button')].find((b) => /^(메시지 )?보내기$|^Send( message)?$/i.test((b.getAttribute('aria-label') || '').trim()) && !b.disabled) || null;
 window.__ratioBtn = () => [...document.querySelectorAll('button')].find((b) => /가로세로 비율/.test(((b.getAttribute('aria-label') || '') + ' ' + (b.innerText || '')))) || null;
 // 비율 칩이 글자 없이 그려질 때가 있다 — 그땐 aria-label(「가로세로 비율, 16:9」)에서 읽는다
 window.__ratioNow = () => { const b = window.__ratioBtn(); if (!b) return null; const t = (b.innerText || '').replace(/\s+/g, ' ').trim(); if (/\d+:\d+/.test(t)) return t.match(/\d+:\d+/)[0]; const a = (b.getAttribute('aria-label') || '').match(/\d+:\d+/); return a ? a[0] : t; };

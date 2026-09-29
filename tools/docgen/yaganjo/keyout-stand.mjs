@@ -23,7 +23,8 @@ if (!src || !outName) {
 //   (S1 1128, S2 1127 …) — 1128로 고정하면 미세하게 어긋난다.
 const refMeta = matchArg ? await sharp(join(STAND, matchArg)).metadata() : null;
 const H_OUT = refMeta?.height || Number(heightArg) || 1128;
-const NEAR_WHITE = 235;
+// 제미나이 그림은 순백이 아니라 옅은 종이색(249,247,235 안팎)이다 — 새벽이슬판 235 로는 파란 칸이 걸린다
+const NEAR_WHITE = Number(argv.find((x) => x.startsWith('--white='))?.split('=')[1]) || 225;
 
 const { data, info } = await sharp(src).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 const { width: W, height: H } = info;
@@ -49,7 +50,8 @@ while (queue.length) {
 const out = join(STAND, outName);
 let buf = await sharp(data, { raw: { width: W, height: H, channels: 4 } })
   .trim()                                   // 투명 여백 제거 — objectFit 레터박스 방지
-  .resize({ height: H_OUT, withoutEnlargement: true })
+  // 제미나이 세로 그림은 1024 높이라 인물이 기준(1128)보다 작다 — 키워서라도 높이를 맞춘다
+  .resize({ height: H_OUT })
   .png({ compressionLevel: 9 })
   .toBuffer();
 
