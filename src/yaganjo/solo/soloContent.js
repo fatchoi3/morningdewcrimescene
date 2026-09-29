@@ -14,10 +14,26 @@
 //   휴대폰을 3단계로 미룬 것과 같은 이유다 — 2차 심문에 들고 갈 패가 있어야 한다.
 // ─────────────────────────────────────────────────────────────────────────────
 import { provider, scenario } from './services.js';
-import { keyByPersonName } from '../../scenarios/yaganjo/cast.js';
+import { keyByPersonName, t as castT } from '../../scenarios/yaganjo/cast.js';
 import { TESTIMONY } from './interrogation.js';
 
 const all = provider.getAllClues();
+// 공개 게시물 ①(UTAY-40) — 보드판은 진행자가 펴 두는 글이라 해설이 붙어 있다. 솔로는 한 줄씩, 말한 사람을 제목에.
+//   줄마다 실마리가 하나씩 있다 — 빈 자리를 누가 대신 대답했다(차민우 태그) · 키는 컵홀더(흐엉) · 자격 대장(임기석 무면허).
+{
+  const i = all.findIndex((c) => c.code === 'UTAY-40');
+  if (i >= 0 && all[i].pages?.length === 4) {
+    const [p1] = all[i].pages;
+    all[i] = { ...all[i], pages: [p1,
+      { title: castT('22:40 조회 — 조장 {{victim|이/가}} 한 말'),
+        content: '· 다음 주 본사 감사. 근태 기록도 전수로 본다.\n\n· 기록에 걸릴 게 있으면 오늘 밤부터 조장에게 와서 말하라 — 조장이 정리해 올린다.\n\n· 그날 조회에 한 자리가 비었고, 다른 사람이 대신 대답했다.' },
+      { title: '해산길에 돈 말 — 누가 했는지는 모른다',
+        content: '· "CCTV도 이번에 싹 본다더라" — 공문에는 없는 말이다.' },
+      { title: '현장 상식 — 이 센터에서는',
+        content: '· 반품 사유 스티커는 셋: 「반품·단순변심」 「파손」 「오배송」\n\n· 지게차 키는 컵홀더에 꽂아 두고, 아침에 다음 사람이 꺼내 간다\n\n· 자격 대장에는 지게차 운전기능사 사본과 운전면허 사본이 함께 붙는다' },
+    ] };
+  }
+}
 const byCode = Object.fromEntries(all.map((c) => [c.code, c]));
 
 // 증언 단서(대화로 확보) — 단서 조회에서 함께 해석되도록 code 형태로 정규화.
@@ -144,7 +160,9 @@ function buildLocations() {
     return {
       id: r.code,
       kind: r.code === 'ROOM-V' ? 'cctv' : 'room',
-      label: r.room?.label || r.title,
+      label: r.code === 'ROOM-P' ? '조장 사물함'
+        : (r.person && r.person !== '조장' && r.person !== '공용' && !r.room?.showBody) ? `${r.person} — 사물함과 소지품`
+        : (r.room?.label || r.title),
       person: r.person,
       stage: STAGE_BY_ROOM[r.code] ?? 2,
       bg: ROOM_BG[r.person] || 'linear-gradient(160deg,#141a20,#080c10)',
@@ -153,7 +171,7 @@ function buildLocations() {
       objects,
       // 조장의 칸 — 보드판 이벤트 ② 「사물함은 자물쇠가 걸려 있고 열쇠가 나오지 않아 아직 열지 못했다」.
       //   흐엉의 칸에서 나오는 사물함 마스터키(D1)가 있어야 연다.
-      ...(r.code === 'ROOM-P' ? { lockedBy: 'OIXS-24', lockedMsg: '🔒 조장의 칸은 자물쇠가 걸려 있다 — 열쇠가 아직 나오지 않았다' } : {}),
+      ...(r.code === 'ROOM-P' ? { lockedBy: 'OIXS-24', lockedMsg: '🔒 조장 사물함은 자물쇠가 걸려 있다 — 열쇠가 아직 나오지 않았다' } : {}),
     };
   });
 
@@ -185,7 +203,7 @@ const briefing = {
     '최초 발견자는 오정숙입니다. 04:11 비명을 듣고 사람들이 모였고, 04:15 서장현 안전관리자가 112와 119에 신고했습니다.',
     '정문 기록에 22:30 이후 04:15까지 출입이 없습니다. 스물다섯 중 열여덟은 그 밤 공정 기록이 한 번도 끊기지 않았습니다. 단말을 들지 않는 자리 셋과 기록에 공백이 있는 넷 — 그중 한 사람이 죽었습니다. 남는 사람은 여섯입니다.',
     '1차 검안 소견서는 사건 기록에 들어 있습니다. 나중에 다시 읽어도 됩니다.',
-    '각 칸과 현장을 탐색해 단서를 모으고, 여섯을 심문해, 누가·어떻게·왜 죽였는지 밝혀내세요.',
+    '센터 곳곳과 현장을 탐색해 단서를 모으고, 여섯을 심문해, 누가·어떻게·왜 죽였는지 밝혀내세요.',
   ],
 };
 

@@ -192,8 +192,8 @@ export default function SoloApp() {
     else if (modalCode) coach = { sel: '.s-modal .mx', text: '단서를 확보했습니다. ✕ 로 닫고 계속하세요' };
     else if (suspectId) coach = null;      // 심문 안에서는 그 화면이 직접 안내한다(아래 CrossExamView)
     else if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
-    else if (!sceneId) coach = { sel: '[data-tut="door"]', text: t('이제 {{S1}}의 칸을 눌러 들어가세요') };
-    else if (sceneId !== 'ROOM-A') coach = { sel: '.aa-dlg-act', text: t('먼저 {{S1}}의 칸부터 봅시다 — 나가기를 눌러 복도로') };
+    else if (!sceneId) coach = { sel: '[data-tut="door"]', text: t('이제 지도에서 {{S1|을/를}} 눌러 찾아가세요') };
+    else if (sceneId !== 'ROOM-A') coach = { sel: '.aa-dlg-act', text: t('먼저 {{S1}}부터 봅시다 — 나가기를 눌러 지도로') };
     else if (!jhExamined) coach = { sel: '.aa-track .s-zone', text: '테두리가 빛나는 물건을 눌러 단서를 조사하세요' };
     // 배경에 인물이 그려진 방은 .s-talkzone, 떠 있는 스탠딩은 .s-figure — 둘 다 잡아야 한다
     //   (예전엔 .s-figure 만 봐서 종현방에선 코치마크가 통째로 사라졌다)

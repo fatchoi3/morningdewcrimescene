@@ -1,26 +1,38 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// features/hub — T자 복도 네비게이션(허브). 실사 배경 + 핫스팟.
-//   main : 인물의 칸 6개 · 오른쪽→C통로 현장 · 왼쪽→공용 공간
-//   pastor : 동쪽 끝 C통로(현장) · floor1 : 공용 공간·관제실 열람대 · lab : 감식 의뢰실
+// features/hub — 센터 지도(허브). GH로지스 3센터를 비스듬히 내려다본 지도 한 장에
+//   여섯이 그날 밤 일하던 자리에 서 있고, 공용 공간·관제실·C통로 현장·조장 사물함이 제자리에 있다.
+//   예전의 「탈의실 앞 복도 + 인물의 칸」은 칸이 무엇인지(사물함인지 방인지) 애매했다 — 사람은 자리에,
+//   사물함은 탈의실(남·여)에 둔다. 인물을 누르면 그 사람의 사물함·압수 소지품으로 들어가 심문한다.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from 'react';
-import { stageHint } from '../lib/game.js';
 import { locationAlerts, alertReason } from '../lib/alerts.js';
 import { getClue } from '../content.js';
-import { HallBg } from '../art.jsx';
+import { StandingFigure } from '../art.jsx';
 import { cast } from '../../../scenarios/yaganjo/cast.js';
+import { CenterMap, mapAt } from './centerMap.jsx';
 
-// 야간조의 「칸」은 탈의실 사물함이다 — 복도 양쪽 벽에 여섯, 끝에 조장의 칸.
-// main.jpg 위 위치(%): 좌벽 근→원, 우벽 근→원 (배경 16:9를 16:9 무대에 cover)
-// person 은 방 데이터와 맞춰야 하는 조회 키라 cast 에서 이름을 뽑는다.
-const HALL_DOORS = [
-  { person: cast.S1.name, x: 10, y: 60 },
-  { person: cast.S6.name, x: 24, y: 56 },
-  { person: cast.S2.name, x: 37, y: 50 },
-  { person: cast.S4.name, x: 63, y: 50 },
-  { person: cast.S3.name, x: 76, y: 56 },
-  { person: cast.S5.name, x: 90, y: 60 },
+// 그날 밤 각자 있던 자리(정본 §15-1 · 배치표 VEVM-47). 서장현은 2층 사무실, 셋은 B구역 랙 사이 통로,
+//   흐엉은 D구역 반품 작업대 앞, 임기석은 배터리실. person 은 방 데이터와 맞춰야 하는 조회 키라 cast 에서 뽑는다.
+const PERSON_SPOTS = [
+  { sid: 'S1', person: cast.S1.name, at: mapAt(6, 16, { floor: 2 }) },
+  { sid: 'S2', person: cast.S2.name, at: mapAt(47, 45.5) },
+  { sid: 'S3', person: cast.S3.name, at: mapAt(60, 50.2) },
+  { sid: 'S5', person: cast.S5.name, at: mapAt(71, 40.5) },
+  { sid: 'S4', person: cast.S4.name, at: mapAt(104.5, 51) },
+  { sid: 'S6', person: cast.S6.name, at: mapAt(52.6, 23) },
 ];
+// 공용 공간 — 지도 위 이름은 짧게(방 안 제목은 원래 이름 그대로)
+const COMMON_SPOTS = [
+  { id: 'ROOM-W', icon: '☕', label: '휴게실 · 흡연장', at: mapAt(9.5, 53.5, { lift: 2.4 }) },
+  { id: 'ROOM-N', icon: '🔋', label: '충전소', at: mapAt(36, 22.5) },
+  { id: 'ROOM-U', icon: '🗄', label: '2층 사무실', at: mapAt(19, 13, { floor: 2 }) },
+  { id: 'ROOM-V', icon: '📹', label: '관제실 열람대', at: mapAt(34.5, 13, { floor: 2 }) },
+  { id: 'ROOM-J', icon: '🚪', label: '갈림 · D구역 · 뒷문', at: mapAt(92.5, 42) },
+];
+const BOSS_AT = mapAt(5.4, 39.5, { lift: 2.4 });
+const CRIME_AT = mapAt(95.1, 13);
+const LAB_AT = mapAt(62, 66);
+const CAM_L1 = mapAt(17.8, 34.6);
 
 // 모순이 남은 방만 붉게 — 잡담·주울 것만 남은 방은 호박색 '!'. solo.css 는 이 파일 소관이 아니라 인라인으로 둔다.
 //   .s-alert 의 붉은 후광·맥동까지 덮어써야 색 구분이 온전히 읽힌다(글자도 어둡게 — 흰 '!'는 대비가 없다).
@@ -64,29 +76,36 @@ function MenuButton({ onOpen }) {
   );
 }
 
-export function HallNav({ locations, stage, progressStage, collectedSet, state, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, accuseReady, view, onView, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
-  // 각 장소에 '남은 거리'가 있으면 알림 배지를 띄운다(복도에서 어디로 갈지 바로 보이게)
+// 인물 — 지도 위에 작게 서 있는 전신. 발끝이 그 자리에 오도록 그림 높이만큼 위로 올린다.
+const FIG_H = 58;
+function PersonPin({ at, sid, name, sub, locked, recommend, alert, alertKey = 0, alertTitle, onClick }) {
+  return (
+    <button className={`map-person${locked ? ' locked' : ''}`} data-tut={recommend ? 'door' : undefined}
+      style={{ left: `${at.x}%`, top: `calc(${at.y}% - ${FIG_H}px)` }} onClick={onClick} aria-label={`${name} — ${sub}`}>
+      {!locked && alert > 0 && (
+        <span className="s-alert" title={alertTitle} style={alertKey > 0 ? undefined : ALERT_SOFT}>{alertKey > 0 ? alertKey : '!'}</span>
+      )}
+      <span className="map-person-fig"><StandingFigure sid={sid} person={name} height={FIG_H} fallbackSize={40} /></span>
+      <span className="hall-hot-plate">{name}</span>
+      {sub && <span className="hall-hot-sub">{sub}</span>}
+    </button>
+  );
+}
+
+export function HallNav({ locations, stage, progressStage, collectedSet, state, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, accuseReady, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
+  // 각 장소에 '남은 거리'가 있으면 알림 배지를 띄운다(지도에서 어디로 갈지 바로 보이게)
   const alertsOf = (loc) => locationAlerts(loc, state || {}, stage, progressStage >= 3 ? 2 : 1);
   // 배지 관련 props 한 묶음 — 한 문패에 total·key·사유를 따로 계산하면 alertsOf 를 세 번 돈다
   const alertProps = (loc) => { const a = alertsOf(loc); return { alert: a.total, alertKey: a.key, alertTitle: `${loc.label} — ${alertReason(a)}` }; };
   const roomByPerson = (person) => locations.rooms.find((l) => l.person === person);
-  const pastor = locations.rooms.find((l) => l.showBody);
+  const crime = locations.rooms.find((l) => l.showBody);
   const tool = (id) => locations.all.find((l) => l.id === id);
   const lab = tool('LOC-LAB');
-  // 조장의 칸(P) — 조장 소유지만 현장이 아니라 사물함이다. 복도 끝에 둔다.
+  // 조장 사물함 — 조장 소유지만 현장이 아니라 남자 탈의실의 사물함이다.
   const bossLocker = locations.rooms.find((l) => l.person === '조장' && !l.showBody);
-  // 공용 공간 넷과 관제실 열람대 — 왼쪽으로 가면 나온다. 위치는 센터 배치(서→동, 2층은 위)를 따른다.
-  const COMMON_SPOTS = [
-    { id: 'ROOM-W', x: 16, y: 54, icon: '☕' },
-    { id: 'ROOM-N', x: 34, y: 60, icon: '🔋' },
-    { id: 'ROOM-U', x: 50, y: 34, icon: '🗄' },
-    { id: 'ROOM-V', x: 66, y: 60, icon: '📹' },
-    { id: 'ROOM-J', x: 84, y: 54, icon: '🚪' },
-  ];
   const commons = COMMON_SPOTS.map((c) => ({ ...c, loc: tool(c.id) })).filter((c) => c.loc);
-  const floorAlerts = () => commons.reduce((n, c) => n + alertsOf(c.loc).total, 0) + (lab ? alertsOf(lab).total : 0);
 
-  // 열쇠가 있어야 여는 곳(조장의 칸) — 단계가 열려도 그 열쇠를 쥐기 전에는 못 들어간다
+  // 열쇠가 있어야 여는 곳(조장 사물함) — 단계가 열려도 그 열쇠를 쥐기 전에는 못 들어간다
   const keyLocked = (loc) => !!loc.lockedBy && !collectedSet.has(loc.lockedBy);
   const subOf = (loc, isCrime) => {
     if (loc.stage > stage) return isCrime ? '통제 중' : loc.stage === 2 ? '사건 후 개방' : '2차 개방';
@@ -102,19 +121,18 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   };
   const enter = (loc, isCrime) => {
     if (!loc) return;
-    if (loc.stage > stage) { onToast(isCrime ? '🚧 C통로는 경찰 통제 중입니다 — 현장 감식이 끝나면 개방됩니다' : stageHint(loc.stage)); return; }
+    if (loc.stage > stage) {
+      onToast(isCrime ? '🚧 C통로는 경찰 통제 중입니다 — 현장 감식이 끝나면 개방됩니다'
+        : '아직 그쪽에 갈 일은 없어 보입니다. 먼저 여섯 사람부터 만나 보세요.');
+      return;
+    }
     if (keyLocked(loc)) { onToast(loc.lockedMsg || '🔒 잠겨 있다'); return; }
     onEnter(loc.id);
   };
-  const here = view === 'main' ? '탈의실 앞 복도 — 인물들의 칸'
-    : view === 'pastor' ? '동쪽 끝 — C통로 (사건 현장)'
-    : view === 'floor1' ? '센터 안 — 공용 공간 · 관제실 열람대'
-    : '감식 의뢰실';
 
-  // 폰 세로에서는 가로 사진을 화면 높이에 맞춰 크게 깔고 좌우로 밀어 본다(방 화면과 같다).
-  //   너비에 맞추면 높이가 화면의 4분의 1뿐이라 사물함 이름표가 겹치고 잘렸다(디자인 점검 1).
-  //   복도를 바꿀 때마다 가운데로 되돌린다.
+  // 폰 세로에서는 가로 지도를 화면 높이에 맞춰 크게 깔고 좌우로 밀어 본다(방 화면과 같다).
   //   「밀어서 둘러보기」 안내는 3초 뒤 사라지므로, 그쪽에 더 볼 것이 남아 있는 동안은 가장자리 화살표를 띄운다.
+  //   처음에는 서쪽 끝(2층 사무실·탈의실)부터 — 이야기가 거기서 시작한다.
   const camRef = useRef(null);
   const [edge, setEdge] = useState({ l: false, r: false });
   const syncEdge = () => {
@@ -124,56 +142,52 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     setEdge({ l: cam.scrollLeft > 8, r: cam.scrollLeft < max - 8 });
   };
   useEffect(() => {
-    const cam = camRef.current;
-    if (cam) cam.scrollLeft = Math.max(0, (cam.scrollWidth - cam.clientWidth) / 2);
     syncEdge();
     window.addEventListener('resize', syncEdge);
     return () => window.removeEventListener('resize', syncEdge);
-  }, [view]);
+  }, []);
   const pan = (dir) => camRef.current?.scrollBy({ left: dir * camRef.current.clientWidth * 0.6, behavior: 'smooth' });
   return (
     <div className="aa-fs">
       <div className="hall-cam" ref={camRef} onScroll={syncEdge}>
       <div className="hall-fit">
-          <HallBg name={view} />
+          <CenterMap crimeOpen={crime ? crime.stage <= stage : undefined} />
 
-          {view === 'main' && HALL_DOORS.map((d) => {
+          {PERSON_SPOTS.map((d) => {
             const loc = roomByPerson(d.person);
             if (!loc) return null;
-            return <HallHot key={d.person} x={d.x} y={d.y} icon="🚪" label={loc.label}
+            return <PersonPin key={d.person} at={d.at} sid={d.sid} name={d.person}
               sub={subOf(loc, false)} locked={loc.stage > stage} {...alertProps(loc)}
               recommend={recommendPerson === d.person} onClick={() => enter(loc, false)} />;
           })}
-          {view === 'main' && bossLocker && (
-            <HallHot x={50} y={50} icon="🗄" label={bossLocker.label}
+          {bossLocker && (
+            <HallHot x={BOSS_AT.x} y={BOSS_AT.y} icon="🗄" label="조장 사물함"
               sub={subOf(bossLocker, false)} locked={bossLocker.stage > stage || keyLocked(bossLocker)} {...alertProps(bossLocker)}
               onClick={() => enter(bossLocker, false)} />
           )}
-          {view === 'main' && (
-            <button className="hall-cctv" style={{ left: '50%', top: '20%' }} aria-label="탈의실 입구 카메라"
-              onClick={() => onToast('탈의실 입구 위에 카메라가 하나 있다. 녹화는 관제실 열람대에서 볼 수 있다.')}>📹</button>
-          )}
-          {view === 'pastor' && pastor && (
-            <HallHot x={50} y={50} icon="⚰️" tone="crime" label={pastor.label}
-              sub={subOf(pastor, true)} locked={pastor.stage > stage} {...alertProps(pastor)}
-              onClick={() => enter(pastor, true)} />
-          )}
-          {view === 'floor1' && commons.map((c) => (
-            <HallHot key={c.id} x={c.x} y={c.y} icon={c.icon} label={c.loc.label}
+          <button className="hall-cctv" style={{ left: `${CAM_L1.x}%`, top: `${CAM_L1.y}%` }} aria-label="탈의실 입구 카메라"
+            onClick={() => onToast('탈의실 입구 위에 카메라가 하나 있다(L-1). 남·여 탈의실 모두 이 입구 하나로 드나든다. 녹화는 관제실 열람대에서 볼 수 있다.')}>📹</button>
+          {commons.map((c) => (
+            <HallHot key={c.id} x={c.at.x} y={c.at.y} icon={c.icon} label={c.label}
               sub={subOf(c.loc, false)} locked={c.loc.stage > stage} {...alertProps(c.loc)}
               onClick={() => enter(c.loc, false)} />
           ))}
-          {view === 'lab' && lab && (
-            <HallHot x={43} y={56} icon="🔬" label={lab.label} sub={subOf(lab)} locked={lab.stage > stage}
+          {crime && (
+            <HallHot x={CRIME_AT.x} y={CRIME_AT.y} icon="⚠️" tone="crime" label="C통로 현장"
+              sub={subOf(crime, true)} locked={crime.stage > stage} {...alertProps(crime)}
+              onClick={() => enter(crime, true)} />
+          )}
+          {lab && (
+            <HallHot x={LAB_AT.x} y={LAB_AT.y} icon="🔬" label="감식 의뢰실" sub={subOf(lab)} locked={lab.stage > stage}
               {...alertProps(lab)} onClick={() => enter(lab)} />
           )}
       </div>
       </div>
       <div className="hall-swipe-hint" aria-hidden="true">← 밀어서 둘러보기 →</div>
-      {edge.l && <button className="hall-pan l" aria-label="왼쪽 더 보기" onClick={() => pan(-1)}>‹</button>}
-      {edge.r && <button className="hall-pan r" aria-label="오른쪽 더 보기" onClick={() => pan(1)}>›</button>}
+      {edge.l && <button className="hall-pan l" aria-label="서쪽 더 보기" onClick={() => pan(-1)}>‹</button>}
+      {edge.r && <button className="hall-pan r" aria-label="동쪽 더 보기" onClick={() => pan(1)}>›</button>}
 
-      {/* 복도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
+      {/* 지도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
       <div className="hall-hud">
         <div className="hall-hud-chip"><b>🔎 {stageLabel}</b><span>{progressText}</span>{objective && <span className="hall-objective">🎯 {objective}</span>}</div>
         <div className="hall-hud-btns">
@@ -183,30 +197,12 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
         </div>
       </div>
 
-      <div className="hall-here">📍 {here}</div>
-
       {/* 2차 심문이 어느 정도 쌓이기 전엔 까딱임을 멈춘다 — 3막 첫 순간부터 시선을 끌면
           아직 아무것도 캐묻지 않은 채로 사건이 끝나 버린다 */}
-      {canAccuse && view === 'main' && (
+      {canAccuse && (
         <button className="hall-accuse" style={accuseReady ? undefined : { animation: 'none', opacity: 0.6 }}
           onClick={onAccuse}>🔍 범인 지목하기</button>
       )}
-
-      <div className="hall-nav-row">
-        {view === 'main' ? <>
-          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 그쪽에 갈 일은 없어 보인다. 먼저 인물들의 칸을 둘러보고 이야기부터 나눠보자.') : onView('floor1')}>
-            {floorAlerts() > 0 && <span className="s-alert" title="공용 공간 쪽에 볼 것이 남아 있다">!</span>}◀ 왼쪽 · 공용 공간</button>
-          <button className="hall-arrow" onClick={() => stage < 2 ? onToast('아직 현장에 갈 필요는 없다. 지금은 인물들부터 만나보자.') : onView('pastor')}>
-            {alertsOf(pastor).total > 0 && <span className="s-alert" title="현장에 볼 것이 남아 있다">!</span>}오른쪽 · C통로 현장 ▶</button>
-        </> : view === 'floor1' ? <>
-          <button className="hall-arrow" onClick={() => onView('main')}>◀ 복도로</button>
-          {lab && <button className="hall-arrow" onClick={() => onView('lab')}>
-            {alertsOf(lab).total > 0 && <span className="s-alert" title="감식 의뢰실에 처리할 것이 있다">!</span>}감식 의뢰실 ▶</button>}
-        </> : <>
-          <button className="hall-arrow" onClick={() => onView(view === 'lab' ? 'floor1' : 'main')}>◀ {view === 'lab' ? '공용 공간으로' : '복도로'}</button>
-          <span />
-        </>}
-      </div>
     </div>
   );
 }
