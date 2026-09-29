@@ -16,6 +16,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="야간조" />
+    <!-- 아직 공개 전 — 사건 고르는 화면(/solo-play)에서 비밀번호로 푼 브라우저만 들어온다.
+         주소를 직접 쳐서 들어오면 고르는 화면으로 돌려보낸다. -->
+    <script>
+      (function () {
+        var ok = false;
+        try { ok = localStorage.getItem('crimescene_unlock_yaganjo') === '1'; } catch (e) {}
+        if (!ok) location.replace('/solo-play');
+      })();
+    </script>
   </head>
   <body>
     <div id="solo-root"></div>

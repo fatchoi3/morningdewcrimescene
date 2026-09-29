@@ -43,6 +43,26 @@
         border-radius: 999px; background: rgba(11,13,18,.82); border: 1px solid var(--gold); color: var(--gold); }
       .resume[hidden] { display: none; }
       @media (prefers-reduced-motion: reduce) { .story { transition: none; } .story:hover { transform: none; } }
+      /* 잠긴 사건 — 카드는 보이되 들어가지 못한다 */
+      .story.locked { cursor: default; filter: grayscale(.75) brightness(.7); }
+      .story.locked:hover { transform: none; border-color: var(--line); }
+      .story .lockmark { display: none; }
+      .story.locked .lockmark { display: inline-flex; position: absolute; top: 12px; right: 12px; z-index: 2; align-items: center; gap: 5px;
+        font-size: .78rem; font-weight: 800; padding: 5px 11px; border-radius: 999px; background: rgba(11,13,18,.88); border: 1px solid var(--line); color: var(--text); }
+      .story.locked .go, .story.locked .resume { display: none; }
+      h1 { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+      .pw-ov { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
+      .pw-ov[hidden] { display: none; }
+      .pw-box { width: 100%; max-width: 340px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 18px 16px; }
+      .pw-box p { margin: 0 0 12px; font-weight: 800; }
+      .pw-box input { width: 100%; font: inherit; font-size: 1rem; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--ink); color: var(--text); }
+      .pw-msg { min-height: 1.4em; margin: 8px 0 0; font-size: .82rem; color: #e38a8a; }
+      .pw-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+      .pw-btns button { font: inherit; font-weight: 800; min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--text); cursor: pointer; }
+      .pw-btns button.ok { background: var(--gold); border-color: var(--gold); color: #1a1a1a; }
+      .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30; background: rgba(11,13,18,.94);
+        border: 1px solid var(--gold); color: var(--text); font-size: .88rem; padding: 10px 16px; border-radius: 999px; white-space: nowrap; }
+      .toast[hidden] { display: none; }
     </style>
   </head>
   <body>
@@ -63,7 +83,8 @@
         </div>
       </a>
 
-      <a class="story" href="/yaganjo-solo" style="background-image: url('/images/yaganjo/start.jpg')" data-save="yaganjo_solo_v1">
+      <a class="story" href="/yaganjo-solo" style="background-image: url('/images/yaganjo/start.jpg')" data-save="yaganjo_solo_v1" data-lock="yaganjo">
+        <span class="lockmark">🔒 준비 중</span>
         <span class="resume" hidden>이어서 하기</span>
         <div class="body">
           <p class="title">야간조</p>
@@ -74,6 +95,16 @@
       </a>
     </main>
 
+    <div class="pw-ov" id="pw" hidden>
+      <form class="pw-box" id="pwForm" autocomplete="off">
+        <p>비밀번호</p>
+        <input id="pwIn" type="password" inputmode="text" autocomplete="off" aria-label="비밀번호" />
+        <div class="pw-msg" id="pwMsg"></div>
+        <div class="pw-btns"><button type="button" id="pwCancel">취소</button><button type="submit" class="ok">열기</button></div>
+      </form>
+    </div>
+    <div class="toast" id="toast" hidden></div>
+
     <script>
       // 진행 중인 사건이 있으면 「이어서 하기」를 띄운다 — 저장이 막힌 브라우저(사생활 모드)에서도 화면은 그대로 뜬다
       document.querySelectorAll('[data-save]').forEach(function (card) {
@@ -81,6 +112,51 @@
           var s = JSON.parse(localStorage.getItem(card.getAttribute('data-save')) || 'null');
           if (s && s.started && !s.submitted) card.querySelector('.resume').hidden = false;
         } catch (e) { /* 저장을 못 읽어도 고르기는 된다 */ }
+      });
+
+      // ── 잠긴 사건(야간조) ─────────────────────────────────────────────
+      //   아직 공개 전이라 카드를 잠가 둔다. 제목 「혼자 하는 추리」를 다섯 번 누르면 비밀번호 창이 뜬다.
+      //   비밀번호 원문은 페이지에 두지 않고 SHA-256 값만 둔다. 푼 기록은 이 브라우저에만 남고,
+      //   야간조 화면(yaganjo-solo.html)도 같은 기록을 보고 없으면 이리로 돌려보낸다.
+      //   ※ 화면 잠금일 뿐 보안 장치는 아니다 — 게임 파일 자체는 누구나 받을 수 있다.
+      var UNLOCK_KEY = 'crimescene_unlock_yaganjo';
+      var PW_HASH = '1c64b1058fa6d9eaedd7a11d1a2f970d005f63434641bcddef17304be3296d81';
+      function isUnlocked() { try { return localStorage.getItem(UNLOCK_KEY) === '1'; } catch (e) { return false; } }
+      var toastEl = document.getElementById('toast'), toastT;
+      function toast(m) { toastEl.textContent = m; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { toastEl.hidden = true; }, 2200); }
+      function paintLocks() {
+        document.querySelectorAll('[data-lock]').forEach(function (card) { card.classList.toggle('locked', !isUnlocked()); });
+      }
+      paintLocks();
+      document.querySelectorAll('[data-lock]').forEach(function (card) {
+        card.addEventListener('click', function (e) {
+          if (!isUnlocked()) { e.preventDefault(); toast('준비 중인 사건입니다'); }
+        });
+      });
+
+      var pw = document.getElementById('pw'), pwIn = document.getElementById('pwIn'), pwMsg = document.getElementById('pwMsg');
+      function openPw() { pwMsg.textContent = ''; pwIn.value = ''; pw.hidden = false; setTimeout(function () { pwIn.focus(); }, 30); }
+      function closePw() { pw.hidden = true; }
+      var taps = 0, tapT;
+      document.querySelector('h1').addEventListener('click', function () {
+        taps += 1; clearTimeout(tapT);
+        tapT = setTimeout(function () { taps = 0; }, 1500);   // 1.5초 안에 이어서 눌러야 센다
+        if (taps >= 5) { taps = 0; if (isUnlocked()) toast('야간조는 이미 열려 있습니다'); else openPw(); }
+      });
+      document.getElementById('pwCancel').addEventListener('click', closePw);
+      pw.addEventListener('click', function (e) { if (e.target === pw) closePw(); });
+      function sha256(s) {
+        return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)).then(function (buf) {
+          return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+        });
+      }
+      document.getElementById('pwForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        sha256(pwIn.value).then(function (h) {
+          if (h !== PW_HASH) { pwMsg.textContent = '비밀번호가 맞지 않습니다'; pwIn.select(); return; }
+          try { localStorage.setItem(UNLOCK_KEY, '1'); } catch (err) { pwMsg.textContent = '이 브라우저는 기록을 남길 수 없어 열 수 없습니다'; return; }
+          closePw(); paintLocks(); toast('🔓 야간조가 열렸습니다');
+        }).catch(function () { pwMsg.textContent = '이 브라우저에서는 확인할 수 없습니다'; });
       });
     </script>
   </body>
