@@ -366,7 +366,7 @@ button { font-family: inherit; }
 .aa-swipe-hint { position: absolute; left: 50%; top: 54px; transform: translateX(-50%); z-index: 6; background: #000000ba; color: #ffe9a8; font-size: .74rem; font-weight: 700; padding: 4px 13px; border-radius: 999px; pointer-events: none; opacity: 0; animation: swipehint 4s ease-in-out .3s 1 forwards; }
 /* 모바일: 배경을 화면보다 크게 잡아 일부만 보이고 상하좌우로 밀어(팬) 둘러보기 */
 @media (max-width: 640px) {
-  .aa-cam { overflow: auto; touch-action: pan-x pan-y pinch-zoom; overscroll-behavior: contain; }
+  .aa-cam { overflow: auto; touch-action: pan-x pan-y; overscroll-behavior: contain; }
   .aa-track { height: 122%; margin: 0; }
 }
 @keyframes swipehint { 0% { opacity: 0; } 12%, 68% { opacity: 1; } 100% { opacity: 0; } }
@@ -720,8 +720,12 @@ button { font-family: inherit; }
 .view-toggle:active { transform: scale(.96); }
 .view-toggle.scene { top: 52px; left: 12px; }
 .view-toggle.hall { right: 12px; top: calc(20dvh - 50px); }
-.aa-cam.overview { overflow: hidden; display: flex; align-items: center; padding-bottom: 150px; box-sizing: border-box; }
-.aa-cam.overview .aa-track { height: auto !important; width: 100%; max-height: 100%; margin: 0; flex: none; }
+/* 방 그림 확대·축소(lib/pinch) — 높이는 스크립트가 쓴다. 화면보다 작아지면 가운데에 놓인다
+   (flex 안의 margin:auto 는 작을 땐 가운데, 클 땐 0 이라 밀어서 보기가 잘리지 않는다).
+   두 손가락 확대는 스크립트가 받으므로 브라우저 확대(pinch-zoom)는 이 안에서 뺀다. */
+.aa-cam { display: flex; touch-action: pan-x pan-y; }
+.aa-cam > .aa-track { flex: none; margin: auto; }
+.aa-backdrop { position: absolute; inset: -24px; z-index: 0; pointer-events: none; filter: blur(18px) brightness(.38) saturate(.8); }
 @media (max-aspect-ratio: 4/5) {
   .hall-cam.overview { overflow: hidden; justify-content: center; }
   .hall-cam.overview .hall-fit { height: auto; width: 100%; }
