@@ -5,7 +5,7 @@
 //     · 인물 초상:  gameData의 suspect.image (예: /images/people/s1.png)
 //   프롬프트는 docs/solo-art-prompts.md 참고.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { keyByPersonName } from '../data/cast.js';
 import { assetUrl } from '../data/assets.js';
 
@@ -256,13 +256,50 @@ function SceneSVG({ location }) {
 const COVER = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' };
 
 // 후보 이미지들을 순서대로 시도, 다 실패하면 아무것도 안 그림(뒤 SVG가 보임).
+// ── 그림 불러오는 중 ─────────────────────────────────────────────────────────
+//   큰 배경 그림(HybridImg)이 아직 안 왔으면 화면 위에 막대를 띄운다 — 느린 망에서 빈 방·빈 복도가
+//   「고장 났다」로 읽혔다. 도착(또는 후보가 다 실패)하면 내린다. 0.25초 안에 오면 아예 안 띄운다.
+const PENDING = new Set();
+const PEND_SUBS = new Set();
+function markPending(k, on) {
+  const had = PENDING.has(k);
+  if (on) PENDING.add(k); else PENDING.delete(k);
+  if (had !== on) PEND_SUBS.forEach((f) => f(PENDING.size));
+}
+export function LoadingBar() {
+  const [n, setN] = useState(PENDING.size);
+  const [show, setShow] = useState(false);
+  useEffect(() => { PEND_SUBS.add(setN); return () => { PEND_SUBS.delete(setN); }; }, []);
+  const busy = n > 0;
+  useEffect(() => {
+    if (!busy) { setShow(false); return undefined; }
+    const t = setTimeout(() => setShow(true), 250);
+    return () => clearTimeout(t);
+  }, [busy]);
+  if (!show || !busy) return null;
+  return <div className="s-loadbar" role="status"><i /><span>그림을 불러오는 중…</span></div>;
+}
+
 function HybridImg({ candidates, style, extra }) {
   const [i, setI] = useState(0);
+  const key = useRef(null);
+  if (!key.current) key.current = {};
+  const imgRef = useRef(null);
   // 후보 경로는 '/images/…' 루트 기준으로 적혀 있다. 하위 경로 배포(GitHub Pages
   // 프로젝트 사이트 등)에서도 맞도록 여기서 한 번에 base 를 붙인다.
   const list = candidates.filter(Boolean).map(assetUrl);
+  const src = list[i];
+  useEffect(() => {
+    if (!src) return undefined;
+    markPending(key.current, true);
+    // 이미 캐시에 있던 그림은 이 효과보다 먼저 다 읽혀 있다 — 그땐 바로 내린다
+    const el = imgRef.current;
+    if (el && el.complete && el.naturalWidth) markPending(key.current, false);
+    return () => markPending(key.current, false);
+  }, [src]);
   if (i >= list.length) return null;
-  return <img src={list[i]} alt="" style={style} onError={() => setI((n) => n + 1)} {...extra} />;
+  return <img ref={imgRef} src={src} alt="" style={style} onError={() => setI((n) => n + 1)} {...extra}
+    onLoad={(e) => { markPending(key.current, false); extra?.onLoad?.(e); }} />;
 }
 
 const scenesFor = (id, image) => [image, `/images/scenes/${id}.jpg`, `/images/scenes/${id}.png`, `/images/scenes/${id}.webp`];

@@ -25,6 +25,7 @@ import { StartScreen, BriefingVN, EventVN, EventVN2, EndingScreen } from './feat
 import { TutorialCoach, TutorialFinale } from './features/tutorial.jsx';
 import { AdminPanel } from './features/admin.jsx';
 import { SheetOverlay } from './ui/overlays.jsx';
+import { LoadingBar } from './art.jsx';
 import { useDialog } from './ui/dialog.jsx';
 
 export default function SoloApp() {
@@ -297,6 +298,7 @@ export default function SoloApp() {
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {toast && <div className="s-toast">{toast}</div>}
+      <LoadingBar />
       {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (
         <TutorialFinale onClose={() => update({ tutFinaleSeen: true })} />

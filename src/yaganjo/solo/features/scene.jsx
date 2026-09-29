@@ -38,6 +38,9 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   const trackRef = useRef(null);
   // 지금 보고 있는 구간 — 남은 단서가 어느 쪽에 있는지 가장자리 화살표로 알리는 데 쓴다
   const [cam, setCam] = useState(null);
+  // 방 전체 보기 — 폰에선 그림의 일부만 보여 단서가 어디 있는지 한눈에 안 들어온다.
+  //   누르면 그림을 화면 너비에 맞춰 통째로 보여 주고, 다시 누르면 크게(밀어서 보기)로 돌아간다.
+  const [overview, setOverview] = useState(false);
   const syncCam = () => {
     const c = camRef.current, tr = trackRef.current;
     if (c && tr) setCam({ l: c.scrollLeft, t: c.scrollTop, w: c.clientWidth, h: c.clientHeight, tw: tr.offsetWidth, th: tr.offsetHeight });
@@ -45,6 +48,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   // 트랙(방 이미지)이 뷰포트보다 크면 가운데로 스크롤 시작 — 밀어서 둘러본다(모바일은 상하좌우 2D 팬)
   useEffect(() => {
     setBgRatio(16 / 9); // 방을 옮기면 새 그림의 onLoad 가 다시 정확한 비율을 준다
+    setOverview(false);
     const cam = camRef.current, tr = trackRef.current;
     if (cam && tr) {
       cam.scrollLeft = Math.max(0, (tr.offsetWidth - cam.clientWidth) / 2);
@@ -52,6 +56,15 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
     }
   }, [location?.id]);
   useEffect(syncCam, [location?.id, bgRatio]); // 그림 비율이 도착하면 트랙 크기가 달라진다
+  // 보기를 바꾸면 트랙 크기가 달라진다 — 크게 보기로 돌아올 땐 가운데부터
+  useEffect(() => {
+    const c = camRef.current, tr = trackRef.current;
+    if (c && tr && !overview) {
+      c.scrollLeft = Math.max(0, (tr.offsetWidth - c.clientWidth) / 2);
+      c.scrollTop = Math.max(0, (tr.offsetHeight - c.clientHeight) / 2);
+    }
+    syncCam();
+  }, [overview]);
   if (!location) return null;
   const isLab = location.kind === 'lab'; // 감식 의뢰실 — 감식원에게 대화형으로 의뢰
   const pannable = !isLab;
@@ -73,7 +86,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   const talkPos = ROOM_HOTSPOTS[location.id]?.['__talk__']; // 있으면 인물이 배경에 그려짐 → 터치존, 없으면 떠 있는 스탠딩
   return (
     <div className="aa-fs">
-      <div className="aa-cam" ref={camRef} onScroll={syncCam}>
+      <div className={`aa-cam${overview ? ' overview' : ''}`} ref={camRef} onScroll={syncCam}>
         <div className="aa-track" ref={trackRef} style={{ aspectRatio: String(bgRatio) }}>
           <SceneBg location={location} onRatio={setBgRatio} />
 
@@ -188,7 +201,13 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         <div key={d} style={{ ...EDGE_BASE, ...EDGE_POS[d] }}>{EDGE_MARK[d]} 단서 {n}</div>
       ))}
       {/* 아직 못 찾은 단서가 화면 밖에 있는 동안엔 스와이프 안내를 계속 되풀이한다 */}
-      {pannable && <div className="aa-swipe-hint" style={{ animationIterationCount: offscreen > 0 ? 'infinite' : 1 }}>← 밀어서 방을 둘러보기 →</div>}
+      {/* 그림이 화면보다 클 때만 — 이미 다 보이는 넓은 화면에서는 띄우지 않는다 */}
+      {pannable && (overview || (cam && (cam.tw > cam.w + 8 || cam.th > cam.h + 8))) && (
+        <button className="view-toggle scene" onClick={() => setOverview((v) => !v)}>
+          {overview ? '🔍 크게 보기' : '🗺 방 전체 보기'}
+        </button>
+      )}
+      {pannable && !overview && <div className="aa-swipe-hint" style={{ animationIterationCount: offscreen > 0 ? 'infinite' : 1 }}>← 밀어서 방을 둘러보기 →</div>}
 
       {roomSuspect && onTalk && !talkPos && (
         <button className="s-figure" onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>

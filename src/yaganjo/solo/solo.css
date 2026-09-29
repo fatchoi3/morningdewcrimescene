@@ -725,3 +725,35 @@ button { font-family: inherit; }
 .s-start-ask { max-width: 320px; background: #0b0d12e6; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
 .s-start-ask p { margin: 0 0 12px; font-size: .9rem; line-height: 1.6; }
 .s-start-ask-row { display: flex; gap: 8px; justify-content: center; }
+
+/* ── 전체 보기 · 불러오는 중 (2026-09-29) ─────────────────────────────────
+   폰 세로에선 방·복도 그림의 일부만 보여 「한눈에 안 보여 답답하다」는 말을 들었다.
+   전체 보기는 그림을 화면 너비에 맞춰 통째로 보여 준다 — 핫스팟 좌표는 % 라 그대로 맞는다. */
+.view-toggle { position: absolute; z-index: 9; min-height: 40px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+  background: #0b0d12d9; border: 1px solid var(--gold); color: #ffe9a8; font: inherit; font-size: .78rem; font-weight: 800;
+  box-shadow: 0 3px 10px #0008; }
+.view-toggle::before { content: ''; position: absolute; inset: -3px 0; } /* 누르는 영역 44px */
+.view-toggle:active { transform: scale(.96); }
+.view-toggle.scene { top: 52px; left: 12px; }
+.view-toggle.hall { right: 12px; top: calc(15dvh - 50px); }
+.aa-cam.overview { overflow: hidden; display: flex; align-items: center; padding-bottom: 150px; box-sizing: border-box; }
+.aa-cam.overview .aa-track { height: auto !important; width: 100%; max-height: 100%; margin: 0; flex: none; }
+@media (max-aspect-ratio: 4/5) {
+  .hall-cam.overview { overflow: hidden; justify-content: center; }
+  .hall-cam.overview .hall-fit { height: auto; width: 100%; }
+  /* 한눈에 보는 화면이라 이름만 — 진척(단서 0/9)은 크게 보기에서 */
+  .hall-cam.overview .hall-hot-sub { display: none; }
+  .hall-cam.overview .hall-hot-plate { font-size: .64rem; padding: 1px 5px; }
+  .hall-cam.overview .hall-hot-ic { font-size: 1.1rem; }
+  .hall-cam.overview .hall-cctv { transform: translate(-50%, -50%) scale(.6); }
+  /* 지도 전체 보기 — 사람도 작게. 발끝 위치는 hub.jsx 가 --fig-h 로 맞춘다 */
+  .hall-cam.overview { --fig-h: 30px; }
+  .hall-cam.overview .map-person-fig img { height: 30px !important; }
+  .hall-cam.overview .map-person .s-alert { transform: scale(.8); }
+}
+.s-loadbar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 80; background: #ffffff14; overflow: hidden; pointer-events: none; }
+.s-loadbar i { position: absolute; top: 0; bottom: 0; width: 35%; background: var(--gold); animation: loadslide 1.1s ease-in-out infinite; }
+.s-loadbar span { position: fixed; left: 50%; top: 44%; transform: translateX(-50%); background: #0b0d12d9; border: 1px solid #ffffff22;
+  color: #cfcabb; font-size: .8rem; font-weight: 700; padding: 7px 14px; border-radius: 999px; white-space: nowrap; }
+@keyframes loadslide { 0% { left: -35%; } 100% { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { .s-loadbar i { animation: none; left: 0; width: 100%; opacity: .5; } }

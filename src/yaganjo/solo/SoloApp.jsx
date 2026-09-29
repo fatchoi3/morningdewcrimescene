@@ -16,6 +16,7 @@ import {
 } from './lib/game.js';
 import { pressOf, presentOn } from './interrogation.js';
 import { HallNav } from './features/hub.jsx';
+import { LoadingBar } from './art.jsx';
 import { SceneView } from './features/scene.jsx';
 import { CrossExamView } from './features/interrogation.jsx';
 import { ClueModal } from './features/clues.jsx';
@@ -341,6 +342,7 @@ export default function SoloApp() {
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {toast && <div className="s-toast">{toast}</div>}
+      <LoadingBar />
       {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (
         <TutorialFinale onClose={() => update({ tutFinaleSeen: true })} />

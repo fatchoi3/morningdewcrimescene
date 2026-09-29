@@ -81,7 +81,7 @@ const FIG_H = 58;
 function PersonPin({ at, sid, name, sub, locked, recommend, alert, alertKey = 0, alertTitle, onClick }) {
   return (
     <button className={`map-person${locked ? ' locked' : ''}`} data-tut={recommend ? 'door' : undefined}
-      style={{ left: `${at.x}%`, top: `calc(${at.y}% - ${FIG_H}px)` }} onClick={onClick} aria-label={`${name} — ${sub}`}>
+      style={{ left: `${at.x}%`, top: `calc(${at.y}% - var(--fig-h, ${FIG_H}px))` }} onClick={onClick} aria-label={`${name} — ${sub}`}>
       {!locked && alert > 0 && (
         <span className="s-alert" title={alertTitle} style={alertKey > 0 ? undefined : ALERT_SOFT}>{alertKey > 0 ? alertKey : '!'}</span>
       )}
@@ -135,6 +135,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   //   처음에는 서쪽 끝(2층 사무실·탈의실)부터 — 이야기가 거기서 시작한다.
   const camRef = useRef(null);
   const [edge, setEdge] = useState({ l: false, r: false });
+  // 「지도 전체 보기」 — 지도를 화면 너비에 맞춰 통째로 보여 준다(누가 어디 있는지 한눈에)
+  const [overview, setOverview] = useState(false);
   const syncEdge = () => {
     const cam = camRef.current;
     if (!cam) return;
@@ -145,11 +147,12 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     syncEdge();
     window.addEventListener('resize', syncEdge);
     return () => window.removeEventListener('resize', syncEdge);
-  }, []);
+  }, [overview]);
+  const pannable = edge.l || edge.r;
   const pan = (dir) => camRef.current?.scrollBy({ left: dir * camRef.current.clientWidth * 0.6, behavior: 'smooth' });
   return (
     <div className="aa-fs">
-      <div className="hall-cam" ref={camRef} onScroll={syncEdge}>
+      <div className={`hall-cam${overview ? ' overview' : ''}`} ref={camRef} onScroll={syncEdge}>
       <div className="hall-fit">
           <CenterMap crimeOpen={crime ? crime.stage <= stage : undefined} />
 
@@ -183,9 +186,12 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
           )}
       </div>
       </div>
-      <div className="hall-swipe-hint" aria-hidden="true">← 밀어서 둘러보기 →</div>
-      {edge.l && <button className="hall-pan l" aria-label="서쪽 더 보기" onClick={() => pan(-1)}>‹</button>}
-      {edge.r && <button className="hall-pan r" aria-label="동쪽 더 보기" onClick={() => pan(1)}>›</button>}
+      {!overview && <div className="hall-swipe-hint" aria-hidden="true">← 밀어서 둘러보기 →</div>}
+      {!overview && edge.l && <button className="hall-pan l" aria-label="서쪽 더 보기" onClick={() => pan(-1)}>‹</button>}
+      {!overview && edge.r && <button className="hall-pan r" aria-label="동쪽 더 보기" onClick={() => pan(1)}>›</button>}
+      {(pannable || overview) && (
+        <button className="view-toggle hall" onClick={() => setOverview((v) => !v)}>{overview ? '🔍 크게 보기' : '🗺 지도 전체 보기'}</button>
+      )}
 
       {/* 지도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
       <div className="hall-hud">
