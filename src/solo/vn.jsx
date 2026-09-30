@@ -35,7 +35,9 @@ export const DialogueBox = forwardRef(function DialogueBox({ location, speaker, 
   useImperativeHandle(ref, () => ({ tap }));
   const acts = (actions || []).filter(Boolean);
   return (
-    <div className="aa-dialogue" onClick={tap}>
+    // 화면 전체 탭 위임(부모의 onClick)까지 올라가면 한 번 탭에 「글 다 보이기 + 다음 장」이 겹쳐 일어난다 —
+    //   글자가 찍히는 중에 누르면 문장을 못 읽고 넘어갔다(2026-09-30 시험). 여기서 멈춘다.
+    <div className="aa-dialogue" onClick={(e) => { e.stopPropagation(); tap(); }}>
       {location && <div className="aa-loc">{location}</div>}
       <div className="aa-box">
         {speaker && <div className="aa-speaker">{speaker}</div>}

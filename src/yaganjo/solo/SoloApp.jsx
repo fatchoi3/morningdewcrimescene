@@ -188,14 +188,18 @@ export default function SoloApp() {
   if (!state.tutorialSeen && !casefileOpen && !adminOpen) {
     // 첫 방은 진범의 칸(ROOM-A) — 새벽이슬판의 ROOM-JH 를 그대로 두면 안에 들어가도 「나가기」만 가리켰다
     const jhObjs = locations.rooms.find((l) => l.id === 'ROOM-A')?.objects || [];
-    const jhExamined = jhObjs.some((c) => collectedSet.has(c));
-    if (recordOpen) coach = { sel: '.s-sheet-back', text: '사건 개요를 봤으면 ← 로 나가세요' };
-    else if (modalCode) coach = { sel: '.s-modal .mx', text: '단서를 확보했습니다. ✕ 로 닫고 계속하세요' };
+    // 첫 심문에서 성공 반박을 해 보려면 그 단서가 손에 있어야 한다 — 그 물건부터 짚게 한다
+    // (진범 서장현의 모순 중 첫 방 단서로 깨지는 것은 보고서 자백뿐이라 튜토리얼이 그리로 몰면 1분 만에 동기가 드러난다 —
+    //   그래서 반응만 끌어내는 순찰 일지를 연습용으로 쓴다)
+    const TUT_CODE = 'NUMF-40';
+    const jhExamined = jhObjs.includes(TUT_CODE) ? collectedSet.has(TUT_CODE) : jhObjs.some((c) => collectedSet.has(c));
+    if (recordOpen) coach = { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽었으면 ← 로 나가세요' };
+    else if (modalCode) coach = { sel: '.s-modal .mx', dim: false, text: '단서를 확보했습니다. 다 읽었으면 ✕ 로 닫으세요' };
     else if (suspectId) coach = null;      // 심문 안에서는 그 화면이 직접 안내한다(아래 CrossExamView)
     else if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
     else if (!sceneId) coach = { sel: '[data-tut="door"]', text: t('이제 지도에서 {{S1|을/를}} 눌러 찾아가세요') };
     else if (sceneId !== 'ROOM-A') coach = { sel: '.aa-dlg-act', text: t('먼저 {{S1}}부터 봅시다 — 나가기를 눌러 지도로') };
-    else if (!jhExamined) coach = { sel: '.aa-track .s-zone', text: '테두리가 빛나는 물건을 눌러 단서를 조사하세요' };
+    else if (!jhExamined) coach = { sel: jhObjs.includes(TUT_CODE) ? `.aa-track .s-zone-wrap[data-code="${TUT_CODE}"] .s-zone` : ".aa-track .s-zone", text: '테두리가 빛나는 이 물건을 눌러 조사하세요' };
     // 배경에 인물이 그려진 방은 .s-talkzone, 떠 있는 스탠딩은 .s-figure — 둘 다 잡아야 한다
     //   (예전엔 .s-figure 만 봐서 종현방에선 코치마크가 통째로 사라졌다)
     else coach = { sel: '.s-talkzone, .s-figure', text: t('{{S1|을/를}} 눌러 이야기를 시작하세요') };
@@ -224,6 +228,16 @@ export default function SoloApp() {
             phase={progressStage >= 3 ? 2 : 1}
             tutorialSeen={!!state.tutorialSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
             onSkipTutorial={() => update({ tutorialSeen: true, tutFinaleSeen: true })}
+            tutorialTarget={{ stId: 'night', code: 'NUMF-40' }}
+            // 들은 말을 수첩 「대화 기록」에 남긴다 — 캐묻기로 나온 말은 넘기면 다시 볼 길이 없었다
+            onLog={(e) => {
+              const tl = { ...(state.talkLog || {}) };
+              const cur = tl[suspectId] || [];
+              const row = { ...e, phase: progressStage >= 3 ? 2 : 1 };
+              if (cur.some((x) => x.q === row.q && x.a === row.a)) return; // 같은 말을 두 번 적지 않는다
+              tl[suspectId] = [...cur, row].slice(-200);
+              update({ talkLog: tl });
+            }}
             onAsked={(stId) => { const a = { ...(state.askedQ || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), stId])]; update({ askedQ: a }); }}
             onAskedClue={(code) => { const a = { ...(state.askedC || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), code])]; update({ askedC: a }); }}
             onAskedTopic={(tid) => { const a = { ...(state.askedT || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), tid])]; update({ askedT: a }); }}
@@ -293,6 +307,7 @@ export default function SoloApp() {
             // 3막이 열리자마자(2차 심문 0회) 빨간 버튼이 까딱거리면 오탭 한 번에 수사가 끝난다 —
             //   절반 이상 재심문하기 전까지는 있되 눈에 덜 띄게 둔다.
             canAccuse={progressStage >= 3} accuseReady={p2Count >= Math.ceil(suspectIds.length / 2)}
+            accuseNote={`아직 이르다 — 2차 심문 ${p2Count}/${suspectIds.length}`}
             view={hubView} onView={setHubView} onEnter={(id) => setSceneId(id)} onToast={showToast}
             onOpenRecord={() => { setRecordOpen(true); if (!state.tutorialSeen && !state.tutRecordDone) update({ tutRecordDone: true }); }}
             onOpenMenu={() => setAdminOpen(true)}
@@ -301,7 +316,8 @@ export default function SoloApp() {
 
       {recordOpen && (
         <SheetOverlay title={`사건 기록 · 단서 ${recordClues.length}`} onClose={() => setRecordOpen(false)}>
-          <CaseRecord clues={recordClues} onOpen={(code) => setModalCode(code)} notes={state.notes} onNotes={(v) => update({ notes: v })} />
+          <CaseRecord clues={recordClues} onOpen={(code) => setModalCode(code)} notes={state.notes} onNotes={(v) => update({ notes: v })}
+            talkLog={state.talkLog} briefOpen={!state.tutorialSeen} />
         </SheetOverlay>
       )}
       {casefileOpen && (

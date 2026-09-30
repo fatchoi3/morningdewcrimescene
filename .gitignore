@@ -33,3 +33,4 @@ tools/_*.json
 public/images/yaganjo/person-*.png
 public/images/yaganjo/person-*.jpg
 public/images/yaganjo/person-*.jpeg
+tools/playtest/.runs/

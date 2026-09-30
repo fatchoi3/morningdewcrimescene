@@ -9,7 +9,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { getClue, clueIcon } from '../content.js';
 import { TRUST_MAX, isUiTap } from '../lib/game.js';
-import { visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
+import { DATA, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, TopHud } from '../vn.jsx';
 import { TutorialCoach } from './tutorial.jsx';
@@ -24,9 +24,9 @@ function ClueAsk({ c, k, onPick }) {
 }
 
 // 진술 질문 한 줄. ✅=모순 짚음 · ❗=새로 열림 · ✔=이미 물음
-function Ask({ s, k, label, onPick }) {
+function Ask({ s, k, label, onPick, tut }) {
   return (
-    <button className={k.broke ? 'done' : k.isNew ? 'new' : k.asked ? 'asked' : ''} onClick={() => onPick(s)}>
+    <button className={k.broke ? 'done' : k.isNew ? 'new' : k.asked ? 'asked' : ''} data-tut={tut ? 'tut-q' : undefined} onClick={() => onPick(s)}>
       {k.broke ? '✅ ' : k.isNew ? '❗ ' : k.asked ? '✔ ' : '💬 '}{label}
     </button>
   );
@@ -36,6 +36,15 @@ function Ask({ s, k, label, onPick }) {
 //   예전엔 'guide' 만 걸러서, 수사관의 추궁문("❗모순 — …CCTV에 찍혔습니다")과 독백까지
 //   용의자 이름표를 달고 나왔다(자기가 자기를 추궁하는 꼴).
 const NOTE_KINDS = new Set(['guide', 'note']);
+
+// 엉뚱한 단서를 들이댔을 때 붙이는 방향 한 줄 — 답은 주지 않고 「어디에 쓸 단서인가」만.
+//   예전엔 늘 같은 한 줄이라 세 사람 모두 「왜 틀렸는지 모르겠다」고 했다(2026-09-30 시험).
+function wrongHint(sid, code) {
+  const usedBy = (id) => (DATA[id]?.statements || []).some((st) => (st.contradict?.codes || []).includes(code) || (st.soft && code in st.soft));
+  if (usedBy(sid)) return '(수사 노트) 이 사람과 얽힌 단서이긴 하다 — 다른 대답에 대 보자.';
+  if (Object.keys(DATA).some((id) => id !== sid && usedBy(id))) return '(수사 노트) 이 단서는 다른 사람의 말과 맞대 보는 편이 낫겠다.';
+  return '(수사 노트) 이 단서는 누구의 거짓을 깨는 물증이라기보다 배경 사정에 가깝다.';
+}
 
 // 반박 시트 인물 필터 칩 — solo.css 는 다른 담당자 소유라 여기서 인라인으로 그린다
 const chipStyle = (on) => ({
@@ -48,7 +57,7 @@ const chipStyle = (on) => ({
 //   화면 문법: 하단 바 없음 · 대사창 우측 하단=이 화면에서 할 것(반박·다른 질문·수첩·나가기).
 //   수첩(📓)만은 다른 화면과 달리 우측 상단이 아니라 대사창 액션행에 둔다 —
 //   심문은 한 화면에 오래 머물고 단서 확인이 잦은데, 폰 세로에서 우측 상단은 엄지가 닿지 않는다.
-export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onAsked, onAskedClue, onAskedTopic, onPress, onPresent, onOpenRecord, onExit, onSkipTutorial }) {
+export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onAsked, onAskedClue, onAskedTopic, onPress, onPresent, onOpenRecord, onExit, onSkipTutorial, onLog, tutorialTarget }) {
   const [curId, setCurId] = useState(null); // 지금 붙잡고 있는 질문(진술 id) — null = 질문 목록
   // 대사창 오버라이드: { text, kind } — 진입 시 인사말(1차/2차 다름)부터
   const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
@@ -69,10 +78,17 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const peekRef = useRef({ t: null, fired: false, at: 0 }); // 길게 누르기 판정 — fired 면 뒤따라오는 click(=제시)을 삼킨다
   // 예전엔 진입 즉시 튜토리얼을 끝내서, 심문 화면 전체가 '안내 없는 구간'이 됐다.
   //   질문 하나를 끝까지 듣고 목록으로 돌아온 시점에 끝낸다 — 그때까지 코치마크가 이어진다.
+  //   첫 심문에는 성공하는 반박을 한 번 직접 해 보게 한다(tutorialTarget) — 튜토리얼이 반박을 말로만
+  //   알려 주고 끝나서, 처음 들이민 반박이 빗나가자 「어디다 대야 하는지 감이 안 온다」고 했다.
+  const [tutHit, setTutHit] = useState(false);
+  const tutT = !tutorialSeen && tutorialTarget && (state.collected || []).includes(tutorialTarget.code)
+    && visibleStatements(suspect?.id, state.collected || [], state.stUnlocked?.[suspect?.id] || [], phase).some((x) => x.id === tutorialTarget.stId)
+    ? tutorialTarget : null;
   useEffect(() => {
-    if (!tutorialSeen && (state.askedQ?.[suspect?.id] || []).length >= 1 && !line && !curId) onTutorialSeen?.();
+    if (tutorialSeen || line || curId) return;
+    if (tutT ? tutHit : (state.askedQ?.[suspect?.id] || []).length >= 1) onTutorialSeen?.();
     /* eslint-disable-next-line */
-  }, [tutorialSeen, line, curId]);
+  }, [tutorialSeen, line, curId, tutHit]);
 
   const sid = suspect?.id;
   const collected = state.collected || [];
@@ -108,11 +124,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const openTopic = openTopicId ? topics.find((t) => t.id === openTopicId) : null;
 
   // 질문 정렬: 새로 열린 질문(0) → 아직 안 한 질문(1) → 이미 물은 질문(2) → 모순 짚은 질문(3) 순으로 위→아래
+  //   (예전엔 물은 질문·모순 짚은 질문을 아래로 내려 물을 때마다 목록이 뒤섞였다 — 2026-09-30 시험)
   const qRank = (s) => {
-    if (broke.find((e) => e.id === s.id)) return 3;
-    if (askedIds.includes(s.id) || pressedIds.includes(s.id)) return 2;
-    if (s.hidden) return 0;
-    return 1;
+    const done = broke.find((e) => e.id === s.id) || askedIds.includes(s.id) || pressedIds.includes(s.id);
+    return s.hidden && !done ? 0 : 1;
   };
   const byQ = (a, b) => qRank(a) - qRank(b);
   // 최상위엔 기본 질문 + 모순으로 열린 질문. 단서로 열리는 질문은 화제 안으로 들어가는데,
@@ -148,14 +163,22 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const topicHasMore = leftInTopic > 0
     || !!(openTopic?.press && !topicPressed.includes(openTopic.id));
   const hasAsks = rootSts.length > 0 || topics.length > 0;
+  const topicLeft = (t) => stsOf(t).filter((x) => !askedIds.includes(x.id) && !pressedIds.includes(x.id)).length
+    + cluesOf(t).filter((c) => !cKey(c).asked && !cKey(c).done).length;
+  // 튜토리얼 목표 질문이 이야깃거리 안에 들어 있으면 그 이야깃거리부터 가리킨다
+  const tutTopic = tutT ? topics.find((t) => stsOf(t).some((x) => x.id === tutT.stId)) : null;
+  const pendingRoot = rootSts.filter((x) => !sKey(x).asked && !sKey(x).broke).length + topics.filter((t) => topicLeft(t) > 0).length;
   // 질문지가 떠 있는 동안 대사창에 나가는 글은 인물의 말이 아니라 화면 안내다 — 타이핑 판정에도 쓴다
   const menuOpen = !line && !cur;
   const dlgText = line ? line.text
     : cur ? cur.text
     : openTopic ? (leftInTopic > 0
         ? `${openTopic.q} — 더 물어볼 게 ${leftInTopic}가지 남았다.`
+        // 「더 들을 게 없다」라고 해 놓고 「💬 더 캐묻는다」가 남아 있으면 거짓말이 된다
+        : topicHasMore ? `${openTopic.q} — 「💬 더 캐묻는다」 하나가 남았다.`
         : `${openTopic.q} — 이 얘기는 더 들을 게 없다. 다른 이야기를 꺼내볼까.`)
-    : (hasAsks ? '무엇을 물어볼까.' : '…(지금은 물어볼 것이 없다. 단서를 모으거나 수사가 진행되면 질문이 생긴다.)');
+    : (hasAsks ? (pendingRoot > 0 ? `무엇을 물어볼까. (❗ 아직 안 물은 것 ${pendingRoot}개 — 목록을 밀어 보자)` : '무엇을 물어볼까.')
+      : '…(지금은 물어볼 것이 없다. 단서를 모으거나 수사가 진행되면 질문이 생긴다.)');
   // 캐묻기·반응 라인을 닫으면 텍스트가 답변(cur.text)으로 되돌아가는데, DialogueBox 는 텍스트가
   //   바뀐 것으로 보고 방금 읽은 답변을 처음부터 다시 친다. vn.jsx 는 건드릴 수 없으니
   //   여기서 tap() 한 번으로 타이핑을 끝내 준다(이미 읽은 대사는 어디서 다시 만나도 즉시 표시).
@@ -173,7 +196,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
   // 「다른 질문」 = 지금 있는 겹으로 복귀(화제 안이면 그 화제 목록, 아니면 최상위)
   const toMenu = () => { setLine(null); setCurId(null); setPicker(false); };
-  const pickStatement = (s) => { onAsked?.(s.id); setCurId(s.id); };
+  const log = (q, a, kind) => { if (a) onLog?.({ q, a, kind }); };
+  const pickStatement = (s) => { onAsked?.(s.id); setCurId(s.id); log(qLabel(s), s.text, 'answer'); };
 
   // 대사 넘김: 인사말→(첫 심문이면 안내). 대답·반응(press/break/soft/wrong)을 읽고 탭하면 라인만 닫아,
   //   현재 질문(cur)이 있으면 그 답변 화면에 머문다 → 이어서 캐묻기/증거 가능(질문 목록으로 튀지 않음).
@@ -195,6 +219,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     if (r.grants) { const t = getClue(r.grants); if (t) extra += `\n🗣 증언 확보 — ${t.title}`; }
     if (r.unlock) extra += '\n❗ 새로운 질문이 열렸다.';
     setLine({ text: (r.text || '…') + extra, kind: 'press' });
+    log(`${qLabel(cur)} — 더 캐묻기`, r.text, 'press');
   };
 
   // 이미 손에 있는 단서면 '확보' 알림을 내지 않는다 — DISC-11 로 그 모순을 짚으면 보상이 같은 코드라
@@ -207,13 +232,17 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     setPicker(false);
     onAskedClue?.(code);   // 반박으로 이미 써먹은 단서 — 질문지·방 배지에서도 '들어봤음'으로
     const r = onPresent(cur.id, code) || {};
+    const ctitle = getClue(code)?.title || code;
+    if (tutT && cur.id === tutT.stId && code === tutT.code && (r.result === 'contradict' || r.result === 'soft')) setTutHit(true);
     if (r.result === 'contradict') {
       // 컷인은 판정 선언이 아니라 '순간의 충격'이다 — 대사는 인물이 직접 하고, 여기선 임팩트만
       setCutin('!!!');
       setTimeout(() => setCutin((c) => (c === '!!!' ? null : c)), 1300);
       setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
+      log(`${qLabel(cur)} ← 📁 ${ctitle}`, r.text, 'break');
     } else if (r.result === 'soft') {
       setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
+      log(`${qLabel(cur)} ← 📁 ${ctitle}`, r.text, 'soft');
     } else if (r.result === 'offtopic') {
       // 이 인물의 다른 진술에서 쓰이는 '정답 증거'를 자리만 잘못 짚은 것 — 화낼 일도 감점할 일도 아니다.
       //   흔들림·angry 표정 없이 수사 노트로 알려준다(SoloApp 은 'wrong' 일 때만 신뢰도를 깎는다).
@@ -222,9 +251,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       setShake(true); setTimeout(() => setShake(false), 480);
       const c = getClue(code);
       const own = c && c.person === suspect.name;
-      setLine({ text: own
+      setLine({ text: (own
         ? '…그건 제 물건이 맞는데요. 지금 이 얘기랑 무슨 상관이죠?'
-        : '그건 제 것도 아닌데… 왜 저한테 보여주시는 거예요?', kind: 'wrong' });
+        : '그건 제 것도 아닌데… 왜 저한테 보여주시는 거예요?') + '\n' + wrongHint(sid, code), kind: 'wrong' });
     }
   };
 
@@ -254,6 +283,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     if (askedTopics.includes(t.id)) return;         // 이미 들은 화제면 곧장 목록으로
     onAskedTopic?.(t.id);
     setLine({ text: t.text, kind: 'topic' });
+    log(t.q, t.text, 'topic');
   };
 
   // 단서 하나를 짚어 묻는다 → 그 단서에 대한 반응만 듣고 끝난다.
@@ -281,13 +311,16 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     // 목록에서 골라 '물어보는' 것뿐이므로 반응이 없어도 신뢰도를 깎지 않는다(silent).
     //   신뢰도 차감은 대답에 대놓고 '들이대는' 「이 말에 증거」의 몫.
     const r = onPresent(stId, code, true) || {};
+    const ctitle = getClue(code)?.title || code;
     if (r.result === 'contradict') {
       // 컷인은 판정 선언이 아니라 '순간의 충격'이다 — 대사는 인물이 직접 하고, 여기선 임팩트만
       setCutin('!!!');
       setTimeout(() => setCutin((c) => (c === '!!!' ? null : c)), 1300);
       setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
+      log(`📁 ${ctitle}에 대해`, r.text, 'break');
     } else if (r.result === 'soft') {
       setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
+      log(`📁 ${ctitle}에 대해`, r.text, 'soft');
     } else {
       // 'offtopic'(다른 진술에서는 쓰이는 단서)이면 그쪽 안내문을 그대로 쓴다 — 둘 다 인물이 아닌 독백이다
       setLine({ kind: 'note', text: (r.result === 'offtopic' && r.text) || '그 단서로는 지금 이 사람에게 딱히 물을 게 없어 보인다. 다른 질문을 먼저 풀거나 단서를 더 모으자.' });
@@ -300,6 +333,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     ? (line.kind === 'break' ? '❗ 모순을 짚었다' : line.kind === 'wrong' ? '심기가 불편하다'
       : NOTE_KINDS.has(line.kind) ? '수사 노트' : line.kind === 'intro' ? (phase >= 2 ? '2차 심문' : '심문 시작')
       : (line.kind === 'press' || line.kind === 'topicPress') ? '더 캐묻는다'
+      : line.kind === 'soft' ? '반응이 있다 · 모순까지는 아니다'
       : `${suspect.name}의 대답`)   // soft = 증거에 대한 반응, topic = 화제를 꺼낸 대답
     : cur ? (bk ? '✅ 밝혀낸 이야기' : `${suspect.name}의 대답`)
     : openTopic ? '📁 이야기 중' : '질문 선택';
@@ -346,14 +380,15 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
         <div className="aa-ask">
           <div className="aa-ask-h">🎙 무엇을 물어볼까{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
           {rootSts.length > 0 && <div className="aa-ask-sec">💬 질문</div>}
-          {rootSts.map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} />)}
+          {rootSts.map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} />)}
           {/* 이야깃거리 — 관련 단서를 챙기면 열린다. 파생 질문은 안에 들어가야 보인다 */}
           {topics.length > 0 && <div className="aa-ask-sec">📁 단서로 여는 이야기</div>}
           {topics.map((t) => {
             const left = stsOf(t).filter((s) => !askedIds.includes(s.id) && !pressedIds.includes(s.id)).length
               + cluesOf(t).filter((c) => !cKey(c).asked && !cKey(c).done).length;
             return (
-              <button key={t.id} className={left > 0 ? 'new' : 'asked'} onClick={() => askTopic(t)}>
+              <button key={t.id} className={left > 0 ? 'new' : 'asked'} onClick={() => askTopic(t)}
+                data-tut={tutT && !tutHit && stsOf(t).some((x) => x.id === tutT.stId) ? 'tut-q' : undefined}>
                 {left > 0 ? '❗ ' : '✔ '}{t.q}{left > 0 ? ` (${left})` : ''}
               </button>
             );
@@ -370,9 +405,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {menuOpen && openTopic && (
         <div className="aa-ask">
           <div className="aa-ask-h">📁 {openTopic.q}</div>
-          {stsOf(openTopic).sort(byQ).map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} />)}
-          {cluesOf(openTopic).sort((a, b) => cRank(a) - cRank(b))
-            .map((c) => <ClueAsk key={c.code} c={c} k={cKey(c)} onPick={askAboutClue} />)}
+          {stsOf(openTopic).sort(byQ).map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} />)}
+          {cluesOf(openTopic).map((c) => <ClueAsk key={c.code} c={c} k={cKey(c)} onPick={askAboutClue} />)}
           {/* 화제를 꺼낸 대답에서 한 겹 더 — 수사에 진전을 주지 않는 여담이라 ❗를 달지 않고
               맨 아래(급하지 않은 것) 자리에 둔다. 남은 개수(leftInTopic)에도 넣지 않는다 */}
           {openTopic.press && (
@@ -380,6 +414,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
               onClick={() => {
                 setTopicPressed((p) => (p.includes(openTopic.id) ? p : [...p, openTopic.id]));
                 setLine({ text: openTopic.press, kind: 'topicPress' });
+                log(`${openTopic.q} — 더 캐묻기`, openTopic.press, 'press');
               }}>
               {topicPressed.includes(openTopic.id) ? '✔ ' : '💬 '}더 캐묻는다
             </button>
@@ -415,15 +450,29 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
       {/* 첫 심문 코치마크 — 심문 화면에도 '지금 할 것'이 계속 붙어 있게 한다.
           대사 읽는 중 → 대사창 / 질문 고를 때 → 질문지 / 대답 화면 → 한 번 더 탭 or 돌아가기 */}
-      {!tutorialSeen && !picker && (
+      {!tutorialSeen && (!picker || tutT) && (
         <TutorialCoach onSkip={onSkipTutorial}
-          {...(line
-            ? { targetSel: '.aa-dialogue', text: '대사창을 탭해 이야기를 넘기세요' }
-            : cur
-              ? (canPress
-                ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
-                : { targetSel: '.aa-dlg-actions', text: '「↩ 다른 질문」으로 질문지로 돌아가세요' })
-              : { targetSel: '.aa-ask', text: '질문지에서 하나를 골라 물어보세요' })} />
+          {...(tutT && !tutHit
+            ? (line
+              ? { targetSel: '.aa-dialogue', text: '대사창을 탭해 이야기를 넘기세요' }
+              : picker
+                ? { targetSel: '[data-tut="tut-clue"]', text: `「${getClue(tutT.code)?.title || '그 단서'}」를 들이미세요` }
+                : cur && cur.id === tutT.stId
+                  ? (canPress
+                    ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
+                    : { targetSel: '.aa-dlg-act.key', text: '방금 본 물건을 이 말에 맞대 보자 — 「📁 반박」을 누르세요' })
+                  : cur
+                    ? { targetSel: '.aa-dlg-actions', text: openTopic ? '「↩ 이 이야기로」로 질문지로 돌아가세요' : '「↩ 다른 질문」으로 질문지로 돌아가세요' }
+                    : { targetSel: '[data-tut="tut-q"]', text: tutTopic && !openTopic
+                      ? `「${tutTopic.q}」 — 이 이야기를 꺼내 보세요`
+                      : `「${statements.find((x) => x.id === tutT.stId)?.q || '이 질문'}」 — 이 질문을 고르세요` })
+            : (line
+              ? { targetSel: '.aa-dialogue', text: tutHit ? '반응이 나왔다 — 증거는 이렇게 들이민다. 탭해서 넘기세요' : '대사창을 탭해 이야기를 넘기세요' }
+              : cur
+                ? (canPress
+                  ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
+                  : { targetSel: '.aa-dlg-actions', text: openTopic ? '「↩ 이 이야기로」로 질문지로 돌아가세요' : '「↩ 다른 질문」으로 질문지로 돌아가세요' })
+                : { targetSel: '.aa-ask', text: '질문지에서 하나를 골라 물어보세요' }))} />
       )}
 
       {picker && cur && !bk && (
@@ -449,6 +498,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                     const k = cKey(c);
                     return (
                       <button key={c.code} className="s-card" style={(k.done || k.asked) ? { opacity: .62 } : undefined}
+                        data-tut={tutT && c.code === tutT.code ? 'tut-clue' : undefined}
                         onPointerDown={() => peekStart(c)} onPointerUp={peekStop}
                         onPointerCancel={peekStop} onPointerLeave={peekStop}
                         onContextMenu={(e) => e.preventDefault()}

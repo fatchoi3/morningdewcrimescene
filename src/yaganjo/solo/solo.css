@@ -76,6 +76,8 @@ button { font-family: inherit; }
 .tut-arrow.down { border-top: 15px solid #ffe9a8; }
 .tut-cap { margin: 6px 0; background: #0b1220f2; color: #ffe9a8; border: 1px solid var(--gold); border-radius: 10px; padding: 11px 18px; font-size: .9rem; font-weight: 600; line-height: 1.55; width: max-content; max-width: min(600px, 94vw); text-align: center; box-shadow: 0 4px 16px #000b; word-break: keep-all; }
 .tut-skip { position: fixed; top: 12px; left: 12px; z-index: 62; pointer-events: auto; background: #000000b0; color: #cfcabb; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: .74rem; cursor: pointer; }
+/* 가리키는 곳이 왼쪽 위(수첩 ← 등)일 때는 건너뛰기를 아래로 비킨다 — 튜토리얼이 누르라는 단추를 덮었다 */
+.tut-skip.low { top: auto; bottom: calc(12px + env(safe-area-inset-bottom)); }
 @keyframes tutpulse { 0%, 100% { box-shadow: 0 0 0 3px #ffe9a855, 0 0 18px 4px #ffe9a655; } 50% { box-shadow: 0 0 0 5px #ffe9a880, 0 0 28px 7px #ffe9a690; } }
 @keyframes tutbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
 
@@ -765,3 +767,33 @@ button { font-family: inherit; }
   color: #cfcabb; font-size: .8rem; font-weight: 700; padding: 7px 14px; border-radius: 999px; white-space: nowrap; }
 @keyframes loadslide { 0% { left: -35%; } 100% { left: 100%; } }
 @media (prefers-reduced-motion: reduce) { .s-loadbar i { animation: none; left: 0; width: 100%; opacity: .5; } }
+
+/* ── 2026-10-01 모르는 플레이어 시험 뒤 ─────────────────────────────────────── */
+/* 수첩 맨 위 사건 개요 */
+.s-brief { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; margin: 0 0 12px; overflow: hidden; }
+.s-brief-h { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; background: none; border: none; color: var(--gold); font: inherit; font-weight: 800; font-size: .88rem; padding: 12px 14px; min-height: 44px; cursor: pointer; text-align: left; }
+.s-brief-t { color: var(--muted); font-size: .74rem; font-weight: 700; white-space: nowrap; }
+.s-brief-b { padding: 0 14px 12px; }
+.s-brief-b p { margin: 0 0 8px; color: #d6d2c8; font-size: .86rem; line-height: 1.65; }
+.s-brief-b .s-brief-sub { color: var(--text); font-weight: 700; }
+/* 단서 거르기 · 대화 기록 인물 고르기 */
+.s-clue-filter { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; }
+.s-clue-filter button { flex: none; background: #ffffff10; border: 1px solid #ffffff2e; color: #cdd3df; font-size: .78rem; font-weight: 700; padding: 8px 12px; min-height: 36px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.s-clue-filter button.on { background: #241f14; border-color: var(--gold); color: #ffe9a8; }
+.s-talklog { display: flex; flex-direction: column; gap: 8px; }
+.s-talklog-row { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid #3a4a6a; border-radius: 10px; padding: 10px 12px; }
+.s-talklog-row.break { border-left-color: var(--danger); }
+.s-talklog-row.soft { border-left-color: var(--gold); }
+.s-talklog-row .tq { color: var(--muted); font-size: .76rem; font-weight: 700; margin-bottom: 4px; }
+.s-talklog-row .ta { color: var(--text); font-size: .88rem; line-height: 1.6; white-space: pre-wrap; }
+/* 목록(질문지·감식 의뢰) — 아래에 더 있으면 끝이 흐려져 밀어 볼 거리가 있다는 게 보인다.
+   감식 의뢰실 맨 아래(보온병)를 못 보고 지나칠 뻔했다. */
+.aa-ask { padding-bottom: 22px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); }
+/* 지목까지 몇 단계 */
+.hall-steps { display: flex; gap: 4px; margin-top: 6px; }
+.hall-steps i { font-style: normal; font-size: .64rem; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: #ffffff10; color: var(--muted); border: 1px solid #ffffff1c; white-space: nowrap; }
+.hall-steps i.done { color: #9fd6a2; border-color: #9fd6a255; }
+.hall-steps i.now { color: #1a1a1a; background: var(--gold); border-color: var(--gold); }
+.hall-accuse small { display: block; font-size: .66rem; font-weight: 700; opacity: .85; }
+.hall-accuse { bottom: calc(14px + env(safe-area-inset-bottom)); }
+@media (max-aspect-ratio: 4/5) { .hall-cam.overview .map-person { z-index: 8; } }

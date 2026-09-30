@@ -19,7 +19,8 @@ export function defaultState() {
     askedQ: {},                 // { S1: [증언id] } — 한 번이라도 골라 들은 질문(✔ 표시용)
     askedC: {},                 // { S1: [단서코드] } — 화제 아래에서 이미 물어본 단서
     askedT: {},                 // { S1: [화제id] } — 이미 꺼낸 화제(꺼내야 그 단서 질문이 열린다)
-    broke: {},                  // { S1: [{ id, text, confess }] } — 모순 잡은 진술
+    broke: {},
+    talkLog: {},                // { S1: [{ q, a, kind, phase }] } — 들은 말(수첩 「대화 기록」)                  // { S1: [{ id, text, confess }] } — 모순 잡은 진술
     stUnlocked: {},             // { S1: [증언id] } — 추궁/모순으로 열린 숨은 증언
     eventSeen: false,           // 중간 사건(부검 소견) 연출을 봤는가
     event2Seen: false,          // 2차 부검 발표를 봤는가 — 운영자 '단서 비우기' 로 되돌려 재지급한다

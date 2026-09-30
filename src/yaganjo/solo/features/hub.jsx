@@ -92,7 +92,19 @@ function PersonPin({ at, sid, name, sub, locked, recommend, alert, alertKey = 0,
   );
 }
 
-export function HallNav({ locations, stage, progressStage, collectedSet, state, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, accuseReady, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
+// 지목까지 몇 단계 — 단서가 쌓이면 「끝이 안 보인다」는 말을 들었다(2026-09-30 시험). 장 셋 + 지목.
+const STEP_NAMES = ['1장 탐문', '2장 점검', '3장 추궁', '지목'];
+function Steps({ at }) {
+  return (
+    <span className="hall-steps" aria-label={`지목까지 ${Math.max(0, 4 - at)}단계`}>
+      {STEP_NAMES.map((n, i) => <i key={n} className={i + 1 < at ? 'done' : i + 1 === at ? 'now' : ''}>{n}</i>)}
+    </span>
+  );
+}
+// 방에 들어갔다 나오면 지도·복도가 처음 자리로 돌아가 매번 다시 밀어야 했다 — 마지막 자리를 기억한다
+const LAST_SCROLL = {};
+
+export function HallNav({ locations, stage, progressStage, collectedSet, state, recommendPerson, admin, stageLabel, progressText, objective, canAccuse, accuseReady, accuseNote, onEnter, onToast, onOpenRecord, onOpenMenu, onAccuse }) {
   // 각 장소에 '남은 거리'가 있으면 알림 배지를 띄운다(지도에서 어디로 갈지 바로 보이게)
   const alertsOf = (loc) => locationAlerts(loc, state || {}, stage, progressStage >= 3 ? 2 : 1);
   // 배지 관련 props 한 묶음 — 한 문패에 total·key·사유를 따로 계산하면 alertsOf 를 세 번 돈다
@@ -142,8 +154,12 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     if (!cam) return;
     const max = cam.scrollWidth - cam.clientWidth;
     setEdge({ l: cam.scrollLeft > 8, r: cam.scrollLeft < max - 8 });
+    if (!overview) LAST_SCROLL[scrollKey] = cam.scrollLeft;
   };
+  const scrollKey = 'map';
   useEffect(() => {
+    const cam = camRef.current;
+    if (cam && !overview && LAST_SCROLL[scrollKey] != null) cam.scrollLeft = LAST_SCROLL[scrollKey];
     syncEdge();
     window.addEventListener('resize', syncEdge);
     return () => window.removeEventListener('resize', syncEdge);
@@ -195,7 +211,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
 
       {/* 지도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
       <div className="hall-hud">
-        <div className="hall-hud-chip"><b>🔎 {stageLabel}</b><span>{progressText}</span>{objective && <span className="hall-objective">🎯 {objective}</span>}</div>
+        <div className="hall-hud-chip"><b>🔎 {stageLabel}</b><span>{progressText}</span>{objective && <span className="hall-objective">🎯 {objective}</span>}<Steps at={Math.min(4, progressStage || 1)} /></div>
         <div className="hall-hud-btns">
           {admin && <span className="s-admin-chip">ADMIN</span>}
           <button data-tut="record-btn" className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord}>📓</button>
@@ -207,7 +223,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
           아직 아무것도 캐묻지 않은 채로 사건이 끝나 버린다 */}
       {canAccuse && (
         <button className="hall-accuse" style={accuseReady ? undefined : { animation: 'none', opacity: 0.6 }}
-          onClick={onAccuse}>🔍 범인 지목하기</button>
+          onClick={onAccuse}>🔍 범인 지목하기{!accuseReady && accuseNote ? <small>{accuseNote}</small> : null}</button>
       )}
     </div>
   );

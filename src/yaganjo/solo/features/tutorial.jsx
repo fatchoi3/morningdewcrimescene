@@ -11,8 +11,20 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   const [rect, setRect] = useState(null);
   useEffect(() => {
     let raf;
+    // 가리킬 것이 화면 밖(밀어야 보이는 복도·방·목록)에 있으면 한 번 그쪽으로 밀어 준다 —
+    //   「종현방을 눌러라」는데 종현방이 화면 밖이라 멈춘 줄 알았다는 말을 들었다(2026-09-30 시험).
+    //   그림 비율이 늦게 도착하면 자리가 한 번 더 바뀌므로 처음 1.5초 동안은 계속 살핀다(그 뒤엔 플레이어 손에 맡긴다).
+    const t0 = Date.now();
     const tick = () => {
       const el = document.querySelector(targetSel);
+      if (el && Date.now() - t0 < 1500) {
+        const r = el.getBoundingClientRect();
+        // 반쯤 잘려도 민다(화면보다 작은 것만 — 큰 것은 어차피 다 안 들어온다)
+        const cut = (r.left < 0 || r.right > window.innerWidth) && r.width < window.innerWidth;
+        if (r.width && (cut || r.bottom < 0 || r.top > window.innerHeight)) {
+          el.scrollIntoView({ block: 'nearest', inline: 'center' });
+        }
+      }
       if (el) { const r = el.getBoundingClientRect(); setRect({ x: r.left, y: r.top, w: r.width, h: r.height }); }
       else setRect(null);
       raf = requestAnimationFrame(tick);
@@ -54,7 +66,7 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
           ? (<><div className="tut-arrow up" /><div className="tut-cap" style={{ transform: `translateX(${capShift}px)` }}>{text}</div></>)
           : (<><div className="tut-cap" style={{ transform: `translateX(${capShift}px)` }}>{text}</div><div className="tut-arrow down" /></>)}
       </div>
-      <button className="tut-skip" onClick={onSkip}>튜토리얼 건너뛰기 ✕</button>
+      <button className={`tut-skip${hy < 80 && hx < 200 ? ' low' : ''}`} onClick={onSkip}>튜토리얼 건너뛰기 ✕</button>
     </div>
   );
 }

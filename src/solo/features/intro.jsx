@@ -68,7 +68,6 @@ export function BriefingVN({ onDone }) {
   const beats = [
     { loc: '프롤로그', text: briefing.subtitle },
     ...briefing.lines.map((l) => ({ text: l })),
-    { text: '당신은 수사관이다. 현장을 조사하고 용의자를 심문해, 누가·어떻게·왜 죽였는지 밝혀라.' },
   ];
   const [i, setI] = useState(0);
   const dlgRef = useRef(null);

@@ -148,7 +148,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         };
         const tone = have ? ' have' : req ? ' req' : '';
         return (
-          <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle}>
+          <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle} data-code={code}>
             {/* 클릭 판정 전용(투명). poly면 실루엣 안에서만 눌린다 */}
             <button className={`s-zone${boxed ? ' boxed' : ''}${p.poly ? ' poly' : ''}${tone}`}
               style={btnStyle}

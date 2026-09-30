@@ -11,6 +11,8 @@ import { usePinchZoom } from '../lib/pinch.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, TopHud } from '../vn.jsx';
 
+// 받침에 맞춘 조사(을/를 · 이/가) — 「최종현을(를)」처럼 둘 다 붙여 두면 어색했다(2026-09-30 시험)
+const josa = (w, a, b) => { const c = (w || '').charCodeAt((w || '').length - 1) - 0xac00; return c >= 0 && c <= 11171 && c % 28 ? a : b; };
 // 화면 밖에 남은 단서의 방향 표시 — 폰 세로에선 그림의 21%만 보여서, 안내가 없으면
 //   나머지를 통째로 지나친다. solo.css 는 이 파일 소관이 아니라 인라인으로 둔다.
 const DLG_COVER = 165; // 하단 대사창이 덮는 높이(px) — 그 아래는 보여도 못 누른다
@@ -137,7 +139,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         };
         const tone = have ? ' have' : req ? ' req' : '';
         return (
-          <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle}>
+          <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle} data-code={code}>
             {/* 클릭 판정 전용(투명). poly면 실루엣 안에서만 눌린다 */}
             <button className={`s-zone${boxed ? ' boxed' : ''}${p.poly ? ' poly' : ''}${tone}`}
               style={btnStyle}
@@ -232,7 +234,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         actions={[{ label: '🚶 나가기', onClick: onBack }]}
         text={isLab
           ? '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 결과는 2차 심문이 열릴 때 도착한다.'
-          : ('테두리가 빛나는 물건을 누르면 조사할 수 있다.' + (roomSuspect ? ` ${roomSuspect.name}을(를) 누르면 이야기할 수 있다.` : ''))} />
+          : ('테두리가 빛나는 물건을 누르면 조사할 수 있다.' + (roomSuspect ? ` ${roomSuspect.name}${josa(roomSuspect.name, '을', '를')} 누르면 이야기할 수 있다.` : ''))} />
     </div>
   );
 }
