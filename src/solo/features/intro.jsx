@@ -6,7 +6,7 @@
 //   EndingScreen: 엔딩(정/오답 + 사건 전말 + 타임라인)
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState } from 'react';
-import { briefing, victim, suspects } from '../content.js';
+import { briefing, victim, suspects, soloContent } from '../content.js';
 import { cast, t } from '../../data/cast.js';
 import { isUiTap, REVEAL, TIMELINE } from '../lib/game.js';
 import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
@@ -145,6 +145,9 @@ export function EventVN2({ onDone }) {
   );
 }
 
+// 전말·타임라인의 **굵게** 를 굵은 글씨로 — 그대로 두면 별표가 보였다(2026-10-01 시험)
+const bold = (s) => String(s || '').split(/\*\*(.+?)\*\*/g).map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
+
 // ── 엔딩 — 정/오답 + 사건 전말 + 그날의 진실(타임라인) ────────────────────────
 export function EndingScreen({ result, onNewCase }) {
   const r = result;
@@ -154,9 +157,23 @@ export function EndingScreen({ result, onNewCase }) {
         <EndingArt good={r.culpritRight} />
         <div className="s-score">
           <div className="s-eye">사건 종결</div>
-          <div className="big" style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)' }}>{r.culpritRight ? '정답' : '오답'}</div>
+          <div className="big" style={{ color: !r.culpritRight ? 'var(--danger)' : r.methodRight && r.motiveRight ? 'var(--gold)' : 'var(--ok)' }}>
+            {!r.culpritRight ? '오답' : r.methodRight && r.motiveRight ? '완벽한 해결' : '범인 정답'}
+          </div>
           <div style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)', fontWeight: 800, marginTop: 6 }}>
             {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : `✗ 당신의 지목: ${suspects.find((s) => s.id === r.pick)?.name || '—'}`}
+          </div>
+          <div style={{ marginTop: 12, fontSize: '.86rem', lineHeight: 1.8, textAlign: 'left', display: 'inline-block' }}>
+            {[['수법', r.methodRight, r.method, soloContent.caseKey.methods, 'm_pillow'], ['동기', r.motiveRight, r.motive, soloContent.caseKey.motives, 'mo_cert']].map(([k, ok, id, list, answer]) => (
+              // 범인을 틀렸으면 수법·동기는 매기지 않는다 — 회색 「—」. 틀린 줄에는 정답을 작게 붙인다
+              <div key={k} style={{ color: !r.culpritRight ? 'var(--muted)' : ok ? 'var(--ok)' : 'var(--danger)' }}>
+                {!r.culpritRight ? '—' : ok ? '✓' : '✗'} {k} — {list.find((m) => m.id === id)?.label || '고르지 않음'}
+                {!ok && <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>정답: {list.find((m) => m.id === answer)?.label}</div>}
+              </div>
+            ))}
+            {r.culpritRight && r.methodRight && r.motiveRight && (
+              <div style={{ marginTop: 6, color: 'var(--gold)', fontWeight: 800 }}>★ 범인·수법·동기를 모두 밝혔습니다 — 완벽한 해결</div>
+            )}
           </div>
           <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>{cast.S4.name}</b> · 직접 사인 <b style={{ color: '#fff' }}>베개 질식</b></div>
         </div>
@@ -167,7 +184,7 @@ export function EndingScreen({ result, onNewCase }) {
             return (
               <div key={id} style={{ marginTop: 16 }}>
                 <h3>{s?.name} <span className="role">— {REVEAL.people[id].role}</span></h3>
-                <p style={{ lineHeight: 1.8 }}>{REVEAL.people[id].text}</p>
+                <p style={{ lineHeight: 1.8 }}>{bold(REVEAL.people[id].text)}</p>
               </div>
             );
           })}
@@ -176,13 +193,13 @@ export function EndingScreen({ result, onNewCase }) {
             {TIMELINE.map(([t, d], i) => (
               <div className="s-tl2-row" key={i}>
                 <div className="s-tl2-t">{t}</div>
-                <div className="s-tl2-d">{d}</div>
+                <div className="s-tl2-d">{bold(d)}</div>
               </div>
             ))}
           </div>
           <div style={{ background: '#0f0e0c', border: '1px solid var(--gold)', borderRadius: 12, padding: 18, marginTop: 22 }}>
             <div className="s-eye" style={{ color: 'var(--gold)' }}>사건의 본질</div>
-            <p style={{ lineHeight: 1.9, marginBottom: 0 }}>{REVEAL.essence}</p>
+            <p style={{ lineHeight: 1.9, marginBottom: 0 }}>{bold(REVEAL.essence)}</p>
           </div>
         </div>
         <div style={{ textAlign: 'center', margin: '24px 0' }}>

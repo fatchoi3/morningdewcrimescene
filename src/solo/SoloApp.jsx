@@ -17,7 +17,7 @@ import {
 import { pressOf, presentOn } from './interrogation.js';
 import { HallNav } from './features/hub.jsx';
 import { SceneView } from './features/scene.jsx';
-import { CrossExamView } from './features/interrogation.jsx';
+import { CrossExamView, clueUsedAnywhere } from './features/interrogation.jsx';
 import { ClueModal } from './features/clues.jsx';
 import { CaseRecord } from './features/record.jsx';
 import { CaseFileView } from './features/casefile.jsx';
@@ -42,7 +42,7 @@ export default function SoloApp() {
   const update = (patch) => setState((p) => ({ ...p, ...patch }));
   const collectedSet = useMemo(() => new Set(state.collected), [state.collected]);
 
-  const showToast = (t) => { setToast(t); setTimeout(() => setToast((cur) => (cur === t ? null : cur)), 2400); };
+  const showToast = (t, ms = 2400) => { setToast(t); setTimeout(() => setToast((cur) => (cur === t ? null : cur)), ms); };
 
   // 현재 수사 단계 — 진행도로만 열린다(1차 탐문 → 부검 소견 → 2차 심문).
   //   난이도로 전 구역을 미리 열던 옵션은 없앴다: 1장인데 폰·CCTV가 열려 2막 구조가 무너졌다.
@@ -56,10 +56,11 @@ export default function SoloApp() {
   const PHONE_CODES = useMemo(() => provider.getAllClues().filter((c) => c.phone).map((c) => c.code), []);
   const SPECIAL_CODES = useMemo(() => provider.getAllClues().filter((c) => c.type === '특수').map((c) => c.code), []);
   // 새 단계 개방 시 1회 배너 알림
+  //   심문 도중엔 띄우지 않는다 — 대답 한가운데 긴 안내가 끼어들어 무엇을 해야 하는지 놓쳤다(2026-10-01). 나오면 띄우고 오래 둔다.
   useEffect(() => {
-    if (stage > (state.stageSeen || 1)) { showToast(STAGE_BANNER[stage]); update({ stageSeen: stage }); }
+    if (!suspectId && stage > (state.stageSeen || 1)) { showToast(STAGE_BANNER[stage], 9000); update({ stageSeen: stage }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage]);
+  }, [stage, suspectId]);
 
   // 2차 심문 개방 시: 의뢰해 둔 감식 결과 일괄 도착
   useEffect(() => {
@@ -230,7 +231,7 @@ export default function SoloApp() {
                 const patch = { broke: bk };
                 if (r.unlock) { const u = { ...(state.stUnlocked || {}) }; u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])]; patch.stUnlocked = u; }
                 update(patch);
-              } else if (r.result === 'wrong' && !silent) {
+              } else if (r.result === 'wrong' && !silent && !clueUsedAnywhere(code)) {
                 const tr = { ...(state.trust || {}) };
                 const t = Math.max(0, (tr[suspectId] ?? TRUST_MAX) - 1);
                 // 문구에 없던 페널티를 암시하지 않는다 — 신뢰도는 여기서 곧바로 회복되고 쿨다운도 없어서,
@@ -249,7 +250,7 @@ export default function SoloApp() {
               stage,
               requested: (code) => (state.labReq || []).includes(code),
               ready: (code) => gamsikReady(code, state.collected),
-              request: (code) => { update({ labReq: [...new Set([...(state.labReq || []), code])] }); showToast('🔬 감식 의뢰 접수 — 결과는 2차 심문이 열리면 도착합니다'); },
+              request: (code) => { update({ labReq: [...new Set([...(state.labReq || []), code])] }); showToast(stage >= 3 ? '🔬 감식 의뢰 접수 — 결과가 곧 도착합니다' : '🔬 감식 의뢰 접수 — 결과는 2차 심문이 열리면 도착합니다'); },
             }}
             // 3막 진행도는 '2차 심문을 몇 명과 했는가'로 잰다 — 열리는 질문 수가 인물마다 달라
             //   물어본 질문 수로는 셀 수 없다. 여기(대화 시작)가 유일한 심문 진입점이다.
@@ -281,7 +282,8 @@ export default function SoloApp() {
       )}
       {casefileOpen && (
         <SheetOverlay title="🔍 범인 지목" onClose={() => setCasefileOpen(false)}>
-          <CaseFileView state={state} onPick={(sid) => update({ casefile: { culprit: sid } })}
+          <CaseFileView state={state} onPick={(cf) => update({ casefile: cf })}
+            onConfirmLock={(who) => dlg.confirm({ title: '범인 확정', body: <p><b>{who?.name}</b> — 이 사람으로 확정하면 바꿀 수 없습니다. 확정할까요?</p>, ok: '확정한다', cancel: '더 생각한다', tone: 'danger' })}
             // 제출은 되돌릴 수 없다(엔딩의 「새 사건」은 clearSave라 기록까지 사라진다) — 확인창에서
             //   '얼마나 조사하고 지목하는지'를 숫자로 보여준 뒤 물어본다.
             onSubmit={async () => {

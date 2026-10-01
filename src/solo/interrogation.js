@@ -255,7 +255,9 @@ export const DATA = resolveTokens({
           //   한 호흡 안에서 부인하고 인정하는 줄이 된다 — 사실은 내주고 경위만 모른다고 한다.
           text: '(감식 결과지를 천천히 내려놓는다) …설하정. 제 약통에서요. (잠시 말이 없다) …네. 영양제뿐이라고 말씀드린 건 사실이 아닙니다. 그 약이 제 통에 있었습니다. 어떻게 거기 있었는지는 저도 모릅니다.',
           unlock: 'crack' } },
+      // 응급약을 바꿨다고 이미 자백한 판(가짜로 바뀐 응급약 NTGB-51 을 쥔 판)에선 「모릅니다」로 되돌아가면 안 된다(2026-10-01 시험)
       { id: 'crack', say: '거짓', hidden: true, q: '왜 목사님 약이 당신 통에 있죠?',
+        after: { whenClue: 'NTGB-51', text: '(시선을 떨군다) …말씀드린 그대로입니다. 목사님 설하정을 비타민C로 바꾼 건 저고, 빼낸 진짜 약을 버리지 못해 제 통에 넣어 뒀습니다.', press: null }, // 자백 뒤엔 「실수로 샀을 수도」 캐묻기가 앞뒤가 안 맞아 뺀다
         text: '(한동안 말이 없다) …모릅니다. 누가 넣었는지, 왜 거기 있는지. 저는 모르는 일입니다.',
         press: '제가 실수로 샀을 수도 있고, 누가 착각해 섞었을 수도 있죠. 그 약이 제 통에 있다는 것만으로 제가 뭘 했다는 증거는 되지 않습니다. …아닙니까?' },
       // 감식은 코드별 개별 의뢰라 '진짜 설하정 맞음'(GTNV-09)만 도착한 경로가 실재한다 —
@@ -854,7 +856,7 @@ export function visibleStatements(sid, collected = [], unlocked = [], phase = 1)
       return list.some((c) => have.has(c));
     }
     return true;
-  });
+  }).map((s) => (s.after && have.has(s.after.whenClue) ? { ...s, text: s.after.text ?? s.text, press: 'press' in s.after ? s.after.press : s.press } : s));
 }
 
 /** 캐묻기 → { text, unlock?, grants? } (grants: 대화로 확보되는 증언 단서 코드) */

@@ -116,7 +116,7 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
         const inner = (
           <>
             {!got && !isScene && <circle className="cctv-marker-ping" r="13" />}
-            {!isScene && <circle className="cctv-marker-hit" r="17" fill="transparent" />}
+            {!isScene && <circle className="cctv-marker-hit" r="26" fill="transparent" />}
             <circle r={isScene ? 8 : 9} className="cctv-marker-dot" />
             {!isScene && <text className="cctv-marker-glyph" y="4">{got ? '✓' : '?'}</text>}
             <text className="cctv-marker-label" y={isScene ? 23 : 24}>{isScene ? p.who : (got ? p.who : '인물')}</text>
@@ -241,6 +241,21 @@ function CctvModal({ item, evidence = [], onCollect, onClose }) {
 
         <p className="cctv-scene-desc">{scene?.scene}</p>
 
+        {/* ②-1 이 장면에 찍힌 사람 — 평면도의 ? 는 동선을 따라 움직이고 목사방 쪽에선 사라져서 폰에선 잘 안 눌렸다.
+            같은 확보를 단추로도 한다(2026-10-01 솔로 시험: 17개 중 2개만 확보). */}
+        {(scene?.people || []).some((p) => p.unlocks) && (
+          <div className="cctv-picks">
+            {(scene?.people || []).filter((p) => p.unlocks).map((p, i) => {
+              const got = collected.has(p.unlocks);
+              return (
+                <button key={`${scene?.time}-${i}`} className={`cctv-pick${got ? ' got' : ''}`} onClick={() => handlePick(p)}>
+                  {got ? `✓ ${p.who}` : '❓ 이 장면의 인물'}{!got && (scene.people.filter((x) => x.unlocks).length > 1) ? ` ${i + 1}` : ''}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {flash && <div className={`cctv-flash ${flash.ok ? 'ok' : 'no'}`}>{flash.text}</div>}
 
         {/* ③ 창 안에서 단서 상세 인라인 열람 */}
@@ -255,7 +270,7 @@ function CctvModal({ item, evidence = [], onCollect, onClose }) {
           </div>
         )}
 
-        <p className="cctv-help">시간대 칩 → 분단위 ❓를 고르면 그 시점의 동선(화살표)이 보입니다. 평면도의 인물 ❓를 누르면 단서를 확보하고 여기서 바로 펼쳐 봅니다.</p>
+        <p className="cctv-help">시간대 칩 → 분단위 ❓를 고르면 그 시점의 동선(화살표)이 보입니다. 평면도의 인물 ❓(또는 아래 「❓ 이 장면의 인물」 단추)를 누르면 단서를 확보하고 여기서 바로 펼쳐 봅니다.</p>
       </div>
     </div>
   );

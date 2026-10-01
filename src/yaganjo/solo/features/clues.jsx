@@ -5,7 +5,7 @@
 //     일정표형(ScheduleModal) / 필적대조형(HandwritingModal) / 기본형.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react';
-import { getClue, provider, locations, soloContent } from '../content.js';
+import { getClue, provider, locations, soloContent, suspects } from '../content.js';
 import { isPhoneLocked, verifyPhoneLock } from '../services.js';
 import { Shell } from '../ui/overlays.jsx';
 
@@ -32,7 +32,7 @@ const pagerMinH = (pages, hasImage) => {
 };
 
 // ── 단서 열람 모달 ─────────────────────────────────────────────────────────
-export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
+export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talkLog }) {
   const isBody = code === '__body__';
   const c = isBody ? null : getClue(code);
   const [page, setPage] = useState(0);
@@ -101,7 +101,7 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
 
   // 폰형
   if (c.phone) {
-    return <PhoneModal code={code} clue={c} collectedSet={collectedSet} onClose={onClose} onCollect={onCollect} />;
+    return <PhoneModal code={code} clue={c} collectedSet={collectedSet} onClose={onClose} onCollect={onCollect} talkLog={talkLog} />;
   }
 
   // 지갑형 — 항목을 눌러 내용물 확인
@@ -225,7 +225,15 @@ const isChatApp = (t) => t === 'kakao' || t === 'sms';
 // 톡서랍 복구 힌트 — 야간조에는 아직 복구 비번이 걸린 폰이 없다(secrets.recover 가 비어 있다).
 //   폰 잠금 네 자리의 출처는 폰마다 다르고, 그 출처는 카드 본문이 말한다.
 const recoverHint = () => '네 자리 숫자입니다 — 그 사람이 잊지 않는 날짜를 단서에서 찾아보세요';
-function PhoneModal({ code, clue, collectedSet, onClose, onCollect }) {
+// 이미 들은 말 중 비밀번호 이야기 — 잠금 화면에 다시 띄운다(2026-10-01 시험: 「딸 생일」을 듣고도 어디서 들었는지 잊었다)
+const heardPinLines = (talkLog) => {
+  const out = [];
+  for (const s of suspects) for (const r of (talkLog?.[s.id] || [])) {
+    if (/비밀번호|비번|잠금/.test(r.a || '')) out.push({ who: s.name, a: String(r.a).replace(/\s+/g, ' ').slice(0, 90) });
+  }
+  return out.slice(-4);
+};
+function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
   const apps = clue.phone.apps || [];
   const [appId, setAppId] = useState(null);   // null = 홈 화면
   const [chatIdx, setChatIdx] = useState(null); // 카톡: null = 대화 목록
@@ -288,6 +296,14 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect }) {
               <button className="s-btn sm" disabled={pin.length !== 4} onClick={tryPin}>열기</button>
             </div>
             {pinMsg && <div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{pinMsg}</div>}
+            {/* 데이터에 적힌 힌트(「시작한 날」 등)는 처음부터 — 예전엔 아예 보이지 않았다 */}
+            {clue.phone.lock?.hint && <div className="kkr-hint">힌트 — {clue.phone.lock.hint}</div>}
+            {heardPinLines(talkLog).length > 0 && (
+              <div className="kkr-heard">
+                <div className="kkr-heard-h">🗣 들은 말 — 비밀번호 이야기</div>
+                {heardPinLines(talkLog).map((h, i) => <div key={i}><b>{h.who}</b> 「{h.a}」</div>)}
+              </div>
+            )}
             {pinFails >= 3 && <div className="kkr-hint">힌트: {recoverHint(clue)}</div>}
           </div>
         ) : !app ? (
@@ -362,7 +378,7 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect }) {
                         <span className="kk-av">{initial(ch.name)}</span>
                         <span className="kk-body">
                           <span className="kk-name">{ch.name}{ch.deleted && <span className="s-tag danger">{locked ? '삭제됨' : '복원됨'}</span>}</span>
-                          <span className="kk-prev">{locked ? '🔒 삭제된 대화 — 복구 필요' : (last?.text || '')}</span>
+                          <span className="kk-prev">{locked ? '🔒 삭제된 대화 — 눌러서 복구' : (last?.text || '')}</span>
                         </span>
                       </button>
                     );

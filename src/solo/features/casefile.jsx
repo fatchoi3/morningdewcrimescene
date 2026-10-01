@@ -1,32 +1,80 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// features/casefile — 사건 파일(최종 제출): 범인 한 명만 지목 → 채점/엔딩.
+// features/casefile — 사건 파일(최종 제출): 범인 한 명을 확정한 뒤 그 사람의 수법·동기 → 채점/엔딩.
+//   정답/오답은 범인으로 가른다. 수법·동기는 범인을 맞혔을 때만 따로 ✓/✗ 로 매긴다.
+//   (새벽이슬판) 보기는 caseKey 의 행위·동기 목록에서 「무고」만 뺀 것 — 여섯의 행위가 섞여 있어
+//   「누가 무엇을 했는가」를 가려야 고른다. 예전엔 범인 한 명만 골라서 수법·동기를 맞힐 길이 없었다(2026-10-01 시험).
+//   범인을 「확정」하기 전에는 목록을 띄우지 않고, 확정은 한 번 물은 뒤 되돌릴 수 없다 — 목록을 먼저 훑어 힌트로 쓰지 못하게.
 // ─────────────────────────────────────────────────────────────────────────────
-import { suspects } from '../content.js';
+import { suspects, soloContent } from '../content.js';
 import { Avatar } from '../art.jsx';
 
-// ── 사건 파일(최종 제출) — 범인 한 명만 지목 ──
-export function CaseFileView({ state, onPick, onSubmit }) {
-  const pick = state.casefile?.culprit || null;
+const METHODS = soloContent.caseKey.methods.filter((m) => m.id !== 'm_none');
+const MOTIVES = soloContent.caseKey.motives.filter((m) => m.id !== 'mo_none');
+
+function Choice({ title, items, value, onPick }) {
   return (
-    <>
-      <p style={{ color: 'var(--muted)', lineHeight: 1.7, margin: '0 0 14px' }}>
-        모은 단서와 심문을 근거로, 이 사건의 <b style={{ color: 'var(--text)' }}>범인</b>을 한 명 지목하세요.
-        제출하면 사건이 종결되고 전말이 공개됩니다.
-      </p>
+    <div style={{ marginTop: 18 }}>
+      <div className="s-eye" style={{ marginBottom: 8 }}>{title}</div>
       <div className="s-accuse-list">
-        {suspects.map((s) => (
-          <button key={s.id} className={`s-accuse-row${pick === s.id ? ' on' : ''}`} onClick={() => onPick(s.id)}>
-            <Avatar person={s.name} image={s.image} size={44} />
-            <div className="ar-body"><div className="ar-name">{s.name}</div><div className="ar-occ">{s.occupation}</div></div>
-            <span className="ar-radio">{pick === s.id ? '◉' : '○'}</span>
+        {items.map((m) => (
+          <button key={m.id} className={`s-accuse-row${value === m.id ? ' on' : ''}`} onClick={() => onPick(m.id)}>
+            <div className="ar-body"><div className="ar-occ" style={{ fontSize: '.86rem', color: 'var(--text)', marginTop: 0, lineHeight: 1.55 }}>{m.label}</div></div>
+            <span className="ar-radio">{value === m.id ? '◉' : '○'}</span>
           </button>
         ))}
       </div>
-      <div style={{ textAlign: 'center', margin: '20px 0 4px' }}>
-        <button className="s-btn" disabled={!pick} style={!pick ? { opacity: 0.5 } : {}} onClick={onSubmit}>
-          {pick ? '사건 파일 제출 →' : '범인을 지목하세요'}
-        </button>
-      </div>
+    </div>
+  );
+}
+
+// ── 사건 파일(최종 제출) ──
+export function CaseFileView({ state, onPick, onSubmit, onConfirmLock }) {
+  const cf = state.casefile || {};
+  const pick = cf.culprit || null;
+  const locked = !!(pick && cf.locked);
+  const ready = locked && cf.method && cf.motive;
+  const set = (patch) => onPick({ ...cf, ...patch });
+  const picked = suspects.find((s) => s.id === pick);
+  return (
+    <>
+      <p style={{ color: 'var(--muted)', lineHeight: 1.7, margin: '0 0 14px' }}>
+        모은 단서와 심문을 근거로, 이 사건의 <b style={{ color: 'var(--text)' }}>범인</b>을 한 명 확정하고
+        그 사람이 <b style={{ color: 'var(--text)' }}>어떻게</b>, <b style={{ color: 'var(--text)' }}>왜</b> 했는지 고르세요.
+        제출하면 사건이 종결되고 전말이 공개됩니다.
+      </p>
+      {!locked ? (
+        <>
+          <div className="s-accuse-list">
+            {suspects.map((s) => (
+              <button key={s.id} className={`s-accuse-row${pick === s.id ? ' on' : ''}`} onClick={() => set({ culprit: s.id, method: null, motive: null })}>
+                <Avatar person={s.name} image={s.image} size={44} />
+                <div className="ar-body"><div className="ar-name">{s.name}</div><div className="ar-occ">{s.occupation}</div></div>
+                <span className="ar-radio">{pick === s.id ? '◉' : '○'}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', margin: '20px 0 4px' }}>
+            {/* 확정 전에 한 번 묻는다 — 확정한 뒤에는 되돌릴 수 없다. 아무나 확정해 목록만 훑고 되돌아가던 길을 막는다(5회차 #3) */}
+            <button className="s-btn" disabled={!pick} style={!pick ? { opacity: 0.5 } : {}} onClick={async () => { if (await onConfirmLock(picked)) set({ locked: true }); }}>
+              {pick ? `${picked?.name} — 이 사람으로 확정 →` : '범인을 지목하세요'}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="s-accuse-row on" style={{ cursor: 'default' }}>
+            <Avatar person={picked?.name} image={picked?.image} size={44} />
+            <div className="ar-body"><div className="ar-name">{picked?.name}</div><div className="ar-occ">범인으로 확정</div></div>
+          </div>
+          <Choice title="수법 — 어떻게 죽였는가" items={METHODS} value={cf.method} onPick={(id) => set({ method: id })} />
+          <Choice title="동기 — 왜 죽였는가" items={MOTIVES} value={cf.motive} onPick={(id) => set({ motive: id })} />
+          <div style={{ textAlign: 'center', margin: '20px 0 4px' }}>
+            <button className="s-btn" disabled={!ready} style={!ready ? { opacity: 0.5 } : {}} onClick={onSubmit}>
+              {ready ? '사건 파일 제출 →' : '수법과 동기를 고르세요'}
+            </button>
+          </div>
+        </>
+      )}
     </>
   );
 }

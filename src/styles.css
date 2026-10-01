@@ -2567,3 +2567,8 @@ textarea {
   font-size: 0.8rem;
   pointer-events: none;
 }
+
+/* CCTV — 장면 속 인물 단추(평면도의 움직이는 ? 대신 눌러도 된다) */
+.cctv-picks { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.cctv-pick { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #4a90e2; background: #0f1a2a; color: #cfe3ff; font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; }
+.cctv-pick.got { border-color: #5cb85c; color: #bfe8bf; background: #10200f; }

@@ -157,6 +157,9 @@ export function EventVN2({ onDone, hasTumbler }) {
   );
 }
 
+// 전말·타임라인의 **굵게** 를 굵은 글씨로 — 그대로 두면 별표가 보였다(2026-10-01 시험)
+const bold = (s) => String(s || '').split(/\*\*(.+?)\*\*/g).map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
+
 // ── 엔딩 — 정/오답 + 사건 전말 + 그날의 진실(타임라인) ────────────────────────
 export function EndingScreen({ result, onNewCase }) {
   const r = result;
@@ -166,7 +169,9 @@ export function EndingScreen({ result, onNewCase }) {
         <EndingArt good={r.culpritRight} />
         <div className="s-score">
           <div className="s-eye">사건 종결</div>
-          <div className="big" style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)' }}>{r.culpritRight ? '정답' : '오답'}</div>
+          <div className="big" style={{ color: !r.culpritRight ? 'var(--danger)' : r.methodRight && r.motiveRight ? 'var(--gold)' : 'var(--ok)' }}>
+            {!r.culpritRight ? '오답' : r.methodRight && r.motiveRight ? '완벽한 해결' : '범인 정답'}
+          </div>
           <div style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)', fontWeight: 800, marginTop: 6 }}>
             {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : `✗ 당신의 지목: ${suspects.find((s) => s.id === r.pick)?.name || '—'}`}
           </div>
@@ -191,7 +196,7 @@ export function EndingScreen({ result, onNewCase }) {
             return (
               <div key={id} style={{ marginTop: 16 }}>
                 <h3>{s?.name} <span className="role">— {REVEAL.people[id].role}</span></h3>
-                <p style={{ lineHeight: 1.8 }}>{REVEAL.people[id].text}</p>
+                <p style={{ lineHeight: 1.8 }}>{bold(REVEAL.people[id].text)}</p>
               </div>
             );
           })}
@@ -200,13 +205,13 @@ export function EndingScreen({ result, onNewCase }) {
             {TIMELINE.map(([t, d], i) => (
               <div className="s-tl2-row" key={i}>
                 <div className="s-tl2-t">{t}</div>
-                <div className="s-tl2-d">{d}</div>
+                <div className="s-tl2-d">{bold(d)}</div>
               </div>
             ))}
           </div>
           <div style={{ background: '#0f0e0c', border: '1px solid var(--gold)', borderRadius: 12, padding: 18, marginTop: 22 }}>
             <div className="s-eye" style={{ color: 'var(--gold)' }}>사건의 본질</div>
-            <p style={{ lineHeight: 1.9, marginBottom: 0 }}>{REVEAL.essence}</p>
+            <p style={{ lineHeight: 1.9, marginBottom: 0 }}>{bold(REVEAL.essence)}</p>
           </div>
         </div>
         <div style={{ textAlign: 'center', margin: '24px 0' }}>

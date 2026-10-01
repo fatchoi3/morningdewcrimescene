@@ -15,9 +15,9 @@ import { CenterMap, mapAt } from './centerMap.jsx';
 //   흐엉은 D구역 반품 작업대 앞, 임기석은 배터리실. person 은 방 데이터와 맞춰야 하는 조회 키라 cast 에서 뽑는다.
 const PERSON_SPOTS = [
   { sid: 'S1', person: cast.S1.name, at: mapAt(6, 16, { floor: 2 }) },
-  { sid: 'S2', person: cast.S2.name, at: mapAt(47, 45.5) },
-  { sid: 'S3', person: cast.S3.name, at: mapAt(60, 50.2) },
-  { sid: 'S5', person: cast.S5.name, at: mapAt(71, 40.5) },
+  { sid: 'S2', person: cast.S2.name, at: mapAt(43.5, 45.5) },
+  { sid: 'S3', person: cast.S3.name, at: mapAt(58, 50.2) },
+  { sid: 'S5', person: cast.S5.name, at: mapAt(74.5, 40.5) },
   { sid: 'S4', person: cast.S4.name, at: mapAt(104.5, 51) },
   { sid: 'S6', person: cast.S6.name, at: mapAt(52.6, 23) },
 ];

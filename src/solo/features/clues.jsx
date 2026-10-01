@@ -302,7 +302,7 @@ function PhoneModal({ code, clue, onClose }) {
                         <span className="kk-av">{initial(ch.name)}</span>
                         <span className="kk-body">
                           <span className="kk-name">{ch.name}{ch.deleted && <span className="s-tag danger">{locked ? '삭제됨' : '복원됨'}</span>}</span>
-                          <span className="kk-prev">{locked ? '🔒 삭제된 대화 — 복구 필요' : (last?.text || '')}</span>
+                          <span className="kk-prev">{locked ? '🔒 삭제된 대화 — 눌러서 복구' : (last?.text || '')}</span>
                         </span>
                       </button>
                     );
@@ -317,7 +317,8 @@ function PhoneModal({ code, clue, onClose }) {
                   <div className="s-kk-recover">
                     <div className="kkr-lock">🔒 삭제된 대화</div>
                     <div className="kkr-desc">톡서랍 복구 비밀번호가 필요합니다.</div>
-                    {fails >= 3 && <div className="kkr-hint">힌트: {recoverHint(clue)}</div>}
+                    {/* 실마리는 처음부터 — 세 번 틀린 뒤에만 떠서 복구 방법을 끝내 몰랐다(2026-10-01 시험) */}
+                    <div className="kkr-hint">🔑 실마리: {recoverHint(clue)}</div>
                     <div className="s-pw"><input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="복구 비밀번호 4자리" inputMode="numeric" /><button className="s-btn sm" onClick={tryRecover}>복구</button></div>
                     {msg && <div className="kkr-err">{msg}</div>}
                   </div>

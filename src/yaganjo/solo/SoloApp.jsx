@@ -18,7 +18,7 @@ import { pressOf, presentOn } from './interrogation.js';
 import { HallNav } from './features/hub.jsx';
 import { LoadingBar } from './art.jsx';
 import { SceneView } from './features/scene.jsx';
-import { CrossExamView } from './features/interrogation.jsx';
+import { CrossExamView, clueUsedAnywhere } from './features/interrogation.jsx';
 import { ClueModal } from './features/clues.jsx';
 import { CaseRecord } from './features/record.jsx';
 import { CaseFileView } from './features/casefile.jsx';
@@ -42,7 +42,7 @@ export default function SoloApp() {
   const update = (patch) => setState((p) => ({ ...p, ...patch }));
   const collectedSet = useMemo(() => new Set(state.collected), [state.collected]);
 
-  const showToast = (t) => { setToast(t); setTimeout(() => setToast((cur) => (cur === t ? null : cur)), 2400); };
+  const showToast = (t, ms = 2400) => { setToast(t); setTimeout(() => setToast((cur) => (cur === t ? null : cur)), ms); };
 
   // 현재 수사 단계 — 진행도로만 열린다(1차 탐문 → 부검 소견 → 2차 심문).
   //   난이도로 전 구역을 미리 열던 옵션은 없앴다: 1장인데 폰·CCTV가 열려 2막 구조가 무너졌다.
@@ -56,10 +56,11 @@ export default function SoloApp() {
   const PHONE_CODES = useMemo(() => provider.getAllClues().filter((c) => c.phone).map((c) => c.code), []);
   const SPECIAL_CODES = useMemo(() => provider.getAllClues().filter((c) => c.type === '특수').map((c) => c.code), []);
   // 새 단계 개방 시 1회 배너 알림
+  //   심문 도중엔 띄우지 않는다 — 대답 한가운데 긴 안내가 끼어들어 무엇을 해야 하는지 놓쳤다(2026-10-01). 나오면 띄우고 오래 둔다.
   useEffect(() => {
-    if (stage > (state.stageSeen || 1)) { showToast(STAGE_BANNER[stage]); update({ stageSeen: stage }); }
+    if (!suspectId && stage > (state.stageSeen || 1)) { showToast(STAGE_BANNER[stage], 9000); update({ stageSeen: stage }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage]);
+  }, [stage, suspectId]);
 
   // 감식 결과 도착 — 질식을 말하지 않는 셋(텀블러·약봉투·보온병)은 **맡기는 즉시**, 나머지는 2차 심문 때.
   //   보드판은 이벤트 ② 부터 감식 결과를 읽는다. 솔로가 전부 2차 부검과 같은 순간에 주면
@@ -217,7 +218,7 @@ export default function SoloApp() {
       + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED} · 감식 의뢰 ${Math.min((state.labReq || []).length, 1)}/1 · 그 뒤 심문 ${state.talkAfterLab ? 1 : 0}/1` : '');
   // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
-    : progressStage < 3 ? `C통로 현장 단서 ${SCENE_NEEDED}개를 찾고 감식을 한 건 맡긴 뒤, 한 사람을 더 심문하고 나오면 곧바로 2차 심문이 열립니다 — 둘러볼 곳은 그 전에`
+    : progressStage < 3 ? `C통로 현장 단서 ${SCENE_NEEDED}개를 찾고 감식을 한 건 이상 맡긴 뒤(여러 건 맡겨도 된다), 한 사람을 더 심문하고 나오면 곧바로 2차 심문이 열립니다 — 둘러볼 곳은 그 전에`
     : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요';
   const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
 
@@ -271,7 +272,7 @@ export default function SoloApp() {
                 const patch = { broke: bk };
                 if (r.unlock) { const u = { ...(state.stUnlocked || {}) }; u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])]; patch.stUnlocked = u; }
                 update(patch);
-              } else if (r.result === 'wrong' && !silent) {
+              } else if (r.result === 'wrong' && !silent && !clueUsedAnywhere(code)) {
                 const tr = { ...(state.trust || {}) };
                 const t = Math.max(0, (tr[suspectId] ?? TRUST_MAX) - 1);
                 // 문구에 없던 페널티를 암시하지 않는다 — 신뢰도는 여기서 곧바로 회복되고 쿨다운도 없어서,
@@ -354,7 +355,7 @@ export default function SoloApp() {
       )}
 
       {modalCode && (
-        <ClueModal code={modalCode} collectedSet={collectedSet}
+        <ClueModal code={modalCode} collectedSet={collectedSet} talkLog={state.talkLog}
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {toast && <div className="s-toast">{toast}</div>}

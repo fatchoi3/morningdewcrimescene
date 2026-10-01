@@ -233,7 +233,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       <DialogueBox location={isLab ? '감식 의뢰실' : location.label}
         actions={[{ label: '🚶 나가기', onClick: onBack }]}
         text={isLab
-          ? '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 결과는 2차 심문이 열릴 때 도착한다.'
+          ? (stage >= 3 ? '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 지금은 맡기면 곧바로 결과가 나온다.' : '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 결과는 2차 심문이 열릴 때 도착한다.')
           : ('테두리가 빛나는 물건을 누르면 조사할 수 있다.' + (roomSuspect ? ` ${roomSuspect.name}${josa(roomSuspect.name, '을', '를')} 누르면 이야기할 수 있다.` : ''))} />
     </div>
   );

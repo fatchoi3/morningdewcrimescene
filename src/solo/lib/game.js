@@ -355,6 +355,11 @@ export const isUiTap = (e) => !!e.target.closest('button, .aa-ask, .aa-present, 
 
 // 채점 — 범인 한 명만 지목(S4 = 서지안, 진범)
 export function scoreCase(casefile) {
-  const pick = casefile?.culprit || null;   // 범인 한 명만 지목
-  return { culpritRight: pick === 'S4', pick }; // S4 = 서지안(진범)
+  const pick = casefile?.culprit || null;
+  const right = pick === 'S4'; // S4 = 서지안(진범)
+  return {
+    culpritRight: right, pick,
+    method: casefile?.method || null, methodRight: right && casefile?.method === 'm_pillow',
+    motive: casefile?.motive || null, motiveRight: right && casefile?.motive === 'mo_cert',
+  };
 }

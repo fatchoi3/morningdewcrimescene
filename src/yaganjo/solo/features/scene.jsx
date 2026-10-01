@@ -109,6 +109,8 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         const zoneLab = have ? c.title
           : locked ? '🔒 잠김'
           : isGamsik && lab ? (req ? '🔬 분석 중…' : lab.ready(code) ? '🔬 감식 의뢰' : '채취물 필요')
+          // 관제실 — 이름 없는 작은 칸 열넷이라 무엇이 어느 카메라인지 몰랐다(2026-10-01). 카메라·시각만 짧게
+          : location.kind === 'cctv' ? (() => { const t = String(c.title || '').replace(/^\[CCTV\]\s*/, '').split(' — ')[0].split(' '); return `${t[0]} ${t[t.length - 1]}`; })()
           : '조사';
         // 핫스팟: w/h가 있으면 물건 크기에 맞춘 상자, poly가 있으면 실루엣 모양.
         //   poly는 버튼 자체를 clip-path로 잘라 '실루엣 안에서만' 클릭되게 한다 →

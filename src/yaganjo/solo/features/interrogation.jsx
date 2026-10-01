@@ -6,7 +6,7 @@
 //   ❗=새 질문 · ✔=이미 물음 · ✅=모순 밝힌 질문.
 //   (증언/진술 데이터·판정 로직은 ../interrogation.js 를 참조)
 // ─────────────────────────────────────────────────────────────────────────────
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getClue, clueIcon } from '../content.js';
 import { TRUST_MAX, isUiTap } from '../lib/game.js';
 import { DATA, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
@@ -24,10 +24,11 @@ function ClueAsk({ c, k, onPick }) {
 }
 
 // 진술 질문 한 줄. ✅=모순 짚음 · ❗=새로 열림 · ✔=이미 물음
-function Ask({ s, k, label, onPick, tut }) {
+function Ask({ s, k, label, onPick, tut, breakable }) {
   return (
     <button className={k.broke ? 'done' : k.isNew ? 'new' : k.asked ? 'asked' : ''} data-tut={tut ? 'tut-q' : undefined} onClick={() => onPick(s)}>
       {k.broke ? '✅ ' : k.isNew ? '❗ ' : k.asked ? '✔ ' : '💬 '}{label}
+      {breakable && <span className="aa-breakable" title="지금 가진 단서로 무너뜨릴 수 있는 대답"> ⚖</span>}
     </button>
   );
 }
@@ -36,6 +37,12 @@ function Ask({ s, k, label, onPick, tut }) {
 //   예전엔 'guide' 만 걸러서, 수사관의 추궁문("❗모순 — …CCTV에 찍혔습니다")과 독백까지
 //   용의자 이름표를 달고 나왔다(자기가 자기를 추궁하는 꼴).
 const NOTE_KINDS = new Set(['guide', 'note']);
+
+// 이 단서가 누구의 말에든(모순·반응) 쓰이는가 — 쓰이는 단서를 엉뚱한 대답에 낸 것은 「거의 맞은」 반박이라
+//   신뢰도를 깎지 않는다. 아무 데도 안 쓰이는 단서일 때만 깎는다(2026-10-01 시험: 억울하다는 말).
+export function clueUsedAnywhere(code) {
+  return Object.keys(DATA).some((id) => (DATA[id]?.statements || []).some((st) => (st.contradict?.codes || []).includes(code) || (st.soft && code in st.soft)));
+}
 
 // 엉뚱한 단서를 들이댔을 때 붙이는 방향 한 줄 — 답은 주지 않고 「어디에 쓸 단서인가」만.
 //   예전엔 늘 같은 한 줄이라 세 사람 모두 「왜 틀렸는지 모르겠다」고 했다(2026-09-30 시험).
@@ -127,10 +134,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
   // 질문 정렬: 새로 열린 질문(0) → 아직 안 한 질문(1) → 이미 물은 질문(2) → 모순 짚은 질문(3) 순으로 위→아래
   //   (예전엔 물은 질문·모순 짚은 질문을 아래로 내려 물을 때마다 목록이 뒤섞였다 — 2026-09-30 시험)
-  const qRank = (s) => {
-    const done = broke.find((e) => e.id === s.id) || askedIds.includes(s.id) || pressedIds.includes(s.id);
-    return s.hidden && !done ? 0 : 1;
-  };
+  //   새로 열린 질문을 맨 위에 끼우던 것도 없앴다 — 끼어들면 아래 질문이 한 칸씩 밀려 엉뚱한 걸 눌렀다(2026-10-01).
+  const qRank = () => 0;
   const byQ = (a, b) => qRank(a) - qRank(b);
   // 최상위엔 기본 질문 + 모순으로 열린 질문. 단서로 열리는 질문은 화제 안으로 들어가는데,
   //   그 화제가 아직 안 열려 있으면 최상위로 되돌린다 — 안 그러면 질문이 화면에서 증발한다
@@ -152,8 +157,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   // 반박 시트 — 21~30장이 주운 순서대로 깔려 있어 폰에서 3~4화면을 훑어야 했다.
   //   아직 안 써본 것을 위로 올리고, 인물로 좁힐 수 있게 한다(화제 목록과 같은 ❗/✔/✅ 표시).
   const presentPersons = [...new Set(presentable.map((c) => c.person).filter(Boolean))];
-  const presentList = presentable.filter((c) => !pPerson || c.person === pPerson)
-    .sort((a, b) => cRank(a) - cRank(b));
+  //   (쓴 증거를 뒤로 보내던 정렬은 뺐다 — 같은 자리를 다시 누르면 엉뚱한 증거가 나갔다. 2026-10-01)
+  const presentList = presentable.filter((c) => !pPerson || c.person === pPerson);
 
   // 화제 안에서 아직 안 물어본 게 남았나 — 다 들었으면 대사창이 그만 나가자고 말해준다
   const leftInTopic = openTopic
@@ -172,6 +177,14 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const pendingRoot = rootSts.filter((x) => !sKey(x).asked && !sKey(x).broke).length + topics.filter((t) => topicLeft(t) > 0).length;
   // 질문지가 떠 있는 동안 대사창에 나가는 글은 인물의 말이 아니라 화면 안내다 — 타이핑 판정에도 쓴다
   const menuOpen = !line && !cur;
+  // 질문지를 밀어 둔 자리 — 대답을 보고 돌아오면 목록이 맨 위로 돌아가 다시 찾아야 했다(2026-10-01)
+  const askRef = useRef(null);
+  const askScroll = useRef({});
+  const askKey = openTopicId || '_root';
+  useLayoutEffect(() => {
+    if (menuOpen && askRef.current) askRef.current.scrollTop = askScroll.current[askKey] || 0;
+  }, [menuOpen, askKey]);
+  const breakableOf = (s) => !brokeOf(s.id) && (s.contradict?.codes || []).some((c) => collected.includes(c));
   const dlgText = line ? line.text
     : cur ? cur.text
     : openTopic ? (leftInTopic > 0
@@ -255,7 +268,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       const own = c && c.person === suspect.name;
       setLine({ text: (own
         ? '…그건 제 물건이 맞는데요. 지금 이 얘기랑 무슨 상관이죠?'
-        : '그건 제 것도 아닌데… 왜 저한테 보여주시는 거예요?') + '\n' + wrongHint(sid, code), kind: 'wrong' });
+        : '그건 제 것도 아닌데… 왜 저한테 보여주시는 거예요?') + '\n' + wrongHint(sid, code)
+        + (clueUsedAnywhere(code) ? ' (신뢰도는 그대로다.)' : ' (♥ 하나를 잃었다.)'), kind: 'wrong' });
     }
   };
 
@@ -364,7 +378,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {isTutorial && <div className="aa-tut-chip">📖 튜토리얼 — 처음이니 차근차근</div>}
       {/* 수첩은 여기가 아니라 대사창 액션행에 있다 — 위쪽 우측은 폰 세로에서 엄지가 닿지 않는다 */}
       <TopHud>
-        <div className="aa-hp" title="신뢰도">
+        <div className="aa-hp" title="신뢰도" role="button"
+          onClick={(e) => { e.stopPropagation(); setLine({ kind: 'note', text: '(수사 노트) ♥ 는 이 사람의 신뢰도다. 아무 데도 쓰이지 않는 단서를 들이밀면 하나씩 준다 — 다른 대답·다른 사람에게 쓰일 단서는 깎이지 않는다. 다 떨어지면 이번 심문이 끝나지만, 다시 찾아오면 채워져 있다.' }); }}>
           <span style={{ color: '#e8706e' }}>{'♥'.repeat(trust)}</span><span style={{ opacity: .28 }}>{'♡'.repeat(TRUST_MAX - trust)}</span>
         </div>
       </TopHud>
@@ -379,10 +394,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
       {/* 질문지 — 최상위(기본 질문 + 이야깃거리) 또는 화제 안. 한 화면에 한 겹만 보인다 */}
       {menuOpen && !openTopic && (
-        <div className="aa-ask">
+        <div className="aa-ask" ref={askRef} onScroll={(e) => { askScroll.current[askKey] = e.currentTarget.scrollTop; }}>
           <div className="aa-ask-h">🎙 무엇을 물어볼까{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
           {rootSts.length > 0 && <div className="aa-ask-sec">💬 질문</div>}
-          {rootSts.map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} />)}
+          {rootSts.map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} breakable={breakableOf(s)} />)}
           {/* 이야깃거리 — 관련 단서를 챙기면 열린다. 파생 질문은 안에 들어가야 보인다 */}
           {topics.length > 0 && <div className="aa-ask-sec">📁 단서로 여는 이야기</div>}
           {topics.map((t) => {
@@ -405,9 +420,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
       {/* 화제 안 — 이 이야기에서 파생된 질문과 단서만 */}
       {menuOpen && openTopic && (
-        <div className="aa-ask">
+        <div className="aa-ask" ref={askRef} onScroll={(e) => { askScroll.current[askKey] = e.currentTarget.scrollTop; }}>
           <div className="aa-ask-h">📁 {openTopic.q}</div>
-          {stsOf(openTopic).sort(byQ).map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} />)}
+          {stsOf(openTopic).sort(byQ).map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} breakable={breakableOf(s)} />)}
           {cluesOf(openTopic).map((c) => <ClueAsk key={c.code} c={c} k={cKey(c)} onPick={askAboutClue} />)}
           {/* 화제를 꺼낸 대답에서 한 겹 더 — 수사에 진전을 주지 않는 여담이라 ❗를 달지 않고
               맨 아래(급하지 않은 것) 자리에 둔다. 남은 개수(leftInTopic)에도 넣지 않는다 */}

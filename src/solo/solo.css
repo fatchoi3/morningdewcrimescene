@@ -777,3 +777,12 @@ button { font-family: inherit; }
 .hall-steps i.done { color: #9fd6a2; border-color: #9fd6a255; }
 .hall-steps i.now { color: #1a1a1a; background: var(--gold); border-color: var(--gold); }
 .hall-accuse small { display: block; font-size: .66rem; font-weight: 700; opacity: .85; }
+/* 목록이 대사창 위에서 끝나게(vn.jsx 가 --dlg-h 를 잰다) */
+.aa-ask { bottom: calc(var(--dlg-h, 140px) + 14px); max-height: calc(100dvh - var(--dlg-h, 140px) - 140px); }
+.aa-breakable { color: #ffd479; font-weight: 800; }
+.aa-hp { cursor: pointer; }
+
+/* CCTV — 장면 속 인물 단추(평면도의 움직이는 ? 대신 눌러도 된다) */
+.cctv-picks { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.cctv-pick { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #4a90e2; background: #0f1a2a; color: #cfe3ff; font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; }
+.cctv-pick.got { border-color: #5cb85c; color: #bfe8bf; background: #10200f; }
