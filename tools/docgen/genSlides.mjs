@@ -1,16 +1,12 @@
 // 게임 진행용 슬라이드(.pptx) 생성기 — 참가자용(빔프로젝터로 띄워 보여주는 화면).
 //   피해자·용의자(웹 인물 이미지)·핸드폰 QR은 gameData에서 자동 파생.
 //   운영자 전용 지시 슬라이드는 넣지 않는다(참가자 시점). 조 이름은 TEAMS 상수.
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-import { existsSync } from 'node:fs';
+//   node: 모듈을 들이지 않는다 — 브라우저 인쇄물 키트(/qr-kit)도 이 파일을 그대로 돌린다.
+//   인물 사진은 부르는 쪽이 data URL 로 넘긴다(Node 는 public/ 에서 읽고, 브라우저는 사이트에서 받는다).
 import pptxgen from 'pptxgenjs';
 import QRCode from 'qrcode';
 import { evidenceMap, victim, suspects, SITE_URL, PERSON_ORDER, PERSON_COLOR } from './loadData.mjs';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PUBLIC = join(__dirname, '..', '..', 'public');
-const imgPath = (webPath) => join(PUBLIC, (webPath || '').replace(/^\//, ''));
 
 const DARK = '0F0E0C', PANEL = '1B1813', GOLD = 'C9A84C', LIGHT = 'E8E4DC', GREY = '9C9A92', LINE = '4A463E';
 const hx = (c) => (c || '#666666').replace('#', '');
@@ -91,10 +87,14 @@ function drawScanMock(pptx, slide, x, y, w, code) {
   slide.addText('스캔이 어려우면 코드를 직접 입력하세요. (대소문자 구분 없음)', { x: x + 0.3, y: y + 2.75, w: w - 0.6, h: 0.7, fontSize: 10, color: '8A8270', lineSpacingMultiple: 1.2 });
 }
 
+// 슬라이드에 실리는 인물 사진(웹 경로) — 부르는 쪽이 이것들을 data URL 로 읽어 넘긴다
+export const slideImagePaths = () => [victim.image, ...suspects.map((sp) => sp.image)].filter(Boolean);
+
+let IMAGES = {};
 function personImage(pptx, slide, webPath, name, color, x, y, w, h) {
-  const p = imgPath(webPath);
-  if (webPath && existsSync(p)) {
-    slide.addImage({ path: p, x, y, w, h, sizing: { type: 'contain', w, h }, rounding: false });
+  const data = webPath && IMAGES[webPath];
+  if (data) {
+    slide.addImage({ data, x, y, w, h, sizing: { type: 'contain', w, h }, rounding: false });
   } else {
     // 이미지 없으면 색 박스 + 이니셜
     slide.addShape(pptx.ShapeType.rect, { x, y, w, h, fill: { color: hx(color) } });
@@ -105,7 +105,9 @@ function personImage(pptx, slide, webPath, name, color, x, y, w, h) {
 // 6개 조 (조 인원·편성은 별도 공지)
 const TEAMS = ['원영조', '민경조', '재헌조', '도현조', '정혁조', '예림조'];
 
-export async function genSlidesPptx(outPath) {
+// images: { 웹경로: data URL } — 없는 사진은 색 박스 + 이니셜로 그린다. 만든 덱(pptxgen)을 돌려준다.
+export async function buildSlidesDeck(images = {}) {
+  IMAGES = images;
   const pptx = new pptxgen();
   pptx.layout = 'LAYOUT_WIDE';      // 13.33 x 7.5 inch
   pptx.author = 'Morning Dew Crime Scene';
@@ -331,6 +333,5 @@ export async function genSlidesPptx(outPath) {
   s.addText('진실을 밝혀라', { x: 0.9, y: 2.9, w: 11.5, h: 1.1, fontSize: 44, color: LIGHT, bold: true, align: 'center' });
   s.addText(urlText, { x: 0.9, y: 4.1, w: 11.5, h: 0.6, fontSize: 18, color: GOLD, bold: true, align: 'center' });
 
-  await pptx.writeFile({ fileName: outPath });
-  return outPath;
+  return pptx;
 }

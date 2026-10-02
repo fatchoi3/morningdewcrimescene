@@ -1,7 +1,7 @@
 // 운영 문서 일괄 생성기.
 //   node tools/docgen/build.mjs          → HTML + PDF 모두 생성
 //   node tools/docgen/build.mjs --html   → HTML만 (puppeteer 불필요)
-import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -11,7 +11,7 @@ import { genPlaceGuide } from './genPlace.mjs';
 import { genTruth } from './genTruth.mjs';
 import { genQRDocs } from './genQR.mjs';
 import { genResultSheet } from './genResult.mjs';
-import { genSlidesPptx } from './genSlides.mjs';
+import { buildSlidesDeck, slideImagePaths } from './genSlides.mjs';
 import { genBoardDocs } from './genBoard.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -67,7 +67,14 @@ async function main() {
   try {
     mkdirSync(OUT, { recursive: true });
     const pptPath = join(OUT, '게임진행_슬라이드.pptx');
-    await genSlidesPptx(pptPath);
+    // 인물 사진은 public/ 에서 읽어 data URL 로 넘긴다(브라우저 키트는 사이트에서 받는다)
+    const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
+    const images = {};
+    for (const wp of slideImagePaths()) {
+      const f = join(__dirname, '..', '..', 'public', wp.replace(/^\//, ''));
+      if (existsSync(f)) images[wp] = `data:${MIME[wp.split('.').pop().toLowerCase()] || 'image/png'};base64,${readFileSync(f).toString('base64')}`;
+    }
+    await (await buildSlidesDeck(images)).writeFile({ fileName: pptPath });
     console.log('✔ PPT 생성 →', pptPath);
   } catch (e) {
     console.log('⚠ PPT 생성 실패:', e.message);
