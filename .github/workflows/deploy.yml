@@ -46,7 +46,7 @@ jobs:
       #   (S3 REST 오리진 + OAC 라 디렉터리 index 가 자동으로 안 붙는다. 이 방식이면
       #    CloudFront Function 없이 같은 주소를 만들 수 있다.)
       #   위 sync 가 --delete 라 매 배포마다 지워졌다 다시 올라간다 — 순서가 중요하다.
-      - name: Pretty URL (/solo-play, /morningdew-solo, /board-kit, /cctv, /unlock, /clue, /yaganjo-*)
+      - name: Pretty URL (/solo-play, /morningdew-solo, /board-kit, /qr-kit, /cctv, /unlock, /clue, /yaganjo-*)
         run: |
           set -e
           REGION=$(aws s3api get-bucket-location --bucket "$BUCKET" --query 'LocationConstraint' --output text)
@@ -56,6 +56,8 @@ jobs:
           aws s3 cp dist/solo.html "s3://$BUCKET/morningdew-solo" \
             --content-type "text/html; charset=utf-8" --region "$REGION"
           aws s3 cp dist/board.html "s3://$BUCKET/board-kit" \
+            --content-type "text/html; charset=utf-8" --region "$REGION"
+          aws s3 cp dist/qr-kit.html "s3://$BUCKET/qr-kit" \
             --content-type "text/html; charset=utf-8" --region "$REGION"
           aws s3 cp dist/cctv.html "s3://$BUCKET/cctv" \
             --content-type "text/html; charset=utf-8" --region "$REGION"

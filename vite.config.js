@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
+import { dirname, resolve as resolveFs } from 'node:path';
 
 // '@secrets' 별칭 — 어떤 비밀팩을 번들할지 빌드 시점에 고른다.
 //   VITE_DEMO=1        → secrets.demo.js (실제 정답 미포함, 공개 데모용)
@@ -46,7 +47,7 @@ const base = (process.env.VITE_BASE || '/').replace(/\/*$/, '/');
 //   운영(S3+CloudFront)에서는 배포 워크플로가 solo.html 을 'solo-play' 키로 한 번 더 올려 같은 주소를 만든다.
 const prettyPaths = () => {
   //   야간조 세 줄 — 카드 QR 이 확장자 없는 주소를 가리키므로 이 항목이 없으면 QR 열아홉 장이 전부 404 다.
-  const MAP = { '/solo-play': '/play.html', '/solo-play/': '/play.html', '/morningdew-solo': '/solo.html', '/morningdew-solo/': '/solo.html', '/cast-edit': '/cast.html', '/board-kit': '/board.html', '/cctv': '/cctv.html', '/unlock': '/unlock.html', '/clue': '/clue.html', '/yaganjo-kit': '/yaganjo-board.html', '/yaganjo-clue': '/yaganjo-clue.html', '/yaganjo-cctv': '/yaganjo-cctv.html', '/yaganjo-solo': '/yaganjo-solo.html', '/yaganjo-solo/': '/yaganjo-solo.html' };
+  const MAP = { '/solo-play': '/play.html', '/solo-play/': '/play.html', '/morningdew-solo': '/solo.html', '/morningdew-solo/': '/solo.html', '/cast-edit': '/cast.html', '/board-kit': '/board.html', '/qr-kit': '/qr-kit.html', '/cctv': '/cctv.html', '/unlock': '/unlock.html', '/clue': '/clue.html', '/yaganjo-kit': '/yaganjo-board.html', '/yaganjo-clue': '/yaganjo-clue.html', '/yaganjo-cctv': '/yaganjo-cctv.html', '/yaganjo-solo': '/yaganjo-solo.html', '/yaganjo-solo/': '/yaganjo-solo.html' };
   // 값을 반환하면 Vite가 '내부 미들웨어 뒤에 붙일 후처리 훅'으로 오해한다(use()는 connect 앱을
   //   돌려주는데 그것도 함수라서). 중괄호로 감싸 반환값을 버린다.
   const rewrite = (server) => {
@@ -59,9 +60,24 @@ const prettyPaths = () => {
   return { name: 'pretty-paths', configureServer: rewrite, configurePreviewServer: rewrite };
 };
 
+// 문서 생성기(tools/docgen)를 브라우저에서 돌린다 — QR판 인쇄물 키트(/qr-kit).
+//   생성기들은 './loadData.mjs' 를 무는데, 그 파일은 fs 로 비밀팩을 찾아 브라우저에서 못 쓴다.
+//   tools/docgen **바로 그 폴더 안에서** 무는 것만 브라우저판(loadData.browser.mjs)으로 바꿔 문다.
+//   Node 로 돌리는 npm run docs 는 Vite 를 안 거치므로 영향이 없다.
+const docgenDir = resolvePath('./tools/docgen');
+const docgenBrowser = () => ({
+  name: 'docgen-browser',
+  enforce: 'pre',
+  resolveId(source, importer) {
+    if (source !== './loadData.mjs' || !importer) return null;
+    if (resolveFs(dirname(importer.split('?')[0])) !== resolveFs(docgenDir)) return null;
+    return resolveFs(docgenDir, 'loadData.browser.mjs');
+  },
+});
+
 export default defineConfig({
   base,
-  plugins: [react(), prettyPaths()],
+  plugins: [react(), prettyPaths(), docgenBrowser()],
   // 로컬 폰 테스트(ngrok 등 터널) 시 외부 호스트 접근 허용
   server: { host: true, allowedHosts: true },
   preview: { host: true, allowedHosts: true },
@@ -85,6 +101,8 @@ export default defineConfig({
         solo: resolvePath('./solo.html'),
         cast: resolvePath('./cast.html'),
         board: resolvePath('./board.html'),
+        // QR판(오프라인 QR 게임) 인쇄물 키트 — QR 인쇄 시트·부착표·배우 시트·결과 제출지
+        qrKit: resolvePath('./qr-kit.html'),
         cctv: resolvePath('./cctv.html'),
         unlock: resolvePath('./unlock.html'),
         clue: resolvePath('./clue.html'),
