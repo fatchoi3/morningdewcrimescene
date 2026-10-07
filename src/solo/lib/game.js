@@ -353,13 +353,31 @@ export const TIMELINE = resolveTokens([
 // 풀블리드 VN 화면: 버튼·시트·오버레이가 아닌 곳을 탭하면 대사 넘김(대사창 tap 위임)
 export const isUiTap = (e) => !!e.target.closest('button, .aa-ask, .aa-present, .aa-dialogue, .aa-hud, .aa-hp, .s-modal');
 
-// 채점 — 범인 한 명만 지목(S4 = 서지안, 진범)
+// 대질 — 범인을 맞힌 뒤 결정적 증거 한 장(features/confront.jsx). 2026-10-07 사용자 승인 문장.
+//   정본(genTruth·bible): 서지안은 약을 바꾼 것까지는 인정하되 베개는 끝까지 부인한다 — 자백시키지 않는다.
+//   accept: 그를 그 시각 그 자리에 묶는 것 · near: 현장 증거지만 그를 직접 가리키지 못하는 것(틀림으로 치되 받아치는 말이 다르다)
+export const CONFRONT = {
+  culprit: 'S4',
+  deny: '복도에 있었던 건 말씀드렸습니다. 문 앞에서 전화를 드리며 기다렸을 뿐입니다. 저는 그 방에 들어가지 않았습니다.',
+  accept: {
+    'PKIN-42': '(화면을 보지 않는다) …문 앞에서 기다렸다고 말씀드렸습니다.',   // [CCTV 장면] 13:13~21 서지안
+    'LUDP-77': '(시곗줄을 손으로 덮는다) …오래된 시계입니다. 자국쯤은 어디서든 생깁니다.', // 손목시계 — 시곗줄의 새 자국
+  },
+  near: ['FIBR-98', 'TUCH-83', 'IHKX-61'], // 손톱 밑 이물질 감식 · 옷깃 접촉흔 감식 · 베개
+  nearLine: '그게 제 것이라는 말은 어디에도 없지 않습니까.',
+  wrongLine: '그게 저와 무슨 상관입니까. 그걸로 저를 범인이라 하실 수는 없습니다.',
+  note: '(수사 노트) 그는 끝까지 베개를 인정하지 않았다. 그러나 13시 13분부터 21분까지 그 방 앞에 있었던 사람은 그 하나뿐이다.',
+  failNote: '(수사 노트) 결정적인 한 장을 내밀지 못했다. 그는 끝까지 같은 말을 되풀이했다.',
+};
+
+// 채점 — 범인 한 명(S4 = 서지안, 진범) + 수법·동기 + 대질에서 내민 결정적 증거
 export function scoreCase(casefile) {
   const pick = casefile?.culprit || null;
-  const right = pick === 'S4'; // S4 = 서지안(진범)
+  const right = pick === CONFRONT.culprit;
   return {
     culpritRight: right, pick,
     method: casefile?.method || null, methodRight: right && casefile?.method === 'm_pillow',
     motive: casefile?.motive || null, motiveRight: right && casefile?.motive === 'mo_cert',
+    evidence: casefile?.evidence || null, evidenceRight: right && !!CONFRONT.accept[casefile?.evidence],
   };
 }

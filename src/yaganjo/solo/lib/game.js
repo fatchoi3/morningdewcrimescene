@@ -407,14 +407,32 @@ export const isUiTap = (e) => !!e.target.closest('button, .aa-ask, .aa-present, 
 
 // 채점 — 범인 한 명만 지목(S1 = 서장현, 진범)
 //   야간조는 공범이 없다. 나머지 다섯은 구멍을 냈을 뿐이라 지목 대상이 아니다.
+// 대질 — 범인을 맞힌 뒤 결정적 증거 한 장(features/confront.jsx). 2026-10-07 사용자 승인 문장.
+//   정본 §6(서장현): 「⚠ 자백 조건 — 없다. 살인은 끝까지 부인한다.」 — 자백시키지 않는다.
+//   accept: 그를 03:16 동쪽 지게차와 03:24 조회에 묶는 것 · near: 그가 동쪽에 있었다는 것까지(틀림으로 치되 받아치는 말이 다르다)
+export const CONFRONT = {
+  culprit: 'S1',
+  deny: '동쪽에 걸어 들어간 건 말씀드렸습니다. 무전 듣고 확인하러 간 겁니다. 형님 일은 지게차 사고입니다. 저는 형님을 죽이지 않았습니다.',
+  accept: {
+    'VZBL-10': '(기록을 한참 본다) …그 차는 위에서 누가 몰았는지 안 찍힙니다.', // ⭐ 동쪽에 한 사람이 남는다
+    'LOOKUP-ZVLJ-37': '(오래 말이 없다) …일지 쓰다가 본 겁니다.',           // 조장 태블릿 — 관리자 조회 결과(03:24)
+  },
+  near: ['MPXG-54', 'QNWA-14', 'TST-E'], // M-2 자동문 02:54~03:03 · 03:14~03:21(03:16 지게차 — 누가 몰았는지는 안 찍힌다) · 윤도경의 「조회」 증언
+  nearLine: '들어간 건 맞습니다. 그게 다입니다.',
+  wrongLine: '안전관리자로서 말씀드리면, 그건 아무것도 증명하지 못합니다.',
+  note: '(수사 노트) 그는 끝까지 「형이 시켰습니다」에서 멈췄다. 그러나 03시 16분 동쪽으로 들어간 지게차를 몰 수 있었던 사람은 그 하나뿐이다.',
+  failNote: '(수사 노트) 결정적인 한 장을 내밀지 못했다. 그는 끝까지 같은 말을 되풀이했다.',
+};
+
 // 정답/오답은 범인으로 가른다. 수법·동기는 범인을 맞혔을 때만 진범(S1)의 것과 맞는지 매긴다 —
 //   범인을 틀리고 「✓ 수법」이 뜨면 부분 점수처럼 보이지만 아무것도 가르지 못했다(3회차 #2).
 export function scoreCase(casefile) {
   const pick = casefile?.culprit || null;   // S1 = 서장현(진범)
-  const right = pick === 'S1';
+  const right = pick === CONFRONT.culprit;
   return {
     culpritRight: right, pick,
     method: casefile?.method || null, methodRight: right && casefile?.method === 'm_kill',
     motive: casefile?.motive || null, motiveRight: right && casefile?.motive === 'mo_draft',
+    evidence: casefile?.evidence || null, evidenceRight: right && !!CONFRONT.accept[casefile?.evidence],
   };
 }

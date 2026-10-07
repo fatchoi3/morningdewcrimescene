@@ -12,7 +12,7 @@ import {
 } from './content.js';
 import {
   STAGE_LABEL, STAGE_BANNER, SCENE_NEEDED, TRUST_MAX,
-  computeStage, interrogatedCount, sceneClueCount, scoreCase,
+  computeStage, interrogatedCount, sceneClueCount, scoreCase, CONFRONT,
 } from './lib/game.js';
 import { pressOf, presentOn } from './interrogation.js';
 import { HallNav } from './features/hub.jsx';
@@ -22,6 +22,7 @@ import { ClueModal } from './features/clues.jsx';
 import { CaseRecord } from './features/record.jsx';
 import { CaseFileView } from './features/casefile.jsx';
 import { StartScreen, BriefingVN, EventVN, EventVN2, EndingScreen } from './features/intro.jsx';
+import { ConfrontView } from './features/confront.jsx';
 import { TutorialCoach, TutorialFinale } from './features/tutorial.jsx';
 import { AdminPanel } from './features/admin.jsx';
 import { SheetOverlay } from './ui/overlays.jsx';
@@ -134,6 +135,20 @@ export default function SoloApp() {
   // ── 엔딩 ────────────────────────────────────────────────────────────────
   if (state.screen === 'ending' && state.result) {
     return <EndingScreen result={state.result} onNewCase={() => { clearSave(); setState(defaultState()); }} />;
+  }
+
+  // ── 대질 — 범인을 맞혔으면 결말 전에 결정적 증거 한 장을 내민다(features/confront.jsx) ──
+  //   내민 횟수(evTries)는 저장에 남긴다 — 새로고침으로 기회를 되살리지 못하게.
+  if (state.screen === 'confront') {
+    return (
+      <ConfrontView clues={state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방')}
+        tries={state.casefile?.evTries || 0} lastCode={state.casefile?.evidence}
+        onPresent={(code, n) => update({ casefile: { ...state.casefile, evidence: code, evTries: n } })}
+        onDone={(code) => {
+          const cf = { ...state.casefile, evidence: code || state.casefile?.evidence || null };
+          update({ casefile: cf, result: scoreCase(cf), screen: 'ending' });
+        }} />
+    );
   }
 
   // ── 중간 사건 — 1차 심문(6인)을 마치면 부검 소견이 도착한다 ────────────────
@@ -308,7 +323,10 @@ export default function SoloApp() {
               });
               if (!yes) return;
               setCasefileOpen(false);
-              update({ submitted: true, result: scoreCase(state.casefile || {}), screen: 'ending' });
+              const cf = state.casefile || {};
+              // 범인을 맞혔으면 결말 전에 대질 — 결정적 증거를 내민다. 틀렸으면 곧장 결말
+              if (cf.culprit === CONFRONT.culprit) update({ submitted: true, screen: 'confront' });
+              else update({ submitted: true, result: scoreCase(cf), screen: 'ending' });
             }} />
         </SheetOverlay>
       )}

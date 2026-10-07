@@ -8,7 +8,7 @@
 import { useRef, useState } from 'react';
 import { briefing, victim, suspects, soloContent } from '../content.js';
 import { cast, t } from '../../../scenarios/yaganjo/cast.js';
-import { isUiTap, REVEAL, TIMELINE } from '../lib/game.js';
+import { isUiTap, REVEAL, TIMELINE, CONFRONT } from '../lib/game.js';
 import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
 import { DialogueBox } from '../vn.jsx';
 
@@ -163,14 +163,18 @@ const bold = (s) => String(s || '').split(/\*\*(.+?)\*\*/g).map((p, i) => (i % 2
 // ── 엔딩 — 정/오답 + 사건 전말 + 그날의 진실(타임라인) ────────────────────────
 export function EndingScreen({ result, onNewCase }) {
   const r = result;
+  // 단계 넷 — 감으로 맞힌 사람과 증거로 맞힌 사람이 결말에서 갈린다(대질, 2026-10-07)
+  const perfect = r.culpritRight && r.methodRight && r.motiveRight && r.evidenceRight;
+  const grade = !r.culpritRight ? '오답' : perfect ? '완벽한 해결' : r.evidenceRight ? '증거로 입증' : '범인 정답';
+  const clueTitle = (code) => soloContent.getClue?.(code)?.title || code;
   return (
     <div className="solo-wrap">
       <div className="s-body" style={{ paddingTop: 24 }}>
         <EndingArt good={r.culpritRight} />
         <div className="s-score">
           <div className="s-eye">사건 종결</div>
-          <div className="big" style={{ color: !r.culpritRight ? 'var(--danger)' : r.methodRight && r.motiveRight ? 'var(--gold)' : 'var(--ok)' }}>
-            {!r.culpritRight ? '오답' : r.methodRight && r.motiveRight ? '완벽한 해결' : '범인 정답'}
+          <div className="big" style={{ color: !r.culpritRight ? 'var(--danger)' : perfect ? 'var(--gold)' : 'var(--ok)' }}>
+            {grade}
           </div>
           <div style={{ color: r.culpritRight ? 'var(--ok)' : 'var(--danger)', fontWeight: 800, marginTop: 6 }}>
             {r.culpritRight ? '✓ 진범을 정확히 지목했습니다' : `✗ 당신의 지목: ${suspects.find((s) => s.id === r.pick)?.name || '—'}`}
@@ -183,8 +187,15 @@ export function EndingScreen({ result, onNewCase }) {
                 {!ok && <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>정답: {list.find((m) => m.id === answer)?.label}</div>}
               </div>
             ))}
-            {r.culpritRight && r.methodRight && r.motiveRight && (
-              <div style={{ marginTop: 6, color: 'var(--gold)', fontWeight: 800 }}>★ 범인·수법·동기를 모두 밝혔습니다 — 완벽한 해결</div>
+            {/* 결정적 증거 — 대질에서 내민 한 장. 범인을 틀렸으면 대질이 없었다 */}
+            <div style={{ color: !r.culpritRight ? 'var(--muted)' : r.evidenceRight ? 'var(--ok)' : 'var(--danger)' }}>
+              {!r.culpritRight ? '—' : r.evidenceRight ? '✓' : '✗'} 결정적 증거 — {r.evidence ? clueTitle(r.evidence) : '내밀지 않음'}
+              {r.culpritRight && !r.evidenceRight && (
+                <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>정답: {Object.keys(CONFRONT.accept).map(clueTitle).join(' 또는 ')}</div>
+              )}
+            </div>
+            {perfect && (
+              <div style={{ marginTop: 6, color: 'var(--gold)', fontWeight: 800 }}>★ 범인·수법·동기에 결정적 증거까지 — 완벽한 해결</div>
             )}
           </div>
           <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>{cast.S1.name}</b> · 직접 사인 <b style={{ color: '#fff' }}>후두부 가격 뒤 스트레치 랩 질식</b></div>
