@@ -365,7 +365,8 @@ button { font-family: inherit; }
 .aa-cam { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; z-index: 0; touch-action: pan-x pinch-zoom; }
 .aa-cam::-webkit-scrollbar { height: 0; width: 0; }
 .aa-track { position: relative; height: 100%; aspect-ratio: 16 / 9; margin-inline: auto; }
-.aa-swipe-hint { position: absolute; left: 50%; top: 54px; transform: translateX(-50%); z-index: 6; background: #000000ba; color: #ffe9a8; font-size: .74rem; font-weight: 700; padding: 4px 13px; border-radius: 999px; pointer-events: none; opacity: 0; animation: swipehint 4s ease-in-out .3s 1 forwards; }
+/* 「방 전체 보기」(.view-toggle.scene, top 52px·높이 40px) 아래로 — 같은 줄에 두면 단추가 안내를 덮었다 */
+.aa-swipe-hint { position: absolute; left: 50%; top: 100px; transform: translateX(-50%); z-index: 6; background: #000000ba; color: #ffe9a8; font-size: .74rem; font-weight: 700; padding: 4px 13px; border-radius: 999px; pointer-events: none; opacity: 0; animation: swipehint 4s ease-in-out .3s 1 forwards; }
 /* 모바일: 배경을 화면보다 크게 잡아 일부만 보이고 상하좌우로 밀어(팬) 둘러보기 */
 @media (max-width: 640px) {
   .aa-cam { overflow: auto; touch-action: pan-x pan-y; overscroll-behavior: contain; }

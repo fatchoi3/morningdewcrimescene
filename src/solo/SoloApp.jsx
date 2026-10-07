@@ -293,6 +293,10 @@ export default function SoloApp() {
                 body: (
                   <>
                     <p><b>{pickName}</b> — 이 사람을 범인으로 지목합니다.</p>
+                    <p style={{ fontSize: '.88rem', lineHeight: 1.7 }}>
+                      수법 · {soloContent.caseKey.methods.find((m) => m.id === state.casefile?.method)?.label}<br />
+                      동기 · {soloContent.caseKey.motives.find((m) => m.id === state.casefile?.motive)?.label}
+                    </p>
                     <p>제출하면 사건이 종결되고 전말이 공개됩니다. <b>수사로 돌아올 수 없습니다.</b></p>
                     <p style={{ fontSize: '.82rem', color: 'var(--muted)', lineHeight: 1.7 }}>
                       지금까지 — 2차 심문 {p2Count}/{suspectIds.length}명 · 추리 단서 ⭐ {specialGot}/{SPECIAL_CODES.length}
