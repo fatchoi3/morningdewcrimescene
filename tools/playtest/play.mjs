@@ -17,11 +17,22 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, openSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const CHROME = 'C:/Users/user/AppData/Local/ms-playwright/chromium-1228/chrome-win64/chrome.exe';
+// 브라우저 — 판 번호를 박아 두면 playwright 가 판을 갈 때 통째로 못 뜬다(2026-10-07 5회차 시험이
+//   chromium-1228 이 사라져 세 명 모두 시작도 못 했다). 있는 판 중 가장 새것 → 없으면 컴퓨터의 크롬.
+const PW = 'C:/Users/user/AppData/Local/ms-playwright';
+const CHROME = (() => {
+  try {
+    const found = readdirSync(PW).filter((d) => /^chromium-\d+$/.test(d))
+      .sort((a, b) => +b.split('-')[1] - +a.split('-')[1])
+      .map((d) => `${PW}/${d}/chrome-win64/chrome.exe`).find((p) => existsSync(p));
+    if (found) return found;
+  } catch { /* playwright 폴더 없음 */ }
+  return 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+})();
 const ROOT = 'C:/ictk_repo/morningdewcrimescene/tools/playtest/.runs';
 const [name, cmd, ...args] = process.argv.slice(2);
 if (!name || !cmd) { console.log('사용법은 파일 머리 주석'); process.exit(1); }
@@ -144,12 +155,20 @@ if (cmd === 'serve') {
   const port = portOf(name);
   try { writeFileSync(path.join(dir, 'ready'), ''); } catch { /* 처음 */ }
   const self = fileURLToPath(import.meta.url);
-  const child = spawn(process.execPath, [self, name, 'serve', url, String(port)], { detached: true, stdio: 'ignore' });
+  // 조종기의 오류는 serve.log 로 받는다 — 예전엔 버려서 「못 띄웠다」만 나오고 이유를 알 길이 없었다
+  const logFile = path.join(dir, 'serve.log');
+  const out = openSync(logFile, 'w');
+  const child = spawn(process.execPath, [self, name, 'serve', url, String(port)], { detached: true, stdio: ['ignore', out, out] });
   child.unref();
   writeFileSync(stateFile, JSON.stringify({ port, pid: child.pid }));
   let ok = false;
   for (let i = 0; i < 120 && !ok; i++) { await sleep(250); try { ok = readFileSync(path.join(dir, 'ready'), 'utf8') === String(port); } catch { /* 아직 */ } }
-  console.log(ok ? await send('look', []) : '브라우저를 못 띄웠다');
+  if (ok) console.log(await send('look', []));
+  else {
+    const why = (() => { try { return readFileSync(logFile, 'utf8').split(/\r?\n/).filter((l) => /Error|error|오류/.test(l)).slice(0, 3).join(' / '); } catch { return ''; } })();
+    console.log('브라우저를 못 띄웠다' + (why ? ` — ${why}` : ' — 이유 모름(serve.log 확인)'));
+    process.exitCode = 1;
+  }
 } else {
   try { console.log(await send(cmd, args)); } catch (e) { console.log('조종기에 닿지 않는다 — start 를 먼저: ' + e.message); }
 }
