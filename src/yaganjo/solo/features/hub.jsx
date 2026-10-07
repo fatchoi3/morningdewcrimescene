@@ -4,7 +4,7 @@
 //   예전의 「탈의실 앞 복도 + 인물의 칸」은 칸이 무엇인지(사물함인지 방인지) 애매했다 — 사람은 자리에,
 //   사물함은 탈의실(남·여)에 둔다. 인물을 누르면 그 사람의 사물함·압수 소지품으로 들어가 심문한다.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { locationAlerts, alertReason } from '../lib/alerts.js';
 import { getClue } from '../content.js';
 import { StandingFigure } from '../art.jsx';
@@ -163,6 +163,12 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     syncEdge();
     window.addEventListener('resize', syncEdge);
     return () => window.removeEventListener('resize', syncEdge);
+  }, [overview]);
+  // 떠나는 순간에 자리를 적는다 — 스크롤 신호로만 적으면 신호가 안 오는 때가 있어, 방에 들어갔다 나오면
+  //   지도·복도가 처음 자리로 돌아갔다(2026-10-07 시험, 세 사람 모두). 레이아웃 정리 단계는 DOM 이 떼이기 전이라 값이 살아 있다.
+  useLayoutEffect(() => {
+    const cam = camRef.current;
+    return () => { if (cam && !overview) LAST_SCROLL[scrollKey] = cam.scrollLeft; };
   }, [overview]);
   const pannable = edge.l || edge.r;
   const pan = (dir) => camRef.current?.scrollBy({ left: dir * camRef.current.clientWidth * 0.6, behavior: 'smooth' });

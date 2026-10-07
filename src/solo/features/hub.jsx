@@ -3,7 +3,7 @@
 //   main : 인물 방 6개 · 오른쪽→목사방 · 왼쪽→1층
 //   pastor : 복도 끝 목사님 방(현장) · floor1 : CCTV·소지품 · lab : 감식 의뢰실
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { stageHint } from '../lib/game.js';
 import { locationAlerts, alertReason } from '../lib/alerts.js';
 import { getClue } from '../content.js';
@@ -128,6 +128,12 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     syncEdge();
     window.addEventListener('resize', syncEdge);
     return () => window.removeEventListener('resize', syncEdge);
+  }, [view, overview]);
+  // 떠나는 순간에 자리를 적는다 — 스크롤 신호로만 적으면 신호가 안 오는 때가 있어, 방에 들어갔다 나오면
+  //   지도·복도가 처음 자리로 돌아갔다(2026-10-07 시험, 세 사람 모두). 레이아웃 정리 단계는 DOM 이 떼이기 전이라 값이 살아 있다.
+  useLayoutEffect(() => {
+    const cam = camRef.current;
+    return () => { if (cam && !overview) LAST_SCROLL[scrollKey] = cam.scrollLeft; };
   }, [view, overview]);
   const pan = (dir) => camRef.current?.scrollBy({ left: dir * camRef.current.clientWidth * 0.6, behavior: 'smooth' });
   const pannable = edge.l || edge.r;
