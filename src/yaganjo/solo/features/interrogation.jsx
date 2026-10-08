@@ -9,7 +9,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getClue, clueIcon } from '../content.js';
 import { TRUST_MAX, isUiTap } from '../lib/game.js';
-import { DATA, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
+import { DATA, TESTIMONY, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, TopHud } from '../vn.jsx';
 import { TutorialCoach } from './tutorial.jsx';
@@ -40,7 +40,10 @@ const NOTE_KINDS = new Set(['guide', 'note']);
 
 // 이 단서가 누구의 말에든(모순·반응) 쓰이는가 — 쓰이는 단서를 엉뚱한 대답에 낸 것은 「거의 맞은」 반박이라
 //   신뢰도를 깎지 않는다. 아무 데도 안 쓰이는 단서일 때만 깎는다(2026-10-01 시험: 억울하다는 말).
+//   증언은 「이 사람 말과 저 사람 말이 어긋난다」를 맞대 보는 추리라, 어디에 걸려 있든 없든 깎지 않는다
+//   (증언을 누구 것이든 반박 목록에 올린 뒤, 어디에도 안 걸린 증언 넷이 하트만 깎는 함정이 되었다 — 2026-10-08).
 export function clueUsedAnywhere(code) {
+  if (TESTIMONY[code]) return true;
   return Object.keys(DATA).some((id) => (DATA[id]?.statements || []).some((st) => (st.contradict?.codes || []).includes(code) || (st.soft && code in st.soft)));
 }
 
