@@ -54,6 +54,7 @@ function wrongHint(sid, code) {
 }
 
 // 반박 시트 인물 필터 칩 — solo.css 는 다른 담당자 소유라 여기서 인라인으로 그린다
+const NL = String.fromCharCode(10); // 수사 노트 줄바꿈
 const chipStyle = (on) => ({
   flex: 'none', background: on ? '#241f14' : '#ffffff10',
   border: `1px solid ${on ? 'var(--gold)' : '#ffffff2e'}`, color: on ? '#ffe9a8' : '#cdd3df',
@@ -243,6 +244,14 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const grantNote = (r) => (r.grants && !collected.includes(r.grants)
     ? `\n⭐ 추리 단서 확보 — ${getClue(r.grants)?.title || r.grants}` : '');
 
+  // 같은 대답에 두 번 헛짚었는데 그 대답을 깰 증거가 아직 손에 없으면 한 줄 — 하트가 안 깎이니 여섯 장을
+  //   차례로 들이미는 찍기가 나왔다(2026-10-08 7회차). 참말이든 아직 못 깨는 거짓말이든 같은 문구라 거짓 여부는 새지 않는다.
+  const missRef = useRef({});
+  const missNote = (st) => {
+    const n = (missRef.current[st.id] = (missRef.current[st.id] || 0) + 1);
+    const canBreak = (st.contradict?.codes || []).some((c) => collected.includes(c));
+    return n >= 2 && !canBreak ? `${NL}(수사 노트) 이 대답을 깰 증거는 아직 손에 없는 것 같다 — 다른 곳을 더 조사하고 다시 오자.` : '';
+  };
   const doPresent = (code) => {
     if (!cur) return;
     setPicker(false);
@@ -257,12 +266,12 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(숨긴 일을 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
       log(`${qLabel(cur)} ← 📁 ${ctitle}`, r.text, 'break');
     } else if (r.result === 'soft') {
-      setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
+      setLine({ text: (r.text || '') + grantNote(r) + missNote(cur), kind: 'soft' });
       log(`${qLabel(cur)} ← 📁 ${ctitle}`, r.text, 'soft');
     } else if (r.result === 'offtopic') {
       // 이 인물의 다른 진술에서 쓰이는 '정답 증거'를 자리만 잘못 짚은 것 — 화낼 일도 감점할 일도 아니다.
       //   흔들림·angry 표정 없이 수사 노트로 알려준다(SoloApp 은 'wrong' 일 때만 신뢰도를 깎는다).
-      setLine({ text: r.text || '(이 대답에 들이댈 단서는 아니다. 자리를 잘못 짚었다.)', kind: 'note' });
+      setLine({ text: (r.text || '(이 대답에 들이댈 단서는 아니다. 자리를 잘못 짚었다.)') + missNote(cur), kind: 'note' });
     } else {
       setShake(true); setTimeout(() => setShake(false), 480);
       const c = getClue(code);
@@ -270,7 +279,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       setLine({ text: (own
         ? '…그건 제 물건이 맞는데요. 지금 이 얘기랑 무슨 상관이죠?'
         : '그건 제 것도 아닌데… 왜 저한테 보여주시는 거예요?') + '\n' + wrongHint(sid, code)
-        + (clueUsedAnywhere(code) ? ' (신뢰도는 그대로다.)' : ' (♥ 하나를 잃었다.)'), kind: 'wrong' });
+        + (clueUsedAnywhere(code) ? ' (신뢰도는 그대로다.)' : ' (♥ 하나를 잃었다.)') + missNote(cur), kind: 'wrong' });
     }
   };
 

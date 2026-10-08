@@ -811,3 +811,4 @@ button { font-family: inherit; }
   background: #241f14ee; border: 1px solid var(--gold); color: #ffe9a8; font-size: .76rem; font-weight: 800; padding: 4px 12px; border-radius: 999px; animation: aamore 1.6s ease-in-out infinite; }
 @keyframes aamore { 50% { transform: translate(-50%, 3px); } }
 @media (prefers-reduced-motion: reduce) { .aa-ask-more { animation: none; } }
+.s-fresh-note { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: #14371a; border: 1px solid var(--ok); color: #dfffd0; font-size: .82rem; font-weight: 700; }

@@ -60,7 +60,7 @@ const FILTERS = [
   { id: 'gamsik', label: '🔬 감식', test: (c) => c.type === '감식' },
   { id: 'talk', label: '🗣 증언', test: (c) => c.type === '증언' },
 ];
-function ClueGroups({ clues, onOpen }) {
+function ClueGroups({ clues, onOpen, fresh = [] }) {
   const [f, setF] = useState('all');
   // 찾기 — 단서가 백 장을 넘자 한 장을 찾느라 열 번 넘게 밀었다(2026-10-08 시험, 두 사람)
   const [q, setQ] = useState('');
@@ -74,6 +74,9 @@ function ClueGroups({ clues, onOpen }) {
   return (
     <>
       {clues.length === 0 && <p style={{ color: 'var(--muted)' }}>아직 단서가 없습니다. 현장을 조사하세요.</p>}
+      {fresh.length > 0 && (
+        <p className="s-fresh-note">🆕 새로 도착한 감식 결과 {fresh.length}건 — 아래 🆕 카드를 열어 보세요</p>
+      )}
       {clues.length > 12 && (
         <input className="s-clue-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="🔎 단서 찾기 — 제목이나 인물 이름" />
       )}
@@ -92,7 +95,7 @@ function ClueGroups({ clues, onOpen }) {
           <div className="s-grid">
             {groups[g].map((c) => (
               <button key={c.code} className={cardCls(c)} onClick={() => onOpen(c.code)}>
-                <div className="cn" style={{ fontSize: '.9rem' }}>{c.title}</div>
+                <div className="cn" style={{ fontSize: '.9rem' }}>{fresh.includes(c.code) ? '🆕 ' : ''}{c.title}</div>
                 <div className="cm">{c.type || '보통'}</div>
               </button>
             ))}
@@ -132,7 +135,7 @@ function TalkLog({ talkLog }) {
 }
 
 // ── 사건 기록 — 사건 개요 / 단서 정보 / 인물 정보 / 대화 기록 / 메모 ──
-export function CaseRecord({ clues, onOpen, notes, onNotes, talkLog, briefOpen }) {
+export function CaseRecord({ clues, onOpen, notes, onNotes, talkLog, briefOpen, fresh }) {
   const [tab, setTab] = useState('clues'); // clues | people | talk | notes
   const hasNotes = typeof onNotes === 'function';
   const talkCount = Object.values(talkLog || {}).reduce((n, a) => n + a.length, 0);
@@ -145,7 +148,7 @@ export function CaseRecord({ clues, onOpen, notes, onNotes, talkLog, briefOpen }
         <button className={tab === 'talk' ? 'on' : ''} onClick={() => setTab('talk')}>대화 기록{talkCount ? ` (${talkCount})` : ''}</button>
         {hasNotes && <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>메모</button>}
       </div>
-      {tab === 'clues' && <ClueGroups clues={clues} onOpen={onOpen} />}
+      {tab === 'clues' && <ClueGroups clues={clues} onOpen={onOpen} fresh={fresh || []} />}
       {tab === 'people' && <PeopleInfo />}
       {tab === 'talk' && <TalkLog talkLog={talkLog} />}
       {tab === 'notes' && hasNotes && (

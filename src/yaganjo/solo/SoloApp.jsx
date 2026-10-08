@@ -76,8 +76,9 @@ export default function SoloApp() {
     pending.forEach((c) => set.add(c));
     soloContent.computeAutoUnlocked(set); // 특수 연쇄
     for (const g of gamsikCodes) if (!pending.includes(g) && !collectedSet.has(g)) set.delete(g); // 미의뢰 감식은 제외
-    update({ collected: [...set] });
-    showToast(`🔬 감식 결과 ${pending.length}건 도착 — 수첩에서 확인하세요`);
+    // 새로 온 결과는 수첩에 🆕 로 남긴다(labNew) — 알림만 뜨고 사라져, 결과를 안 읽은 채 지목까지 갔다(2026-10-08 7회차)
+    update({ collected: [...set], labNew: [...new Set([...(state.labNew || []), ...pending])] });
+    showToast(`🔬 감식 결과 ${pending.length}건 도착 — 수첩 📓 의 🆕 카드`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, state.labReq]);
 
@@ -334,7 +335,9 @@ export default function SoloApp() {
 
       {recordOpen && (
         <SheetOverlay title={`사건 기록 · 단서 ${recordClues.length}`} onClose={() => setRecordOpen(false)}>
-          <CaseRecord clues={recordClues} onOpen={(code) => setModalCode(code)} notes={state.notes} onNotes={(v) => update({ notes: v })}
+          <CaseRecord clues={recordClues} fresh={state.labNew}
+            onOpen={(code) => { setModalCode(code); if ((state.labNew || []).includes(code)) update({ labNew: state.labNew.filter((c) => c !== code) }); }}
+            notes={state.notes} onNotes={(v) => update({ notes: v })}
             talkLog={state.talkLog} briefOpen={!state.tutorialSeen} />
         </SheetOverlay>
       )}
