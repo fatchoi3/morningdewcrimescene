@@ -760,7 +760,8 @@ button { font-family: inherit; }
 .s-brief-b p { margin: 0 0 8px; color: #d6d2c8; font-size: .86rem; line-height: 1.65; }
 .s-brief-b .s-brief-sub { color: var(--text); font-weight: 700; }
 /* 단서 거르기 · 대화 기록 인물 고르기 */
-.s-clue-filter { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; }
+/* 줄을 넘겨 감싼다 — 가로로 밀게 두니 오른쪽 끝 칸이 화면 밖에서 잘려 못 눌렀다(2026-10-07 시험, 세 사람 모두) */
+.s-clue-filter { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 10px; }
 .s-clue-filter button { flex: none; background: #ffffff10; border: 1px solid #ffffff2e; color: #cdd3df; font-size: .78rem; font-weight: 700; padding: 8px 12px; min-height: 36px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
 .s-clue-filter button.on { background: #241f14; border-color: var(--gold); color: #ffe9a8; }
 .s-talklog { display: flex; flex-direction: column; gap: 8px; }
@@ -793,3 +794,12 @@ button { font-family: inherit; }
 .cf-actions { position: sticky; bottom: -14px; padding: 10px 0 2px; background: linear-gradient(180deg, transparent, #060a12 40%); }
 .cf-actions .s-btn { width: 100%; }
 .cf-actions .s-btn:disabled { opacity: .5; }
+/* 대질 — 「입증」 도장 · 이미 깬 증거 표시 */
+.cf-stamp { position: absolute; left: 50%; top: 46%; z-index: 7; white-space: nowrap; transform: translate(-50%, -50%) rotate(-8deg);
+  font-size: 2.4rem; font-weight: 900; letter-spacing: .08em; color: #ff6b5a; border: 4px solid #ff6b5a; border-radius: 12px;
+  padding: 6px 22px; background: #1a0c0acc; text-shadow: 0 0 18px #ff6b5a88; animation: cfstamp .45s cubic-bezier(.2, 1.6, .4, 1) both; pointer-events: none; }
+@keyframes cfstamp { from { opacity: 0; transform: translate(-50%, -50%) rotate(-8deg) scale(2.2); } to { opacity: 1; transform: translate(-50%, -50%) rotate(-8deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .cf-stamp { animation: none; } }
+.cf-used { border-color: #6fbf73 !important; }
+.cf-used-note { margin: -2px 0 8px; font-size: .76rem; color: #a6d9a8; }
+.s-toast.low { top: auto; bottom: calc(var(--dlg-h, 140px) + 24px); }

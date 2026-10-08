@@ -142,6 +142,7 @@ export default function SoloApp() {
   if (state.screen === 'confront') {
     return (
       <ConfrontView clues={state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방')}
+        broke={state.broke?.[CONFRONT.culprit] || []}
         tries={state.casefile?.evTries || 0} lastCode={state.casefile?.evidence}
         onPresent={(code, n) => update({ casefile: { ...state.casefile, evidence: code, evTries: n } })}
         onDone={(code) => {
@@ -282,7 +283,8 @@ export default function SoloApp() {
             // 3막이 열리자마자(2차 심문 0회) 빨간 버튼이 까딱거리면 오탭 한 번에 수사가 끝난다 —
             //   절반 이상 재심문하기 전까지는 있되 눈에 덜 띄게 둔다.
             canAccuse={progressStage >= 3} accuseReady={p2Count >= Math.ceil(suspectIds.length / 2)}
-            accuseNote={`아직 이르다 — 2차 심문 ${p2Count}/${suspectIds.length}`}
+            // 막는 단추처럼 읽혔다(「아직 이르다」, 2026-10-07 시험) — 지금도 누를 수 있다는 걸 먼저 말한다
+            accuseNote={`지금도 지목할 수 있어요 · 2차 심문 ${p2Count}/${suspectIds.length}`}
             view={hubView} onView={setHubView} onEnter={(id) => setSceneId(id)} onToast={showToast}
             onOpenRecord={() => { setRecordOpen(true); if (!state.tutorialSeen && !state.tutRecordDone) update({ tutRecordDone: true }); }}
             onOpenMenu={() => setAdminOpen(true)}
@@ -335,7 +337,8 @@ export default function SoloApp() {
         <ClueModal code={modalCode} collectedSet={collectedSet}
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
-      {toast && <div className="s-toast">{toast}</div>}
+      {/* 튜토리얼 중엔 아래로 — 위쪽 코치 말풍선(「✕ 로 닫으세요」)을 덮었다(2026-10-07 시험) */}
+      {toast && <div className={`s-toast${!state.tutorialSeen ? ' low' : ''}`}>{toast}</div>}
       <LoadingBar />
       {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (

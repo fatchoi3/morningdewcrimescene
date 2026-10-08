@@ -1027,7 +1027,8 @@ export function presentOn(sid, stId, code, confessed = false) {
   //   엉뚱한 대답에 붙인 것뿐이다. 'wrong'(신뢰도 −1)으로 벌하지 않고 갈 곳만 일러 준다.
   //   화제 경로(askAboutClue)가 이미 감점 없이 안내하고 있어, 반박 경로만 관용도가 달랐다.
   if (usedInOtherStatement(sid, stId, code)) {
-    return { result: 'offtopic', text: '(…그 얘기라면 지금 이 대답에 꺼낼 게 아닌 것 같다.)' };
+    return { result: 'offtopic', text: '(…그 얘기라면 지금 이 대답에 꺼낼 게 아닌 것 같다.)' + String.fromCharCode(10)
+      + '(수사 노트) 이 단서가 맞닿는 대답은 따로 있다 — ⚖ 표시가 붙은 대답을 찾거나, 아직 듣지 못한 대답일 수도 있다.' };
   }
   return { result: 'wrong', text: '' };
 }

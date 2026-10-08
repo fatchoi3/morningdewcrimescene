@@ -232,11 +232,17 @@ function CctvModal({ item, evidence = [], onCollect, onClose }) {
 
         {/* ② 분단위 ❓ 칩 (선택 시간대) */}
         <div className="cctv-timebar cctv-minutebar">
-          {cutsInDecade.map((t) => (
-            <button key={t.time} className={`cctv-time ${t.time === cutTime ? 'active' : ''}`} onClick={() => selectCut(t)}>
-              ❓ {t.time}
-            </button>
-          ))}
+          {/* 그 장면의 인물을 모두 확보했으면 ✓ — 늘 ❓ 라 어디까지 봤는지 몰랐고, 장면을 보기만 하고
+              인물 단추를 안 눌러 결정적 CCTV 를 증거로 못 쓴 사람이 있었다(2026-10-07 솔로 시험) */}
+          {cutsInDecade.map((t) => {
+            const picks = (t.people || []).filter((p) => p.unlocks);
+            const done = picks.length > 0 && picks.every((p) => collected.has(p.unlocks));
+            return (
+              <button key={t.time} className={`cctv-time ${t.time === cutTime ? 'active' : ''}${done ? ' done' : ''}`} onClick={() => selectCut(t)}>
+                {done ? '✓' : '❓'} {t.time}
+              </button>
+            );
+          })}
         </div>
 
         <p className="cctv-scene-desc">{scene?.scene}</p>

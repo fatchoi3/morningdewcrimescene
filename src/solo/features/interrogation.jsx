@@ -499,9 +499,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
           {presentable.length === 0
             ? <p style={{ color: 'var(--muted)', fontSize: '.85rem', padding: '4px 2px' }}>이 인물과 관련된 단서가 아직 없습니다. 현장·대화로 단서를 더 모으세요.</p>
             : <>
-                {/* 인물 칩 — 세로줄로 쌓으면 시트가 잡아먹히니 가로로 한 줄만 밀어 본다 */}
+                {/* 인물 칩 — 줄을 넘겨 감싼다(가로로 밀게 두니 오른쪽 끝이 잘려 못 눌렀다, 2026-10-07) */}
+                <p style={{ color: 'var(--muted)', fontSize: '.74rem', margin: '0 2px 8px' }}>이 사람의 말과 얽힌 단서와 이 사람의 소지품만 보여요.</p>
                 {presentPersons.length > 1 && (
-                  <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>
                     <button style={chipStyle(!pPerson)} onClick={() => setPPerson(null)}>전체 {presentable.length}</button>
                     {presentPersons.map((p) => (
                       <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>
