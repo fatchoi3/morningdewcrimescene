@@ -269,6 +269,11 @@ button { font-family: inherit; }
 /* 이름표 — 버튼의 형제(래퍼 자식). clip-path에 잘리지 않도록 버튼 밖에 둔다 */
 .s-zone-lab { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); margin-bottom: 4px; font-size: .68rem; background: #000c; color: #ffe9a8; padding: 2px 8px; border-radius: 6px; white-space: nowrap; opacity: 0; transition: opacity .14s; pointer-events: none; }
 .s-zone:hover ~ .s-zone-lab, .s-zone:focus-visible ~ .s-zone-lab { opacity: 1; }
+/* 관제실 열람대 — 그림 아래 카메라·시각 단추(8회차: 열네 칸을 하나씩 눌러 봤다) */
+.aa-ask.cam-ask { max-height: 36vh; }
+.cam-ask .cam-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.cam-ask .cam-grid button { padding: 6px 4px; min-height: 40px; font-size: .78rem; text-align: center; font-variant-numeric: tabular-nums; }
+.cam-ask .cam-grid button.done { color: #a6e6bd; border-color: #2f5a42; }
 /* 확보한 단서 — 초록 빛(이미 챙긴 것이라 새 단서보다 차분하게, 숨쉬기 없음) */
 .s-zone-check { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 1.1rem; font-weight: 800; color: #86e6ab; text-shadow: 0 1px 3px #000, 0 0 8px #000; opacity: 0; transition: opacity .14s; pointer-events: none; }
 /* ✓ 는 버튼의 자식이 아니라 형제다(래퍼 자식) — 자손 결합자로 쓰면 마우스에서도 영영 안 뜬다 */

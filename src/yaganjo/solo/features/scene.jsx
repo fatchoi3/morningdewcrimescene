@@ -60,6 +60,8 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   useEffect(syncCam, [zoom.z]);
   if (!location) return null;
   const isLab = location.kind === 'lab'; // 감식 의뢰실 — 감식원에게 대화형으로 의뢰
+  // 관제실 — 칸마다 고르는 함수를 모아 아래 「카메라 목록」 단추가 같은 판정을 쓰게 한다
+  const camPicks = [];
   const pannable = !isLab;
   // 이 방에서 지금 보이는 단서와, 그중 아직 못 챙긴 것의 방향(화면 밖이면 화살표로 안내)
   const shown = isLab ? [] : location.objects.filter((code) => {
@@ -106,11 +108,15 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         const lockedBy = !isGamsik && c.type !== '특수' && Array.isArray(c.unlockedBy)
           ? c.unlockedBy.filter((r) => !collectedSet.has(r)) : [];
         const locked = !have && lockedBy.length > 0;
-        const zoneLab = have ? c.title
+        // 관제실 — 이름 없는 작은 칸 열넷이라 무엇이 어느 카메라인지 몰랐다(2026-10-01). 카메라·시각만 짧게.
+        //   8회차에도 셋 다 하나씩 눌러 봤다 — 터치 기기엔 호버가 없어 이름표가 안 떴다. 관제실만 늘 띄운다.
+        const camLab = location.kind === 'cctv'
+          ? (() => { const t = String(c.title || '').replace(/^\[CCTV\]\s*/, '').split(' — ')[0].split(' '); return `${t[0]} ${t[t.length - 1]}`; })()
+          : null;
+        const zoneLab = camLab ? camLab
+          : have ? c.title
           : locked ? '🔒 잠김'
           : isGamsik && lab ? (req ? '🔬 분석 중…' : lab.ready(code) ? '🔬 감식 의뢰' : '채취물 필요')
-          // 관제실 — 이름 없는 작은 칸 열넷이라 무엇이 어느 카메라인지 몰랐다(2026-10-01). 카메라·시각만 짧게
-          : location.kind === 'cctv' ? (() => { const t = String(c.title || '').replace(/^\[CCTV\]\s*/, '').split(' — ')[0].split(' '); return `${t[0]} ${t[t.length - 1]}`; })()
           : '조사';
         // 핫스팟: w/h가 있으면 물건 크기에 맞춘 상자, poly가 있으면 실루엣 모양.
         //   poly는 버튼 자체를 clip-path로 잘라 '실루엣 안에서만' 클릭되게 한다 →
@@ -148,9 +154,10 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
           }
           onOpen(code);
         };
+        if (camLab) camPicks.push({ code, lab: camLab, have, onPick });
         const tone = have ? ' have' : req ? ' req' : '';
         return (
-          <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle} data-code={code}>
+          <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}${camLab ? ' cam' : ''}`} style={wrapStyle} data-code={code}>
             {/* 클릭 판정 전용(투명). poly면 실루엣 안에서만 눌린다 */}
             <button className={`s-zone${boxed ? ' boxed' : ''}${p.poly ? ' poly' : ''}${tone}`}
               style={btnStyle}
@@ -237,6 +244,19 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
               }}>{ready && !req && !have ? '❗ ' : ''}{label}</button>
             );
           })}
+        </div>
+      )}
+
+      {/* 관제실 열람대 — 열네 칸에 이름이 없어 셋 다 하나씩 눌러 봤다(8회차). 칸 안 이름표는 여러 칸짜리 모니터에서
+          서로 겹쳐서, 그림 아래에 카메라·시각 단추를 늘어놓는다. 누르면 그 칸을 누른 것과 같다. */}
+      {camPicks.length > 0 && (
+        <div className="aa-ask cam-ask">
+          <div className="aa-ask-h">📹 카메라 · 시각</div>
+          <div className="cam-grid">
+            {camPicks.map((p) => (
+              <button key={p.code} className={p.have ? 'done' : ''} onClick={p.onPick}>{p.have ? '✓ ' : ''}{p.lab}</button>
+            ))}
+          </div>
         </div>
       )}
 

@@ -140,6 +140,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
       return;
     }
     if (keyLocked(loc)) { onToast(loc.lockedMsg || '🔒 잠겨 있다'); return; }
+    // 「열쇠가 필요하다」고 해 놓고 말없이 열려, 왜 열렸는지 몰랐다(8회차 둘) — 무엇으로 열었는지 한 줄
+    if (loc.lockedBy) onToast(`🔑 ${getClue(loc.lockedBy)?.title || '열쇠'}로 자물쇠를 연다`);
     onEnter(loc.id);
   };
 

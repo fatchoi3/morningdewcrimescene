@@ -55,12 +55,13 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
 
   const left = MAX_TRIES - tries;
   const again = left > 0 ? `▶ 한 번 더 내민다 (남은 기회 ${left})` : '▶ 탭하여 다음';
-  const retry = () => (left > 0 ? setPicking(true) : setBeat({ kind: 'fail', code: beat.code }));
+  // 한 번 더 내밀 때는 인물 거르기를 「전체」로 되돌린다 — 앞에서 고른 거르기가 남아 엉뚱한 카드를 고를 뻔했다(8회차)
+  const retry = () => (left > 0 ? (setPPerson(null), setSel(null), setPicking(true)) : setBeat({ kind: 'fail', code: beat.code }));
   const LINES = {
     deny: { speaker: who?.name, text: deny, hint: '▶ 증거를 내민다', next: () => setPicking(true) },
     press: { speaker: '수사관', text: CONFRONT.press?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'accept', code: beat.code }) },
     accept: { speaker: who?.name, text: (CONFRONT.accept[beat.code] || '') + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
-    note: { speaker: '수사 노트', text: CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
+    note: { speaker: '수사 노트', text: (CONFRONT.noteStatement && !brokeIds.has(CONFRONT.noteStatement) && CONFRONT.noteBefore) || CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
     near: { speaker: who?.name, text: CONFRONT.nearLine, hint: again, next: retry },
     wrong: { speaker: who?.name, text: CONFRONT.wrongLine, hint: again, next: retry },
     fail: { speaker: '수사 노트', text: CONFRONT.failNote, hint: '▶ 결말 보기', next: () => onDone(beat.code || null) },
