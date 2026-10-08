@@ -386,7 +386,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
       {/* 상반신 프레이밍 — 인물을 크게 그리고 하반신은 대사창 뒤로 잠기게(역전재판식) */}
       <div className={`aa-room-fig bust${speaking && speakerName ? ' talking' : ''}`}>
-        {confessed && <div className="aa-court-tag">⚖️ 관여 자백</div>}
+        {/* 「관여 자백」은 살인에 관여했다는 뜻으로 읽혔다(2026-10-08 시험) — 숨긴 일을 털어놓았다는 뜻이다 */}
+        {confessed && <div className="aa-court-tag">⚖️ 숨긴 일 자백</div>}
         <StandingFigure sid={sid} person={suspect.name} image={suspect.image} height={620} fallbackSize={160} mood={mood} />
       </div>
 

@@ -13,7 +13,8 @@ import { Shell } from '../ui/overlays.jsx';
 const CAMERA_CODES = new Set(provider.getCctvClueCodes());
 // 시신 — 데이터팩의 현장 방(showBody)이 준 문구를 그대로 쓴다. 솔로가 따로 지어내지 않는다.
 const BODY = locations.rooms.find((r) => r.showBody)?.body || null;
-const cameraSrc = (code) => `${import.meta.env.BASE_URL || '/'}yaganjo-cctv.html#${encodeURIComponent(code)}`;
+// ?solo=1 — 보드판 문구(「이 QR 은…」)를 솔로 말로 바꾼다(2026-10-08 시험: 뭘 놓친 줄 알았다)
+const cameraSrc = (code) => `${import.meta.env.BASE_URL || '/'}yaganjo-cctv.html?solo=1#${encodeURIComponent(code)}`;
 
 const PAGE_IMG_H = 170;   // 그림이 있는 쪽·없는 쪽의 높이를 맞추려고 늘 잡아 두는 자리
 

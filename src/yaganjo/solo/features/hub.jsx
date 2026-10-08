@@ -148,7 +148,9 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   const camRef = useRef(null);
   const [edge, setEdge] = useState({ l: false, r: false });
   // 「지도 전체 보기」 — 지도를 화면 너비에 맞춰 통째로 보여 준다(누가 어디 있는지 한눈에)
-  const [overview, setOverview] = useState(false);
+  // 전체 보기도 기억한다 — 전체 보기에서 방을 눌러 들어갔다 나오면 확대 화면 처음 자리로 돌아갔다(2026-10-08 시험)
+  const [overview, setOverview] = useState(() => !!LAST_SCROLL._overview);
+  useEffect(() => { LAST_SCROLL._overview = overview; }, [overview]);
   const syncEdge = () => {
     const cam = camRef.current;
     if (!cam) return;

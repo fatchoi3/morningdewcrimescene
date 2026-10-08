@@ -286,7 +286,11 @@ function PhoneModal({ code, clue, onClose }) {
                       <div className="pbr-site">🌐 {app.lookup.site}</div>
                       <div className="pbr-desc">{app.lookup.desc}</div>
                       <div className="s-pw"><input value={lookup} onChange={(e) => setLookup(e.target.value)} placeholder={app.lookup.placeholder || app.lookup.label} /><button className="s-btn sm" onClick={tryLookup}>조회</button></div>
-                      {lookupRes && <p className="pbr-res">{lookupRes}</p>}
+                      {/* 결과가 { title, lines } 로 오는 조회가 있다 — 그대로 그리면 화면 전체가 꺼졌다
+                          (2026-10-08 시험: 수료증 진위조회에서 까만 화면, 진행 불가) */}
+                      {lookupRes && (typeof lookupRes === 'object'
+                        ? <div className="pbr-res">{lookupRes.title && <b>{lookupRes.title}</b>}{(lookupRes.lines || []).map((l, i) => <div key={i}>{l}</div>)}</div>
+                        : <p className="pbr-res">{lookupRes}</p>)}
                     </div>
                   )}
                 </div>

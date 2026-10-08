@@ -62,14 +62,21 @@ const FILTERS = [
 ];
 function ClueGroups({ clues, onOpen }) {
   const [f, setF] = useState('all');
+  // 찾기 — 단서가 백 장을 넘자 한 장을 찾느라 열 번 넘게 밀었다(2026-10-08 시험, 두 사람)
+  const [q, setQ] = useState('');
   const ft = FILTERS.find((x) => x.id === f);
-  const shown = ft?.test ? clues.filter(ft.test) : clues;
+  const qn = q.trim().replace(/\s+/g, '');
+  const hit = (c) => !qn || `${c.title}${c.person || ''}`.replace(/\s+/g, '').includes(qn);
+  const shown = (ft?.test ? clues.filter(ft.test) : clues).filter(hit);
   const groups = {};
   shown.forEach((c) => { (groups[c.person || '공용'] ||= []).push(c); });
   const cardCls = (c) => 's-card' + (c.type === '특수' ? ' clue-special' : c.type === '감식' ? ' clue-gamsik' : '');
   return (
     <>
       {clues.length === 0 && <p style={{ color: 'var(--muted)' }}>아직 단서가 없습니다. 현장을 조사하세요.</p>}
+      {clues.length > 12 && (
+        <input className="s-clue-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="🔎 단서 찾기 — 제목이나 인물 이름" />
+      )}
       {clues.length > 0 && (
         <div className="s-clue-filter">
           {FILTERS.filter((x) => !x.test || clues.some(x.test)).map((x) => (
