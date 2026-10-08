@@ -806,3 +806,8 @@ button { font-family: inherit; }
 /* 반박 고르기 머리 고정 — 아래로 밀면 ✕ 가 화면 밖으로 사라졌다(2026-10-08 시험) */
 .aa-present-h { position: sticky; top: -10px; z-index: 2; background: #0b1220; margin: -10px -12px 8px; padding: 10px 12px 8px; }
 .s-clue-search { width: 100%; margin: 0 0 8px; padding: 10px 12px; min-height: 42px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font-family: inherit; font-size: .9rem; }
+/* 질문지 아래에 더 있을 때 — 목록 아래 끝(대사창 바로 위)에 띄운다 */
+.aa-ask-more { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--dlg-h, 140px) + 16px); z-index: 9; pointer-events: none;
+  background: #241f14ee; border: 1px solid var(--gold); color: #ffe9a8; font-size: .76rem; font-weight: 800; padding: 4px 12px; border-radius: 999px; animation: aamore 1.6s ease-in-out infinite; }
+@keyframes aamore { 50% { transform: translate(-50%, 3px); } }
+@media (prefers-reduced-motion: reduce) { .aa-ask-more { animation: none; } }

@@ -184,6 +184,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   useLayoutEffect(() => {
     if (menuOpen && askRef.current) askRef.current.scrollTop = askScroll.current[askKey] || 0;
   }, [menuOpen, askKey]);
+  const [askMore, setAskMore] = useState(false);
+  const syncMore = (el) => setAskMore(!!el && el.scrollHeight - el.scrollTop - el.clientHeight > 12);
+  useLayoutEffect(() => { syncMore(askRef.current); });
   const breakableOf = (s) => !brokeOf(s.id) && (s.contradict?.codes || []).some((c) => collected.includes(c));
   const dlgText = line ? line.text
     : cur ? cur.text
@@ -253,7 +256,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       // 컷인은 판정 선언이 아니라 '순간의 충격'이다 — 대사는 인물이 직접 하고, 여기선 임팩트만
       setCutin('!!!');
       setTimeout(() => setCutin((c) => (c === '!!!' ? null : c)), 1300);
-      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
+      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(숨긴 일을 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
       log(`${qLabel(cur)} ← 📁 ${ctitle}`, r.text, 'break');
     } else if (r.result === 'soft') {
       setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
@@ -332,7 +335,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       // 컷인은 판정 선언이 아니라 '순간의 충격'이다 — 대사는 인물이 직접 하고, 여기선 임팩트만
       setCutin('!!!');
       setTimeout(() => setCutin((c) => (c === '!!!' ? null : c)), 1300);
-      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(관여를 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
+      setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(숨긴 일을 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
       log(`📁 ${ctitle}에 대해`, r.text, 'break');
     } else if (r.result === 'soft') {
       setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
@@ -394,8 +397,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {cutin && <div className="aa-cutin"><span>{cutin}</span></div>}
 
       {/* 질문지 — 최상위(기본 질문 + 이야깃거리) 또는 화제 안. 한 화면에 한 겹만 보인다 */}
+      {menuOpen && askMore && <div className="aa-ask-more" aria-hidden="true">▼ 아래에 더 있어요</div>}
       {menuOpen && !openTopic && (
-        <div className="aa-ask" ref={askRef} onScroll={(e) => { askScroll.current[askKey] = e.currentTarget.scrollTop; }}>
+        <div className="aa-ask" ref={askRef} onScroll={(e) => { askScroll.current[askKey] = e.currentTarget.scrollTop; syncMore(e.currentTarget); }}>
           <div className="aa-ask-h">🎙 무엇을 물어볼까{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
           {rootSts.length > 0 && <div className="aa-ask-sec">💬 질문</div>}
           {rootSts.map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} breakable={breakableOf(s)} />)}
@@ -421,7 +425,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
       {/* 화제 안 — 이 이야기에서 파생된 질문과 단서만 */}
       {menuOpen && openTopic && (
-        <div className="aa-ask" ref={askRef} onScroll={(e) => { askScroll.current[askKey] = e.currentTarget.scrollTop; }}>
+        <div className="aa-ask" ref={askRef} onScroll={(e) => { askScroll.current[askKey] = e.currentTarget.scrollTop; syncMore(e.currentTarget); }}>
           <div className="aa-ask-h">📁 {openTopic.q}</div>
           {stsOf(openTopic).sort(byQ).map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} breakable={breakableOf(s)} />)}
           {cluesOf(openTopic).map((c) => <ClueAsk key={c.code} c={c} k={cKey(c)} onPick={askAboutClue} />)}

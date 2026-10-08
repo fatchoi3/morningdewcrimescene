@@ -314,6 +314,9 @@ export default function SoloApp() {
                       수법 · {soloContent.caseKey.methods.find((m) => m.id === state.casefile?.method)?.label}<br />
                       동기 · {soloContent.caseKey.motives.find((m) => m.id === state.casefile?.motive)?.label}
                     </p>
+                    {p2Count === 0 && (
+                      <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 아직 2차 심문을 한 명도 하지 않았어요. 물증으로 거짓말을 무너뜨리는 장면을 하나도 보지 않은 채 지목하게 됩니다.</p>
+                    )}
                     <p>제출하면 사건이 종결되고 전말이 공개됩니다. <b>수사로 돌아올 수 없습니다.</b></p>
                     <p style={{ fontSize: '.82rem', color: 'var(--muted)', lineHeight: 1.7 }}>
                       지금까지 — 2차 심문 {p2Count}/{suspectIds.length}명 · 추리 단서 ⭐ {specialGot}/{SPECIAL_CODES.length}
