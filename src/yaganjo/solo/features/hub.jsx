@@ -25,11 +25,12 @@ const PERSON_SPOTS = [
 const COMMON_SPOTS = [
   { id: 'ROOM-W', icon: '☕', label: '휴게실 · 흡연장', at: mapAt(9.5, 53.5, { lift: 2.4 }) },
   { id: 'ROOM-N', icon: '🔋', label: '충전소', at: mapAt(36, 22.5) },
-  { id: 'ROOM-U', icon: '🗄', label: '2층 사무실', at: mapAt(19, 13, { floor: 2 }) },
-  { id: 'ROOM-V', icon: '📹', label: '관제실 열람대', at: mapAt(34.5, 13, { floor: 2 }) },
-  { id: 'ROOM-J', icon: '🚪', label: '갈림 · D구역 · 뒷문', at: mapAt(92.5, 42) },
+  // 이름표 자리 — 전체 보기에서 서장현·윤도경·흐엉 이름표와 겹쳐 「2층 사무 관제실」처럼 읽혔다(6·7회차). 사람 자리는 정본이라 두고 이름표만 옮긴다.
+  { id: 'ROOM-U', icon: '🗄', label: '2층 사무실', at: mapAt(23, 13, { floor: 2 }) },
+  { id: 'ROOM-V', icon: '📹', label: '관제실 열람대', at: mapAt(47, 13, { floor: 2 }) },
+  { id: 'ROOM-J', icon: '🚪', label: '갈림 · D구역 · 뒷문', at: mapAt(89, 58) },
 ];
-const BOSS_AT = mapAt(5.4, 39.5, { lift: 2.4 });
+const BOSS_AT = mapAt(5.4, 30, { lift: 2.4 }); // 이름표가 휴게실 표식에 덮이지 않게 조금 위로(6·7회차)
 const CRIME_AT = mapAt(95.1, 13);
 const LAB_AT = mapAt(62, 66);
 const CAM_L1 = mapAt(17.8, 34.6);

@@ -756,7 +756,8 @@ button { font-family: inherit; }
   .hall-cam.overview .hall-hot-sub { display: none; }
   .hall-cam.overview .hall-hot-plate { font-size: .64rem; padding: 1px 5px; }
   .hall-cam.overview .hall-hot-ic { font-size: 1.1rem; }
-  .hall-cam.overview .hall-cctv { transform: translate(-50%, -50%) scale(.6); }
+  /* 전체 보기에서는 탈의실 입구 카메라 표식을 감춘다 — 「조장 사물함」 이름표를 덮었다(6·7회차). 크게 보기·관제실에서 연다. */
+  .hall-cam.overview .hall-cctv { display: none; }
   /* 지도 전체 보기 — 사람도 작게. 발끝 위치는 hub.jsx 가 --fig-h 로 맞춘다 */
   .hall-cam.overview { --fig-h: 30px; }
   .hall-cam.overview .map-person-fig img { height: 30px !important; }

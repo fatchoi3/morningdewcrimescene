@@ -523,6 +523,19 @@ if (!clue) {
     .filter(Boolean)
     .join('<br>');
 
+  // 혼자 하는 판(?solo=1)은 통행 기록표를 먼저 보이고 도면은 접어 둔다. 폰 모달에서 도면 설명이 컷마다
+  //   되풀이되어 표가 두세 번 밀어야 나왔다(6·7회차 네 사람). 표를 합치거나 세어 주지는 않는다 — 위 원칙 그대로다.
+  const solo = new URLSearchParams(location.search).has('solo');
+  const planBlock = `<div class="planwrap">${planSvg(camId)}</div>
+    <p class="planfoot">
+      <span class="swipe" id="swipe" hidden>← 도면은 가로로 밀어서 봅니다 · </span>
+      위에서 본 <b>도면</b>이다 — 사진이 아니라 치수가 맞는다(1m = 3.5px).<br>
+      자동문 → 갈림 <b>15m</b> · 갈림 → 현장 <b>20m</b> ·
+      C통로는 갈림에서 북쪽 <b>25m 막다른 길</b>이고 출구는 갈림 하나다.<br>
+      B 작업 위치 → 자동문 <b>30m</b> · 충전소 → 자동문 <b>45m</b>.
+      동서를 오가는 길은 <b>자동문 하나</b>뿐이고, 카메라는 <b>이 여섯 대가 전부</b>다.
+    </p>`;
+  const descBlock = clue.description ? `<p class="desc">${esc(clue.description)}</p>` : '';
   root.innerHTML = `<div class="box">
     <div class="hd">
       <span class="cam">${esc(camId || 'CCTV')}</span>
@@ -531,17 +544,9 @@ if (!clue) {
       ${boardNo ? `<span class="cardno">${esc(boardNo)}</span>` : ''}
     </div>
     ${cam ? `<p class="lens">${esc(cam.lens)}</p>` : ''}
-    <div class="planwrap">${planSvg(camId)}</div>
-    <p class="planfoot">
-      <span class="swipe" id="swipe" hidden>← 도면은 가로로 밀어서 봅니다 · </span>
-      위에서 본 <b>도면</b>이다 — 사진이 아니라 치수가 맞는다(1m = 3.5px).<br>
-      자동문 → 갈림 <b>15m</b> · 갈림 → 현장 <b>20m</b> ·
-      C통로는 갈림에서 북쪽 <b>25m 막다른 길</b>이고 출구는 갈림 하나다.<br>
-      B 작업 위치 → 자동문 <b>30m</b> · 충전소 → 자동문 <b>45m</b>.
-      동서를 오가는 길은 <b>자동문 하나</b>뿐이고, 카메라는 <b>이 여섯 대가 전부</b>다.
-    </p>
-    ${clue.description ? `<p class="desc">${esc(clue.description)}</p>` : ''}
-    ${body}
+    ${solo
+      ? `${descBlock}${body}<details class="plandet"><summary>도면과 거리 보기</summary>${planBlock}</details>`
+      : `${planBlock}${descBlock}${body}`}
     <p class="foot">${foot}</p>
   </div>`;
 
@@ -550,14 +555,19 @@ if (!clue) {
   const wrap = root.querySelector('.planwrap');
   const svgEl = wrap && wrap.querySelector('svg.plan');
   const camAt = CAMERAS[camId];
-  if (wrap && svgEl) {
+  const fitPlan = () => {
+    if (!wrap || !svgEl) return;
     const w = svgEl.getBoundingClientRect().width;
     if (w > wrap.clientWidth + 1) {
       const hint = root.querySelector('#swipe');
       if (hint) hint.hidden = false;
       if (camAt) wrap.scrollLeft = Math.max(0, (camAt.at[0] / 480) * w - wrap.clientWidth / 2);
     }
-  }
+  };
+  fitPlan();
+  // 접어 둔 도면(솔로)은 펼칠 때 크기가 생긴다 — 그때 다시 맞춘다
+  const det = root.querySelector('details.plandet');
+  if (det) det.addEventListener('toggle', () => { if (det.open) fitPlan(); });
 
   wireShots(root);
   if (black) {

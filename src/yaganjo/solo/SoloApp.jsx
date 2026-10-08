@@ -234,9 +234,23 @@ export default function SoloApp() {
     : `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}`
       + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED} · 감식 의뢰 ${Math.min((state.labReq || []).length, 1)}/1 · 그 뒤 심문 ${state.talkAfterLab ? 1 : 0}/1` : '');
   // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
+  // 3장 — 아직 안 연 휴대폰·태블릿이 어느 방에 있는지 짚어 준다. 6회차 두 사람이 「폰 1/8」이라는 숫자만 보고
+  //   조장 태블릿(2층 사무실)을 끝내 못 찾았다. 물건 이름은 말하지 않고 자리만 말한다.
+  //   사람 사물함의 휴대폰은 찾기 쉬우니 「사물함 N곳」으로 묶고, 그 밖의 자리(태블릿이 있는 2층 사무실 등)만 이름을 댄다.
+  const phoneLeftLocs = progressStage >= 3
+    ? locations.all.filter((l) => (l.objects || []).some((c) => PHONE_CODES.includes(c) && !collectedSet.has(c)))
+    : [];
+  const isLocker = (l) => !l.showBody && suspects.some((x) => x.name === l.person);
+  const lockerLeft = phoneLeftLocs.filter(isLocker).length;
+  const shortLoc = (l) => (l.showBody ? 'C통로 현장' : l.id === 'ROOM-U' ? '2층 사무실' : l.label.split(' — ')[0]);
+  const phoneLeftAt = [
+    ...(lockerLeft ? [`사람 사물함 ${lockerLeft}곳`] : []),
+    ...phoneLeftLocs.filter((l) => !isLocker(l)).map(shortLoc),
+  ];
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
     : progressStage < 3 ? `C통로 현장 단서 ${SCENE_NEEDED}개를 찾고 감식을 한 건 이상 맡긴 뒤(여러 건 맡겨도 된다), 한 사람을 더 심문하고 나오면 곧바로 2차 심문이 열립니다 — 둘러볼 곳은 그 전에`
-    : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요';
+    : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요'
+      + (phoneLeftAt.length ? ` — 아직 열지 않은 휴대폰·태블릿: ${phoneLeftAt.join(' · ')}` : '');
   const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
 
   return (
