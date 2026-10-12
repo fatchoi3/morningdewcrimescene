@@ -886,6 +886,17 @@ export function pressOf(sid, stId) {
 
 /** 단서로 '질문'하면 반응할 (지금 보이는) 진술을 찾는다 — 모순(contradict) 우선, 없으면 반응(soft).
  *  visibleStatements 결과만 대상으로 하므로 아직 안 열린 진술로 건너뛰지 않는다(추리 순서 보존). */
+/** 물어도 사건이 움직이지 않는 단서인가 — 어떤 대답도 흔들지 않고(soft·contradict 아님) 새 단서·새 질문도
+ *  주지 않는다(CLUE_REACT 의 grants·unlock 없음). 이런 소지품에도 ❗ 를 달아 「다 눌러야 할 것 같다」고 느껴
+ *  1장이 길어졌다(2026-10-12 8~10회차). 질문은 그대로 두고 ❗·남은 개수에서만 뺀다. */
+export function isFlavorClue(sid, code, statements, clue) {
+  // 그 사람 자신의 소지품만 — 남의 물건(소미에게 다영의 독촉장 등)은 관계를 넌지시 드러내는 반응이라 ❗ 를 둔다
+  if (!clue || clue.person !== cast[sid]?.name) return false;
+  if (clueTargetIn(statements, code)) return false;
+  const r = CLUE_REACT[sid]?.[code];
+  return !(r && typeof r === 'object' && (r.grants || r.unlock));
+}
+
 export function clueTargetIn(statements, code) {
   let soft = null;
   for (const s of statements) {

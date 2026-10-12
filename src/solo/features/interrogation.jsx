@@ -9,7 +9,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getClue, clueIcon } from '../content.js';
 import { TRUST_MAX, isUiTap } from '../lib/game.js';
-import { DATA, TESTIMONY, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
+import { DATA, TESTIMONY, isFlavorClue, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, TopHud } from '../vn.jsx';
 import { TutorialCoach } from './tutorial.jsx';
@@ -17,8 +17,8 @@ import { TutorialCoach } from './tutorial.jsx';
 // 단서로 묻는 한 줄. ❗=아직 안 물음 · ✔=물어봄 · ✅=이걸로 모순을 짚음
 function ClueAsk({ c, k, onPick }) {
   return (
-    <button className={k.done ? 'done' : k.asked ? 'asked' : 'new'} onClick={() => onPick(c.code)}>
-      {k.done ? '✅ ' : k.asked ? '✔ ' : '❗ '}{clueIcon(c)} “{c.title}” 에 대해 묻는다
+    <button className={k.done ? 'done' : k.asked ? 'asked' : k.flavor ? '' : 'new'} onClick={() => onPick(c.code)}>
+      {k.done ? '✅ ' : k.asked ? '✔ ' : k.flavor ? '💬 ' : '❗ '}{clueIcon(c)} “{c.title}” 에 대해 묻는다
     </button>
   );
 }
@@ -150,8 +150,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const cKey = (c) => {
     const tgt = clueTargetIn(statements, c.code);
     const done = tgt && tgt.kind === 'contradict' && brokeOf(tgt.stId);
-    return { done, asked: askedCodes.includes(c.code) };
+    return { done, asked: askedCodes.includes(c.code), flavor: isFlavorClue(sid, c.code, statements, c) };
   };
+  // 남은 일로 세는 단서 질문 — 물어도 사건이 안 움직이는 소지품(flavor)은 빼고 센다
+  const clueLeft = (c) => { const k = cKey(c); return !k.asked && !k.done && !k.flavor; };
   const cRank = (c) => { const k = cKey(c); return k.done ? 2 : k.asked ? 1 : 0; };
   const sKey = (s) => {
     const b = brokeOf(s.id);
@@ -170,7 +172,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   // 화제 안에서 아직 안 물어본 게 남았나 — 다 들었으면 대사창이 그만 나가자고 말해준다
   const leftInTopic = openTopic
     ? stsOf(openTopic).filter((s) => !askedIds.includes(s.id) && !pressedIds.includes(s.id)).length
-      + cluesOf(openTopic).filter((c) => !cKey(c).asked && !cKey(c).done).length
+      + cluesOf(openTopic).filter(clueLeft).length
     : 0;
   // 「💬 더 캐묻는다」는 남은 개수에 안 세지만 아직 할 일이긴 하다 — 대사창 힌트와 '더 들을 것 없다'
   //   안내가 서로 다른 말을 하지 않도록 같은 조건을 쓴다.
@@ -178,7 +180,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     || !!(openTopic?.press && !topicPressed.includes(openTopic.id));
   const hasAsks = rootSts.length > 0 || topics.length > 0;
   const topicLeft = (t) => stsOf(t).filter((x) => !askedIds.includes(x.id) && !pressedIds.includes(x.id)).length
-    + cluesOf(t).filter((c) => !cKey(c).asked && !cKey(c).done).length;
+    + cluesOf(t).filter(clueLeft).length;
   // 튜토리얼 목표 질문이 이야깃거리 안에 들어 있으면 그 이야깃거리부터 가리킨다
   const tutTopic = tutT ? topics.find((t) => stsOf(t).some((x) => x.id === tutT.stId)) : null;
   const pendingRoot = rootSts.filter((x) => !sKey(x).asked && !sKey(x).broke).length + topics.filter((t) => topicLeft(t) > 0).length;
@@ -425,7 +427,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
           {topics.length > 0 && <div className="aa-ask-sec">📁 단서로 여는 이야기</div>}
           {topics.map((t) => {
             const left = stsOf(t).filter((s) => !askedIds.includes(s.id) && !pressedIds.includes(s.id)).length
-              + cluesOf(t).filter((c) => !cKey(c).asked && !cKey(c).done).length;
+              + cluesOf(t).filter(clueLeft).length;
             return (
               <button key={t.id} className={left > 0 ? 'new' : 'asked'} onClick={() => askTopic(t)}
                 data-tut={tutT && !tutHit && stsOf(t).some((x) => x.id === tutT.stId) ? 'tut-q' : undefined}>

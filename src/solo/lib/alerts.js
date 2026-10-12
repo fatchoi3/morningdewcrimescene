@@ -6,7 +6,7 @@
 //   "남은 것"만 세고 "이미 한 것"은 세지 않는다 — 다 하면 배지가 사라져 진행도가 보인다.
 // ─────────────────────────────────────────────────────────────────────────────
 import { getClue, suspects, gamsikReady } from '../content.js';
-import { visibleStatements, visibleTopics, topicClues, clueTargetIn } from '../interrogation.js';
+import { visibleStatements, visibleTopics, topicClues, clueTargetIn, isFlavorClue } from '../interrogation.js';
 
 const sidOfPerson = (person) => suspects.find((s) => s.name === person)?.id || null;
 
@@ -40,7 +40,8 @@ export function questionBreakdown(sid, state, phase = 1) {
   const askedT = new Set(state.askedT?.[sid] || []);
   const askedC = new Set(state.askedC?.[sid] || []);
   for (const t of visibleTopics(sid, collected)) {
-    const inTopic = topicClues(sid, t, collected, open);
+    // 물어도 사건이 안 움직이는 소지품은 남은 일로 세지 않는다(질문은 화면에 그대로 있다)
+    const inTopic = topicClues(sid, t, collected, open).filter((c) => !isFlavorClue(sid, c, open, getClue(c)));
     if (!inTopic.length) continue;                    // 이어질 게 없는 화제는 화면에도 안 뜬다
     if (!askedT.has(t.id)) { total += 1; inTopic.forEach((c) => markKey(targetOf(c))); continue; }
     const left = inTopic.filter((code) => !askedC.has(code));
