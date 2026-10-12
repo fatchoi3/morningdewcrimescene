@@ -177,7 +177,7 @@ export function EndingScreen({ result, onNewCase }) {
             ))}
             {/* 결정적 증거 — 대질에서 내민 한 장. 범인을 틀렸으면 대질이 없었다 */}
             <div style={{ color: !r.culpritRight ? 'var(--muted)' : r.evidenceRight ? 'var(--ok)' : 'var(--danger)' }}>
-              {!r.culpritRight ? '—' : r.evidenceRight ? '✓' : '✗'} 결정적 증거 — {r.evidence ? clueTitle(r.evidence) : '내밀지 않음'}
+              {!r.culpritRight ? '—' : r.evidenceRight ? '✓' : '✗'} 결정적 증거 — {!r.culpritRight ? '범인을 맞혀야 대질에서 내밀 수 있다' : r.evidence ? clueTitle(r.evidence) : '내밀지 않음'}
               {r.culpritRight && !r.evidenceRight && (
                 <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>정답: {Object.keys(CONFRONT.accept).map(clueTitle).join(' 또는 ')}</div>
               )}

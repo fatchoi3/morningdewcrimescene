@@ -72,8 +72,13 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
   if (c.cctv?.timeline) {
     return (
       <CctvModal item={c} evidence={[...collectedSet].map((cd) => ({ code: cd }))}
-        onCollect={(cd) => { const r = onCollect(cd); const ok = (r?.added || []).includes(cd) || collectedSet.has(cd); return { success: ok, message: ok ? `단서 확보! [${cd}]` : '확보하지 못했습니다.' }; }}
-        onClose={onClose} />
+        onCollect={(cd) => {
+          const list = Array.isArray(cd) ? cd : [cd]; // 장면 자동 확보는 여러 장을 한 번에 넘긴다
+          const r = onCollect(cd);
+          const ok = list.every((x) => (r?.added || []).includes(x) || collectedSet.has(x));
+          return { success: ok, message: ok ? `단서 확보! [${list.join(', ')}]` : '확보하지 못했습니다.' };
+        }}
+        autoCollect onClose={onClose} />
     );
   }
 

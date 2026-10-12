@@ -153,7 +153,7 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
 
 const decadeOf = (time) => (time || '').slice(0, 2);
 
-function CctvModal({ item, evidence = [], onCollect, onClose }) {
+function CctvModal({ item, evidence = [], onCollect, onClose, autoCollect = false }) {
   const timeline = item.cctv?.timeline || [];
   const decades = [...new Set(timeline.map((t) => decadeOf(t.time)))];
 
@@ -187,6 +187,18 @@ function CctvModal({ item, evidence = [], onCollect, onClose }) {
     setOpenClue(null);
   };
   const selectCut = (t) => { setCutTime(t.time); setFlash(null); setOpenClue(null); };
+
+  // autoCollect(솔로만) — 장면을 열면 그 장면 인물을 바로 확보한다. 시간대 → 분 → 인물 → 닫기를 장면마다
+  //   되풀이해 15장면에 45번쯤 눌렀고, 보기만 하고 인물을 안 눌러 결정적 CCTV 를 증거로 못 쓴 사람이
+  //   있었다(2026-10-08·12 솔로 시험). QR판·보드판은 기본값(끔) 그대로 — 인물 ❓ 를 누르는 것이 그 판의 손맛이다.
+  useEffect(() => {
+    if (!autoCollect || !scene || !onCollect) return;
+    const fresh = (scene.people || []).filter((p) => p.unlocks && !collected.has(p.unlocks));
+    if (!fresh.length) return;
+    onCollect(fresh.map((p) => p.unlocks)); // 한 번에 — 한 장씩 부르면 받는 쪽이 낡은 상태로 덮어쓴다
+    setFlash({ ok: true, text: `이 장면에 찍힌 ${fresh.map((p) => p.who).join(' · ')} — 단서로 확보` });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCollect, scene?.time]);
 
   const showClue = (code) => {
     const clue = provider.getClue(code);

@@ -73,6 +73,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
   const [picker, setPicker] = useState(false);
   const [pPerson, setPPerson] = useState(null); // 반박 시트 인물 필터 — null = 전체
+  const [pKind, setPKind] = useState(null);     // 반박 시트 종류 필터 — null = 전체
   const [peek, setPeek] = useState(null); // 반박 시트에서 길게 눌러 들춰 본 단서
   const [openTopicId, setOpenTopicId] = useState(null); // 지금 들어와 있는 화제 — null = 최상위 질문지
   // 이번 방문에 캐물어 본 화제 — 세이브(askedT)에는 화제를 꺼냈는지만 남아 화제 press 는 여기서만 센다.
@@ -160,7 +161,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   아직 안 써본 것을 위로 올리고, 인물로 좁힐 수 있게 한다(화제 목록과 같은 ❗/✔/✅ 표시).
   const presentPersons = [...new Set(presentable.map((c) => c.person).filter(Boolean))];
   //   (쓴 증거를 뒤로 보내던 정렬은 뺐다 — 같은 자리를 다시 누르면 엉뚱한 증거가 나갔다. 2026-10-01)
-  const presentList = presentable.filter((c) => !pPerson || c.person === pPerson);
+  const kindOf = (c) => (/^\[CCTV/.test(c.title || '') ? 'cctv' : c.type === '감식' ? 'gamsik' : c.type === '특수' ? 'special' : c.type === '증언' ? 'talk' : 'thing');
+  const KINDS = [['cctv', '📹 CCTV'], ['gamsik', '🔬 감식'], ['special', '⭐ 추리'], ['talk', '🗣 증언'], ['thing', '📦 물건']]
+    .filter(([k]) => presentable.some((c) => kindOf(c) === k));
+  const presentList = presentable.filter((c) => (!pPerson || c.person === pPerson) && (!pKind || kindOf(c) === pKind));
 
   // 화제 안에서 아직 안 물어본 게 남았나 — 다 들었으면 대사창이 그만 나가자고 말해준다
   const leftInTopic = openTopic
@@ -518,6 +522,14 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
             : <>
                 {/* 인물 칩 — 줄을 넘겨 감싼다(가로로 밀게 두니 오른쪽 끝이 잘려 못 눌렀다, 2026-10-07) */}
                 <p style={{ color: 'var(--muted)', fontSize: '.74rem', margin: '0 2px 8px' }}>이 사람의 말과 얽힌 단서와 이 사람의 소지품만 보여요.</p>
+                {KINDS.length > 1 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 6 }}>
+                    <button style={chipStyle(!pKind)} onClick={() => setPKind(null)}>모든 종류</button>
+                    {KINDS.map(([k, label]) => (
+                      <button key={k} style={chipStyle(pKind === k)} onClick={() => setPKind(k)}>{label} {presentable.filter((c) => kindOf(c) === k).length}</button>
+                    ))}
+                  </div>
+                )}
                 {presentPersons.length > 1 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>
                     <button style={chipStyle(!pPerson)} onClick={() => setPPerson(null)}>전체 {presentable.length}</button>

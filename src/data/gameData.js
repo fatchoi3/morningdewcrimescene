@@ -328,9 +328,9 @@ export const evidenceMap = withAssetBase(resolveTokens({
         {
           time: '13:13~21',
           location: '목사님 방 앞 복도',
-          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 사라졌다가, 5분 뒤 다시 나타나 숙소 쪽으로 빠르게 빠져나간다.',
+          scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 사라졌다가, 8분 뒤 다시 나타나 숙소 쪽으로 빠르게 빠져나간다.',
           people: [
-            { look: '여성 — 방으로 갔다가 5분쯤 뒤 숙소 쪽으로 빠르게 나옴', who: '{{S4}}', unlocks: 'PKIN-42', x: 298, y: 132, arrow: { from: { x: 290, y: 80 }, to: { x: 355, y: 60 }, round: true } }
+            { look: '여성 — 방으로 갔다가 8분쯤 뒤 숙소 쪽으로 빠르게 나옴', who: '{{S4}}', unlocks: 'PKIN-42', x: 298, y: 132, arrow: { from: { x: 290, y: 80 }, to: { x: 355, y: 60 }, round: true } }
           ]
         },
         {

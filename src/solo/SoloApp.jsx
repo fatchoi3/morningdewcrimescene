@@ -78,17 +78,21 @@ export default function SoloApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, state.labReq]);
 
-  function collect(code) {
-    if (collectedSet.has(code)) return { added: [] };
+  // 여러 장을 한 번에 받을 수 있다 — CCTV 장면 자동 확보는 한 장면에 인물이 둘일 때가 있는데,
+  //   한 장씩 연달아 부르면 두 번째가 낡은 state 로 덮어써 첫 장이 빠진다.
+  function collect(codeOrList) {
+    const codes = (Array.isArray(codeOrList) ? codeOrList : [codeOrList]).filter((cd) => !collectedSet.has(cd));
+    if (!codes.length) return { added: [] };
+    const code = codes[0];
     const set = new Set(state.collected);
-    set.add(code);
+    codes.forEach((cd) => set.add(cd));
     const autos = soloContent.computeAutoUnlocked(set) || []; // set을 변형하며 특수/감식 연쇄 해금
     // 감식은 자동 수령하지 않는다 — 감식실에서 의뢰하면 2차 심문 때 결과 도착.
-    const stripped = autos.filter((a) => gamsikCodes.has(a.code) && a.code !== code && !collectedSet.has(a.code));
+    const stripped = autos.filter((a) => gamsikCodes.has(a.code) && !codes.includes(a.code) && !collectedSet.has(a.code));
     stripped.forEach((a) => set.delete(a.code));
     const kept = autos.filter((a) => !stripped.includes(a));
     update({ collected: [...set] });
-    const c = getClue(code);
+    const c = codes.length > 1 ? { title: codes.map((cd) => getClue(cd)?.title || cd).join(' · ') } : getClue(code);
     const newSpecials = kept.filter((a) => a.code !== code && getClue(a.code)?.type === '특수');
     const extra = newSpecials.length
       ? ` · ⭐ 추리 단서 해금: ${newSpecials.map((a) => getClue(a.code)?.title || a.code).join(' · ')}`
@@ -113,7 +117,7 @@ export default function SoloApp() {
         ),
       });
     }
-    return { added: [code, ...kept.map((a) => a.code)] };
+    return { added: [...codes, ...kept.map((a) => a.code)] };
   }
 
   const goHub = () => { setSceneId(null); setSuspectId(null); update({ screen: 'hub' }); };
@@ -317,6 +321,9 @@ export default function SoloApp() {
                       수법 · {soloContent.caseKey.methods.find((m) => m.id === state.casefile?.method)?.label}<br />
                       동기 · {soloContent.caseKey.motives.find((m) => m.id === state.casefile?.motive)?.label}
                     </p>
+                    {p2Count > 0 && p2Count < suspectIds.length && (
+                      <p style={{ color: '#ffd479', fontWeight: 700 }}>⚠ 아직 2차 심문을 하지 않은 사람이 {suspectIds.length - p2Count}명 있어요. 그들에게서 아직 듣지 못한 사실이 있을 수 있어요.</p>
+                    )}
                     {p2Count === 0 && (
                       <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 아직 2차 심문을 한 명도 하지 않았어요. 물증으로 거짓말을 무너뜨리는 장면을 하나도 보지 않은 채 지목하게 됩니다.</p>
                     )}
