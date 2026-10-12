@@ -9,7 +9,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getClue, clueIcon } from '../content.js';
 import { TRUST_MAX, isUiTap } from '../lib/game.js';
-import { DATA, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
+import { DATA, TESTIMONY, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, TopHud } from '../vn.jsx';
 import { TutorialCoach } from './tutorial.jsx';
@@ -41,6 +41,7 @@ const NOTE_KINDS = new Set(['guide', 'note']);
 // 이 단서가 누구의 말에든(모순·반응) 쓰이는가 — 쓰이는 단서를 엉뚱한 대답에 낸 것은 「거의 맞은」 반박이라
 //   신뢰도를 깎지 않는다. 아무 데도 안 쓰이는 단서일 때만 깎는다(2026-10-01 시험: 억울하다는 말).
 export function clueUsedAnywhere(code) {
+  if (TESTIMONY_CODES.has(code)) return true; // 증언 맞대기는 하트를 깎지 않는다
   return Object.keys(DATA).some((id) => (DATA[id]?.statements || []).some((st) => (st.contradict?.codes || []).includes(code) || (st.soft && code in st.soft)));
 }
 
@@ -54,6 +55,7 @@ function wrongHint(sid, code) {
 }
 
 // 반박 시트 인물 필터 칩 — solo.css 는 다른 담당자 소유라 여기서 인라인으로 그린다
+const TESTIMONY_CODES = new Set(Object.keys(TESTIMONY)); // 증언 — 반박 목록에 올리되 하트는 깎지 않는다
 const NL = String.fromCharCode(10); // 수사 노트 줄바꿈
 const chipStyle = (on) => ({
   flex: 'none', background: on ? '#241f14' : '#ffffff10',
@@ -120,7 +122,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
   // 「반박」에 들이댈 수 있는 증거 — 관련 코드 + 이 인물 소지품(빗나가면 신뢰도가 깎이는 승부수)
   const rel = sid ? relatedCodes(sid) : new Set();
-  const isRelated = (c) => c.type !== '증언' && (rel.has(c.code) || c.person === suspect?.name);
+  // 증언은 누구의 것이든 다 올린다 — 「다른 사람의 말과 맞대 보고 싶다」(2026-10-08 6회차, 두 게임 두 사람)
+  const isRelated = (c) => c.type === '증언' || rel.has(c.code) || c.person === suspect?.name;
   const presentable = collectedClues.filter(isRelated);
 
   // 화제 — 관련 단서를 챙기면 열리는 '이야깃거리'. 고르면 그 안으로 들어가고, 파생 질문은
@@ -496,7 +499,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                       ? `「${tutTopic.q}」 — 이 이야기를 꺼내 보세요`
                       : `「${statements.find((x) => x.id === tutT.stId)?.q || '이 질문'}」 — 이 질문을 고르세요` })
             : (line
-              ? { targetSel: '.aa-dialogue', text: tutHit ? '반응이 나왔다 — 증거는 이렇게 들이민다. 탭해서 넘기세요' : '대사창을 탭해 이야기를 넘기세요' }
+              ? { targetSel: '.aa-dialogue', text: tutHit ? '반응을 끌어냈다 — 반박의 첫걸음이다. 거짓말을 진짜로 깰 수 있는 대답에는 ⚖ 표시가 붙는다. 탭해서 넘기세요' : '대사창을 탭해 이야기를 넘기세요' }
               : cur
                 ? (canPress
                   ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
