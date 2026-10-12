@@ -230,7 +230,7 @@ function PhoneModal({ code, clue, onClose }) {
   const tryRecover = async () => {
     const ok = await provider.verifyRecover(code, pw);
     if (ok) { setRecovered(true); setMsg(''); setFails(0); }
-    else { setFails((n) => n + 1); setMsg('비밀번호가 맞지 않습니다.'); }
+    else { setFails((n) => n + 1); setMsg('비밀번호가 맞지 않습니다.'); setPw(''); }
   };
   const tryLookup = async () => {
     const res = await provider.verifyLookup(code, lookup);
@@ -331,7 +331,7 @@ function PhoneModal({ code, clue, onClose }) {
                     <div className="kkr-desc">톡서랍 복구 비밀번호가 필요합니다.</div>
                     {/* 실마리는 처음부터 — 세 번 틀린 뒤에만 떠서 복구 방법을 끝내 몰랐다(2026-10-01 시험) */}
                     <div className="kkr-hint">🔑 실마리: {recoverHint(clue)}</div>
-                    <div className="s-pw"><input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="복구 비밀번호 4자리" inputMode="numeric" /><button className="s-btn sm" onClick={tryRecover}>복구</button></div>
+                    <div className="s-pw"><input value={pw} onChange={(e) => setPw(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="복구 비밀번호 4자리" inputMode="numeric" maxLength={4} /><button className="s-btn sm" onClick={tryRecover}>복구</button></div>
                     {msg && <div className="kkr-err">{msg}</div>}
                   </div>
                 );

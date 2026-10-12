@@ -74,7 +74,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const [picker, setPicker] = useState(false);
   const [pPerson, setPPerson] = useState(null); // 반박 시트 인물 필터 — null = 전체
   const [pKind, setPKind] = useState(null);     // 반박 시트 종류 필터 — null = 전체
-  useEffect(() => { if (picker) setPKind(null); }, [picker]); // 열 때마다 「모든 종류」로 — 지난 칩이 남아 있었다(10회차)
+  useEffect(() => { if (picker) { setPKind(null); setPPerson(null); } }, [picker]); // 열 때마다 「모든 종류」로 — 지난 칩이 남아 있었다(10회차)
   const [peek, setPeek] = useState(null); // 반박 시트에서 길게 눌러 들춰 본 단서
   const [openTopicId, setOpenTopicId] = useState(null); // 지금 들어와 있는 화제 — null = 최상위 질문지
   // 이번 방문에 캐물어 본 화제 — 세이브(askedT)에는 화제를 꺼냈는지만 남아 화제 press 는 여기서만 센다.
@@ -260,7 +260,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const missNote = (st) => {
     const n = (missRef.current[st.id] = (missRef.current[st.id] || 0) + 1);
     const canBreak = (st.contradict?.codes || []).some((c) => collected.includes(c));
-    return n >= 2 && !canBreak ? `${NL}(수사 노트) 이 대답을 깰 증거는 아직 손에 없는 것 같다 — 다른 곳을 더 조사하고 다시 오자.` : '';
+    if (n < 2 || canBreak) return '';
+    // 진술이 방향을 갖고 있으면 그걸 — 「조카예요」는 아는 사람이 따로 있고, 서지안의 「들어가지 않았다」는 심문이 아니라
+    //   대질에서 묶인다. 셋이 같은 자리에서 막혔다(2026-10-12 11회차).
+    return `${NL}${st.missHint || '(수사 노트) 이 대답을 깰 증거는 아직 손에 없는 것 같다 — 다른 곳을 더 조사하고 다시 오자.'}`;
   };
   const doPresent = (code) => {
     if (!cur) return;
