@@ -812,3 +812,8 @@ button { font-family: inherit; }
 @keyframes aamore { 50% { transform: translate(-50%, 3px); } }
 @media (prefers-reduced-motion: reduce) { .aa-ask-more { animation: none; } }
 .s-fresh-note { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: #14371a; border: 1px solid var(--ok); color: #dfffd0; font-size: .82rem; font-weight: 700; }
+/* 여러 쪽 문서 — 뒤쪽이 남았다는 표시 */
+.s-pager-more { margin: 8px 0 0; padding: 6px 10px; border-radius: 8px; background: #241f14; border: 1px solid var(--gold); color: #ffe9a8; font-size: .8rem; font-weight: 700; }
+.s-pager button.more { border-color: var(--gold); color: #ffe9a8; box-shadow: 0 0 0 2px #ffd47944; }
+/* 진행 칸의 「지목」 — 누르면 지목 화면 */
+.hall-steps i.go { cursor: pointer; color: #ffe9a8; border-color: var(--gold); }

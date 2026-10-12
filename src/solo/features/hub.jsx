@@ -65,10 +65,12 @@ function MenuButton({ onOpen }) {
 
 // 지목까지 몇 단계 — 단서가 쌓이면 「끝이 안 보인다」는 말을 들었다(2026-09-30 시험). 장 셋 + 지목.
 const STEP_NAMES = ['1장 탐문', '2장 점검', '3장 추궁', '지목'];
-function Steps({ at }) {
+function Steps({ at, onAccuse }) {
   return (
     <span className="hall-steps" aria-label={`지목까지 ${Math.max(0, 4 - at)}단계`}>
-      {STEP_NAMES.map((n, i) => <i key={n} className={i + 1 < at ? 'done' : i + 1 === at ? 'now' : ''}>{n}</i>)}
+      {STEP_NAMES.map((n, i) => (i === 3 && onAccuse
+        ? <i key={n} role="button" tabIndex={0} className="go" onClick={onAccuse}>{n} ▸</i>
+        : <i key={n} className={i + 1 < at ? 'done' : i + 1 === at ? 'now' : ''}>{n}</i>))}
     </span>
   );
 }
@@ -180,7 +182,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
 
       {/* 복도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
       <div className="hall-hud">
-        <div className="hall-hud-chip"><b>🔎 {stageLabel}</b><span>{progressText}</span>{objective && <span className="hall-objective">🎯 {objective}</span>}<Steps at={Math.min(4, progressStage || 1)} /></div>
+        <div className="hall-hud-chip"><b>🔎 {stageLabel}</b><span>{progressText}</span>{objective && <span className="hall-objective">🎯 {objective}</span>}<Steps at={Math.min(4, progressStage || 1)} onAccuse={canAccuse ? onAccuse : null} /></div>
         <div className="hall-hud-btns">
           {admin && <span className="s-admin-chip">ADMIN</span>}
           <button data-tut="record-btn" className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord} style={{ position: 'relative' }}>📓

@@ -59,10 +59,13 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
         {/* 쪽마다 글 길이가 달라 「다음 →」이 손가락 밑에서 움직인다(실측 56px, 버튼 높이는 32px).
             그 단서의 가장 긴 쪽에 맞춰 본문 칸을 미리 잡아 두면 버튼이 제자리에 머문다. */}
         <div className="s-detail" style={{ minHeight: pagerMinH(c.pages, hasPageImage) }}>{pg.content}</div>
+        {page < c.pages.length - 1 && (
+          <p className="s-pager-more">📖 뒤에 {c.pages.length - 1 - page}쪽이 더 있어요 — 「다음 →」으로 끝까지 넘겨 보세요</p>
+        )}
         <div className="s-pager">
           <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← 이전</button>
           <span style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{page + 1} / {c.pages.length}</span>
-          <button disabled={page >= c.pages.length - 1} onClick={() => setPage((p) => p + 1)}>다음 →</button>
+          <button className={page < c.pages.length - 1 ? 'more' : ''} disabled={page >= c.pages.length - 1} onClick={() => setPage((p) => p + 1)}>다음 →</button>
         </div>
       </Shell>
     );

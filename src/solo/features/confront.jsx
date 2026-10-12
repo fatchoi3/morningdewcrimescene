@@ -60,7 +60,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     deny: { speaker: who?.name, text: deny, hint: '▶ 증거를 내민다', next: () => setPicking(true) },
     press: { speaker: '수사관', text: CONFRONT.press?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'accept', code: beat.code }) },
     accept: { speaker: who?.name, text: (CONFRONT.accept[beat.code] || '') + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
-    note: { speaker: '수사 노트', text: CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
+    note: { speaker: '수사 노트', text: CONFRONT.noteBy?.[beat.code] || CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
     near: { speaker: who?.name, text: CONFRONT.nearLine, hint: again, next: retry },
     wrong: { speaker: who?.name, text: CONFRONT.wrongLine, hint: again, next: retry },
     fail: { speaker: '수사 노트', text: CONFRONT.failNote, hint: '▶ 결말 보기', next: () => onDone(beat.code || null) },

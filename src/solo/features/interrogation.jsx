@@ -283,9 +283,12 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       setShake(true); setTimeout(() => setShake(false), 480);
       const c = getClue(code);
       const own = c && c.person === suspect.name;
-      setLine({ text: (own
-        ? '…그건 제 물건이 맞는데요. 지금 이 얘기랑 무슨 상관이죠?'
-        : '그건 제 것도 아닌데… 왜 저한테 보여주시는 거예요?') + '\n' + wrongHint(sid, code)
+      const talk = c?.type === '증언';
+      setLine({ text: (talk
+        ? (own ? '…그건 제가 한 말이 맞아요. 그게 지금 이 얘기랑 무슨 상관이죠?' : '그 사람이 한 말이요? …그게 지금 제 얘기랑 무슨 상관이에요?')
+        : own
+          ? '…그건 제 물건이 맞는데요. 지금 이 얘기랑 무슨 상관이죠?'
+          : '그건 제 것도 아닌데… 왜 저한테 보여주시는 거예요?') + '\n' + wrongHint(sid, code)
         + (clueUsedAnywhere(code) ? ' (신뢰도는 그대로다.)' : ' (♥ 하나를 잃었다.)') + missNote(cur), kind: 'wrong' });
     }
   };
