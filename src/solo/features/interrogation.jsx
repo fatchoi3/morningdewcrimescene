@@ -74,6 +74,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const [picker, setPicker] = useState(false);
   const [pPerson, setPPerson] = useState(null); // 반박 시트 인물 필터 — null = 전체
   const [pKind, setPKind] = useState(null);     // 반박 시트 종류 필터 — null = 전체
+  useEffect(() => { if (picker) setPKind(null); }, [picker]); // 열 때마다 「모든 종류」로 — 지난 칩이 남아 있었다(10회차)
   const [peek, setPeek] = useState(null); // 반박 시트에서 길게 눌러 들춰 본 단서
   const [openTopicId, setOpenTopicId] = useState(null); // 지금 들어와 있는 화제 — null = 최상위 질문지
   // 이번 방문에 캐물어 본 화제 — 세이브(askedT)에는 화제를 꺼냈는지만 남아 화제 press 는 여기서만 센다.

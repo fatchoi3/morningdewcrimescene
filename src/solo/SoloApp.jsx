@@ -322,7 +322,7 @@ export default function SoloApp() {
                       동기 · {soloContent.caseKey.motives.find((m) => m.id === state.casefile?.motive)?.label}
                     </p>
                     {p2Count > 0 && p2Count < suspectIds.length && (
-                      <p style={{ color: '#ffd479', fontWeight: 700 }}>⚠ 아직 2차 심문을 하지 않은 사람이 {suspectIds.length - p2Count}명 있어요. 그들에게서 아직 듣지 못한 사실이 있을 수 있어요.</p>
+                      <p style={{ color: '#ffd479', fontWeight: 700 }}>⚠ 아직 2차 심문을 하지 않은 사람 — {suspects.filter((s) => !(state.p2Met || []).includes(s.id)).map((s) => s.name).join(' · ')}. 그들에게서 아직 듣지 못한 사실이 있을 수 있어요.</p>
                     )}
                     {p2Count === 0 && (
                       <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 아직 2차 심문을 한 명도 하지 않았어요. 물증으로 거짓말을 무너뜨리는 장면을 하나도 보지 않은 채 지목하게 됩니다.</p>

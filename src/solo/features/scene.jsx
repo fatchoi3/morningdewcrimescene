@@ -63,6 +63,10 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   //   못 챙긴 물건은 이름을 감춘 채(「아직 조사하지 않은 물건」) 줄로 세워, 눌러서 바로 조사한다.
   const [listOpen, setListOpen] = useState(false);
   useEffect(() => { setListOpen(false); }, [location?.id]);
+  const listRef = useRef(null);
+  const [listMore, setListMore] = useState(false);
+  const syncList = (el) => setListMore(!!el && el.scrollHeight - el.scrollTop - el.clientHeight > 12);
+  useEffect(() => { if (listOpen) syncList(listRef.current); });
   if (!location) return null;
   const isLab = location.kind === 'lab'; // 감식 의뢰실 — 감식원에게 대화형으로 의뢰
   const pannable = !isLab;
@@ -213,7 +217,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       )}
 
       {listOpen && !isLab && (
-        <div className="aa-ask s-room-list">
+        <div className="aa-ask s-room-list" ref={listRef} onScroll={(e) => syncList(e.currentTarget)}>
           <div className="aa-ask-h">📋 {location.label} — 물건 {shown.length - missing.length}/{shown.length}</div>
           {location.showBody && <button onClick={() => { setListOpen(false); onOpen('__body__'); }}>🔎 시신을 조사한다</button>}
           {roomSuspect && onTalk && (
@@ -235,6 +239,8 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
           })}
         </div>
       )}
+
+      {listOpen && !isLab && listMore && <div className="aa-ask-more" aria-hidden="true">▼ 아래에 더 있어요 — 목록을 밀어 보세요</div>}
 
       {isLab && (
         <div className="aa-ask">
