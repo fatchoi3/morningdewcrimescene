@@ -59,6 +59,10 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   }, [location?.id]);
   useEffect(syncCam, [location?.id, bgRatio]); // 그림 비율이 도착하면 트랙 크기가 달라진다
   useEffect(syncCam, [zoom.z]);
+  // 물건 목록 — 「방 전체 보기」는 그림이 작아져 테두리가 손톱만 하고 이름표가 겹쳤다(2026-10-12 8회차, 세 사람).
+  //   못 챙긴 물건은 이름을 감춘 채(「아직 조사하지 않은 물건」) 줄로 세워, 눌러서 바로 조사한다.
+  const [listOpen, setListOpen] = useState(false);
+  useEffect(() => { setListOpen(false); }, [location?.id]);
   if (!location) return null;
   const isLab = location.kind === 'lab'; // 감식 의뢰실 — 감식원에게 대화형으로 의뢰
   const pannable = !isLab;
@@ -76,6 +80,20 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
     if (y < cam.t) dirs.up++; else if (y > cam.t + cam.h - DLG_COVER) dirs.down++;
   }
   const offscreen = dirs.left + dirs.right + dirs.up + dirs.down;
+  const pickCode = (code) => {
+    const c = getClue(code); if (!c) return;
+    const have = collectedSet.has(code);
+    const isGamsik = c.type === '감식';
+    const req = isGamsik && lab ? lab.requested(code) : false;
+    if (isGamsik && !have) {
+      // 감식은 '의뢰 → 2차 심문 때 결과' 흐름 (2차 개방 후엔 즉시 결과)
+      if (!lab || !lab.ready(code)) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
+      if (lab.stage >= 3) { onOpen(code); return; }
+      if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
+      lab.request(code); return;
+    }
+    onOpen(code);
+  };
   const bodyPos = ROOM_HOTSPOTS[location.id]?.['__body__'] || { x: 50, y: 46, s: 1.1 };
   const talkPos = ROOM_HOTSPOTS[location.id]?.['__talk__']; // 있으면 인물이 배경에 그려짐 → 터치존, 없으면 떠 있는 스탠딩
   return (
@@ -127,16 +145,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
           // 몸의 상처(손등·손목)는 인물 터치존(z10) 위에 얹는다 — 그래야 그 부위를 직접 누른다
           ...(p.onPerson ? { zIndex: 11 } : null),
         };
-        const onPick = () => {
-          if (isGamsik && !have) {
-            // 감식은 '의뢰 → 2차 심문 때 결과' 흐름 (2차 개방 후엔 즉시 결과)
-            if (!lab || !lab.ready(code)) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
-            if (lab.stage >= 3) { onOpen(code); return; }
-            if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
-            lab.request(code); return;
-          }
-          onOpen(code);
-        };
+        const onPick = () => pickCode(code);
         const tone = have ? ' have' : req ? ' req' : '';
         return (
           <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle} data-code={code}>
@@ -203,6 +212,30 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         </button>
       )}
 
+      {listOpen && !isLab && (
+        <div className="aa-ask s-room-list">
+          <div className="aa-ask-h">📋 {location.label} — 물건 {shown.length - missing.length}/{shown.length}</div>
+          {location.showBody && <button onClick={() => { setListOpen(false); onOpen('__body__'); }}>🔎 시신을 조사한다</button>}
+          {roomSuspect && onTalk && (
+            <button className={talkPending > 0 ? 'new' : ''} onClick={() => { setListOpen(false); onTalk(roomSuspect.id); }}>
+              {talkPending > 0 ? '❗ ' : '💬 '}{roomSuspect.name} — 이야기를 한다{talkPending > 0 ? ` (${talkPending})` : ''}
+            </button>
+          )}
+          {shown.map((code) => {
+            const c = getClue(code);
+            const have = collectedSet.has(code);
+            const isGamsik = c?.type === '감식';
+            const req = isGamsik && lab ? lab.requested(code) : false;
+            const label = have ? `✓ ${c.title}`
+              : isGamsik ? (req ? '🔬 분석 중…' : lab?.ready(code) ? '🔬 감식 의뢰할 수 있는 것' : '🧪 채취물이 더 필요한 것')
+              : '🔍 아직 조사하지 않은 물건';
+            return (
+              <button key={code} className={have ? 'done' : 'new'} onClick={() => { if (!isGamsik || have) setListOpen(false); pickCode(code); }}>{label}</button>
+            );
+          })}
+        </div>
+      )}
+
       {isLab && (
         <div className="aa-ask">
           <div className="aa-ask-h">🧑‍🔬 감식원 — 어떤 걸 분석해 드릴까요?</div>
@@ -231,7 +264,10 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
 
       {/* 하단 바 없음 — 나가기는 대사창 우측 하단에. 조사는 상시(테두리가 빛나는 물건을 누르면 된다) */}
       <DialogueBox location={isLab ? '감식 의뢰실' : location.label}
-        actions={[{ label: '🚶 나가기', onClick: onBack }]}
+        actions={[
+          !isLab && shown.length > 0 && { label: listOpen ? '✕ 목록 닫기' : `📋 물건 목록 ${shown.length - missing.length}/${shown.length}`, onClick: () => setListOpen((v) => !v) },
+          { label: '🚶 나가기', onClick: onBack },
+        ]}
         text={isLab
           ? (stage >= 3 ? '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 지금은 맡기면 곧바로 결과가 나온다.' : '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 결과는 2차 심문이 열릴 때 도착한다.')
           : ('테두리가 빛나는 물건을 누르면 조사할 수 있다.' + (roomSuspect ? ` ${roomSuspect.name}${josa(roomSuspect.name, '을', '를')} 누르면 이야기할 수 있다.` : ''))} />
