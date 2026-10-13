@@ -17,8 +17,8 @@ import { TutorialCoach } from './tutorial.jsx';
 // 단서로 묻는 한 줄. ❗=아직 안 물음 · ✔=물어봄 · ✅=이걸로 모순을 짚음
 function ClueAsk({ c, k, onPick }) {
   return (
-    <button className={k.done ? 'done' : k.asked ? 'asked' : k.flavor ? '' : 'new'} onClick={() => onPick(c.code)}>
-      {k.done ? '✅ ' : k.asked ? '✔ ' : k.flavor ? '💬 ' : '❗ '}{clueIcon(c)} “{c.title}” 에 대해 묻는다
+    <button className={k.done ? 'done' : k.asked ? 'asked' : k.flavor ? 'flavor' : 'new'} onClick={() => onPick(c.code)}>
+      {k.done ? '✅ ' : k.asked ? '✔ ' : k.flavor ? '· ' : '❗ '}{clueIcon(c)} “{c.title}” 에 대해 묻는다
     </button>
   );
 }
@@ -260,7 +260,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const missNote = (st) => {
     const n = (missRef.current[st.id] = (missRef.current[st.id] || 0) + 1);
     const canBreak = (st.contradict?.codes || []).some((c) => collected.includes(c));
-    if (n < 2 || canBreak) return '';
+    if (canBreak || n < (st.missHint ? 1 : 2)) return '';
     // 진술이 방향을 갖고 있으면 그걸 — 「조카예요」는 아는 사람이 따로 있고, 서지안의 「들어가지 않았다」는 심문이 아니라
     //   대질에서 묶인다. 셋이 같은 자리에서 막혔다(2026-10-12 11회차).
     return `${NL}${st.missHint || '(수사 노트) 이 대답을 깰 증거는 아직 손에 없는 것 같다 — 다른 곳을 더 조사하고 다시 오자.'}`;
@@ -432,9 +432,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
             const left = stsOf(t).filter((s) => !askedIds.includes(s.id) && !pressedIds.includes(s.id)).length
               + cluesOf(t).filter(clueLeft).length;
             return (
-              <button key={t.id} className={left > 0 ? 'new' : 'asked'} onClick={() => askTopic(t)}
+              <button key={t.id} className={left > 0 ? 'new' : askedTopics.includes(t.id) ? 'asked' : 'flavor'} onClick={() => askTopic(t)}
                 data-tut={tutT && !tutHit && stsOf(t).some((x) => x.id === tutT.stId) ? 'tut-q' : undefined}>
-                {left > 0 ? '❗ ' : '✔ '}{t.q}{left > 0 ? ` (${left})` : ''}
+                {left > 0 ? '❗ ' : askedTopics.includes(t.id) ? '✔ ' : '· '}{t.q}{left > 0 ? ` (${left})` : ''}
               </button>
             );
           })}

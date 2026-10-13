@@ -817,3 +817,5 @@ button { font-family: inherit; }
 .s-pager button.more { border-color: var(--gold); color: #ffe9a8; box-shadow: 0 0 0 2px #ffd47944; }
 /* 진행 칸의 「지목」 — 누르면 지목 화면 */
 .hall-steps i.go { cursor: pointer; color: #ffe9a8; border-color: var(--gold); }
+/* 물어도 사건이 안 움직이는 질문·화제 — 흐리게(남은 일로 세지 않는다) */
+.aa-ask button.flavor { opacity: .62; }

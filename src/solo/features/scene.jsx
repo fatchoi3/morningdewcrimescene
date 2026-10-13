@@ -272,6 +272,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       {/* 하단 바 없음 — 나가기는 대사창 우측 하단에. 조사는 상시(테두리가 빛나는 물건을 누르면 된다) */}
       <DialogueBox location={isLab ? '감식 의뢰실' : location.label}
         actions={[
+          roomSuspect && onTalk && { label: `💬 ${roomSuspect.name}${talkPending > 0 ? ` (${talkPending})` : ''}`, onClick: () => onTalk(roomSuspect.id) },
           !isLab && shown.length > 0 && { label: listOpen ? '✕ 목록 닫기' : `📋 물건 목록 ${shown.length - missing.length}/${shown.length}`, onClick: () => setListOpen((v) => !v) },
           { label: '🚶 나가기', onClick: onBack },
         ]}
