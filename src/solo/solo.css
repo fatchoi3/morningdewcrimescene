@@ -819,3 +819,13 @@ button { font-family: inherit; }
 .hall-steps i.go { cursor: pointer; color: #ffe9a8; border-color: var(--gold); }
 /* 물어도 사건이 안 움직이는 질문·화제 — 흐리게(남은 일로 세지 않는다) */
 .aa-ask button.flavor { opacity: .62; }
+/* 여러 쪽 문서를 이어 보기 — 쪽마다 제목 줄과 구분선 */
+.s-page { padding: 10px 0 14px; border-top: 1px dashed var(--line); }
+.s-page:first-of-type { border-top: 0; }
+.s-page-t { display: flex; justify-content: space-between; align-items: baseline; font-weight: 800; margin-bottom: 6px; }
+.s-page-t span { color: var(--muted); font-size: .78rem; font-weight: 600; }
+/* 결말 시간표 — 줄마다 알려 주던 단서(찾음 ✓ · 놓침) */
+.s-tl2-ev { margin-top: 4px; font-size: .74rem; line-height: 1.7; color: var(--muted); }
+.s-tl2-ev span { display: inline-block; margin: 0 6px 2px 0; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line); }
+.s-tl2-ev span.got { color: #a6d9a8; border-color: #4f7a52; }
+.s-tl2-ev span.miss { opacity: .65; }

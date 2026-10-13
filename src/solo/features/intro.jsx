@@ -8,7 +8,7 @@
 import { useRef, useState } from 'react';
 import { briefing, victim, suspects, soloContent } from '../content.js';
 import { cast, t } from '../../data/cast.js';
-import { isUiTap, REVEAL, TIMELINE, CONFRONT } from '../lib/game.js';
+import { isUiTap, REVEAL, TIMELINE, TIMELINE_CLUES, CONFRONT } from '../lib/game.js';
 import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
 import { DialogueBox } from '../vn.jsx';
 
@@ -149,7 +149,7 @@ export function EventVN2({ onDone }) {
 const bold = (s) => String(s || '').split(/\*\*(.+?)\*\*/g).map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
 
 // ── 엔딩 — 정/오답 + 사건 전말 + 그날의 진실(타임라인) ────────────────────────
-export function EndingScreen({ result, onNewCase }) {
+export function EndingScreen({ result, collected = [], onNewCase }) {
   const r = result;
   // 단계 넷 — 감으로 맞힌 사람과 증거로 맞힌 사람이 결말에서 갈린다(대질, 2026-10-07)
   const perfect = r.culpritRight && r.methodRight && r.motiveRight && r.evidenceRight;
@@ -204,7 +204,16 @@ export function EndingScreen({ result, onNewCase }) {
             {TIMELINE.map(([t, d], i) => (
               <div className="s-tl2-row" key={i}>
                 <div className="s-tl2-t">{t}</div>
-                <div className="s-tl2-d">{bold(d)}</div>
+                <div className="s-tl2-d">
+                  {bold(d)}
+                  {/* 이 사실을 알려 주던 단서 — 찾은 것 ✓, 놓친 것은 흐리게 */}
+                  {(TIMELINE_CLUES[i] || []).length > 0 && (
+                    <div className="s-tl2-ev">🔎 {TIMELINE_CLUES[i].map((c) => {
+                      const got = collected.includes(c);
+                      return <span key={c} className={got ? 'got' : 'miss'}>{soloContent.getClue?.(c)?.title || c}{got ? ' ✓' : ' · 놓침'}</span>;
+                    })}</div>
+                  )}
+                </div>
               </div>
             ))}
           </div>

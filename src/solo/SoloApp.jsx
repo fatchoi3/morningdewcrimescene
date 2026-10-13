@@ -139,7 +139,7 @@ export default function SoloApp() {
 
   // ── 엔딩 ────────────────────────────────────────────────────────────────
   if (state.screen === 'ending' && state.result) {
-    return <EndingScreen result={state.result} onNewCase={() => { clearSave(); setState(defaultState()); }} />;
+    return <EndingScreen result={state.result} collected={state.collected} onNewCase={() => { clearSave(); setState(defaultState()); }} />;
   }
 
   // ── 대질 — 범인을 맞혔으면 결말 전에 결정적 증거 한 장을 내민다(features/confront.jsx) ──

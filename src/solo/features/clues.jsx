@@ -4,32 +4,51 @@
 //     페이지형 / CCTV형(CctvModal) / 폰형(PhoneModal) / 지갑형(WalletModal) /
 //     일정표형(ScheduleModal) / 필적대조형(HandwritingModal) / 기본형.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getClue, provider } from '../content.js';
 import { Shell } from '../ui/overlays.jsx';
 import CctvModal from '../../components/CctvModal.jsx';
 
 const PAGE_IMG_H = 170;   // 그림이 있는 쪽·없는 쪽의 높이를 맞추려고 늘 잡아 두는 자리
 
-// 페이지형 본문 칸의 최소 높이 — 가장 긴 쪽을 기준으로 잡는다.
-//   폰 세로(375px)에서 본문 폭 309px · 16px 글씨라 한 줄에 19자, 줄높이 28px.
-//   본문은 white-space: pre-wrap 이라 명시적 줄바꿈도 한 줄을 차지한다 — 글자수만 세면
-//   줄바꿈이 많은 쪽(브리핑)에서 197px 이나 어긋난다.
-//   화면을 넘기면서까지 늘리지는 않는다 — 그러면 「다음 →」이 스크롤 아래로 숨는다.
-//   그렇게 넘치는 쪽은 CSS 가 페이저를 바닥에 고정해(.s-pager sticky) 자리를 지킨다.
-const pagerMinH = (pages, hasImage) => {
-  const lines = (s) => (s || '').split('\n').reduce((n, ln) => n + Math.max(1, Math.ceil(ln.length / 19)), 0);
-  const want = pages.reduce((n, p) => Math.max(n, lines(p.content)), 0) * 28;
-  // 헤더·쪽 제목·페이저·안팎 여백으로 나가는 몫(실측 약 160px)과 그림 자리를 뺀 나머지가 상한
-  const room = Math.round(window.innerHeight * 0.88) - 160 - (hasImage ? PAGE_IMG_H + 10 : 0);
-  return Math.min(want, Math.max(140, room));
-};
+// ── 여러 쪽 문서 — 한 화면에 이어서 ─────────────────────────────────────────
+//   쪽을 하나씩 넘기던 것을 위아래로 이어 붙인다. 「1장은 탭 노동」이라는 말이 모든 유형에서 나왔고(2026-10-08~14
+//   8~13회차), 첫 쪽만 보고 닫아 결정적인 쪽(목사님 일기 0419, 세린 성경 속 그림)을 놓쳤다.
+//   쪽 안에 숨은 단서(unlocks)는 그 쪽이 화면에 보일 때만 들어온다 — 끝까지 내려 본 사람만 찾는 맛은 지킨다.
+function PageStack({ pages, collectedSet, onCollect }) {
+  const refs = useRef([]);
+  useEffect(() => {
+    const want = pages.map((pg, i) => (pg.unlocks && !collectedSet.has(pg.unlocks) ? i : -1)).filter((i) => i >= 0);
+    if (!want.length) return undefined;
+    if (typeof IntersectionObserver === 'undefined') { want.forEach((i) => onCollect(pages[i].unlocks)); return undefined; }
+    const io = new IntersectionObserver((ents) => ents.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const u = pages[+e.target.dataset.i]?.unlocks;
+      if (u) onCollect(u);
+      io.unobserve(e.target);
+    }), { threshold: 0.5 });
+    want.forEach((i) => refs.current[i] && io.observe(refs.current[i]));
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages]);
+  return (
+    <>
+      {pages.length > 1 && <p className="s-pager-more">📖 {pages.length}쪽 — 아래로 밀어 끝까지 읽어 보세요</p>}
+      {pages.map((pg, i) => (
+        <section key={i} className="s-page" data-i={i} ref={(el) => { refs.current[i] = el; }}>
+          {pg.image && <img src={pg.image} alt="" style={{ height: PAGE_IMG_H, width: '100%', objectFit: 'contain', marginBottom: 8 }} />}
+          <div className="s-page-t">{pg.title}<span>{i + 1} / {pages.length}</span></div>
+          <div className="s-detail">{pg.content}</div>
+        </section>
+      ))}
+    </>
+  );
+}
 
 // ── 단서 열람 모달 ─────────────────────────────────────────────────────────
 export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
   const isBody = code === '__body__';
   const c = isBody ? null : getClue(code);
-  const [page, setPage] = useState(0);
 
   // 열람 시 확보(신규면 수집 + 특수 연쇄)
   useEffect(() => { if (!isBody && !collectedSet.has(code)) onCollect(code); /* eslint-disable-next-line */ }, [code]);
@@ -42,31 +61,11 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
   const tag = c.type && c.type !== '보통' ? <span className="s-tag">{c.type}</span> : null;
   const person = c.person && c.person !== '공용' ? <span className="s-tag">{c.person}</span> : null;
 
-  // 페이지형
+  // 페이지형 — 쪽을 이어서 보여 준다(PageStack)
   if (Array.isArray(c.pages) && c.pages.length) {
-    const pg = c.pages[Math.min(page, c.pages.length - 1)];
-    const hasPageImage = c.pages.some((p) => p.image);
-    if (pg?.unlocks && !collectedSet.has(pg.unlocks)) onCollect(pg.unlocks);
     return (
       <Shell title={<>{c.title}{tag}{person}</>} onClose={onClose}>
-        {/* 그림이 한 쪽에만 있으면 그 쪽에서만 아래가 밀려 버튼이 도망간다 — 자리를 늘 잡아 둔다 */}
-        {hasPageImage && (
-          <div style={{ height: PAGE_IMG_H, marginBottom: 10 }}>
-            {pg.image && <img src={pg.image} alt="" style={{ height: '100%', width: '100%', objectFit: 'contain', marginBottom: 0 }} />}
-          </div>
-        )}
-        <div style={{ fontWeight: 800, marginBottom: 6 }}>{pg.title}</div>
-        {/* 쪽마다 글 길이가 달라 「다음 →」이 손가락 밑에서 움직인다(실측 56px, 버튼 높이는 32px).
-            그 단서의 가장 긴 쪽에 맞춰 본문 칸을 미리 잡아 두면 버튼이 제자리에 머문다. */}
-        <div className="s-detail" style={{ minHeight: pagerMinH(c.pages, hasPageImage) }}>{pg.content}</div>
-        {page < c.pages.length - 1 && (
-          <p className="s-pager-more">📖 뒤에 {c.pages.length - 1 - page}쪽이 더 있어요 — 「다음 →」으로 끝까지 넘겨 보세요</p>
-        )}
-        <div className="s-pager">
-          <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← 이전</button>
-          <span style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{page + 1} / {c.pages.length}</span>
-          <button className={page < c.pages.length - 1 ? 'more' : ''} disabled={page >= c.pages.length - 1} onClick={() => setPage((p) => p + 1)}>다음 →</button>
-        </div>
+        <PageStack pages={c.pages} collectedSet={collectedSet} onCollect={onCollect} />
       </Shell>
     );
   }

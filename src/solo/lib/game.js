@@ -350,6 +350,24 @@ export const TIMELINE = resolveTokens([
   ['13:34', '{{S6|이/가}} 112 신고 (진입~신고 공백이 의심을 부름).'],
 ], cast);
 
+// 시간표 줄마다 「이 단서로 알 수 있었다」 — 결말에서 찾은 것 ✓ · 놓친 것을 보여 준다.
+//   오답이 난 사람이 「이건 어떻게 알았어야 했나」 억울해했다(2026-10-12~14 11·13회차). TIMELINE 과 같은 순서.
+export const TIMELINE_CLUES = [
+  ['SIST-22', 'HUOX-80', 'QIVS-92'],          // 전날 밤 — 자매 관계·송금
+  ['TST-SR', 'HQIR-26'],                      // 당일 아침 — 재정 면담·일정표
+  ['CRTN-30'],                                // 10:00 — 등산 출발
+  ['LGYR-78', 'HIDN-37', 'NTGB-51'],          // 10:10~12 — 설하정 바꿔치기
+  ['HJIN-43', 'NVYN-22', 'BXNP-29'],          // 10:20 — 텀블러 졸피뎀
+  ['NQBT-91', 'HKVQ-36', 'TUBE-22'],          // 10:25 — 라벨 교체
+  ['CDRK-00', 'TST-JH'],                      // 12:40 — 음료 전달
+  ['EJIN-08', 'BXCI-79', 'TST-EJ'],           // 12:41~45 — 언쟁, 나올 때 멀쩡
+  ['SHKB-77', 'TUBE-12'],                     // ~12:50 — 요힘빈 음료
+  ['GTNV-09', 'NTGB-51'],                     // 13:10 — 품속 진짜 설하정
+  ['PKIN-42', 'LUDP-77', 'LONS-62'],          // 13:13~21 — 베개 질식
+  ['DVCS-80', 'TST-GH', 'DISC-11'],           // 13:23 — 발견·기록 삭제
+  ['DVCS-80', 'LWUY-33'],                     // 13:34 — 신고 지연
+];
+
 // 풀블리드 VN 화면: 버튼·시트·오버레이가 아닌 곳을 탭하면 대사 넘김(대사창 tap 위임)
 export const isUiTap = (e) => !!e.target.closest('button, .aa-ask, .aa-present, .aa-dialogue, .aa-hud, .aa-hp, .s-modal');
 
