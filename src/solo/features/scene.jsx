@@ -225,7 +225,8 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
               {talkPending > 0 ? '❗ ' : '💬 '}{roomSuspect.name} — 이야기를 한다{talkPending > 0 ? ` (${talkPending})` : ''}
             </button>
           )}
-          {shown.map((code) => {
+          {/* 아직 조사하지 않은 것을 위로 — 목사님 방 목록 맨 아래 넷을 못 보고 「다 했다」고 여겼다(12회차) */}
+          {[...shown].sort((a, b) => (collectedSet.has(a) ? 1 : 0) - (collectedSet.has(b) ? 1 : 0)).map((code) => {
             const c = getClue(code);
             const have = collectedSet.has(code);
             const isGamsik = c?.type === '감식';

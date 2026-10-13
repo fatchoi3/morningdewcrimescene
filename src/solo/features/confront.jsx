@@ -70,8 +70,8 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   const body = line.speaker === '수사 노트' ? String(line.text || '').replace(/^\(수사 노트\)\s*/, '') : line.text;
   // 「거의 맞았다」 — 그 자리의 증거지만 그 사람을 직접 가리키지는 않는다. 방향은 맞다고 한 줄 붙인다
   //   엉뚱한 증거면 무엇이 필요한지 한 줄 — 「아무것도 증명하지 못합니다」만 두 번 듣고 기준을 몰랐다(2026-10-08 시험)
-  const note = beat.kind === 'near' ? '(수사 노트) 방향은 맞다 — 다만 이것만으로는 그를 가리키지 못한다.'
-    : beat.kind === 'wrong' && left > 0 ? '(수사 노트) 필요한 건 그 시각, 그 자리에 그를 묶는 증거다. 심문에서 이미 그를 무너뜨린 증거(✅)도 다시 내밀 수 있다.'
+  const note = beat.kind === 'near' ? '(수사 노트) 방향은 맞다 — 다만 이것만으로는 범인을 가리키지 못한다.'
+    : beat.kind === 'wrong' && left > 0 ? '(수사 노트) 필요한 건 그 시각, 그 자리에 범인을 묶는 증거다. 심문에서 이미 범인을 무너뜨린 증거(✅)도 다시 내밀 수 있다.'
       : null;
   const proved = beat.kind === 'accept' || beat.kind === 'note';
 
@@ -100,7 +100,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
       {picking && (
         <div className="aa-present" onClick={(e) => e.stopPropagation()}>
           <div className="aa-present-h">
-            <span>⚖️ <b>그 시각, 그 자리에 그를 묶는 증거</b> 한 장을 고르세요 · 남은 기회 {left}</span>
+            <span>⚖️ <b>그 시각, 그 자리에 범인을 묶는 증거</b> 한 장을 고르세요 · 남은 기회 {left}</span>
           </div>
           {usedCodes.size > 0 && (
             <p className="cf-used-note">✅ — 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요.</p>
