@@ -53,6 +53,12 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     else setBeat({ kind: CONFRONT.near.includes(code) ? 'near' : 'wrong', code, n });
   };
 
+  // 틀린 증거의 종류(감식·증언·⭐)에 따라 받아치는 말 — 늘 같은 한 줄이라 무엇이 틀렸는지 몰랐다(9회차)
+  const wrongLineOf = (code) => {
+    const c = clues.find((x) => x.code === code);
+    const kind = soloContent.gamsikCodes?.has(code) ? '감식' : c?.type;
+    return CONFRONT.wrongBy?.[kind] || CONFRONT.wrongLine;
+  };
   const left = MAX_TRIES - tries;
   const again = left > 0 ? `▶ 한 번 더 내민다 (남은 기회 ${left})` : '▶ 탭하여 다음';
   // 한 번 더 내밀 때는 인물 거르기를 「전체」로 되돌린다 — 앞에서 고른 거르기가 남아 엉뚱한 카드를 고를 뻔했다(8회차)
@@ -63,7 +69,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     accept: { speaker: who?.name, text: (CONFRONT.accept[beat.code] || '') + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
     note: { speaker: '수사 노트', text: CONFRONT.noteBy?.[beat.code] || (CONFRONT.noteStatement && !brokeIds.has(CONFRONT.noteStatement) && CONFRONT.noteBefore) || CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
     near: { speaker: who?.name, text: CONFRONT.nearLine, hint: again, next: retry },
-    wrong: { speaker: who?.name, text: CONFRONT.wrongLine, hint: again, next: retry },
+    wrong: { speaker: who?.name, text: wrongLineOf(beat.code), hint: again, next: retry },
     fail: { speaker: '수사 노트', text: CONFRONT.failNote, hint: '▶ 결말 보기', next: () => onDone(beat.code || null) },
   };
   const line = LINES[beat.kind];
@@ -78,8 +84,10 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
 
   const persons = [...new Set(clues.map((c) => c.person).filter(Boolean))];
   // 이미 깬 증거를 앞에 — 2차 심문에서 쓴 정답 카드를 대질에서 다시 낼 생각을 못 했다(2026-10-07)
+  //   그다음 ⭐ 추리 단서 — 30~108장을 두세 번 밀어야 찾았다(9회차 셋 다).
+  const rank = (c) => (usedCodes.has(c.code) ? 0 : c.type === '특수' ? 1 : 2);
   const list = clues.filter((c) => !pPerson || c.person === pPerson)
-    .sort((a, b) => (usedCodes.has(b.code) ? 1 : 0) - (usedCodes.has(a.code) ? 1 : 0));
+    .sort((a, b) => rank(a) - rank(b));
   const icon = (c) => soloContent.clueIcon?.(c) || '📄';
 
   return (
