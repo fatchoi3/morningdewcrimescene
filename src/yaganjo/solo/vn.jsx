@@ -17,8 +17,11 @@ export const DialogueBox = forwardRef(function DialogueBox({ location, speaker, 
     setShown(''); doneRef.current = false;
     onTyping?.(true);                       // 타이핑 시작 → 화자 '말하는 중'
     let i = 0;
+    // 긴 문장은 다 찍히기까지 2초를 넘겼다 — 그 사이 넘기려다 「잘렸다」는 말이 셋 다 나왔다(9회차 프롤로그 6쪽).
+    //   한 장이 1.6초 안에 다 찍히도록 긴 문장은 한 번에 두세 글자씩 찍는다.
+    const step = Math.max(1, Math.ceil(full.length / 80));
     idRef.current = setInterval(() => {
-      i += 1; setShown(full.slice(0, i));
+      i = Math.min(full.length, i + step); setShown(full.slice(0, i));
       if (i >= full.length) { doneRef.current = true; onTyping?.(false); clearInterval(idRef.current); idRef.current = null; }
     }, 20);
     return () => { clearInterval(idRef.current); idRef.current = null; onTyping?.(false); };

@@ -3,7 +3,7 @@
 //   단서 확보/감식 배달 같은 오케스트레이션만 담당한다.
 //   화면과 기능은 features/·ui/ 로 분리, 순수 규칙/상수는 lib/game.js, 콘텐츠는 content.js.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { cast, t } from '../../scenarios/yaganjo/cast.js';
 import {
@@ -35,25 +35,6 @@ export default function SoloApp() {
   const [sceneId, setSceneId] = useState(null);
   const [suspectId, setSuspectId] = useState(null);
   const [modalCode, setModalCode] = useState(null);
-  // 첫 추리 단서 안내 — 단서 창이 열려 있는 동안 띄우면 그 위에 겹쳐, 다음 물건을 누르려다 막혔다(6·8회차).
-  //   단서 창이 닫힌 뒤에 띄운다.
-  const pendingSpecialRef = useRef(null);
-  const showSpecialTut = (title) => dlg.popup({
-    title: '⭐ 추리 단서를 얻었어요!',
-    body: (
-      <>
-        <p>단서들을 엮어 추리 단서 <b>「{title}」</b>가 밝혀졌습니다.</p>
-        <p>이런 <b>추리 단서(⭐)</b>는 방에서 줍는 게 아니라, 관련 단서를 모으면 <b>자동으로 사건 기록에 등록</b>돼요.</p>
-        <p>화면 오른쪽 위의 <b>📓 수첩(사건 기록)</b>에서 확인하고, 심문 질문지의 <b>「📁 단서」</b> 칸에서 물어보세요.</p>
-      </>
-    ),
-  });
-  useEffect(() => {
-    if (modalCode || !pendingSpecialRef.current) return;
-    const title = pendingSpecialRef.current;
-    pendingSpecialRef.current = null;
-    showSpecialTut(title);
-  }, [modalCode]);
   const [hubView, setHubView] = useState('main'); // 허브 뷰(main/floor1/pastor/lab) — 장면 진입 후 복귀 위치 보존
   const [toast, setToast] = useState(null);
 
@@ -151,12 +132,12 @@ export default function SoloApp() {
     // 감식 의뢰실은 2단계에 열린다 — 1차에 이 안내를 띄우면 갈 수 없는 곳으로 보낸다
     const gextra = gamsikNow.length && stage >= 2 ? ' · 🔬 감식 의뢰 가능(감식 의뢰실에서 맡기세요)' : '';
     showToast(`단서 확보: ${c?.title || code}${extra}${gextra}`);
-    // 첫 추리 단서 안내 — 공용 팝업으로
+    // 첫 추리 단서 안내 — 막는 팝업이 아니라 길게 머무는 알림 한 줄로. 팝업은 단서 창 위에 뜨거나(창을 닫은 뒤로
+    //   미뤄도) 다음 조사·수첩 넘김을 막았다(6·8·9회차 다섯 사람).
     if (newSpecials.length && !state.specialTutSeen) {
       const first = getClue(newSpecials[0].code);
       update({ specialTutSeen: true });
-      if (modalCode) pendingSpecialRef.current = first?.title;
-      else showSpecialTut(first?.title);
+      showToast(`⭐ 추리 단서 「${first?.title || ''}」 — 관련 단서를 모으면 저절로 사건 기록에 등록됩니다. 📓 수첩과 질문지의 「📁 단서」에서 쓰세요`, 6500);
     }
     return { added: [code, ...kept.map((a) => a.code)] };
   }
