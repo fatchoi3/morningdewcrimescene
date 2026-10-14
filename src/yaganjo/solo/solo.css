@@ -836,3 +836,37 @@ button { font-family: inherit; }
 @keyframes aamore { 50% { transform: translate(-50%, 3px); } }
 @media (prefers-reduced-motion: reduce) { .aa-ask-more { animation: none; } }
 .s-fresh-note { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: #14371a; border: 1px solid var(--ok); color: #dfffd0; font-size: .82rem; font-weight: 700; }
+
+/* 지도 전체 보기 아래 장소 목록 — 세로 폰에서만(가로·패드에선 지도가 충분히 커서 감춘다). 8회차: 전체 보기가 작고 아래가 비었다 */
+.hall-list { display: none; }
+@media (max-aspect-ratio: 4/5) {
+  .hall-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; position: absolute; left: 10px; right: 10px; bottom: 96px; z-index: 6; }
+  .hall-list button { position: relative; display: flex; align-items: center; gap: 4px; min-height: 40px; padding: 6px 6px; border-radius: 10px;
+    background: #0b1220e6; border: 1.5px solid #3a4a6a; color: #e8ecf4; font-size: .74rem; font-weight: 700; text-align: left; line-height: 1.2; }
+  .hall-list button.locked { opacity: .55; }
+  .hall-list .ic { flex: none; font-size: .95rem; }
+  .hall-list .nm { min-width: 0; overflow-wrap: anywhere; }
+  .hall-list .s-alert { position: absolute; top: -6px; right: -6px; left: auto; width: auto; transform: scale(.8); }
+  /* 지도는 위쪽 안내 상자 아래, 목록 위에 둔다(가운데 두면 목록이 지도 아래쪽을 덮었다) */
+  .hall-cam.overview { align-items: flex-start; padding-top: 250px; box-sizing: border-box; }
+}
+/* 키가 작은 폰(667px 등) — 목록을 넷씩 네 줄로 낮춰 지도와 겹치지 않게 */
+@media (max-aspect-ratio: 4/5) and (max-height: 740px) {
+  .hall-list { grid-template-columns: repeat(4, 1fr); gap: 4px; bottom: 88px; }
+  .hall-list button { min-height: 34px; padding: 4px 4px; font-size: .68rem; }
+  .hall-cam.overview { padding-top: 196px; }
+}
+
+/* 가로로 든 폰(높이 500px 이하) — 위 안내 상자와 「범인 지목하기」가 지도의 절반을 덮었다(2026-10-12 확인).
+   안내 상자는 왼쪽 좁게, 목표는 두 줄까지, 단계 칩은 감추고, 지목 단추는 오른쪽 아래 작게. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .hall-hud-chip { max-width: 44vw; padding: 5px 9px; }
+  .hall-hud-chip b { font-size: .74rem; }
+  .hall-hud-chip span { font-size: .64rem; }
+  .hall-hud-chip span.hall-objective { font-size: .66rem; margin-top: 3px; padding-top: 3px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hall-hud-chip .hall-steps { display: none; }
+  .hall-accuse { left: auto; right: 12px; bottom: 12px; transform: none; padding: 7px 14px; font-size: .8rem; }
+  .hall-accuse:active { transform: scale(.96); }
+  .hall-accuse small { font-size: .6rem; }
+}

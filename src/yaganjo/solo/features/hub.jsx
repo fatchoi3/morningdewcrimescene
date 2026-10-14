@@ -175,6 +175,15 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     const cam = camRef.current;
     return () => { if (cam && !overview) LAST_SCROLL[scrollKey] = cam.scrollLeft; };
   }, [overview]);
+  // 지도 전체 보기(세로 폰) — 가로로 긴 지도를 세로 폭에 맞추면 높이 200px 남짓이라 이름표가 작고
+  //   위아래가 비었다(8회차). 빈 아래 칸에 장소 목록을 같이 띄운다 — 지도와 같은 판정·같은 배지.
+  const placeList = [
+    ...PERSON_SPOTS.map((d) => ({ key: d.person, icon: '🧍', label: d.person, loc: roomByPerson(d.person) })),
+    ...(bossLocker ? [{ key: 'boss', icon: '🗄', label: '조장 사물함', loc: bossLocker, keyLock: true }] : []),
+    ...commons.map((c) => ({ key: c.id, icon: c.icon, label: c.label, loc: c.loc })),
+    ...(crime ? [{ key: 'crime', icon: '⚠️', label: 'C통로 현장', loc: crime, isCrime: true }] : []),
+    ...(lab ? [{ key: 'lab', icon: '🔬', label: '감식 의뢰실', loc: lab }] : []),
+  ].filter((p) => p.loc);
   const pannable = edge.l || edge.r;
   const pan = (dir) => camRef.current?.scrollBy({ left: dir * camRef.current.clientWidth * 0.6, behavior: 'smooth' });
   return (
@@ -213,6 +222,22 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
           )}
       </div>
       </div>
+      {overview && (
+        <div className="hall-list" aria-label="장소 목록">
+          {placeList.map((p) => {
+            const locked = p.loc.stage > stage || (p.keyLock && keyLocked(p.loc));
+            const a = alertsOf(p.loc);
+            return (
+              <button key={p.key} className={locked ? 'locked' : ''} onClick={() => enter(p.loc, !!p.isCrime)}>
+                <span className="ic">{locked ? '🔒' : p.icon}</span><span className="nm">{p.label}</span>
+                {!locked && a.total > 0 && (
+                  <span className="s-alert" title={`${p.label} — ${alertReason(a)}`} style={a.key > 0 ? undefined : ALERT_SOFT}>{a.key > 0 ? a.key : '!'}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {!overview && <div className="hall-swipe-hint" aria-hidden="true">← 밀어서 둘러보기 →</div>}
       {!overview && edge.l && <button className="hall-pan l" aria-label="서쪽 더 보기" onClick={() => pan(-1)}>‹</button>}
       {!overview && edge.r && <button className="hall-pan r" aria-label="동쪽 더 보기" onClick={() => pan(1)}>›</button>}
