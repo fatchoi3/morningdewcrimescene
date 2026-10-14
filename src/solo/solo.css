@@ -829,3 +829,9 @@ button { font-family: inherit; }
 .s-tl2-ev span { display: inline-block; margin: 0 6px 2px 0; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line); }
 .s-tl2-ev span.got { color: #a6d9a8; border-color: #4f7a52; }
 .s-tl2-ev span.miss { opacity: .65; }
+/* 그림 눌러 크게 */
+.s-zoomable { cursor: zoom-in; }
+/* 사건 파일 제출 단추 — 화면 아래에 붙는다 */
+.s-cf-submit { position: sticky; bottom: -40px; z-index: 2; text-align: center; margin: 20px -16px 0; padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); background: var(--ink); box-shadow: 0 -14px 14px var(--ink); }
+/* CCTV 를 보는 중엔 알림을 아래로 — 위쪽 시각 단추(10시대)를 가렸다(14회차) */
+body:has(.cctv-modal) .s-toast { top: auto; bottom: 28px; }

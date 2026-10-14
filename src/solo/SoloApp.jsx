@@ -159,7 +159,7 @@ export default function SoloApp() {
 
   // ── 중간 사건 — 1차 심문(6인)을 마치면 부검 소견이 도착한다 ────────────────
   if (!state.eventSeen && !state.admin && progressStage >= 2 && !suspectId) {
-    return <EventVN onDone={() => update({ eventSeen: true })} />;
+    return <EventVN onDone={() => { setSceneId(null); update({ eventSeen: true }); }} />;
   }
 
   // ── 2차 사건 — 모든 조사·1차 심문이 끝나(2차 개방) 정밀 부검 결과(LONS-62)가 도착 ──

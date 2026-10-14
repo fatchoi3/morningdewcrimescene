@@ -12,6 +12,7 @@ export const DialogueBox = forwardRef(function DialogueBox({ location, speaker, 
   const [shown, setShown] = useState('');
   const full = text || '';
   const doneRef = useRef(false);
+  const doneAtRef = useRef(0);
   const idRef = useRef(null);
   useEffect(() => {
     setShown(''); doneRef.current = false;
@@ -19,7 +20,7 @@ export const DialogueBox = forwardRef(function DialogueBox({ location, speaker, 
     let i = 0;
     idRef.current = setInterval(() => {
       i += 1; setShown(full.slice(0, i));
-      if (i >= full.length) { doneRef.current = true; onTyping?.(false); clearInterval(idRef.current); idRef.current = null; }
+      if (i >= full.length) { doneRef.current = true; doneAtRef.current = Date.now(); onTyping?.(false); clearInterval(idRef.current); idRef.current = null; }
     }, 20);
     return () => { clearInterval(idRef.current); idRef.current = null; onTyping?.(false); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -29,7 +30,10 @@ export const DialogueBox = forwardRef(function DialogueBox({ location, speaker, 
     if (!doneRef.current) {
       // 타이핑 중 탭 → 진행 중 인터벌을 멈추고 즉시 전체 표시(안 멈추면 인터벌이 다시 덮어써 줄었다 늘었다 함)
       if (idRef.current) { clearInterval(idRef.current); idRef.current = null; }
-      setShown(full); doneRef.current = true; onTyping?.(false);
+      setShown(full); doneRef.current = true; doneAtRef.current = Date.now(); onTyping?.(false);
+    } else if (Date.now() - doneAtRef.current < 350) {
+      // 글이 다 찍힌 직후(또는 「다 보이기」 직후)의 탭은 넘김으로 치지 않는다 — 두 번 연달아 누르면
+      //   끝까지 못 읽은 채 다음 장으로 갔다(「단서를 챙」, 「…그럼 제가 타」, 2026-10-14 14회차 셋 모두).
     } else if (onAdvance) onAdvance();
   };
   useImperativeHandle(ref, () => ({ tap }));

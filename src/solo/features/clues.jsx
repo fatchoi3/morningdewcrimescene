@@ -11,6 +11,21 @@ import CctvModal from '../../components/CctvModal.jsx';
 
 const PAGE_IMG_H = 170;   // 그림이 있는 쪽·없는 쪽의 높이를 맞추려고 늘 잡아 두는 자리
 
+// ── 눌러서 크게 보는 그림 — 회계 장부·통장 사진의 작은 글씨를 못 읽었다(2026-10-14 14회차) ──
+function ZoomImg({ src, style }) {
+  const [big, setBig] = useState(false);
+  return (
+    <>
+      <img src={src} alt="" style={style} className="s-zoomable" onClick={(e) => { e.stopPropagation(); setBig(true); }} />
+      {big && (
+        <div className="s-phone-zoom" onClick={(e) => { e.stopPropagation(); setBig(false); }}>
+          <img src={src} alt="" /><div className="pz-cap">눌러서 닫기</div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ── 여러 쪽 문서 — 한 화면에 이어서 ─────────────────────────────────────────
 //   쪽을 하나씩 넘기던 것을 위아래로 이어 붙인다. 「1장은 탭 노동」이라는 말이 모든 유형에서 나왔고(2026-10-08~14
 //   8~13회차), 첫 쪽만 보고 닫아 결정적인 쪽(목사님 일기 0419, 세린 성경 속 그림)을 놓쳤다.
@@ -36,7 +51,7 @@ function PageStack({ pages, collectedSet, onCollect }) {
       {pages.length > 1 && <p className="s-pager-more">📖 {pages.length}쪽 — 아래로 밀어 끝까지 읽어 보세요</p>}
       {pages.map((pg, i) => (
         <section key={i} className="s-page" data-i={i} ref={(el) => { refs.current[i] = el; }}>
-          {pg.image && <img src={pg.image} alt="" style={{ height: PAGE_IMG_H, width: '100%', objectFit: 'contain', marginBottom: 8 }} />}
+          {pg.image && <ZoomImg src={pg.image} style={{ height: PAGE_IMG_H, width: '100%', objectFit: 'contain', marginBottom: 8 }} />}
           <div className="s-page-t">{pg.title}<span>{i + 1} / {pages.length}</span></div>
           <div className="s-detail">{pg.content}</div>
         </section>
@@ -107,7 +122,7 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
   // 기본형(이미지 + 상세/설명)
   return (
     <Shell title={<>{c.title}{tag}{person}</>} onClose={onClose}>
-      {c.image && <img src={c.image} alt="" />}
+      {c.image && <ZoomImg src={c.image} />}
       <div className="s-detail">{c.detail || c.description || '특별한 설명이 없습니다.'}</div>
       {Array.isArray(c.unlockedBy) && c.unlockedBy.length > 0 && (
         <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 10 }}>🔗 연관 단서를 모으면 새로운 사실이 드러날 수 있습니다.</p>
