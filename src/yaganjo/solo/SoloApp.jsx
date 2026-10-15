@@ -277,6 +277,15 @@ export default function SoloApp() {
             onExit={() => {
               // 감식을 맡긴 뒤 심문을 한 번 마치고 나오면 2차 심문 조건 하나가 선다(4회차 #1)
               if ((state.labReq || []).length && sceneClueCount(state) >= SCENE_NEEDED && !state.talkAfterLab) update({ talkAfterLab: true });
+              // 「03:24 2층에서 일지」를 들었는데 2층 사무실을 덜 봤으면 한 번 짚는다 — 11회차 셋 중 둘이 2층 사무실
+              //   (감사 진술 초안·조장 태블릿)을 거의 안 열어 동기를 소거법으로 고르고 대질 정답에 못 닿았다.
+              if (suspectId === 'S1' && stage >= 2 && !state.officeHintSeen && (state.askedQ?.S1 || []).includes('t0300')) {
+                const office = locations.all.find((l) => l.id === 'ROOM-U');
+                if (office && office.objects.some((c) => !collectedSet.has(c))) {
+                  update({ officeHintSeen: true });
+                  showToast('📌 수사 노트 — 그는 03:24에 2층 사무실에 있었다고 했다. 2층 사무실을 아직 다 둘러보지 않았다.', 6500);
+                }
+              }
               return sceneId ? setSuspectId(null) : goHub();
             }}
             onPress={(stId) => {

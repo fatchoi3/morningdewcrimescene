@@ -15,6 +15,12 @@ import { DialogueBox } from '../vn.jsx';
 // ── 시작 화면 — 수사 시작 / 이어하기 ─────────────────────────────────────────
 //   처음부터 다시 하는 두 단추는 한 번 묻는다 — 공개 화면에서 누르면 곧장 지워지던 것(디자인 점검 3).
 //   이 화면은 공용 확인 창이 뜨지 않는 자리라 화면 안에서 묻는다.
+// 결말 — 틀린 수법·동기 옆에 붙이는 「갈랐던 단서」(정본 단서 이름 그대로)
+const DECIDED_BY = {
+  수법: '흐엉의 증언(03:28 시동이 켜진 빈 지게차) · 임기석의 증언(03:41 빈 지게차를 몰고 나왔다)',
+  동기: '감사 진술 초안(2층 사무실) · 서장현 휴대폰의 「최근 삭제된 항목」',
+};
+
 export function StartScreen({ started, continueCount, onStart, onContinue, onReset }) {
   const [ask, setAsk] = useState(null); // 'start' | 'reset' | null
   const hasSave = started || continueCount > 0;
@@ -185,6 +191,8 @@ export function EndingScreen({ result, onNewCase }) {
               <div key={k} style={{ color: !r.culpritRight ? 'var(--muted)' : ok ? 'var(--ok)' : 'var(--danger)' }}>
                 {!r.culpritRight ? '—' : ok ? '✓' : '✗'} {k} — {list.find((m) => m.id === id)?.label || '고르지 않음'}
                 {!ok && <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>정답: {list.find((m) => m.id === answer)?.label}</div>}
+                {/* 무엇이 답을 갈랐는지 — 틀린 둘이 왜 틀렸는지 몰랐다(11회차) */}
+                {!ok && r.culpritRight && DECIDED_BY[k] && <div style={{ color: '#a9b3c4', fontSize: '.78rem', marginLeft: '1.2em' }}>갈랐던 단서: {DECIDED_BY[k]}</div>}
               </div>
             ))}
             {/* 결정적 증거 — 대질에서 내민 한 장. 범인을 틀렸으면 대질이 없었다 */}

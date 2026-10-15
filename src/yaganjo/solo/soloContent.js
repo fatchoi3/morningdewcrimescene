@@ -251,6 +251,8 @@ const CHOICE_MOTIVES = [
   { id: 'mo_tag', label: '대리 출퇴근이 근태 전수 점검에 걸릴까 봐' },
   { id: 'mo_grudge', label: '전환 심사에서 밀려난 원한' },
   { id: 'mo_injury', label: '산재를 각서로 덮은 조장에게 쌓인 원한' },
+  // 미끼 — 보기 여섯이 용의자 여섯에게 하나씩 짝지어 있어 지워 나가면 풀렸다(11회차). 서장현에게도 그럴듯한 오답 하나.
+  { id: 'mo_ignored', label: '안전 지적을 번번이 묵살한 조장에게 쌓인 원한' },
   { id: 'mo_draft', label: '감사 진술 초안에 자기 이름이 적혀 있었다' },
   { id: 'mo_license', label: '조장이 감사 자료를 정리해 올리면서 자격 대장까지 올릴까 봐 — 무면허가 드러날 공포' },
   { id: 'mo_passport', label: '조장이 맡아 둔 여권을 되찾으려고' },
