@@ -113,7 +113,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
             <span>⚖️ <b>그 시각, 그 자리에 그를 묶는 증거</b> 한 장을 고르세요 · 남은 기회 {left}</span>
           </div>
           {usedCodes.size > 0 && (
-            <p className="cf-used-note">✅ — 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요. 다만 그가 이미 인정한 것만 보여 주는 증거로는 모자랍니다.</p>
+            <p className="cf-used-note">✅ — 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요.</p>
           )}
           {persons.length > 1 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>

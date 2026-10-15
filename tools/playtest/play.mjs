@@ -42,6 +42,10 @@ const stateFile = path.join(dir, 'state.json');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const W = 390, H = 844;
 const portOf = (n) => 9300 + ([...n].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 100003, 7) % 600);
+// 이름으로 고른 포트가 이미 쓰이면 다음 칸으로 — 11회차에 yz11-first 와 yz11-casual 이 같은 포트를 잡아
+//   한쪽의 탭 여덟 번이 다른 쪽 판에 들어갔다.
+const portFree = (p) => new Promise((res) => { const s = createServer(); s.once('error', () => res(false)); s.listen(p, '127.0.0.1', () => s.close(() => res(true))); });
+async function freePort(start) { for (let p = start; p < start + 200; p++) if (await portFree(p)) return p; return start; }
 
 // 누를 수 있는 것 — 버튼·링크·입력칸 중 화면 안에 보이는 것만, 위에서 아래 순서로
 const LIST_JS = `(() => {
@@ -152,7 +156,7 @@ if (cmd === 'serve') {
   await serve(args[0], +args[1]);
 } else if (cmd === 'start') {
   const url = args[0] || 'http://localhost:5180/solo-play';
-  const port = portOf(name);
+  const port = await freePort(portOf(name));
   try { writeFileSync(path.join(dir, 'ready'), ''); } catch { /* 처음 */ }
   const self = fileURLToPath(import.meta.url);
   // 조종기의 오류는 serve.log 로 받는다 — 예전엔 버려서 「못 띄웠다」만 나오고 이유를 알 길이 없었다

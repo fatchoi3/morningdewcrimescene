@@ -29,6 +29,9 @@ const EDGE_POS = {
 const EDGE_MARK = { left: '◀', right: '▶', up: '▲', down: '▼' };
 
 // ── 장면(역전재판식 풀블리드: 조사/이야기 + 우측 상단 수첩) ────────────────────
+// 창이 닫히거나 화면이 바뀐 직후 0.4초 — SoloApp 이 시각을 찍는다
+const uiJustChanged = () => Date.now() - (window.__soloUiChangedAt || 0) < 400;
+
 export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1, state, phase = 1, onTalk, onOpen, onLockedToast, onOpenRecord, onBack }) {
   // 이 인물에게 아직 안 물어본 질문 수 — 있으면 대화 영역에 알림 배지
   const talkPending = roomSuspect ? pendingQuestions(roomSuspect.id, state || {}, phase) : 0;
@@ -141,6 +144,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
           ...(p.onPerson ? { zIndex: 11 } : null),
         };
         const onPick = () => {
+          if (uiJustChanged()) return; // 창을 닫은 그 탭이 다음 물건으로 새지 않게(11회차)
           if (locked) {
             onLockedToast(`🔒 아직 열 수 없다 — 먼저 필요한 것: ${lockedBy.map((r) => getClue(r)?.title || r).join(' · ')}`);
             return;
@@ -184,7 +188,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       {roomSuspect && onTalk && talkPos && (
         <button className="s-talkzone"
           style={{ left: `${talkPos.x}%`, top: `${talkPos.y}%`, ...(talkPos.w ? { width: `${talkPos.w}%`, height: `${talkPos.h}%` } : null) }}
-          onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
+          onClick={() => { if (!uiJustChanged()) onTalk(roomSuspect.id); }} aria-label={`${roomSuspect.name}과 이야기한다`}>
           {/* 인물은 테두리를 그리지 않는다 — 발밑 빛 + '이야기를 한다' 칩만으로 안내.
               (그림 속 인물 위에 선을 얹으면 오히려 지저분해 보임) */}
           <span className="s-talkzone-glow" />
@@ -214,7 +218,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       {pannable && !zoom.atMin && <div className="aa-swipe-hint" style={{ animationIterationCount: offscreen > 0 ? 'infinite' : 1 }}>← 밀어서 방을 둘러보기 →</div>}
 
       {roomSuspect && onTalk && !talkPos && (
-        <button className="s-figure" onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
+        <button className="s-figure" onClick={() => { if (!uiJustChanged()) onTalk(roomSuspect.id); }} aria-label={`${roomSuspect.name}과 이야기한다`}>
           <span className="s-figure-tip">💬 이야기를 한다</span>
           <StandingFigure sid={roomSuspect.id} person={roomSuspect.name} image={roomSuspect.image} height={240} fallbackSize={110} />
           <span className="s-figure-lab">{roomSuspect.name}</span>

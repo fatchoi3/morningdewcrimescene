@@ -3,7 +3,7 @@
 //   단서 확보/감식 배달 같은 오케스트레이션만 담당한다.
 //   화면과 기능은 features/·ui/ 로 분리, 순수 규칙/상수는 lib/game.js, 콘텐츠는 content.js.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { cast, t } from '../../scenarios/yaganjo/cast.js';
 import {
@@ -54,7 +54,8 @@ export default function SoloApp() {
   const [casefileOpen, setCasefileOpen] = useState(false); // 범인 지목 오버레이
   // 창이 닫히거나 장면이 끝나는 그 탭이 뒤의 지도까지 눌러 엉뚱한 방에 들어갔다(10회차 둘 — 컷신 끝·수첩 접기 뒤).
   //   화면이 바뀐 직후 잠깐은 지도 입장을 받지 않는다(hub.jsx enter 가 본다).
-  useEffect(() => { window.__soloUiChangedAt = Date.now(); },
+  // 그리기 전에 찍는다 — useEffect 로는 닫는 탭 뒤따라오는 click 보다 늦어 새는 탭을 못 막았다(11회차 셋 다)
+  useLayoutEffect(() => { window.__soloUiChangedAt = Date.now(); },
     [recordOpen, modalCode, casefileOpen, adminOpen, sceneId, suspectId, state.eventSeen, state.event2Seen, state.tutFinaleSeen]);
   const ALL_CODES = useMemo(() => provider.getAllClues().map((c) => c.code), []);
   // 3막 진행도·제출 준비도의 분모 — 콘텐츠에서 세어 온다(숫자를 손으로 적으면 데이터가 늘 때 어긋난다)
@@ -355,7 +356,15 @@ export default function SoloApp() {
       {casefileOpen && (
         <SheetOverlay title="🔍 범인 지목" onClose={() => setCasefileOpen(false)}>
           <CaseFileView state={state} onPick={(cf) => update({ casefile: cf })}
-            onConfirmLock={(who) => dlg.confirm({ title: '범인 확정', body: <p><b>{who?.name}</b> — 이 사람으로 확정하면 바꿀 수 없습니다. 확정할까요?</p>, ok: '확정한다', cancel: '더 생각한다', tone: 'danger' })}
+            onConfirmLock={(who) => dlg.confirm({ title: '범인 확정', body: (
+              <>
+                <p><b>{who?.name}</b> — 이 사람으로 확정하면 바꿀 수 없습니다. 확정할까요?</p>
+                {/* 제출 창에서야 경고가 떠, 되돌리기 쉬운 이 단계에선 몰랐다(11회차 둘) */}
+                {(phoneGot * 2 < PHONE_CODES.length || specialGot * 2 < SPECIAL_CODES.length) && (
+                  <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 아직 안 본 것이 많아요 — 휴대폰 {phoneGot}/{PHONE_CODES.length} · ⭐ 추리 단서 {specialGot}/{SPECIAL_CODES.length}. 지목 뒤 대질에서 그를 그 자리에 묶을 한 장이 손에 없을 수 있습니다.</p>
+                )}
+              </>
+            ), ok: '확정한다', cancel: '더 생각한다', tone: 'danger' })}
             // 제출은 되돌릴 수 없다(엔딩의 「새 사건」은 clearSave라 기록까지 사라진다) — 확인창에서
             //   '얼마나 조사하고 지목하는지'를 숫자로 보여준 뒤 물어본다.
             onSubmit={async () => {
