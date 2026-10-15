@@ -4,7 +4,7 @@
 //   수첩=우측 상단 · 나가기=대사창 우측 하단. 감식실은 '의뢰' 흐름.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from 'react';
-import { getClue } from '../content.js';
+import { getClue, locations } from '../content.js';
 import { t } from '../../../scenarios/yaganjo/cast.js';
 import { ROOM_HOTSPOTS, hitBoxFor, hotspotFor } from '../lib/game.js';
 import { pendingQuestions } from '../lib/alerts.js';
@@ -146,7 +146,13 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         const onPick = () => {
           if (uiJustChanged()) return; // 창을 닫은 그 탭이 다음 물건으로 새지 않게(11회차)
           if (locked) {
-            onLockedToast(`🔒 아직 열 수 없다 — 먼저 필요한 것: ${lockedBy.map((r) => getClue(r)?.title || r).join(' · ')}`);
+            // 이름만 대면 「탈의실 사물함 열」을 잘린 「열쇠」로 읽었다(12회차) — 그 단서가 있는 자리를 붙인다
+            const whereOf = (r) => {
+              const l = locations.all.find((x) => (x.objects || []).includes(r));
+              if (!l) return null;
+              return l.person && l.person !== '공용' && l.person !== '조장' ? `${l.person} 사물함` : (l.label.split(' — ')[1] || l.label);
+            };
+            onLockedToast(`🔒 아직 열 수 없다 — 먼저 필요한 것: ${lockedBy.map((r) => { const w = whereOf(r); return `「${getClue(r)?.title || r}」${w ? `(${w})` : ''}`; }).join(' · ')}`);
             return;
           }
           if (isGamsik && !have) {
