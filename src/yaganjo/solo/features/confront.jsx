@@ -64,7 +64,8 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   // 한 번 더 내밀 때는 인물 거르기를 「전체」로 되돌린다 — 앞에서 고른 거르기가 남아 엉뚱한 카드를 고를 뻔했다(8회차)
   const retry = () => (left > 0 ? (setPPerson(null), setSel(null), setPicking(true)) : setBeat({ kind: 'fail', code: beat.code }));
   const LINES = {
-    deny: { speaker: who?.name, text: deny, hint: '▶ 증거를 내민다', next: () => setPicking(true) },
+    // 기회가 두 번뿐이라는 걸 첫 증거를 내고서야 알았다(10회차) — 첫 내밀기 전에 말한다
+    deny: { speaker: who?.name, text: deny, hint: `▶ 증거를 내민다 — 기회는 ${MAX_TRIES}번`, next: () => setPicking(true) },
     press: { speaker: '수사관', text: CONFRONT.press?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'accept', code: beat.code }) },
     accept: { speaker: who?.name, text: (CONFRONT.accept[beat.code] || '') + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
     note: { speaker: '수사 노트', text: CONFRONT.noteBy?.[beat.code] || (CONFRONT.noteStatement && !brokeIds.has(CONFRONT.noteStatement) && CONFRONT.noteBefore) || CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
@@ -112,7 +113,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
             <span>⚖️ <b>그 시각, 그 자리에 그를 묶는 증거</b> 한 장을 고르세요 · 남은 기회 {left}</span>
           </div>
           {usedCodes.size > 0 && (
-            <p className="cf-used-note">✅ — 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요.</p>
+            <p className="cf-used-note">✅ — 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요. 다만 그가 이미 인정한 것만 보여 주는 증거로는 모자랍니다.</p>
           )}
           {persons.length > 1 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>

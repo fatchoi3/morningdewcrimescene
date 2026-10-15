@@ -134,6 +134,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   };
   const enter = (loc, isCrime) => {
     if (!loc) return;
+    // 창이 닫히거나 장면이 끝난 직후 0.4초는 지도 입장을 받지 않는다 — 닫는 탭이 뒤의 지도까지 눌렀다(10회차)
+    if (Date.now() - (window.__soloUiChangedAt || 0) < 400) return;
     if (loc.stage > stage) {
       onToast(isCrime ? '🚧 C통로는 경찰 통제 중입니다 — 현장 감식이 끝나면 개방됩니다'
         : '아직 그쪽에 갈 일은 없어 보입니다. 먼저 여섯 사람부터 만나 보세요.');

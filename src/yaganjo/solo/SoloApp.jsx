@@ -52,6 +52,10 @@ export default function SoloApp() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [recordOpen, setRecordOpen] = useState(false);   // 수첩(사건 기록) 오버레이
   const [casefileOpen, setCasefileOpen] = useState(false); // 범인 지목 오버레이
+  // 창이 닫히거나 장면이 끝나는 그 탭이 뒤의 지도까지 눌러 엉뚱한 방에 들어갔다(10회차 둘 — 컷신 끝·수첩 접기 뒤).
+  //   화면이 바뀐 직후 잠깐은 지도 입장을 받지 않는다(hub.jsx enter 가 본다).
+  useEffect(() => { window.__soloUiChangedAt = Date.now(); },
+    [recordOpen, modalCode, casefileOpen, adminOpen, sceneId, suspectId, state.eventSeen, state.event2Seen, state.tutFinaleSeen]);
   const ALL_CODES = useMemo(() => provider.getAllClues().map((c) => c.code), []);
   // 3막 진행도·제출 준비도의 분모 — 콘텐츠에서 세어 온다(숫자를 손으로 적으면 데이터가 늘 때 어긋난다)
   const PHONE_CODES = useMemo(() => provider.getAllClues().filter((c) => c.phone).map((c) => c.code), []);
