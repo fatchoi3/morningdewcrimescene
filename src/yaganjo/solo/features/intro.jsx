@@ -201,6 +201,10 @@ export function EndingScreen({ result, onNewCase }) {
               {r.culpritRight && !r.evidenceRight && (
                 <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>정답: {Object.keys(CONFRONT.accept).map(clueTitle).join(' 또는 ')}</div>
               )}
+              {/* 왜 그 한 장이 그를 묶는가 — 맞혔으면 낸 것, 틀렸으면 정답 둘 */}
+              {r.culpritRight && (r.evidenceRight ? [r.evidence] : Object.keys(CONFRONT.accept)).filter((c) => CONFRONT.why?.[c]).map((c) => (
+                <div key={c} style={{ color: '#a9b3c4', fontSize: '.78rem', marginLeft: '1.2em' }}>왜 — {CONFRONT.why[c]}</div>
+              ))}
             </div>
             {perfect && (
               <div style={{ marginTop: 6, color: 'var(--gold)', fontWeight: 800 }}>★ 범인·수법·동기에 결정적 증거까지 — 완벽한 해결</div>
