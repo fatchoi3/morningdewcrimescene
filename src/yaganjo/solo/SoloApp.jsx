@@ -226,7 +226,8 @@ export default function SoloApp() {
   // 3막은 재는 축이 다르다 — 현장 단서는 이미 채워진 뒤라 그대로 두면 분자가 분모를 넘고(C통로 10개/3),
   //   정작 남은 일(2차 심문·감식·폰)은 어디에도 안 보였다. 2막 표기도 목표치까지만 센다.
   const progressText = progressStage >= 3
-    ? `2차 심문 ${p2Count}/${suspectIds.length} · 감식 ${gamsikGot}/${gamsikCodes.size} · 폰 ${phoneGot}/${PHONE_CODES.length}`
+    // ⭐ 도 센다 — 알림 한 줄로는 ⭐ 가 대질의 핵심이라는 걸 몰랐다(10회차)
+    ? `2차 심문 ${p2Count}/${suspectIds.length} · ⭐ ${specialGot}/${SPECIAL_CODES.length} · 감식 ${gamsikGot}/${gamsikCodes.size} · 폰 ${phoneGot}/${PHONE_CODES.length}`
     : `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}`
       + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED} · 감식 의뢰 ${Math.min((state.labReq || []).length, 1)}/1 · 그 뒤 심문 ${state.talkAfterLab ? 1 : 0}/1` : '');
   // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
@@ -370,6 +371,11 @@ export default function SoloApp() {
                     </p>
                     {p2Count === 0 && (
                       <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 아직 2차 심문을 한 명도 하지 않았어요. 물증으로 거짓말을 무너뜨리는 장면을 하나도 보지 않은 채 지목하게 됩니다.</p>
+                    )}
+                    {/* 휴대폰·⭐ 를 절반도 안 본 채 지목하면 대질에서 내밀 한 장이 없다 — 「폰 0/8 · ⭐ 3/8」 숫자만으로는
+                        경고로 느끼지 못했다(10회차 둘). 어느 카드가 필요한지는 말하지 않는다. */}
+                    {(phoneGot * 2 < PHONE_CODES.length || specialGot * 2 < SPECIAL_CODES.length) && (
+                      <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 아직 안 본 것이 많아요 — 휴대폰 {phoneGot}/{PHONE_CODES.length} · ⭐ 추리 단서 {specialGot}/{SPECIAL_CODES.length}. 지목 뒤 대질에서 그를 그 자리에 묶을 한 장이 손에 없을 수 있습니다.</p>
                     )}
                     <p>제출하면 사건이 종결되고 전말이 공개됩니다. <b>수사로 돌아올 수 없습니다.</b></p>
                     <p style={{ fontSize: '.82rem', color: 'var(--muted)', lineHeight: 1.7 }}>
