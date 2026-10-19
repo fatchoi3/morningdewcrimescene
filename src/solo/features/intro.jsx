@@ -81,8 +81,8 @@ export function BriefingVN({ onDone }) {
       <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
-        actions={[{ label: '⏭ 건너뛰기', onClick: onDone }]}
-        hint={last ? '▶ 현장으로' : `${i + 1}/${beats.length} · 탭하여 다음`} />
+        actions={[last ? { label: '▶ 현장으로', tone: 'key', onClick: onDone } : { label: '⏭ 건너뛰기', onClick: onDone }]}
+        hint={last ? '마지막 장 — 탭하거나 「▶ 현장으로」' : `${i + 1}/${beats.length} · 탭하여 다음`} />
     </div>
   );
 }
@@ -111,8 +111,8 @@ export function EventVN({ onDone }) {
       <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
-        actions={[{ label: '⏭ 건너뛰기', onClick: onDone }]}
-        hint={last ? '▶ 전면 조사 시작' : `${i + 1}/${beats.length} · 탭하여 다음`} />
+        actions={[last ? { label: '▶ 전면 조사 시작', tone: 'key', onClick: onDone } : { label: '⏭ 건너뛰기', onClick: onDone }]}
+        hint={last ? '마지막 장' : `${i + 1}/${beats.length} · 탭하여 다음`} />
     </div>
   );
 }
@@ -139,8 +139,8 @@ export function EventVN2({ onDone }) {
       <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
-        actions={[{ label: '⏭ 건너뛰기', onClick: onDone }]}
-        hint={last ? '▶ 2차 심문 시작' : `${i + 1}/${beats.length} · 탭하여 다음`} />
+        actions={[last ? { label: '▶ 2차 심문 시작', tone: 'key', onClick: onDone } : { label: '⏭ 건너뛰기', onClick: onDone }]}
+        hint={last ? '마지막 장' : `${i + 1}/${beats.length} · 탭하여 다음`} />
     </div>
   );
 }

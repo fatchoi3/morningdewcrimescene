@@ -178,7 +178,7 @@ export default function SoloApp() {
     // 첫 심문에서 성공 반박을 해 보려면 그 단서가 손에 있어야 한다 — 그 물건부터 짚게 한다
     const TUT_CODE = 'VNTD-61';
     const jhExamined = jhObjs.includes(TUT_CODE) ? collectedSet.has(TUT_CODE) : jhObjs.some((c) => collectedSet.has(c));
-    if (recordOpen) coach = { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽었으면 ← 로 나가세요' };
+    if (recordOpen) coach = modalCode ? null : { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽었으면 ← 로 나가세요' };
     else if (modalCode) coach = { sel: '.s-modal .mx', dim: false, text: '단서를 확보했습니다. 다 읽었으면 ✕ 로 닫으세요' };
     else if (suspectId) coach = null;      // 심문 안에서는 그 화면이 직접 안내한다(아래 CrossExamView)
     else if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
@@ -351,7 +351,7 @@ export default function SoloApp() {
           onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {/* 튜토리얼 중엔 아래로 — 위쪽 코치 말풍선(「✕ 로 닫으세요」)을 덮었다(2026-10-07 시험) */}
-      {toast && <div className={`s-toast${!state.tutorialSeen ? ' low' : ''}`}>{toast}</div>}
+      {toast && <div className="s-toast">{toast}</div>}
       <LoadingBar />
       {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (

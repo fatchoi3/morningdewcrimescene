@@ -388,9 +388,13 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   질문지로 빠져 「📁 반박」을 통째로 지나쳤다(⏭ 도 '넘기기'가 아니라 '나가기'로 동작했다).
   //   나가는 길은 액션행의 「↩ 다른 질문」 하나로 못 박고, 힌트가 그걸 가리킨다.
   const dlgAdvance = line ? advance : (cur && canPress) ? doPress : undefined;
+  const tutEnd = tutorialSeen && !state.tutFinaleSeen;
   const dlgHint = line ? '탭하여 계속 ▶'
     : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : '거짓이다 싶으면 「📁 반박」 · 「↩ 다른 질문」으로 나간다')
     : openTopic ? (topicHasMore ? '위에서 고르거나 「↩ 다른 이야기」' : '「↩ 다른 이야기」로 돌아가세요')
+    // 튜토리얼 마지막 — 질문지로 돌아오면 안내가 그냥 사라져, 셋 모두 글자 없는 🚪 를 짐작으로 눌렀다(튜토리얼 시험).
+    //   말풍선으로 띄우면 질문지 아래를 덮어서, 대사창 안내 줄과 빛나는 「🚪 마치기」로 알린다.
+    : tutEnd ? '🎓 튜토리얼 끝! 더 물어봐도 되고, 다 됐으면 「🚪 마치기」'
     : (hasAsks ? '위 목록에서 질문이나 이야깃거리를 고르세요' : '');
 
   return (
@@ -482,15 +486,17 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
             // 「✕ 취소」 — '반박'을 붙이면 이 상태에서만 폭이 22px 늘어 줄바꿈된다.
             //   피커가 화면을 덮고 있어 무엇을 취소하는지는 이미 보인다.
             : { label: picker ? '✕ 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPeek(null); setPicker((p) => !p); } }),
-          cur && { label: openTopic ? '↩ 이 이야기로' : '↩ 다른 질문', onClick: toMenu },
+          cur && { label: openTopic ? '↩ 이 이야기로' : '↩ 다른 질문', tut: 'dlg-back', onClick: toMenu },
           !cur && openTopic && { label: '↩ 다른 이야기', onClick: () => { setLine(null); setOpenTopicId(null); } },
           // 분량 대부분이 이 화면인데 20ms/자를 끊을 방법이 화면 탭뿐이었다 — 엄지 자리에도 둔다.
           //   (넘길 곳이 있을 때만 = 버튼이 타이핑 도중에 생겼다 사라지며 줄이 흔들리지 않게)
           dlgAdvance && { label: '⏭', onClick: () => dlgRef.current?.tap() },
-          { label: '📓', onClick: () => { setPicker(false); onOpenRecord?.(); } },
+          { label: '📓', aria: '수첩(사건 기록)', onClick: () => { setPicker(false); onOpenRecord?.(); } },
           // 아이콘만 — 답변 화면에선 버튼이 5개라, 글자를 달면 375px 에서 두 줄로 넘어가
           //   대사창이 42px 두꺼워진다. 심문마다 한 번 쓰는 버튼이라 ⏭·📓 처럼 아이콘으로 둔다.
-          { label: '🚪', onClick: onExit },
+          tutEnd && !cur && !line
+            ? { label: '🚪 마치기', tone: 'key', aria: '심문 마치고 나가기', onClick: onExit }
+            : { label: '🚪', aria: '심문 마치고 나가기', onClick: onExit },
         ]} />
 
       {/* 첫 심문 코치마크 — 심문 화면에도 '지금 할 것'이 계속 붙어 있게 한다.
@@ -507,23 +513,24 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                     ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
                     : { targetSel: '.aa-dlg-act.key', text: '방금 본 물건을 이 말에 맞대 보자 — 「📁 반박」을 누르세요' })
                   : cur
-                    ? { targetSel: '.aa-dlg-actions', text: openTopic ? '「↩ 이 이야기로」로 질문지로 돌아가세요' : '「↩ 다른 질문」으로 질문지로 돌아가세요' }
+                    ? { targetSel: '[data-tut="dlg-back"]', text: openTopic ? '「↩ 이 이야기로」로 질문지로 돌아가세요' : '「↩ 다른 질문」으로 질문지로 돌아가세요' }
                     : { targetSel: '[data-tut="tut-q"]', text: tutTopic && !openTopic
                       ? `「${tutTopic.q}」 — 이 이야기를 꺼내 보세요`
                       : `「${statements.find((x) => x.id === tutT.stId)?.q || '이 질문'}」 — 이 질문을 고르세요` })
             : (line
-              ? { targetSel: '.aa-dialogue', text: tutHit ? '반응을 끌어냈다 — 반박의 첫걸음이다. 거짓말을 진짜로 깰 수 있는 대답에는 ⚖ 표시가 붙는다. 탭해서 넘기세요' : '대사창을 탭해 이야기를 넘기세요' }
+              ? { targetSel: '.aa-dialogue', text: tutHit ? '반응을 끌어냈다! 진짜로 깰 수 있는 거짓말에는 ⚖ 표시가 붙는다 — 탭해서 넘기세요' : '대사창을 탭해 이야기를 넘기세요' }
               : cur
                 ? (canPress
                   ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
-                  : { targetSel: '.aa-dlg-actions', text: openTopic ? '「↩ 이 이야기로」로 질문지로 돌아가세요' : '「↩ 다른 질문」으로 질문지로 돌아가세요' })
+                  : { targetSel: '[data-tut="dlg-back"]', text: openTopic ? '「↩ 이 이야기로」로 질문지로 돌아가세요' : '「↩ 다른 질문」으로 질문지로 돌아가세요' })
                 : { targetSel: '.aa-ask', text: '질문지에서 하나를 골라 물어보세요' }))} />
       )}
 
       {picker && cur && !bk && (
         <div className="aa-present">
           <div className="aa-present-h">
-            <span>📁 반박할 증거를 고르세요 — “{cur.text.length > 22 ? cur.text.slice(0, 22) + '…' : cur.text}” <span style={{ color: 'var(--muted)' }}>(길게 누르면 본문)</span></span>
+            {/* 반박할 말을 끝까지 — 22자에서 자르면 무엇을 반박하는지 몰랐다(튜토리얼 시험 셋 모두) */}
+            <span>📁 반박할 증거를 고르세요<span className="aa-present-q">“{cur.text}”</span></span>
             <button className="aa-close" onClick={() => setPicker(false)}>✕</button>
           </div>
           {presentable.length === 0

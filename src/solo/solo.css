@@ -51,8 +51,8 @@ button { font-family: inherit; }
 @media (prefers-reduced-motion: reduce) { .s-rain { display: none; } }
 .s-start .s-title { text-shadow: 0 3px 18px #000, 0 1px 3px #000; }
 .s-eye { font-size: .72rem; letter-spacing: .3em; color: var(--muted); text-transform: uppercase; }
-.s-title { font-size: 2.6rem; font-weight: 900; line-height: 1.1; margin: 6px 0; }
-.s-sub { color: var(--muted); margin-bottom: 24px; max-width: 460px; }
+.s-title { font-size: clamp(1.9rem, 9vw, 2.6rem); font-weight: 900; line-height: 1.15; margin: 6px 0; word-break: keep-all; }  /* 폰에서 「크라임 / 씬」으로 끊기던 것 — 낱말 단위로만 줄을 바꾼다 */
+.s-sub { color: #c9c6bd; margin-bottom: 24px; max-width: 460px; word-break: keep-all; }  /* 흐려서 못 읽고 「다」가 혼자 줄을 넘었다 */
 
 /* 헤더바 */
 .s-top { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(11,13,18,.92); backdrop-filter: blur(6px); z-index: 20; }
@@ -243,11 +243,12 @@ button { font-family: inherit; }
    상자 비율이 어떻든 선 굵기가 일정하다. 버튼(클릭 판정) 밖에 있어서
    clip-path 에 발광이 잘리지 않는다. */
 .s-zone-outline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none;
-  fill: none; stroke: #f3dcae; stroke-width: 1.8; stroke-linejoin: round;
-  filter: drop-shadow(0 0 2px #ffe0a08c) drop-shadow(0 0 6px #ffd98a52);
-  opacity: .58; transition: opacity .14s, stroke .14s, filter .14s;
+  fill: none; stroke: #f6e2b8; stroke-width: 2.4; stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px #000c) drop-shadow(0 0 3px #ffe0a0b0) drop-shadow(0 0 8px #ffd98a70);
+  opacity: .85; transition: opacity .14s, stroke .14s, filter .14s;
   animation: zonebreath 3.6s ease-in-out infinite; }
-@keyframes zonebreath { 0%, 100% { opacity: .46; } 50% { opacity: .72; } }
+/* 숨쉬기의 가장 어두운 순간에도 또렷하게 — 튜토리얼 뒤 혼자 볼 때 그림 선과 섞여 단서인지 몰랐다(튜토리얼 시험 셋 모두) */
+@keyframes zonebreath { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
 .s-zone:hover ~ .s-zone-outline, .s-zone:focus-visible ~ .s-zone-outline {
   opacity: 1; animation: none; stroke: #fff2d4; stroke-width: 2.4;
   filter: drop-shadow(0 0 4px #ffeaba) drop-shadow(0 0 12px #ffd98a9e); }
@@ -463,7 +464,7 @@ button { font-family: inherit; }
 /* 증거 제시 시트(관련 단서만) */
 /* 폰 세로 2열에 카드 21~30장이면 목록이 시트의 3~4배라 뭘 봤는지 놓친다 —
    시트를 키우고(46vh→68vh) 카드도 낮춰 한 화면에 담기는 양을 두 배쯤으로 올린다. */
-.aa-present { position: absolute; left: 0; right: 0; bottom: 8px; z-index: 11; max-height: 68vh; overflow: auto; background: linear-gradient(180deg, #0b1220f6, #060a12fb); border-top: 2px solid var(--gold); padding: 10px 12px 14px; box-shadow: 0 -8px 24px #000a; }
+.aa-present { position: absolute; left: 0; right: 0; bottom: 8px; z-index: 11; max-height: 68vh; overflow: auto; background: linear-gradient(180deg, #0b1220, #060a12); border-top: 2px solid var(--gold); padding: 10px 12px 14px; box-shadow: 0 -8px 24px #000a; }
 /* 제시 시트 안에서만 카드를 낮춘다 — 허브·수첩 카드는 지금 크기가 맞다 */
 .aa-present .s-card { padding: 9px 11px; }
 .aa-present .s-card .ck { font-size: 1.25rem; }
@@ -698,7 +699,7 @@ button { font-family: inherit; }
   .hall-cam::-webkit-scrollbar { display: none; }
   .hall-fit { position: relative; inset: auto; margin: 0; flex: none; height: 60dvh; width: auto; max-height: none; }
   .hall-hot-plate { max-width: none; }
-  .hall-swipe-hint { display: block; position: absolute; left: 50%; top: calc(20dvh - 30px); transform: translateX(-50%); z-index: 7;
+  .hall-swipe-hint { display: block; position: absolute; left: 50%; top: calc(20dvh + 16px); transform: translateX(-50%); z-index: 7;
     background: #000000ba; color: #ffe9a8; font-size: .74rem; font-weight: 700; padding: 4px 13px; border-radius: 999px; pointer-events: none;
     animation: hallHint 3.2s ease 1 forwards; }
 }
@@ -835,3 +836,19 @@ button { font-family: inherit; }
 .s-cf-submit { position: sticky; bottom: -40px; z-index: 2; text-align: center; margin: 20px -16px 0; padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); background: var(--ink); box-shadow: 0 -14px 14px var(--ink); }
 /* CCTV 를 보는 중엔 알림을 아래로 — 위쪽 시각 단추(10시대)를 가렸다(14회차) */
 body:has(.cctv-modal) .s-toast { top: auto; bottom: 28px; }
+/* 튜토리얼 — 판 안의 단추 둘레는 보이되 못 누르게, 말풍선 속 건너뛰기, 자리가 없을 때 붙는 말풍선 */
+.tut-mask.clear { background: transparent; }
+.tut-skip-in { display: block; margin: 6px auto 0; pointer-events: auto; background: none; border: 0; color: #9c9a92; font-size: .72rem; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 4px 8px; }
+.tut-tip.dock { left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom)); }
+.tut-tip.dock.mid { bottom: auto; top: 12%; }
+.tut-skip-in.arm { color: #ffb4a8; text-decoration: none; font-weight: 700; }
+/* 질문지 머리글이 단추 밑에 깔리던 것 — 목록이 넘치면 작은 머리글만 줄어들어 0 이 됐다 */
+.aa-ask > * { flex-shrink: 0; }
+.aa-ask-sec { color: #c3c9d6; background: #000000a0; border-radius: 6px; padding: 4px 8px; align-self: flex-start; border-top: none; }
+/* 증거 고르기 — 반박할 말을 끝까지(세 줄까지) */
+.aa-present-q { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; color: #e8e4dc; font-size: .84rem; line-height: 1.5; }
+/* 눌러서 크게 보는 그림 표시 */
+.s-zoom-wrap { position: relative; display: block; }
+.s-zoom-badge { position: absolute; right: 8px; bottom: 8px; background: #000000b8; color: #ffe9a8; font-size: .7rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; pointer-events: none; }
+/* 단서 창이 열려 있으면 알림은 아래로 — 사진 윗부분·안내문을 덮었다(튜토리얼 시험 셋 모두) */
+body:has(.s-modal) .s-toast { top: auto; bottom: calc(24px + env(safe-area-inset-bottom)); }

@@ -16,7 +16,10 @@ function ZoomImg({ src, style }) {
   const [big, setBig] = useState(false);
   return (
     <>
-      <img src={src} alt="" style={style} className="s-zoomable" onClick={(e) => { e.stopPropagation(); setBig(true); }} />
+      <span className="s-zoom-wrap">
+        <img src={src} alt="" style={style} className="s-zoomable" onClick={(e) => { e.stopPropagation(); setBig(true); }} />
+        <span className="s-zoom-badge" aria-hidden>🔍 눌러서 크게</span>
+      </span>
       {big && (
         <div className="s-phone-zoom" onClick={(e) => { e.stopPropagation(); setBig(false); }}>
           <img src={src} alt="" /><div className="pz-cap">눌러서 닫기</div>
