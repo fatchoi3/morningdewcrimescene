@@ -29,6 +29,8 @@
         font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
       body { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 28px 16px calc(24px + env(safe-area-inset-bottom)); }
       header { text-align: center; margin: 8px 0 20px; }
+      .home { display: inline-block; margin-bottom: 10px; font-size: .82rem; color: var(--muted); text-decoration: none; min-height: 44px; line-height: 44px; }
+      .home[hidden] { display: none; }
       .eye { font-size: .72rem; letter-spacing: .3em; color: var(--muted); text-transform: uppercase; }
       h1 { margin: 8px 0 6px; font-size: 1.6rem; font-weight: 800; letter-spacing: -.01em; }
       .lead { margin: 0; color: var(--muted); font-size: .95rem; }
@@ -75,6 +77,8 @@
   </head>
   <body>
     <header>
+      <!-- dawndew.org 앱 안(/crimescene/)에서 열렸을 때만 — 홈 화면 앱에는 뒤로 가기 단추가 없다 -->
+      <a class="home" id="homeLink" href="/" hidden>← dawndew 로 돌아가기</a>
       <div class="eye">Crime Scene · Solo</div>
       <h1>혼자 하는 추리</h1>
       <p class="lead">어떤 사건을 맡을지 고르세요</p>
@@ -168,6 +172,7 @@
       });
     </script>
       <script>
+      if (location.pathname.indexOf('/crimescene/') === 0) document.getElementById('homeLink').hidden = false;
       // 홈 화면 앱(PWA) — 이 화면이 앱의 첫 화면(start_url)이라 여기서도 서비스워커를 건다. 개발 서버에서는 걸지 않는다.
       //   주소는 상대경로 — dawndew.org/crimescene/ 아래에 올린 판에서도 그 폴더 안에만 걸린다.
       if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
