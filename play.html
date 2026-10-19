@@ -81,7 +81,7 @@
     </header>
 
     <main>
-      <a class="story" href="/morningdew-solo" style="background-image: url('/images/start.jpg')" data-save="morningdew_solo_v1">
+      <a class="story" href="morningdew-solo" style="background-image: url('/images/start.jpg')" data-save="morningdew_solo_v1">
         <span class="resume" hidden>이어서 하기</span>
         <div class="body">
           <p class="title">새벽이슬</p>
@@ -91,7 +91,7 @@
         </div>
       </a>
 
-      <a class="story" href="/yaganjo-solo" style="background-image: url('/images/yaganjo/start.jpg')" data-save="yaganjo_solo_v1" data-lock="yaganjo">
+      <a class="story" href="yaganjo-solo" style="background-image: url('/images/yaganjo/start.jpg')" data-save="yaganjo_solo_v1" data-lock="yaganjo">
         <span class="lockmark">🔒 준비 중</span>
         <span class="resume" hidden>이어서 하기</span>
         <div class="body">
@@ -169,8 +169,9 @@
     </script>
       <script>
       // 홈 화면 앱(PWA) — 이 화면이 앱의 첫 화면(start_url)이라 여기서도 서비스워커를 건다. 개발 서버에서는 걸지 않는다.
+      //   주소는 상대경로 — dawndew.org/crimescene/ 아래에 올린 판에서도 그 폴더 안에만 걸린다.
       if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
-        window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {}); });
+        window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function () {}); });
       }
     </script>
 </body>

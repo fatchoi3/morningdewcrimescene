@@ -1,10 +1,14 @@
 // 서비스워커 — 오프라인 실행용(런타임 캐시, 앱셸 폴백).
 //   프로덕션에서만 등록됨(main.jsx). 개발(HMR)에는 등록 안 함.
-const CACHE = 'morningdew-solo-v13'; // v13 — 갈림길(play.html)·야간조 셸도 미리 받아 둔다(홈 화면 앱으로 열 때)
-const SHELL = ['/solo.html', '/play.html', '/yaganjo-solo.html', '/manifest.webmanifest', '/icon.svg', '/favicon2.png'];
+const CACHE = 'morningdew-solo-v14'; // v14 — 경로를 등록 범위 기준으로(dawndew.org/crimescene/ 아래 판)
+
+// 등록 범위 — 루트 판이면 '/', dawndew.org 안에 넣은 판이면 '/crimescene/'. 모든 셸 경로를 여기에 붙인다.
+const B = new URL(self.registration.scope).pathname;
+const SHELL = ['solo.html', 'play.html', 'yaganjo-solo.html', 'manifest.webmanifest', 'icon.svg', 'favicon2.png'].map((p) => B + p);
 
 // 보기 좋은 주소 → 미리 받아 둔 셸(오프라인에서 /solo-play 를 열면 새벽이슬이 아니라 고르는 화면이 떠야 한다)
-const SHELL_OF = { '/solo-play': '/play.html', '/morningdew-solo': '/solo.html', '/yaganjo-solo': '/yaganjo-solo.html' };
+const SHELL_OF = { 'solo-play': 'play.html', 'morningdew-solo': 'solo.html', 'yaganjo-solo': 'yaganjo-solo.html' };
+const shellFor = (pathname) => B + (SHELL_OF[pathname.slice(B.length).replace(/\/$/, '')] || 'solo.html');
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -37,7 +41,7 @@ self.addEventListener('fetch', (e) => {
       fetch(req).then((res) => {
         if (res && res.status === 200) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
         return res;
-      }).catch(() => caches.match(req).then((hit) => hit || caches.match(SHELL_OF[url.pathname.replace(/\/$/, '')] || '/solo.html'))),
+      }).catch(() => caches.match(req).then((hit) => hit || caches.match(shellFor(url.pathname)))),
     );
     return;
   }
@@ -51,6 +55,6 @@ self.addEventListener('fetch', (e) => {
         caches.open(CACHE).then((c) => c.put(req, copy));
       }
       return res;
-    }).catch(() => caches.match('/solo.html'))),
+    }).catch(() => caches.match(B + 'solo.html'))),
   );
 });

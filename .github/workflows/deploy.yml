@@ -28,6 +28,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      # dawndew.org 앱 안에서 여는 판 — 같은 빌드를 base=/crimescene/ 로 한 번 더 뽑아 dist/crimescene/ 에 둔다.
+      #   dawndew.org 배포판(CloudFront)의 /crimescene/* 동작이 이 버킷의 crimescene/ 접두어를 본다.
+      #   crimescene.dawndew.org 의 기존 주소는 그대로다. 아래 sync 가 dist 전체를 올리므로 따로 올릴 필요 없다.
+      - name: Build (dawndew.org/crimescene/)
+        run: npx vite build --outDir dist/crimescene --emptyOutDir
+        env:
+          VITE_BASE: /crimescene/
+
       - name: S3 Deploy
         uses: jakejarvis/s3-sync-action@master
         with:
@@ -75,6 +83,11 @@ jobs:
           # 야간조 혼자 하는 추리 — 갈림길(/solo-play)에서 넘어온다
           aws s3 cp dist/yaganjo-solo.html "s3://$BUCKET/yaganjo-solo" \
             --content-type "text/html; charset=utf-8" --region "$REGION"
+          # dawndew.org/crimescene/ 판의 보기 좋은 주소 — 혼자 하는 추리 셋만
+          for k in solo-play:play morningdew-solo:solo yaganjo-solo:yaganjo-solo; do
+            aws s3 cp "dist/crimescene/${k#*:}.html" "s3://$BUCKET/crimescene/${k%%:*}" \
+              --content-type "text/html; charset=utf-8" --region "$REGION"
+          done
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
