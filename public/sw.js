@@ -1,7 +1,10 @@
 // 서비스워커 — 오프라인 실행용(런타임 캐시, 앱셸 폴백).
 //   프로덕션에서만 등록됨(main.jsx). 개발(HMR)에는 등록 안 함.
-const CACHE = 'morningdew-solo-v12'; // v12 — /solo-play 가 갈림길이 되었다
-const SHELL = ['/solo.html', '/manifest.webmanifest', '/icon.svg', '/favicon2.png'];
+const CACHE = 'morningdew-solo-v13'; // v13 — 갈림길(play.html)·야간조 셸도 미리 받아 둔다(홈 화면 앱으로 열 때)
+const SHELL = ['/solo.html', '/play.html', '/yaganjo-solo.html', '/manifest.webmanifest', '/icon.svg', '/favicon2.png'];
+
+// 보기 좋은 주소 → 미리 받아 둔 셸(오프라인에서 /solo-play 를 열면 새벽이슬이 아니라 고르는 화면이 떠야 한다)
+const SHELL_OF = { '/solo-play': '/play.html', '/morningdew-solo': '/solo.html', '/yaganjo-solo': '/yaganjo-solo.html' };
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -34,7 +37,7 @@ self.addEventListener('fetch', (e) => {
       fetch(req).then((res) => {
         if (res && res.status === 200) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
         return res;
-      }).catch(() => caches.match(req).then((hit) => hit || caches.match('/solo.html'))),
+      }).catch(() => caches.match(req).then((hit) => hit || caches.match(SHELL_OF[url.pathname.replace(/\/$/, '')] || '/solo.html'))),
     );
     return;
   }

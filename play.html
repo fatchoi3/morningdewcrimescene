@@ -7,6 +7,14 @@
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#0b0d12" />
     <title>크라임씬 — 혼자 하는 추리</title>
+    <!-- PWA: 홈 화면 아이콘이 여는 주소(start_url)가 이 화면이다. 이 페이지에 매니페스트·애플 설정이 없어서
+         /solo-play 를 갈림길로 바꾼 뒤로 「홈 화면에 추가」가 앱이 아니라 사파리 즐겨찾기처럼 열렸다(2026-10-19). -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/favicon2.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="크라임씬" />
     <!--
       혼자 하는 추리의 갈림길 — /solo-play 가 이 화면이다.
         다른 프로젝트의 「크라임씬」 링크가 /solo-play 를 가리키므로 주소는 그대로 두고,
@@ -159,5 +167,11 @@
         }).catch(function () { pwMsg.textContent = '이 브라우저에서는 확인할 수 없습니다'; });
       });
     </script>
-  </body>
+      <script>
+      // 홈 화면 앱(PWA) — 이 화면이 앱의 첫 화면(start_url)이라 여기서도 서비스워커를 건다. 개발 서버에서는 걸지 않는다.
+      if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+        window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {}); });
+      }
+    </script>
+</body>
 </html>
