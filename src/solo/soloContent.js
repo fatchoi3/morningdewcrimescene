@@ -10,7 +10,10 @@ import { keyByPersonName } from '../data/cast.js';
 import { TESTIMONY } from './interrogation.js';
 
 const all = provider.getAllClues();
-const byCode = Object.fromEntries(all.map((c) => [c.code, c]));
+// 솔로에서만 그림을 빼는 단서 — 폰 화면에선 그림 속 글씨가 뭉개져 오히려 헷갈렸다(인쇄물은 그림을 그대로 쓴다).
+//   등산코스 지도: 세 명 모두 「목사님 선호 코스」가 그림 어디인지 못 찾았다(2026-10-20 튜토리얼 3차 시험, 사용자 결정으로 뺌).
+const SOLO_NO_IMAGE = new Set(['VNTD-61']);
+const byCode = Object.fromEntries(all.map((c) => [c.code, SOLO_NO_IMAGE.has(c.code) ? { ...c, image: undefined } : c]));
 const cctvSet = new Set(provider.getCctvClueCodes());
 
 // 증언 단서(대화로 확보) — 단서 조회에서 함께 해석되도록 code 형태로 정규화.

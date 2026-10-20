@@ -766,10 +766,10 @@ export const evidenceMap = withAssetBase(resolveTokens({
     type: '보통',
     person: '{{S5}}'
   },
-  'OLUX-30': { //
+  'OLUX-30': { // 방 그림에선 옷걸이의 니트 가디건 — 사진은 가방 속 여벌 옷이라 둘을 한 설명으로 잇는다(다섯 방 같은 사정)
     title: '{{S5.short}}의 옷가지',
-    description: '{{S5.short}}의 가방에서 발견했다.',
-    detail: '여벌 옷과 양말.',
+    description: '옷걸이에 걸린 니트 가디건, 그리고 {{S5.short}}의 가방 속 여벌 옷.',
+    detail: '옷걸이에는 니트 가디건이 걸려 있고, 가방에는 개어 놓은 여벌 옷과 양말이 들어 있다.',
     image: '/images/옷가지.jpg',
     type: '보통',
     person: '{{S5}}'
@@ -974,7 +974,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'VNTD-61': { // 가방
     title: '등산코스 지도',
     description: '{{S1.short}}의 가방에서 발견되었다.',
-    detail: '숙소 근처에 있는 산의 등산코스 지도. 목사님 선호 코스 표시.',
+    detail: '숙소 근처에 있는 산의 등산코스 지도. 코스 하나에 붉은 펜으로 선이 그어져 있고, 옆에 「목사님」이라고 적혀 있다 — 늘 가시던 길인 듯하다.',
     image: '/images/등산지도.jpg',
     type: '보통',
     person: '{{S1}}'
@@ -1319,8 +1319,8 @@ export const evidenceMap = withAssetBase(resolveTokens({
   
   'LKUJ-60': {
     title: '{{S3.short}}의 옷가지',
-    description: '{{S3.short}}의 가방 안에서 발견했다.',
-    detail: '여벌 옷과 양말이다. ',
+    description: '벽 고리에 걸린 니트 가디건, 그리고 {{S3.short}}의 가방 속 여벌 옷.',
+    detail: '벽 고리에는 니트 가디건이 걸려 있고, 가방에는 개어 놓은 여벌 옷과 양말이 들어 있다.',
     image: '/images/옷가지.jpg',
     type: '보통',
     person: '{{S3}}'
@@ -1392,8 +1392,8 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
   'HTXI-85': { // 방
     title: '{{S4.short}}의 옷가지',
-    description: '{{S4.short}}의 가방에서 발견했다.',
-    detail: '여벌 셔츠와 양말이다.',
+    description: '옷걸이 스탠드에 걸린 니트 카디건, 그리고 {{S4.short}}의 가방 속 여벌 옷.',
+    detail: '옷걸이 스탠드에는 니트 카디건이 걸려 있고, 가방에는 개어 놓은 여벌 셔츠와 양말이 들어 있다.',
     image: '/images/옷가지.jpg',
     type: '보통',
     person: '{{S4}}'
@@ -1717,8 +1717,8 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
   'ALLZ-85': {
     title: '{{S2.short}}의 옷가지',
-    description: '{{S2.short}} 가방에서 발견했다.',
-    detail: '여벌 옷과 양말이다. ',
+    description: '옷걸이 봉에 걸린 니트 스웨터, 그리고 {{S2.short}}의 가방 속 여벌 옷.',
+    detail: '옷걸이 봉에는 니트 스웨터와 셔츠 몇 벌이 걸려 있고, 가방에는 개어 놓은 여벌 옷과 양말이 들어 있다.',
     image: '/images/옷가지.jpg',
     type: '보통',
     person: '{{S2}}',
@@ -1868,8 +1868,8 @@ export const evidenceMap = withAssetBase(resolveTokens({
   },
   'ZNUS-26': { //
     title: '{{S6.short}}의 옷가지',
-    description: '{{S6.short}}의 가방에서 발견했다.',
-    detail: '여벌 옷과 양말이 있다.',
+    description: '침대 옆 봉에 걸린 니트 가디건, 그리고 {{S6.short}}의 가방 속 여벌 옷.',
+    detail: '침대 옆 봉에는 니트 가디건이 걸려 있고, 가방에는 개어 놓은 여벌 옷과 양말이 들어 있다.',
     image: '/images/옷가지.jpg',
     type: '보통',
     person: '{{S6}}'
