@@ -52,7 +52,7 @@ button { font-family: inherit; }
 .s-start .s-title { text-shadow: 0 3px 18px #000, 0 1px 3px #000; }
 .s-eye { font-size: .72rem; letter-spacing: .3em; color: var(--muted); text-transform: uppercase; }
 .s-title { font-size: 2.6rem; font-weight: 900; line-height: 1.1; margin: 6px 0; }
-.s-sub { color: var(--muted); margin-bottom: 24px; max-width: 460px; }
+.s-sub { color: #c9c6bd; margin-bottom: 24px; max-width: 460px; word-break: keep-all; }  /* 「수 / 사관」으로 끊기던 것 — 낱말 단위로만 줄을 바꾼다(튜토리얼 1차) */
 
 /* 헤더바 */
 .s-top { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: rgba(11,13,18,.92); backdrop-filter: blur(6px); z-index: 20; }
@@ -882,3 +882,9 @@ button { font-family: inherit; }
 body:has(.tut-tip.dock) .s-modal { padding-bottom: 120px; }
 body:has(.tut-tip.dock) .s-sheet-body { padding-bottom: 140px; }
 body:has(.tut-tip.dock) .s-toast { display: none; }
+/* 단서 창 아래에 글이 더 있으면 아래 가장자리가 어두워진다 — 끝까지 밀면 사라진다(스크롤 그림자).
+   순찰 일지 03:00 줄이 첫 화면 밖에 있는데 더 있다는 표시가 없었다(튜토리얼 1차, 셋 다) */
+.s-modal { background:
+  linear-gradient(rgba(0,0,0,0), var(--panel) 70%) center bottom / 100% 44px no-repeat local,
+  linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.75)) center bottom / 100% 36px no-repeat scroll,
+  var(--panel); }

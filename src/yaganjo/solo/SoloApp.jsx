@@ -41,6 +41,9 @@ export default function SoloApp() {
   useEffect(() => { saveSave(state); }, [state]);
 
   const update = (patch) => setState((p) => ({ ...p, ...patch }));
+  // 단서를 더할 땐 직전 목록 위에 합친다 — 오래된 화면이 부른 collect 가 그 사이 얻은 단서를 지우지 않게.
+  //   (새벽이슬에서 여러 쪽 문서의 숨은 쪽을 보면 문서가 「안 조사」로 돌아간 일 — 같은 꼴을 미리 막는다)
+  const addCollected = (set, patch = {}) => setState((p) => ({ ...p, ...patch, collected: [...new Set([...p.collected, ...set])] }));
   const collectedSet = useMemo(() => new Set(state.collected), [state.collected]);
 
   const showToast = (t, ms = 2400) => { setToast(t); setTimeout(() => setToast((cur) => (cur === t ? null : cur)), ms); };
@@ -82,7 +85,7 @@ export default function SoloApp() {
     soloContent.computeAutoUnlocked(set); // 특수 연쇄
     for (const g of gamsikCodes) if (!pending.includes(g) && !collectedSet.has(g)) set.delete(g); // 미의뢰 감식은 제외
     // 새로 온 결과는 수첩에 🆕 로 남긴다(labNew) — 알림만 뜨고 사라져, 결과를 안 읽은 채 지목까지 갔다(2026-10-08 7회차)
-    update({ collected: [...set], labNew: [...new Set([...(state.labNew || []), ...pending])] });
+    addCollected(set, { labNew: [...new Set([...(state.labNew || []), ...pending])] });
     showToast(`🔬 감식 결과 ${pending.length}건 도착 — 수첩 📓 의 🆕 카드`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, state.labReq]);
@@ -112,7 +115,7 @@ export default function SoloApp() {
     want.forEach((c) => set.add(c));
     soloContent.computeAutoUnlocked(set);
     for (const g of gamsikCodes) if (!collectedSet.has(g) && !(state.labReq || []).includes(g)) set.delete(g);
-    update({ collected: [...set] });
+    addCollected(set);
     showToast(`🗂 본사 서버 기록 대조 ${want.length}건 도착 — 수첩에서 확인하세요`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progressStage, state.collected.length]);
@@ -126,7 +129,7 @@ export default function SoloApp() {
     const stripped = autos.filter((a) => gamsikCodes.has(a.code) && a.code !== code && !collectedSet.has(a.code));
     stripped.forEach((a) => set.delete(a.code));
     const kept = autos.filter((a) => !stripped.includes(a));
-    update({ collected: [...set] });
+    addCollected(set);
     const c = getClue(code);
     const newSpecials = kept.filter((a) => a.code !== code && getClue(a.code)?.type === '특수');
     const extra = newSpecials.length
@@ -208,8 +211,9 @@ export default function SoloApp() {
     //   그래서 반응만 끌어내는 순찰 일지를 연습용으로 쓴다)
     const TUT_CODE = 'NUMF-40';
     const jhExamined = jhObjs.includes(TUT_CODE) ? collectedSet.has(TUT_CODE) : jhObjs.some((c) => collectedSet.has(c));
-    if (recordOpen) coach = { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽었으면 ← 로 나가세요' };
-    else if (modalCode) coach = { sel: '.s-modal .mx', dim: false, text: '단서를 확보했습니다. 다 읽었으면 ✕ 로 닫으세요' };
+    // 단서 창이 먼저 — 수첩에서 단서 카드를 열면 말풍선이 여전히 「← 로」라 창 뒤의 ← 를 가리켰다(튜토리얼 1차)
+    if (modalCode) coach = { sel: '.s-modal .mx', dim: false, text: recordOpen ? '다 봤으면 ✕ 로 닫고, 수첩은 ← 로 나가세요' : '단서를 확보했습니다. 아래로 끝까지 밀어 읽은 뒤 ✕ 로 닫으세요' };
+    else if (recordOpen) coach = { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽었으면 ← 로 나가세요' };
     else if (suspectId) coach = null;      // 심문 안에서는 그 화면이 직접 안내한다(아래 CrossExamView)
     else if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
     else if (!sceneId) coach = { sel: '[data-tut="door"]', text: t('이제 지도에서 {{S1|을/를}} 눌러 찾아가세요') };
@@ -256,7 +260,7 @@ export default function SoloApp() {
       {suspectId ? (
           <CrossExamView key={suspectId} suspect={suspects.find((s) => s.id === suspectId)} state={state}
             phase={progressStage >= 3 ? 2 : 1}
-            tutorialSeen={!!state.tutorialSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
+            tutorialSeen={!!state.tutorialSeen} tutFinaleSeen={!!state.tutFinaleSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
             onSkipTutorial={() => update({ tutorialSeen: true, tutFinaleSeen: true })}
             tutorialTarget={{ stId: 'night', code: 'NUMF-40' }}
             // 들은 말을 수첩 「대화 기록」에 남긴다 — 캐묻기로 나온 말은 넘기면 다시 볼 길이 없었다

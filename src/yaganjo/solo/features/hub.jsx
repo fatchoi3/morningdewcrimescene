@@ -131,7 +131,10 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     // 휴대폰은 2차 심문(stage 3)에 해금 — 그 전엔 방 탐색 진척도에서 제외
     const reach = counted.filter((c) => stage >= 3 || !getClue(c)?.phone);
     const total = reach.length, got = reach.filter((c) => collectedSet.has(c)).length;
-    return total > 0 && got === total ? '✓ 탐색완료' : `단서 ${got}/${total}`;
+    // 물건은 다 봤는데 물을 것이 남으면 그 말을 붙인다 — 빨간 배지의 뜻은 툴팁에만 있어 폰에선
+    //   「탐색완료인데 왜 1?」이 됐다(튜토리얼 1차, 둘).
+    const q = got === total ? alertsOf(loc).questions : 0;
+    return total > 0 && got === total ? (q ? `✓ 다 봄 · 질문 ${q}` : '✓ 탐색완료') : `단서 ${got}/${total}`;
   };
   const enter = (loc, isCrime) => {
     if (!loc) return;
