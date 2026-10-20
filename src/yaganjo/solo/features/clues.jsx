@@ -49,7 +49,8 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talk
   }
   if (!c) return <Shell title="?" onClose={onClose}><p>단서를 찾을 수 없습니다.</p></Shell>;
 
-  const tag = c.type && c.type !== '보통' ? <span className="s-tag">{c.type}</span> : null;
+  // 데이터의 「특수」는 화면에선 「⭐ 추리」다 — 수첩 분류와 꼬리표 이름이 달랐다(13회차)
+  const tag = c.type && c.type !== '보통' ? <span className="s-tag">{c.type === '특수' ? '⭐ 추리' : c.type}</span> : null;
   const person = c.person && c.person !== '공용' ? <span className="s-tag">{c.person}</span> : null;
 
   // 카메라형 — 보드판 V 카드 QR 이 여는 **바로 그 화면**(/yaganjo-cctv)을 모달 안에 띄운다.
@@ -403,7 +404,10 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
                   <div className="s-kk-chat">
                     {(ch.messages || []).map((m, j) => (
                       <div key={j} className={`s-kk-msg ${m.from === 'me' ? 'me' : 'them'}`}>
-                        <span className="kkm-bubble">{m.text}</span>
+                        {/* 지운 메시지는 글 없이 빈 말풍선으로 그려 고장처럼 보였다 — 카톡처럼 회색 한 줄(13회차) */}
+                        {m.deleted && !m.text
+                          ? <span className="kkm-bubble deleted">🚫 삭제된 메시지입니다.</span>
+                          : <span className="kkm-bubble">{m.text}</span>}
                         {m.time && <span className="kkm-time">{m.time}</span>}
                       </div>
                     ))}

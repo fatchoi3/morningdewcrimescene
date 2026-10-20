@@ -78,7 +78,11 @@ function ClueGroups({ clues, onOpen, fresh = [] }) {
         <p className="s-fresh-note">🆕 새로 도착한 감식 결과 {fresh.length}건 — 아래 🆕 카드를 열어 보세요</p>
       )}
       {clues.length > 12 && (
-        <input className="s-clue-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="🔎 단서 찾기 — 제목이나 인물 이름" />
+        // 누르면 앞 글자 전체 선택(새 검색어가 앞 글자 뒤에 붙었다) · 지우기 단추를 크게(기본 ✕ 는 작아 못 찾았다) — 13회차
+        <div className="s-clue-search-row">
+          <input className="s-clue-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} onFocus={(e) => e.target.select()} placeholder="🔎 단서 찾기 — 제목이나 인물 이름" />
+          {q && <button className="s-clue-search-x" onClick={() => setQ('')} aria-label="검색어 지우기">✕ 지우기</button>}
+        </div>
       )}
       {clues.length > 0 && (
         <div className="s-clue-filter">
@@ -89,6 +93,15 @@ function ClueGroups({ clues, onOpen, fresh = [] }) {
           ))}
         </div>
       )}
+      {/* 칸이 켜진 채 찾으면 결과 0 에 빈 화면만 남아 고장인 줄 알았다(13회차) — 이유와 다른 칸의 결과 수를 알려 준다 */}
+      {qn && shown.length === 0 && (() => {
+        const all = clues.filter(hit).length;
+        return (
+          <p className="s-clue-empty">「{q.trim()}」 — {f !== 'all' && all > 0 ? `${ft?.label || '이'} 칸에는 없어요.` : '찾는 단서가 없어요.'}
+            {f !== 'all' && all > 0 && <button className="s-btn sm" onClick={() => setF('all')}>전체에서 {all}장 보기</button>}
+          </p>
+        );
+      })()}
       {Object.keys(groups).sort().map((g) => (
         <div key={g} style={{ marginBottom: 12 }}>
           <div style={{ fontSize: '.78rem', color: 'var(--muted)', margin: '8px 2px 4px' }}>{g} · {groups[g].length}</div>
@@ -96,7 +109,7 @@ function ClueGroups({ clues, onOpen, fresh = [] }) {
             {groups[g].map((c) => (
               <button key={c.code} className={cardCls(c)} onClick={() => onOpen(c.code)}>
                 <div className="cn" style={{ fontSize: '.9rem' }}>{fresh.includes(c.code) ? '🆕 ' : ''}{c.title}</div>
-                <div className="cm">{c.type || '보통'}</div>
+                <div className="cm">{c.type === '특수' ? '⭐ 추리' : (c.type || '보통')}</div>
               </button>
             ))}
           </div>

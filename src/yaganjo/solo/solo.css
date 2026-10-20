@@ -897,3 +897,15 @@ body:has(.s-modal) .s-toast, body:has(.s-modal) .s-toast.low { top: 8px; bottom:
 .aa-present-q:not(.press) { cursor: pointer; }
 .aa-present-q .more { color: var(--gold); font-size: .76rem; }
 .tut-finale .tf-legend { font-size: .78rem; line-height: 1.8; color: #b9bbc2; background: #0b0d12; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin: -6px 0 16px; text-align: left; }
+/* 지운 카톡 — 회색 기울임 한 줄(빈 말풍선이 고장처럼 보였다, 13회차) */
+.kkm-bubble.deleted { background: #2a2d35 !important; color: #9aa0ab !important; font-style: italic; }
+/* 이름표 비키기(scene.jsx) — 앞 이름표와 겹치면 물건 아래로, 그래도 겹치면 줄여서 */
+.s-zone-lab.flip { bottom: auto; top: 100%; margin-bottom: 0; margin-top: 4px; }
+.s-zone-lab.tight { max-width: 7.5em; overflow: hidden; text-overflow: ellipsis; }
+/* 수첩 찾기 — 지우기 단추·빈 결과 안내(13회차) */
+.s-clue-search-row { display: flex; gap: 6px; align-items: center; }
+.s-clue-search-row .s-clue-search { flex: 1; min-width: 0; }
+.s-clue-search-x { flex: none; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: #1a1d24; color: var(--text); font: inherit; font-size: .82rem; cursor: pointer; }
+.s-clue-empty { color: var(--muted); font-size: .86rem; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 2px; }
+.s-zone-lab.crowd { opacity: 0 !important; }
+.s-zone:hover ~ .s-zone-lab.crowd, .s-zone:focus-visible ~ .s-zone-lab.crowd { opacity: 1 !important; z-index: 5; }

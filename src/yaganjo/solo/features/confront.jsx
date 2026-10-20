@@ -43,7 +43,11 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   const usedCodes = new Set((DATA[CONFRONT.culprit]?.statements || [])
     .filter((s) => brokeIds.has(s.id) && s.contradict)
     .flatMap((s) => s.contradict.codes || [s.contradict.code]));
-  const deny = brokeIds.has(CONFRONT.keyStatement) ? CONFRONT.deny : (CONFRONT.denyBefore || CONFRONT.deny);
+  // 깼으면 deny · 깨지 않았어도 03:16 인정을 들었으면(TST-H) denyAdmitted · 둘 다 아니면 denyBefore
+  const admitted = clues.some((c) => c.code === 'TST-H');
+  const deny = brokeIds.has(CONFRONT.keyStatement) ? CONFRONT.deny
+    : admitted && CONFRONT.denyAdmitted ? CONFRONT.denyAdmitted
+    : (CONFRONT.denyBefore || CONFRONT.deny);
 
   const present = (code) => {
     const n = tries + 1;
@@ -79,7 +83,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   // 「거의 맞았다」 — 그 자리의 증거지만 그 사람을 직접 가리키지는 않는다. 방향은 맞다고 한 줄 붙인다
   //   엉뚱한 증거면 무엇이 필요한지 한 줄 — 「아무것도 증명하지 못합니다」만 두 번 듣고 기준을 몰랐다(2026-10-08 시험)
   const note = beat.kind === 'near' ? '(수사 노트) 방향은 맞다 — 다만 이것만으로는 그를 가리키지 못한다.'
-    : beat.kind === 'wrong' && left > 0 ? '(수사 노트) 필요한 건 그 시각, 그 자리에 그를 묶는 증거다. 심문에서 이미 그를 무너뜨린 증거(✅)도 다시 내밀 수 있다.'
+    : beat.kind === 'wrong' && left > 0 ? '(수사 노트) 필요한 건 그를 범행 시각에 묶는 증거다 — 그 자리에 있었다는 것, 또는 그 시각의 말이 거짓이라는 것. 심문에서 이미 그를 무너뜨린 증거(✅)도 다시 내밀 수 있다.'
       : null;
   const proved = beat.kind === 'accept' || beat.kind === 'note';
 
@@ -110,7 +114,8 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
       {picking && (
         <div className="aa-present" onClick={(e) => e.stopPropagation()}>
           <div className="aa-present-h">
-            <span>⚖️ <b>그 시각, 그 자리에 그를 묶는 증거</b> 한 장을 고르세요 · 남은 기회 {left}</span>
+            {/* 정답 둘 중 하나(03:24 태블릿 조회)는 현장이 아니라 그 시각의 거짓말을 깨는 증거다 — 「그 자리」만 말하자 현장 증거만 찾았다(13회차) */}
+            <span>⚖️ <b>그를 범행 시각에 묶는 증거</b> — 그 자리에 있었거나, 그 시각의 말이 거짓이라는 증거 한 장 · 남은 기회 {left}</span>
           </div>
           {usedCodes.size > 0 && (
             <p className="cf-used-note">✅ — 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요.</p>

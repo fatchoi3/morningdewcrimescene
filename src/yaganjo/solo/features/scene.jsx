@@ -42,6 +42,37 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   const trackRef = useRef(null);
   // 지금 보고 있는 구간 — 남은 단서가 어느 쪽에 있는지 가장자리 화살표로 알리는 데 쓴다
   const [cam, setCam] = useState(null);
+  // 이름표 비키기 — 물건이 붙어 있으면 위에 뜨는 이름표끼리 겹쳐 글자가 섞였다(13회차: 서장현 사물함 클립보드·보고서,
+  //   C통로 표식 다섯). 그린 뒤 보이는 이름표를 위에서부터 재고, 앞 것과 겹치면 물건 아래로 내리고(flip),
+  //   그래도 겹치면 줄여서(tight) 말줄임표로. 매번 처음 자리에서 다시 잰다.
+  useEffect(() => {
+    let raf = 0;
+    const run = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const labs = [...document.querySelectorAll('.s-zone-wrap .s-zone-lab')];
+        labs.forEach((l) => l.classList.remove('flip', 'tight', 'crowd'));
+        const shown = labs.filter((l) => getComputedStyle(l).opacity !== '0' && l.offsetWidth > 0);
+        const hit = (a, b) => !(a.right <= b.left + 2 || a.left >= b.right - 2 || a.bottom <= b.top + 1 || a.top >= b.bottom - 1);
+        const placed = [];
+        shown.sort((x, y) => x.getBoundingClientRect().top - y.getBoundingClientRect().top).forEach((l) => {
+          let r = l.getBoundingClientRect();
+          if (placed.some((q) => hit(r, q))) { l.classList.add('flip'); r = l.getBoundingClientRect(); }
+          // 겹치거나 화면 밖으로 나가면(긴 이름표 — 「작년 12월 재해조사 보고서…」) 줄인다
+          //   「밖」은 화면이 아니라 그림(.aa-track) 가장자리 — 그림이 화면보다 넓어 옆으로 밀리는 방이 있다
+          const edge = (l.closest('.aa-track') || document.body).getBoundingClientRect();
+          if (placed.some((q) => hit(r, q)) || r.left < edge.left + 2 || r.right > edge.right - 2) { l.classList.add('tight'); r = l.getBoundingClientRect(); }
+          // 줄여도 겹치면 위·아래를 한 번 더 바꿔 보고, 그래도 겹치면 그 이름표만 숨긴다(✓ 는 남고 누르면 보인다) — C통로 표식 다섯
+          if (placed.some((q) => hit(r, q))) { l.classList.toggle('flip'); r = l.getBoundingClientRect(); }
+          if (placed.some((q) => hit(r, q))) { l.classList.add('crowd'); return; }
+          placed.push(r);
+        });
+      });
+    };
+    run();
+    window.addEventListener('resize', run);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', run); };
+  });
   const syncCam = () => {
     const c = camRef.current, tr = trackRef.current;
     // ox·oy — 그림이 화면보다 작아져 가운데 놓이면(축소) 그만큼 비켜 있다
@@ -119,6 +150,8 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         const zoneLab = camLab ? camLab
           : have ? c.title
           : locked ? '🔒 잠김'
+          // 안 연 휴대폰도 「조사」뿐이라 폰인 줄 몰랐다(13회차, 둘) — 폰은 처음부터 폰이라고
+          : c.phone ? '📱 휴대폰'
           : isGamsik && lab ? (req ? '🔬 분석 중…' : lab.ready(code) ? '🔬 감식 의뢰' : '채취물 필요')
           : '조사';
         // 핫스팟: w/h가 있으면 물건 크기에 맞춘 상자, poly가 있으면 실루엣 모양.
