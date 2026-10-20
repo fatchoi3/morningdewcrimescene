@@ -134,7 +134,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     // 물건은 다 봤는데 물을 것이 남으면 그 말을 붙인다 — 빨간 배지의 뜻은 툴팁에만 있어 폰에선
     //   「탐색완료인데 왜 1?」이 됐다(튜토리얼 1차, 둘).
     const q = got === total ? alertsOf(loc).questions : 0;
-    return total > 0 && got === total ? (q ? `✓ 다 봄 · 질문 ${q}` : '✓ 탐색완료') : `단서 ${got}/${total}`;
+    return total > 0 && got === total ? (q ? `✓ 다 봄 · 남은 질문 ${q}` : '✓ 탐색완료') : `단서 ${got}/${total}`;
   };
   const enter = (loc, isCrime) => {
     if (!loc) return;
@@ -175,6 +175,18 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     window.addEventListener('resize', syncEdge);
     return () => window.removeEventListener('resize', syncEdge);
   }, [overview]);
+  // 추천 대상(튜토리얼의 서장현)이 생기면 그 사람을 가운데로 — 화면 오른쪽 끝에 반쯤 걸려 이름판·「남은 질문 n」이
+  //   잘렸다(튜토리얼 2차, 셋 다). 수첩을 닫고 돌아온 순간 한 번만.
+  useEffect(() => {
+    const cam = camRef.current;
+    if (!cam || overview || !recommendPerson) return;
+    const rec = cam.querySelector('[data-tut="door"]');
+    if (!rec) return;
+    const c = cam.getBoundingClientRect(), r = rec.getBoundingClientRect();
+    cam.scrollLeft += (r.left + r.width / 2) - (c.left + c.width / 2);
+    syncEdge();
+    /* eslint-disable-next-line */
+  }, [recommendPerson]);
   // 떠나는 순간에 자리를 적는다 — 스크롤 신호로만 적으면 신호가 안 오는 때가 있어, 방에 들어갔다 나오면
   //   지도·복도가 처음 자리로 돌아갔다(2026-10-07 시험, 세 사람 모두). 레이아웃 정리 단계는 DOM 이 떼이기 전이라 값이 살아 있다.
   useLayoutEffect(() => {

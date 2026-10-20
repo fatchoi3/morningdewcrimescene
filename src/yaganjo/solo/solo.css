@@ -882,11 +882,12 @@ button { font-family: inherit; }
 body:has(.tut-tip.dock) .s-modal { padding-bottom: 120px; }
 body:has(.tut-tip.dock) .s-sheet-body { padding-bottom: 140px; }
 body:has(.tut-tip.dock) .s-toast { display: none; }
-/* 단서 창 아래에 글이 더 있으면 아래 가장자리가 어두워진다 — 끝까지 밀면 사라진다(스크롤 그림자).
-   순찰 일지 03:00 줄이 첫 화면 밖에 있는데 더 있다는 표시가 없었다(튜토리얼 1차, 셋 다) */
-.s-modal { background:
-  linear-gradient(rgba(0,0,0,0), var(--panel) 70%) center bottom / 100% 44px no-repeat local,
-  linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.75)) center bottom / 100% 36px no-repeat scroll,
-  var(--panel); }
+/* 단서 창 아래에 글이 더 있으면 창 아래쪽에 붙는 표시(overlays Shell) — 옅은 그림자는 아무도 못 봤다(튜토리얼 2차) */
+.s-modal-more { position: sticky; bottom: 0; margin-top: -30px; height: 30px; display: flex; align-items: flex-end; justify-content: center; pointer-events: none;
+  background: linear-gradient(rgba(0,0,0,0), var(--panel) 75%); color: #ffe9a8; font-size: .76rem; font-weight: 700; padding-bottom: 4px; }
 /* 단서 창이 열려 있으면 「단서 확보」 알림은 맨 위에 작게 — 사진 윗부분을 덮었다(튜토리얼 1차, 둘). 새벽이슬과 같게 */
 body:has(.s-modal) .s-toast:not(.low) { top: 8px; font-size: .8rem; padding: 6px 12px; }
+/* 증거 고르기 — 반박할 말을 세 줄까지, 캐물어 들은 말은 그 아래 흐리게(튜토리얼 2차) */
+.aa-present-q { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 2px 0 6px; color: #e8e4dc; font-size: .84rem; line-height: 1.5; }
+.aa-present-q.press { color: #b9bfcc; font-size: .78rem; -webkit-line-clamp: 2; }
+.tut-finale .tf-legend { font-size: .78rem; line-height: 1.8; color: #b9bbc2; background: #0b0d12; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin: -6px 0 16px; text-align: left; }

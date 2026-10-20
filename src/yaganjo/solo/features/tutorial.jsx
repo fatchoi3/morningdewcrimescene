@@ -140,6 +140,11 @@ export function TutorialFinale({ onClose }) {
           확보한 단서는 <b>사건 기록</b>에서 인물·유형별로 확인할 수 있습니다.<br />
           여섯 명을 <b>한 번씩 다 만나면</b> C통로 현장·공용 공간·관제실 열람대·감식 의뢰실이 열립니다.<br />
           2차 심문이 열리면 <b>사건 파일</b>을 제출해 사건을 마무리하세요.</p>
+        {/* 표시의 뜻 — 지도 배지 빨간 숫자와 노란 ! 의 차이를 아무도 몰랐다(튜토리얼 2차, 셋 다). 새벽이슬과 같게 */}
+        <p className="tf-legend">
+          지도 배지 — <b style={{ color: '#ff8a80' }}>빨간 숫자</b> 아직 안 물은 것 중 거짓이 숨은 대답의 수 · <b style={{ color: '#e8c76b' }}>노란 !</b> 아직 볼 것·물을 것이 남음<br />
+          심문 — <b>⚖ 저울</b> 깰 수 있는 대답 · <b style={{ color: '#e8706e' }}>♥</b> 신뢰도(아무 데도 안 쓰이는 단서를 내밀 때만 준다)
+        </p>
         <button className="s-btn" onClick={onClose}>수사 시작</button>
       </div>
     </div>

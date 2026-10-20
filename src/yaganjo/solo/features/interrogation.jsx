@@ -205,7 +205,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     // 튜토리얼 마지막 한 걸음 — 질문지로 돌아오면 안내가 말없이 사라져, 마무리 화면이 🚪 로 나가야 뜬다는 걸
     //   셋 다 몰랐다(튜토리얼 1차). 말풍선은 질문 목록을 덮어서, 여기 한 줄 + 🚪 를 금색으로.
     : tutorialSeen && !tutFinaleSeen ? '튜토리얼 끝 — 더 물어봐도 되고, 다 됐으면 금색 🚪 로 나가 마무리하세요.'
-    : (hasAsks ? (pendingRoot > 0 ? `무엇을 물어볼까. (❗ 아직 안 물은 것 ${pendingRoot}개)` : '무엇을 물어볼까.')
+    : (hasAsks ? (pendingRoot > 0 ? `무엇을 물어볼까. (아직 안 물은 것 ${pendingRoot}개)` : '무엇을 물어볼까.')
       : '…(지금은 물어볼 것이 없다. 단서를 모으거나 수사가 진행되면 질문이 생긴다.)');
   // 캐묻기·반응 라인을 닫으면 텍스트가 답변(cur.text)으로 되돌아가는데, DialogueBox 는 텍스트가
   //   바뀐 것으로 보고 방금 읽은 답변을 처음부터 다시 친다. vn.jsx 는 건드릴 수 없으니
@@ -509,7 +509,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                     ? { targetSel: '.aa-dlg-actions', text: openTopic ? '「↩ 이 이야기로」로 질문지로 돌아가세요' : '「↩ 다른 질문」으로 질문지로 돌아가세요' }
                     : { targetSel: '[data-tut="tut-q"]', text: tutTopic && !openTopic
                       ? `「${tutTopic.q}」 — 이 이야기를 꺼내 보세요`
-                      : `「${statements.find((x) => x.id === tutT.stId)?.q || '이 질문'}」 — 이 질문을 고르세요` })
+                      : `「${statements.find((x) => x.id === tutT.stId)?.q || '이 질문'}」 — 이 질문을 고르세요. 끝의 「⚖ 저울」은 가진 증거로 깰 수 있는 대답이라는 표시` })
             : (line
               ? { targetSel: '.aa-dialogue', text: tutHit ? '모순을 짚었다 — 증거는 이렇게 들이민다. 진짜로 깨지는 대답에는 질문 끝에 「⚖ 저울」 표시가 붙는다. 탭해서 넘기세요' : '대사창을 탭해 이야기를 넘기세요' }
               : cur
@@ -522,9 +522,13 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {picker && cur && !bk && (
         <div className="aa-present">
           <div className="aa-present-h">
-            <span>📁 반박할 증거를 고르세요 — “{cur.text.length > 22 ? cur.text.slice(0, 22) + '…' : cur.text}” <span style={{ color: 'var(--muted)' }}>(길게 누르면 본문)</span></span>
+            <span>📁 반박할 증거를 고르세요 <span style={{ color: 'var(--muted)' }}>(길게 누르면 본문)</span></span>
             <button className="aa-close" onClick={() => setPicker(false)}>✕</button>
           </div>
+          {/* 반박할 말을 끝까지(세 줄까지) — 22자에서 잘려 정작 깰 대목이 안 보였다. 캐물어 들은 말도 같이 —
+              더 캐물은 말을 보고 반박을 눌렀는데 머리글엔 첫 대답만 떠서 무엇을 반박하는지 헷갈렸다(튜토리얼 2차, 셋 다) */}
+          <div className="aa-present-q">“{cur.text}”</div>
+          {typeof cur.press === 'string' && pressedIds.includes(cur.id) && <div className="aa-present-q press">캐물어 들은 말 — “{cur.press}”</div>}
           {presentable.length === 0
             ? <p style={{ color: 'var(--muted)', fontSize: '.85rem', padding: '4px 2px' }}>이 인물과 관련된 단서가 아직 없습니다. 현장·대화로 단서를 더 모으세요.</p>
             : <>
