@@ -93,6 +93,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   첫 심문에는 성공하는 반박을 한 번 직접 해 보게 한다(tutorialTarget) — 튜토리얼이 반박을 말로만
   //   알려 주고 끝나서, 처음 들이민 반박이 빗나가자 「어디다 대야 하는지 감이 안 온다」고 했다.
   const [tutHit, setTutHit] = useState(false);
+  // 「반응을 끌어냈다」 안내는 반박 직후 그 대답에만 — 반박을 먼저 누른 사람에겐 나중 대답에도 또 떴다(튜토리얼 3차 시험)
+  const [tutHitDone, setTutHitDone] = useState(false);
+  useEffect(() => { if (tutHit && !line) setTutHitDone(true); }, [tutHit, line]);
   const tutT = !tutorialSeen && tutorialTarget && (state.collected || []).includes(tutorialTarget.code)
     && visibleStatements(suspect?.id, state.collected || [], state.stUnlocked?.[suspect?.id] || [], phase).some((x) => x.id === tutorialTarget.stId)
     ? tutorialTarget : null;
@@ -204,7 +207,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
         // 「더 들을 게 없다」라고 해 놓고 「💬 더 캐묻는다」가 남아 있으면 거짓말이 된다
         : topicHasMore ? `${openTopic.q} — 「💬 더 캐묻는다」 하나가 남았다.`
         : `${openTopic.q} — 이 얘기는 더 들을 게 없다. 다른 이야기를 꺼내볼까.`)
-    : (hasAsks ? (pendingRoot > 0 ? `무엇을 물어볼까. (❗ 아직 안 물은 것 ${pendingRoot}개 — 목록을 밀어 보자)` : '무엇을 물어볼까.')
+    : (hasAsks ? (pendingRoot > 0 ? `무엇을 물어볼까. (아직 안 물은 것 ${pendingRoot}개${askMore ? ' — 목록을 밀어 보자' : ''})` : '무엇을 물어볼까.')
       : '…(지금은 물어볼 것이 없다. 단서를 모으거나 수사가 진행되면 질문이 생긴다.)');
   // 캐묻기·반응 라인을 닫으면 텍스트가 답변(cur.text)으로 되돌아가는데, DialogueBox 는 텍스트가
   //   바뀐 것으로 보고 방금 읽은 답변을 처음부터 다시 친다. vn.jsx 는 건드릴 수 없으니
@@ -518,7 +521,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                       ? `「${tutTopic.q}」 — 이 이야기를 꺼내 보세요`
                       : `「${statements.find((x) => x.id === tutT.stId)?.q || '이 질문'}」 — 이 질문을 고르세요` })
             : (line
-              ? { targetSel: '.aa-dialogue', text: tutHit ? '반응을 끌어냈다! 진짜로 깰 수 있는 거짓말에는 「⚖ 저울」 표시가 붙는다 — 탭해서 넘기세요' : '대사창을 탭해 이야기를 넘기세요' }
+              ? { targetSel: '.aa-dialogue', text: tutHit && !tutHitDone ? <>반응을 끌어냈다! 진짜로 깰 수 있는 거짓말에는 <b className="tut-big">⚖</b> 저울 표시가 붙는다 — 탭해서 넘기세요</> : '대사창을 탭해 이야기를 넘기세요' }
               : cur
                 ? (canPress
                   ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }

@@ -62,19 +62,24 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   // 물건 목록 — 「방 전체 보기」는 그림이 작아져 테두리가 손톱만 하고 이름표가 겹쳤다(2026-10-12 8회차, 세 사람).
   //   못 챙긴 물건은 이름을 감춘 채(「아직 조사하지 않은 물건」) 줄로 세워, 눌러서 바로 조사한다.
   const [listOpen, setListOpen] = useState(false);
-  // 인물 이름표가 화면 위쪽 단추 줄에 걸리는지 — 그림 비율이 늦게 잡히므로 몇 번 다시 잰다
+  // 인물 이름표 — 인물 그림이 화면 위쪽 단추 줄까지 올라오면 이름표를 대사창 바로 위(인물의 다리께)에 고정한다.
+  //   머리 위에 두면 📓 단추(2차)나 「밀어서 둘러보기」 띠(3차)와 겹쳤다. 그림 비율이 늦게 잡히므로 몇 번 다시 잰다.
   const talkRef = useRef(null);
-  //   걸리면 걸린 만큼만 내린다(발치까지 내리면 대사창 뒤로 숨었다)
-  const [tipShift, setTipShift] = useState(0);
+  const [tipFix, setTipFix] = useState(null);
   useEffect(() => {
-    // 이름표 자신의 원래 자리(지금 내린 만큼을 빼고)로 잰다 — 「방 전체 보기」 단추 아래(100px)까지
     const check = () => {
-      const tip = talkRef.current?.querySelector('.s-talkzone-tip');
-      if (!tip) return;
-      const cur = parseFloat(tip.style.marginTop) || 0;
-      setTipShift(Math.max(0, Math.round(100 - (tip.getBoundingClientRect().top - cur))));
+      const el = talkRef.current; if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.top >= 76) { setTipFix(null); return; }
+      const dlg = document.querySelector('.aa-dialogue');
+      const dlgTop = dlg ? dlg.getBoundingClientRect().top : window.innerHeight - 160;
+      // 가운데 맞추면 긴 이름이 화면 밖으로 나갔다 — 인물이 선 쪽 모서리에 붙인다
+      const side = r.left + r.width / 2 > window.innerWidth / 2 ? 'r' : 'l';
+      // 대사창 위의 「방 이름」 칩(약 30px)까지 비켜 선다
+      const y = dlgTop - 72;
+      setTipFix((o) => (o && o.side === side && o.y === y ? o : { side, y }));
     };
-    const ids = [0, 300, 1000].map((ms) => setTimeout(check, ms));
+    const ids = [0, 300, 1000, 2500].map((ms) => setTimeout(check, ms));
     window.addEventListener('resize', check);
     return () => { ids.forEach(clearTimeout); window.removeEventListener('resize', check); };
   }, [location?.id]);
@@ -174,10 +179,13 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
               style={btnStyle}
               aria-label={zoneLab} onClick={onPick} />
             {/* 표시 전용 — 면은 비우고 '테두리만' 빛낸다(버튼 밖이라 발광이 잘리지 않음) */}
+            {/* 선을 두 겹으로 — 아래 어두운 굵은 선, 위 밝은 선. 밝은 책상·흰 종이 위에서 밝은 선 하나는 사라졌다(튜토리얼 3차 시험 셋) */}
             <svg className={`s-zone-outline${tone}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               {p.poly
-                ? <polygon points={p.poly.map((pt) => `${pt[0]},${pt[1]}`).join(' ')} vectorEffect="non-scaling-stroke" />
-                : <rect x="2" y="2" width="96" height="96" rx="6" vectorEffect="non-scaling-stroke" />}
+                ? <><polygon className="under" points={p.poly.map((pt) => `${pt[0]},${pt[1]}`).join(' ')} vectorEffect="non-scaling-stroke" />
+                    <polygon points={p.poly.map((pt) => `${pt[0]},${pt[1]}`).join(' ')} vectorEffect="non-scaling-stroke" /></>
+                : <><rect className="under" x="2" y="2" width="96" height="96" rx="6" vectorEffect="non-scaling-stroke" />
+                    <rect x="2" y="2" width="96" height="96" rx="6" vectorEffect="non-scaling-stroke" /></>}
             </svg>
             {have && <span className="s-zone-check">✓</span>}
             {/* 새로 할 수 있게 된 것에만 알림 — 감식 의뢰 가능, 2차에 열린 휴대폰.
@@ -185,7 +193,8 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
             {!have && ((isGamsik && lab?.ready(code) && !req) || (c.phone && stage >= 3)) && (
               <span className="s-alert" title={isGamsik ? '감식 의뢰할 수 있다' : '휴대폰을 볼 수 있게 됐다'}>!</span>
             )}
-            <span className="s-zone-lab">{zoneLab}</span>
+            {/* 그림에 그 물건이 안 그려진 자리(침대 위 성경책)는 이름표를 늘 보인다 — 빈 육각형만 보고 무엇인지 몰랐다 */}
+            <span className={`s-zone-lab${p.label ? ' always' : ''}`}>{!have && typeof p.label === 'string' ? p.label : zoneLab}</span>
           </div>
         );
       })}
@@ -199,8 +208,9 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
           {/* 인물은 테두리를 그리지 않는다 — 발밑 빛 + '이야기를 한다' 칩만으로 안내.
               (그림 속 인물 위에 선을 얹으면 오히려 지저분해 보임) */}
           <span className="s-talkzone-glow" />
-          {talkPending > 0 && <span className="s-alert" title={`물어볼 것 ${talkPending}`} style={tipShift ? { marginTop: tipShift } : undefined}>!</span>}
-          <span className="s-talkzone-tip" style={tipShift ? { marginTop: tipShift } : undefined}>💬 {roomSuspect.name} — 이야기를 한다{talkPending > 0 ? ` (${talkPending})` : ''}</span>
+          {/* 이름표를 모서리에 붙일 땐 ❗ 를 이름표 안에 넣는다(따로 띄우면 배지가 화면 폭으로 늘어났다) */}
+          {talkPending > 0 && !tipFix && <span className="s-alert" title={`물어볼 것 ${talkPending}`}>!</span>}
+          <span className="s-talkzone-tip" style={tipFix ? { position: 'fixed', left: 'auto', [tipFix.side === 'r' ? 'right' : 'left']: 10, top: tipFix.y, transform: 'none', zIndex: 12 } : undefined}>{tipFix && talkPending > 0 ? '❗' : '💬'} {roomSuspect.name} — 이야기를 한다{talkPending > 0 ? ` (${talkPending})` : ''}</span>
         </button>
       )}
         </div>

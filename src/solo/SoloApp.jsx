@@ -303,7 +303,7 @@ export default function SoloApp() {
         )}
 
       {recordOpen && (
-        <SheetOverlay title={`사건 기록 · 단서 ${recordClues.length}`} onClose={() => setRecordOpen(false)}>
+        <SheetOverlay title={`📓 수첩 · 사건 기록 · 단서 ${recordClues.length}`} onClose={() => setRecordOpen(false)}>
           <CaseRecord clues={recordClues} fresh={state.labNew}
             onOpen={(code) => { setModalCode(code); if ((state.labNew || []).includes(code)) update({ labNew: state.labNew.filter((c) => c !== code) }); }}
             notes={state.notes} onNotes={(v) => update({ notes: v })}

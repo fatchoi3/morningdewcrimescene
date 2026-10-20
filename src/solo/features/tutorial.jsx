@@ -16,6 +16,10 @@ const toRect = (r) => ({ x: r.left, y: r.top, w: r.width, h: r.height });
 export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   const [rect, setRect] = useState(null);
   const [box, setBox] = useState(null);
+  // 대사창은 글자가 찍히며 위로 자란다 — 처음 한 번만 재면 말풍선이 자란 대사창에 덮였다(튜토리얼 3차 시험 셋)
+  const [dlgTopSt, setDlgTopSt] = useState(() => window.innerHeight);
+  const [nudge, setNudge] = useState(false);
+  useEffect(() => { if (!nudge) return undefined; const id = setTimeout(() => setNudge(false), 450); return () => clearTimeout(id); }, [nudge]);
   // 건너뛰기는 두 번 눌러야 — 말풍선 속 글줄이 누를 대상(사람 그림) 위에 올 때 그냥 지나가다 눌러 튜토리얼이 꺼졌다
   const [skipArm, setSkipArm] = useState(false);
   useEffect(() => { if (!skipArm) return undefined; const id = setTimeout(() => setSkipArm(false), 6000); return () => clearTimeout(id); }, [skipArm]);
@@ -36,6 +40,9 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
           el.scrollIntoView({ block: 'nearest', inline: 'center' });
         }
       }
+      const d = document.querySelector('.aa-dialogue');
+      const dt = d ? d.getBoundingClientRect().top : window.innerHeight;
+      setDlgTopSt((o) => (o === dt ? o : dt));
       if (el) {
         const r = toRect(el.getBoundingClientRect());
         setRect((o) => (o && o.x === r.x && o.y === r.y && o.w === r.w && o.h === r.h ? o : r));
@@ -63,10 +70,13 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   const W = window.innerWidth, H = window.innerHeight;
   const pad = box ? 6 : 12; // 판 안의 단추는 둘레를 좁게 — 넓으면 고리가 바로 위 안내 줄을 덮었다
   // 대사창 밖의 키 큰 대상(사람 그림)은 대사창 위에서 끊는다 — 금색 고리가 대사창·단추 위로 세로줄을 그었다
-  const dlg = !box && document.querySelector('.aa-dialogue');
-  const dlgTop = dlg ? dlg.getBoundingClientRect().top : H;
-  const hx = Math.max(0, rect.x - pad), hy = Math.max(0, rect.y - pad);
-  const hw = rect.w + pad * 2, hh = Math.max(24, Math.min(rect.h + pad * 2, dlgTop - 4 - hy));
+  const dlgTop = box ? H : dlgTopSt;
+  const hx = Math.max(0, rect.x - pad), hw = rect.w + pad * 2;
+  const rawTop = Math.max(0, rect.y - pad), rawBot = rect.y + rect.h + pad;
+  // 대사창 밖의 키 큰 대상(사람 그림)만 위 단추 줄(96px) 아래에서 시작해 대사창 위에서 끝난다 — 작은 단추(수첩)에 적용하면 구멍이 단추를 벗어난다
+  const tall = !box && rect.h > H * 0.4;
+  const hy = tall ? Math.max(rawTop, Math.min(96, rawBot - 24)) : rawTop;
+  const hh = Math.max(24, (tall ? Math.min(rawBot, dlgTop - 4) : rawBot) - hy);
   // 밝게 둘 영역 = 단추 + 그 단추가 든 판(대사창·증거 고르기·단서 창·수첩). 판 안에서도 누를 수 있는 건 단추뿐이다.
   let vx = hx, vy = hy, vr = hx + hw, vb = hy + hh;
   if (box) {
@@ -94,7 +104,7 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   const capShift = tipLeft - cx; // 캡션만 화면 안으로 밀고, 화살표는 타깃 중심을 가리키게 유지
   // 건너뛰기는 말풍선 안에 — 따로 띄우면 단계 이름·심문 제목·대사창 단추를 덮었다
   const cap = (style) => (
-    <div className="tut-cap" style={style}>
+    <div className={`tut-cap${nudge ? ' nudge' : ''}`} style={style}>
       {text}
       <button className={`tut-skip-in${skipArm ? ' arm' : ''}`} onClick={skip}>{skipArm ? '한 번 더 누르면 튜토리얼을 끕니다' : '튜토리얼 건너뛰기 ✕'}</button>
     </div>
@@ -109,20 +119,21 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   return (
     <div className="tut-coach">
       {dim && <>
-        <div className="tut-mask" style={{ left: 0, top: 0, width: '100%', height: vy }} />
-        <div className="tut-mask" style={{ left: 0, top: vb, width: '100%', height: `calc(100% - ${vb}px)` }} />
-        <div className="tut-mask" style={{ left: 0, top: vy, width: vx, height: vh }} />
-        <div className="tut-mask" style={{ left: vr, top: vy, width: `calc(100% - ${vr}px)`, height: vh }} />
+        {/* 막을 누르면 말풍선이 흔들린다 — 안내 밖을 눌렀을 때 아무 반응이 없어 고장인 줄 알았다(튜토리얼 3차 시험) */}
+        <div className="tut-mask" onClick={() => setNudge(true)} style={{ left: 0, top: 0, width: '100%', height: vy }} />
+        <div className="tut-mask" onClick={() => setNudge(true)} style={{ left: 0, top: vb, width: '100%', height: `calc(100% - ${vb}px)` }} />
+        <div className="tut-mask" onClick={() => setNudge(true)} style={{ left: 0, top: vy, width: vx, height: vh }} />
+        <div className="tut-mask" onClick={() => setNudge(true)} style={{ left: vr, top: vy, width: `calc(100% - ${vr}px)`, height: vh }} />
       </>}
-      {blocks.map((b, i) => <div key={i} className="tut-mask clear" style={b} />)}
+      {blocks.map((b, i) => <div key={i} className="tut-mask clear" onClick={() => setNudge(true)} style={b} />)}
       <div className="tut-ring" style={{ left: hx, top: hy, width: hw, height: hh }} />
       {place === 'dock'
         ? <div className={`tut-tip dock${dim ? ' mid' : ''}`} style={dim ? { top: 'auto', bottom: H - Math.min(dlgTop, vb) + 14 } : undefined}>{cap()}</div>
         : (
           <div className="tut-tip" style={{ left: cx, top: tipTop, transform: place === 'below' ? 'translate(-50%,0)' : 'translate(-50%,-100%)' }}>
             {place === 'below'
-              ? (<>{arrow && <div className="tut-arrow up" />}{cap({ transform: `translateX(${capShift}px)` })}</>)
-              : (<>{cap({ transform: `translateX(${capShift}px)` })}{arrow && <div className="tut-arrow down" />}</>)}
+              ? (<>{arrow && <div className="tut-arrow up" />}{cap({ '--cap-x': `${capShift}px` })}</>)
+              : (<>{cap({ '--cap-x': `${capShift}px` })}{arrow && <div className="tut-arrow down" />}</>)}
           </div>
         )}
     </div>

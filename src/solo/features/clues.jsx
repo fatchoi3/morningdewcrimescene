@@ -15,6 +15,27 @@ const PAGE_IMG_H = 170;   // 그림이 있는 쪽·없는 쪽의 높이를 맞�
 // ── 눌러서 크게 보는 그림 — 회계 장부·통장 사진의 작은 글씨를 못 읽었다(2026-10-14 14회차) ──
 function ZoomImg({ src, style }) {
   const [big, setBig] = useState(false);
+  // 두 손가락으로 키우고 한 손가락으로 끈다. 화면 폭에 맞추기만 해선 원래 그림이 이미 화면 폭이라 커지지 않았다(튜토리얼 3차 시험 셋)
+  const [tf, setTf] = useState({ s: 1.6, x: 0, y: 0 });
+  const ptrs = useRef(new Map());
+  const gest = useRef(null);
+  const moved = useRef(0);
+  const onDown = (e) => { e.currentTarget.setPointerCapture?.(e.pointerId); ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY }); gest.current = null; moved.current = 0; };
+  const onMove = (e) => {
+    const p = ptrs.current.get(e.pointerId); if (!p) return;
+    const pts = [...ptrs.current.values()];
+    if (pts.length >= 2) {
+      const [a, b] = pts; const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (!gest.current) gest.current = { dist, s: tf.s };
+      const s = Math.min(6, Math.max(1, gest.current.s * dist / gest.current.dist));
+      setTf((t) => ({ ...t, s }));
+    } else {
+      setTf((t) => ({ ...t, x: t.x + (e.clientX - p.x), y: t.y + (e.clientY - p.y) }));
+    }
+    moved.current += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y);
+    ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  };
+  const onUp = (e) => { ptrs.current.delete(e.pointerId); gest.current = null; if (ptrs.current.size === 0 && moved.current < 8) setBig(false); };
   return (
     <>
       <span className="s-zoom-wrap">
@@ -23,8 +44,10 @@ function ZoomImg({ src, style }) {
       </span>
       {/* 단서 창 안에 띄우면 튜토리얼 말풍선이 그림 위에 겹치고, 그림이 거의 안 커졌다(2차 시험) — 화면 맨 위에 띄운다 */}
       {big && createPortal(
-        <div className="s-img-zoom" onClick={(e) => { e.stopPropagation(); setBig(false); }}>
-          <img src={src} alt="" /><div className="pz-cap">눌러서 닫기</div>
+        <div className="s-img-zoom" onClick={(e) => e.stopPropagation()}
+          onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+          <img src={src} alt="" draggable={false} style={{ transform: `translate(${tf.x}px, ${tf.y}px) scale(${tf.s})` }} />
+          <div className="pz-cap">두 손가락으로 키우고 끌어 보세요 · 눌러서 닫기</div>
         </div>, document.body)}
     </>
   );
@@ -40,6 +63,14 @@ function PageStack({ pages, collectedSet, onCollect }) {
   //   옛 목록으로 덮어써, 끝까지 읽은 사람의 성경책이 「안 조사」로 돌아갔다(2026-10-20 튜토리얼 2차 시험 셋 모두).
   const cbRef = useRef(onCollect);
   cbRef.current = onCollect;
+  // 「아래로 밀어」 안내는 실제로 넘칠 때만 — 한 화면에 다 들어가는 3쪽 다이어리에도 붙었다(튜토리얼 3차 시험)
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    const check = () => { const sc = refs.current[0]?.closest('.s-modal'); setMore(!!sc && sc.scrollHeight > sc.clientHeight + 8); };
+    const ids = [0, 200, 800].map((ms) => setTimeout(check, ms));
+    window.addEventListener('resize', check);
+    return () => { ids.forEach(clearTimeout); window.removeEventListener('resize', check); };
+  }, [pages]);
   useEffect(() => {
     const want = pages.map((pg, i) => (pg.unlocks && !collectedSet.has(pg.unlocks) ? i : -1)).filter((i) => i >= 0);
     if (!want.length) return undefined;
@@ -56,7 +87,7 @@ function PageStack({ pages, collectedSet, onCollect }) {
   }, [pages]);
   return (
     <>
-      {pages.length > 1 && <p className="s-pager-more">📖 {pages.length}쪽 — 아래로 밀어 끝까지 읽어 보세요</p>}
+      {pages.length > 1 && <p className="s-pager-more">📖 {pages.length}쪽{more ? ' — 아래로 밀어 끝까지 읽어 보세요' : ''}</p>}
       {pages.map((pg, i) => (
         <section key={i} className="s-page" data-i={i} ref={(el) => { refs.current[i] = el; }}>
           {pg.image && <ZoomImg src={pg.image} style={{ height: PAGE_IMG_H, width: '100%', objectFit: 'contain', marginBottom: 8 }} />}

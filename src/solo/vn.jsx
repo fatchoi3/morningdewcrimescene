@@ -59,7 +59,8 @@ export const DialogueBox = forwardRef(function DialogueBox({ location, speaker, 
           {shown}
           {done && onAdvance && <span className="aa-next">▶</span>}
         </div>
-        {hint && <div className="aa-hint">{hint}</div>}
+        {/* 글이 찍히는 중엔 안내 줄을 감춘다 — 「탭하여 계속」이 미리 떠서 다 나온 줄 알고 넘길 뻔했다(튜토리얼 3차 시험 셋) */}
+        {hint && <div className="aa-hint" style={done ? undefined : { visibility: 'hidden' }}>{hint}</div>}
         {/* 이동 버튼 — 여기를 눌러도 대사가 넘어가면 안 되므로 전파를 끊는다 */}
         {acts.length > 0 && (
           <div className="aa-dlg-actions" onClick={(e) => e.stopPropagation()}>
