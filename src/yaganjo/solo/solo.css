@@ -870,3 +870,15 @@ button { font-family: inherit; }
   .hall-accuse:active { transform: scale(.96); }
   .hall-accuse small { font-size: .6rem; }
 }
+/* 튜토리얼 — 새벽이슬과 같은 고침(00429de): 말풍선이 누를 단추가 든 판(대사창·증거 고르기·질문지·단서 창)을 비켜 선다.
+   판 안의 단추 둘레는 보이되 못 누르게, 건너뛰기는 말풍선 안에(두 번 눌러야), 자리가 없으면 붙는 말풍선 */
+.tut-mask.clear { background: transparent; }
+.tut-skip-in { display: block; margin: 6px auto 0; pointer-events: auto; background: none; border: 0; color: #9c9a92; font-size: .72rem; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 4px 8px; }
+.tut-skip-in.arm { color: #ffb4a8; text-decoration: none; font-weight: 700; }
+.tut-tip.dock { left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom)); }
+.tut-tip.dock.mid { bottom: auto; top: 12%; }
+/* 말풍선이 아래에 붙어 있으면 단서 창·수첩 끝을 그만큼 더 밀어 올릴 수 있게 — 순찰 일지 03:00 줄이 말풍선 밑에 갇혀
+   밀어도 안 보였다. 「단서 확보」 알림은 말풍선이 같은 말을 하니 그동안 숨긴다(일지 줄 위에 떴다). */
+body:has(.tut-tip.dock) .s-modal { padding-bottom: 120px; }
+body:has(.tut-tip.dock) .s-sheet-body { padding-bottom: 140px; }
+body:has(.tut-tip.dock) .s-toast { display: none; }
