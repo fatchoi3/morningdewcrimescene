@@ -62,6 +62,22 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
   // 물건 목록 — 「방 전체 보기」는 그림이 작아져 테두리가 손톱만 하고 이름표가 겹쳤다(2026-10-12 8회차, 세 사람).
   //   못 챙긴 물건은 이름을 감춘 채(「아직 조사하지 않은 물건」) 줄로 세워, 눌러서 바로 조사한다.
   const [listOpen, setListOpen] = useState(false);
+  // 인물 이름표가 화면 위쪽 단추 줄에 걸리는지 — 그림 비율이 늦게 잡히므로 몇 번 다시 잰다
+  const talkRef = useRef(null);
+  //   걸리면 걸린 만큼만 내린다(발치까지 내리면 대사창 뒤로 숨었다)
+  const [tipShift, setTipShift] = useState(0);
+  useEffect(() => {
+    // 이름표 자신의 원래 자리(지금 내린 만큼을 빼고)로 잰다 — 「방 전체 보기」 단추 아래(100px)까지
+    const check = () => {
+      const tip = talkRef.current?.querySelector('.s-talkzone-tip');
+      if (!tip) return;
+      const cur = parseFloat(tip.style.marginTop) || 0;
+      setTipShift(Math.max(0, Math.round(100 - (tip.getBoundingClientRect().top - cur))));
+    };
+    const ids = [0, 300, 1000].map((ms) => setTimeout(check, ms));
+    window.addEventListener('resize', check);
+    return () => { ids.forEach(clearTimeout); window.removeEventListener('resize', check); };
+  }, [location?.id]);
   useEffect(() => { setListOpen(false); }, [location?.id]);
   const listRef = useRef(null);
   const [listMore, setListMore] = useState(false);
@@ -177,14 +193,14 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       {/* 인물 터치존은 반드시 .aa-track(그림) 안에 둔다 —
           밖에 두면 %좌표가 '그림'이 아니라 '화면' 기준이 되어 창 크기에 따라 인물에서 어긋난다. */}
       {roomSuspect && onTalk && talkPos && (
-        <button className="s-talkzone"
+        <button className="s-talkzone" ref={talkRef}
           style={{ left: `${talkPos.x}%`, top: `${talkPos.y}%`, ...(talkPos.w ? { width: `${talkPos.w}%`, height: `${talkPos.h}%` } : null) }}
           onClick={() => onTalk(roomSuspect.id)} aria-label={`${roomSuspect.name}과 이야기한다`}>
           {/* 인물은 테두리를 그리지 않는다 — 발밑 빛 + '이야기를 한다' 칩만으로 안내.
               (그림 속 인물 위에 선을 얹으면 오히려 지저분해 보임) */}
           <span className="s-talkzone-glow" />
-          {talkPending > 0 && <span className="s-alert" title={`물어볼 것 ${talkPending}`}>!</span>}
-          <span className="s-talkzone-tip">💬 {roomSuspect.name} — 이야기를 한다{talkPending > 0 ? ` (${talkPending})` : ''}</span>
+          {talkPending > 0 && <span className="s-alert" title={`물어볼 것 ${talkPending}`} style={tipShift ? { marginTop: tipShift } : undefined}>!</span>}
+          <span className="s-talkzone-tip" style={tipShift ? { marginTop: tipShift } : undefined}>💬 {roomSuspect.name} — 이야기를 한다{talkPending > 0 ? ` (${talkPending})` : ''}</span>
         </button>
       )}
         </div>

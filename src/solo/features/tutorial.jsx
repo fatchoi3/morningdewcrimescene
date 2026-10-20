@@ -140,6 +140,12 @@ export function TutorialFinale({ onClose }) {
           확보한 단서는 <b>사건 기록</b>에서 인물·유형별로 확인할 수 있습니다.<br />
           사건이 <b>살인</b>으로 전환되면 목사님 방·CCTV·휴대폰·감식 의뢰실이 열립니다.<br />
           충분히 조사했다면 <b>사건 파일</b>을 제출해 사건을 마무리하세요.</p>
+        {/* 화면 표시의 뜻 — 셋 중 둘이 「빨간 1·노란 !·하트가 뭔지 모르겠다」고 했다(튜토리얼 2차 시험) */}
+        <ul className="tf-legend">
+          <li><span className="tf-badge-red">1</span> 문 옆 빨간 숫자 — 그 방 사람에게 아직 깰 수 있는 거짓말이 남았다</li>
+          <li><span className="tf-badge-amber">!</span> 노란 느낌표 — 볼 것·물어볼 것만 남았다</li>
+          <li><span style={{ color: '#e8706e' }}>♥</span> 심문의 하트 — 그 사람의 신뢰도. 엉뚱한 단서를 내밀면 하나씩 준다</li>
+        </ul>
         <button className="s-btn" onClick={onClose}>수사 시작</button>
       </div>
     </div>
