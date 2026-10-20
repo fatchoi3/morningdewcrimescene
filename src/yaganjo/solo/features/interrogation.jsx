@@ -13,6 +13,7 @@ import { DATA, TESTIMONY, visibleStatements, relatedCodes, introOf, clueTargetIn
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, TopHud } from '../vn.jsx';
 import { TutorialCoach } from './tutorial.jsx';
+import { questionBreakdown } from '../lib/alerts.js';
 
 // 단서로 묻는 한 줄. ❗=아직 안 물음 · ✔=물어봄 · ✅=이걸로 모순을 짚음
 function ClueAsk({ c, k, onPick }) {
@@ -92,6 +93,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   첫 심문에는 성공하는 반박을 한 번 직접 해 보게 한다(tutorialTarget) — 튜토리얼이 반박을 말로만
   //   알려 주고 끝나서, 처음 들이민 반박이 빗나가자 「어디다 대야 하는지 감이 안 온다」고 했다.
   const [tutHit, setTutHit] = useState(false);
+  const [qOpen, setQOpen] = useState(false); // 증거 고르기 머리글의 반박할 말 — 세 줄 넘으면 눌러 펼친다(3차, 셋 다)
   const tutT = !tutorialSeen && tutorialTarget && (state.collected || []).includes(tutorialTarget.code)
     && visibleStatements(suspect?.id, state.collected || [], state.stUnlocked?.[suspect?.id] || [], phase).some((x) => x.id === tutorialTarget.stId)
     ? tutorialTarget : null;
@@ -195,8 +197,15 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const syncMore = (el) => setAskMore(!!el && el.scrollHeight - el.scrollTop - el.clientHeight > 12);
   useLayoutEffect(() => { syncMore(askRef.current); });
   const breakableOf = (s) => !brokeOf(s.id) && (s.contradict?.codes || []).some((c) => collected.includes(c));
+  const keyLeft = questionBreakdown(sid, state, phase).key;
+  // 캐물은 뒤에는 첫 대답 아래에 캐물어 들은 말을 함께 둔다 — 반박 안내가 뜰 때 첫 대답만 떠서
+  //   무엇을 반박하는지 헷갈렸다(튜토리얼 3차, 셋 다).
+  const restText = (st) => (st && typeof st.press === 'string' && pressedIds.includes(st.id) ? `${st.text}
+
+— 더 캐묻자 —
+${st.press}` : st?.text);
   const dlgText = line ? line.text
-    : cur ? cur.text
+    : cur ? restText(cur)
     : openTopic ? (leftInTopic > 0
         ? `${openTopic.q} — 더 물어볼 게 ${leftInTopic}가지 남았다.`
         // 「더 들을 게 없다」라고 해 놓고 「💬 더 캐묻는다」가 남아 있으면 거짓말이 된다
@@ -204,8 +213,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
         : `${openTopic.q} — 이 얘기는 더 들을 게 없다. 다른 이야기를 꺼내볼까.`)
     // 튜토리얼 마지막 한 걸음 — 질문지로 돌아오면 안내가 말없이 사라져, 마무리 화면이 🚪 로 나가야 뜬다는 걸
     //   셋 다 몰랐다(튜토리얼 1차). 말풍선은 질문 목록을 덮어서, 여기 한 줄 + 🚪 를 금색으로.
-    : tutorialSeen && !tutFinaleSeen ? '튜토리얼 끝 — 더 물어봐도 되고, 다 됐으면 금색 🚪 로 나가 마무리하세요.'
+    : tutorialSeen && !tutFinaleSeen ? '튜토리얼 끝 — 더 물어봐도 되고, 다 됐으면 금색 테두리 🚪 로 나가 마무리하세요.'
     : (hasAsks ? (pendingRoot > 0 ? `무엇을 물어볼까. (아직 안 물은 것 ${pendingRoot}개)` : '무엇을 물어볼까.')
+      // 거짓이 숨은 대답(빨간 숫자)은 있는데 깰 증거가 없어 ⚖ 가 하나도 없으면 — 튜토리얼 뒤 여기서 멈췄다(3차, 둘)
+      + (keyLeft > 0 && !statements.some(breakableOf) ? ' 거짓이 숨은 대답이 있지만 깰 증거가 아직 없다 — 단서를 더 모으면 질문 끝에 ⚖ 가 붙는다.' : '')
       : '…(지금은 물어볼 것이 없다. 단서를 모으거나 수사가 진행되면 질문이 생긴다.)');
   // 캐묻기·반응 라인을 닫으면 텍스트가 답변(cur.text)으로 되돌아가는데, DialogueBox 는 텍스트가
   //   바뀐 것으로 보고 방금 읽은 답변을 처음부터 다시 친다. vn.jsx 는 건드릴 수 없으니
@@ -387,7 +398,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   나가는 길은 액션행의 「↩ 다른 질문」 하나로 못 박고, 힌트가 그걸 가리킨다.
   const dlgAdvance = line ? advance : (cur && canPress) ? doPress : undefined;
   const dlgHint = line ? '탭하여 계속 ▶'
-    : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : '거짓이다 싶으면 「📁 반박」 · 「↩ 다른 질문」으로 나간다')
+    : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : bk ? `모순을 짚었다 — 「${openTopic ? '↩ 이 이야기로' : '↩ 다른 질문'}」으로 나간다` : `거짓이다 싶으면 「📁 반박」 · 「${openTopic ? '↩ 이 이야기로' : '↩ 다른 질문'}」으로 나간다`)
     : openTopic ? (topicHasMore ? '위에서 고르거나 「↩ 다른 이야기」' : '「↩ 다른 이야기」로 돌아가세요')
     : (hasAsks ? '위 목록에서 질문이나 이야깃거리를 고르세요' : '');
 
@@ -527,7 +538,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
           </div>
           {/* 반박할 말을 끝까지(세 줄까지) — 22자에서 잘려 정작 깰 대목이 안 보였다. 캐물어 들은 말도 같이 —
               더 캐물은 말을 보고 반박을 눌렀는데 머리글엔 첫 대답만 떠서 무엇을 반박하는지 헷갈렸다(튜토리얼 2차, 셋 다) */}
-          <div className="aa-present-q">“{cur.text}”</div>
+          <div className={`aa-present-q${qOpen ? ' open' : ''}`} onClick={() => setQOpen((v) => !v)} title="눌러서 펼치기">“{cur.text}”{!qOpen && <span className="more"> ▾ 펼치기</span>}</div>
           {typeof cur.press === 'string' && pressedIds.includes(cur.id) && <div className="aa-present-q press">캐물어 들은 말 — “{cur.press}”</div>}
           {presentable.length === 0
             ? <p style={{ color: 'var(--muted)', fontSize: '.85rem', padding: '4px 2px' }}>이 인물과 관련된 단서가 아직 없습니다. 현장·대화로 단서를 더 모으세요.</p>

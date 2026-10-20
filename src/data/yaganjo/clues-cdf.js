@@ -331,7 +331,7 @@ export const cluesCDF = {
   'LHMX-66': {
     title: '지게차 키',
     description: '압수 목록에 「지게차 키 1 — 작업복 오른쪽 주머니」로 적혀 있다.',
-    detail: '노란 플라스틱 태그가 달린 키 한 개. 태그에 유성펜으로 「1호기」.\n\n고리에 다른 것은 걸려 있지 않다.',
+    detail: '노란 플라스틱 태그가 달린 키 한 개. 태그의 유성펜 글씨는 닳아서 「…호기」만 읽힌다.\n\n고리에 다른 것은 걸려 있지 않다.',
     image: '/images/yaganjo/f1-forklift-key.jpg',
     type: '보통',
     person: '{{S6}}',
@@ -349,7 +349,7 @@ export const cluesCDF = {
   'LKQM-22': {
     title: '귀마개와 혈압약',
     description: '작업복 주머니에서 나왔다.',
-    detail: '스펀지 귀마개 한 쌍. 여러 번 눌러 쓴 것이라 한쪽이 찌그러진 채 돌아오지 않는다.\n\n그 옆에 약국 봉투. 겉에 「아침 식후 1회」, 조제일이 이달 초다. 남은 알이 열 몇 개 들어 있다.',
+    detail: '스펀지 귀마개 한 쌍. 여러 번 눌러 쓴 것이라 한쪽이 찌그러진 채 돌아오지 않는다.\n\n그 옆에 약국 봉투. 겉에 「아침 식후 1회」, 조제일이 이달 초다. 그런데 남은 알이 두 알뿐이다 — 보름치가 벌써 거의 비었다.',
     image: '/images/yaganjo/f3-earplugs-meds.jpg',
     type: '보통',
     person: '{{S6}}',

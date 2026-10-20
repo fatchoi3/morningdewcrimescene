@@ -15,15 +15,10 @@ export function Shell({ title, onClose, children }) {
   //   옅은 그림자는 아무도 못 봤다. 끝까지 밀면 사라진다. 그림이 늦게 와 높이가 바뀌어도 다시 잰다.
   const boxRef = useRef(null);
   const [more, setMore] = useState(false);
-  const [lift, setLift] = useState(0); // 튜토리얼 말풍선이 창 아래를 덮고 있으면 그만큼 위로
   const sync = () => {
     const el = boxRef.current;
     if (!el) return;
     setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 24);
-    const dock = document.querySelector('.tut-tip.dock');
-    // sticky 는 창의 아래 여백(튜토리얼 동안 120px) 위에서 멈추므로 그만큼은 빼고 모자란 만큼만
-    const pb = parseFloat(getComputedStyle(el).paddingBottom) || 0;
-    setLift(dock ? Math.max(0, Math.round(el.getBoundingClientRect().bottom - dock.getBoundingClientRect().top + 6 - pb)) : 0);
   };
   useEffect(() => {
     sync();
@@ -35,10 +30,11 @@ export function Shell({ title, onClose, children }) {
   }, [children]);
   return (
     <div className="s-modal-ov" onClick={onClose}>
-      <div className="s-modal" ref={boxRef} onScroll={sync} onClick={(e) => e.stopPropagation()}>
+      {/* 본문만 밀린다(머리·바닥 줄은 고정) — 「▼ 아래에 더 있어요」가 본문 글자 위에 겹쳤다(튜토리얼 3차, 셋 다). 바닥 줄은 본문 밖이다. */}
+      <div className="s-modal" onClick={(e) => e.stopPropagation()}>
         <div className="s-modal-h"><div className="mt">{title}</div><button className="mx" onClick={onClose}>✕</button></div>
-        <div className="s-modal-b">{children}</div>
-        {more && <div className="s-modal-more" aria-hidden="true" style={lift ? { bottom: lift } : undefined}>▼ 아래에 더 있어요</div>}
+        <div className="s-modal-b" ref={boxRef} onScroll={sync}>{children}</div>
+        {more && <div className="s-modal-more" aria-hidden="true">▼ 아래에 더 있어요</div>}
       </div>
     </div>
   );

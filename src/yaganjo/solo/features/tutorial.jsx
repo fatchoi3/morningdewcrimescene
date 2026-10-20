@@ -143,7 +143,8 @@ export function TutorialFinale({ onClose }) {
         {/* 표시의 뜻 — 지도 배지 빨간 숫자와 노란 ! 의 차이를 아무도 몰랐다(튜토리얼 2차, 셋 다). 새벽이슬과 같게 */}
         <p className="tf-legend">
           지도 배지 — <b style={{ color: '#ff8a80' }}>빨간 숫자</b> 아직 안 물은 것 중 거짓이 숨은 대답의 수 · <b style={{ color: '#e8c76b' }}>노란 !</b> 아직 볼 것·물을 것이 남음<br />
-          심문 — <b>⚖ 저울</b> 깰 수 있는 대답 · <b style={{ color: '#e8706e' }}>♥</b> 신뢰도(아무 데도 안 쓰이는 단서를 내밀 때만 준다)
+          심문 — <b>⚖ 저울</b> 깰 수 있는 대답(그 대답을 깰 증거를 손에 넣으면 붙는다) · <b style={{ color: '#e8706e' }}>♥</b> 신뢰도(아무 데도 안 쓰이는 단서를 내밀 때만 줄어든다)<br />
+          이름판 — <b>단서 n/n</b> 그 방에서 본 물건 수 · <b>✓ 다 봄</b> 물건은 다 봤음 · <b>남은 질문 n</b> 아직 안 물은 것(단서를 주우면 늘기도 한다)
         </p>
         <button className="s-btn" onClick={onClose}>수사 시작</button>
       </div>

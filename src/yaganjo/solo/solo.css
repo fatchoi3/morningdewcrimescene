@@ -310,7 +310,11 @@ button { font-family: inherit; }
    항목 높이 85px 보다 커서 같은 자리를 다시 눌러도 다른 항목이 눌린다).
    위를 고정하고 여백만 남겨 손가락 위치가 유지되게 한다. */
 .s-modal-ov { position: fixed; inset: 0; background: #000b; display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px 16px; z-index: 40; }
-.s-modal { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; width: min(96vw, 560px); max-height: 88vh; overflow: auto; }
+.s-modal { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; width: min(96vw, 560px); max-height: 88vh; overflow: hidden; display: flex; flex-direction: column; }
+.s-modal-b { flex: 1 1 auto; min-height: 0; overflow: auto; }
+/* 튜토리얼 동안은 창을 낮춰 말풍선이 창 아래에 서게 — 말풍선이 창 아래쪽 글을 덮었다(튜토리얼 2·3차, 셋 다) */
+body:has(.tut-coach) .s-modal { max-height: calc(100dvh - 6vh - 150px); }
+body:has(.tut-coach) .s-sheet { bottom: 136px; }
 .s-modal-h { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); }
 .s-modal-h .mt { font-weight: 800; flex: 1; }
 .s-modal-h .mx { position: relative; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
@@ -451,7 +455,7 @@ button { font-family: inherit; }
 .aa-ask { position: absolute; left: 10px; right: 10px; bottom: 150px; z-index: 10; display: flex; flex-direction: column; gap: 6px; max-height: 44vh; overflow: auto; }
 .aa-ask-h { font-size: .74rem; font-weight: 800; color: #cdd3df; background: #000000a8; border: 1px solid #ffffff22; border-radius: 8px; padding: 4px 10px; align-self: flex-start; }
 /* 질문지 안 칸 나눔 — 「💬 질문」과 「📁 단서」 (하단 탭 대신 목록 안에서 구분) */
-.aa-ask-sec { font-size: .7rem; font-weight: 800; letter-spacing: .04em; color: #8b93a4; padding: 4px 2px 0; margin-top: 2px; border-top: 1px solid #ffffff14; }
+.aa-ask-sec { font-size: .7rem; font-weight: 800; letter-spacing: .04em; color: #c3c9d6; background: #000000a0; border-radius: 6px; padding: 4px 8px; margin-top: 2px; align-self: flex-start; }  /* 인물 그림 위에 글자가 겹쳐 안 읽혔다(3차) */
 .aa-ask-sec:first-of-type { border-top: none; margin-top: 0; }
 /* 화제 아래로 이어지는 단서 질문 — 한 칸 들여써서 '이 화제에 딸린 것'임을 보인다 */
 .aa-ask button.sub { margin-left: 16px; font-size: .86rem; border-left-width: 3px; }
@@ -879,15 +883,17 @@ button { font-family: inherit; }
 .tut-tip.dock.mid { bottom: auto; top: 12%; }
 /* 말풍선이 아래에 붙어 있으면 단서 창·수첩 끝을 그만큼 더 밀어 올릴 수 있게 — 순찰 일지 03:00 줄이 말풍선 밑에 갇혀
    밀어도 안 보였다. 「단서 확보」 알림은 말풍선이 같은 말을 하니 그동안 숨긴다(일지 줄 위에 떴다). */
-body:has(.tut-tip.dock) .s-modal { padding-bottom: 120px; }
 body:has(.tut-tip.dock) .s-sheet-body { padding-bottom: 140px; }
 body:has(.tut-tip.dock) .s-toast { display: none; }
 /* 단서 창 아래에 글이 더 있으면 창 아래쪽에 붙는 표시(overlays Shell) — 옅은 그림자는 아무도 못 봤다(튜토리얼 2차) */
-.s-modal-more { position: sticky; bottom: 0; margin-top: -30px; height: 30px; display: flex; align-items: flex-end; justify-content: center; pointer-events: none;
-  background: linear-gradient(rgba(0,0,0,0), var(--panel) 75%); color: #ffe9a8; font-size: .76rem; font-weight: 700; padding-bottom: 4px; }
+.s-modal-more { flex: none; height: 26px; display: flex; align-items: center; justify-content: center; pointer-events: none; border-top: 1px solid var(--line);
+  background: var(--panel); color: #ffe9a8; font-size: .76rem; font-weight: 700; }
 /* 단서 창이 열려 있으면 「단서 확보」 알림은 맨 위에 작게 — 사진 윗부분을 덮었다(튜토리얼 1차, 둘). 새벽이슬과 같게 */
-body:has(.s-modal) .s-toast:not(.low) { top: 8px; font-size: .8rem; padding: 6px 12px; }
+body:has(.s-modal) .s-toast, body:has(.s-modal) .s-toast.low { top: 8px; bottom: auto; font-size: .8rem; padding: 6px 12px; }  /* 튜토리얼(.low)에서도 — 창 아래 글과 말풍선 위에 떴다(3차) */
 /* 증거 고르기 — 반박할 말을 세 줄까지, 캐물어 들은 말은 그 아래 흐리게(튜토리얼 2차) */
 .aa-present-q { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 2px 0 6px; color: #e8e4dc; font-size: .84rem; line-height: 1.5; }
 .aa-present-q.press { color: #b9bfcc; font-size: .78rem; -webkit-line-clamp: 2; }
+.aa-present-q.open { -webkit-line-clamp: unset; display: block; }
+.aa-present-q:not(.press) { cursor: pointer; }
+.aa-present-q .more { color: var(--gold); font-size: .76rem; }
 .tut-finale .tf-legend { font-size: .78rem; line-height: 1.8; color: #b9bbc2; background: #0b0d12; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin: -6px 0 16px; text-align: left; }
