@@ -5,6 +5,7 @@
 //     일정표형(ScheduleModal) / 필적대조형(HandwritingModal) / 기본형.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getClue, provider } from '../content.js';
 import { Shell } from '../ui/overlays.jsx';
 import CctvModal from '../../components/CctvModal.jsx';
@@ -20,11 +21,11 @@ function ZoomImg({ src, style }) {
         <img src={src} alt="" style={style} className="s-zoomable" onClick={(e) => { e.stopPropagation(); setBig(true); }} />
         <span className="s-zoom-badge" aria-hidden>🔍 눌러서 크게</span>
       </span>
-      {big && (
-        <div className="s-phone-zoom" onClick={(e) => { e.stopPropagation(); setBig(false); }}>
+      {/* 단서 창 안에 띄우면 튜토리얼 말풍선이 그림 위에 겹치고, 그림이 거의 안 커졌다(2차 시험) — 화면 맨 위에 띄운다 */}
+      {big && createPortal(
+        <div className="s-img-zoom" onClick={(e) => { e.stopPropagation(); setBig(false); }}>
           <img src={src} alt="" /><div className="pz-cap">눌러서 닫기</div>
-        </div>
-      )}
+        </div>, document.body)}
     </>
   );
 }
@@ -35,14 +36,18 @@ function ZoomImg({ src, style }) {
 //   쪽 안에 숨은 단서(unlocks)는 그 쪽이 화면에 보일 때만 들어온다 — 끝까지 내려 본 사람만 찾는 맛은 지킨다.
 function PageStack({ pages, collectedSet, onCollect }) {
   const refs = useRef([]);
+  // 관찰자는 처음 연 순간에 만들어진다 — 그때의 onCollect 를 그대로 쓰면 「문서를 열며 얻은 그 문서」가 빠진
+  //   옛 목록으로 덮어써, 끝까지 읽은 사람의 성경책이 「안 조사」로 돌아갔다(2026-10-20 튜토리얼 2차 시험 셋 모두).
+  const cbRef = useRef(onCollect);
+  cbRef.current = onCollect;
   useEffect(() => {
     const want = pages.map((pg, i) => (pg.unlocks && !collectedSet.has(pg.unlocks) ? i : -1)).filter((i) => i >= 0);
     if (!want.length) return undefined;
-    if (typeof IntersectionObserver === 'undefined') { want.forEach((i) => onCollect(pages[i].unlocks)); return undefined; }
+    if (typeof IntersectionObserver === 'undefined') { want.forEach((i) => cbRef.current(pages[i].unlocks)); return undefined; }
     const io = new IntersectionObserver((ents) => ents.forEach((e) => {
       if (!e.isIntersecting) return;
       const u = pages[+e.target.dataset.i]?.unlocks;
-      if (u) onCollect(u);
+      if (u) cbRef.current(u);
       io.unobserve(e.target);
     }), { threshold: 0.5 });
     want.forEach((i) => refs.current[i] && io.observe(refs.current[i]));

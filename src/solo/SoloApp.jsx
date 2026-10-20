@@ -91,7 +91,13 @@ export default function SoloApp() {
     const stripped = autos.filter((a) => gamsikCodes.has(a.code) && !codes.includes(a.code) && !collectedSet.has(a.code));
     stripped.forEach((a) => set.delete(a.code));
     const kept = autos.filter((a) => !stripped.includes(a));
-    update({ collected: [...set] });
+    // 직전 목록 위에 더한다 — 오래된 화면이 부른 collect 가 그 사이 얻은 단서를 지우지 않게
+    setState((p) => {
+      const merged = new Set(p.collected);
+      set.forEach((cd) => merged.add(cd));
+      stripped.forEach((a) => { if (!p.collected.includes(a.code)) merged.delete(a.code); });
+      return { ...p, collected: [...merged] };
+    });
     const c = codes.length > 1 ? { title: codes.map((cd) => getClue(cd)?.title || cd).join(' · ') } : getClue(code);
     const newSpecials = kept.filter((a) => a.code !== code && getClue(a.code)?.type === '특수');
     const extra = newSpecials.length

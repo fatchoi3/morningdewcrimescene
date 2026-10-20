@@ -394,7 +394,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     : openTopic ? (topicHasMore ? '위에서 고르거나 「↩ 다른 이야기」' : '「↩ 다른 이야기」로 돌아가세요')
     // 튜토리얼 마지막 — 질문지로 돌아오면 안내가 그냥 사라져, 셋 모두 글자 없는 🚪 를 짐작으로 눌렀다(튜토리얼 시험).
     //   말풍선으로 띄우면 질문지 아래를 덮어서, 대사창 안내 줄과 빛나는 「🚪 마치기」로 알린다.
-    : tutEnd ? '🎓 튜토리얼 끝! 더 물어봐도 되고, 다 됐으면 「🚪 마치기」'
+    : tutEnd ? <span className="aa-hint-tut">🎓 튜토리얼 끝! 더 물어봐도 되고, 다 됐으면 「🚪 마치기」</span>
     : (hasAsks ? '위 목록에서 질문이나 이야깃거리를 고르세요' : '');
 
   return (
@@ -518,7 +518,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                       ? `「${tutTopic.q}」 — 이 이야기를 꺼내 보세요`
                       : `「${statements.find((x) => x.id === tutT.stId)?.q || '이 질문'}」 — 이 질문을 고르세요` })
             : (line
-              ? { targetSel: '.aa-dialogue', text: tutHit ? '반응을 끌어냈다! 진짜로 깰 수 있는 거짓말에는 ⚖ 표시가 붙는다 — 탭해서 넘기세요' : '대사창을 탭해 이야기를 넘기세요' }
+              ? { targetSel: '.aa-dialogue', text: tutHit ? '반응을 끌어냈다! 진짜로 깰 수 있는 거짓말에는 「⚖ 저울」 표시가 붙는다 — 탭해서 넘기세요' : '대사창을 탭해 이야기를 넘기세요' }
               : cur
                 ? (canPress
                   ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }

@@ -18,7 +18,7 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   const [box, setBox] = useState(null);
   // 건너뛰기는 두 번 눌러야 — 말풍선 속 글줄이 누를 대상(사람 그림) 위에 올 때 그냥 지나가다 눌러 튜토리얼이 꺼졌다
   const [skipArm, setSkipArm] = useState(false);
-  useEffect(() => { if (!skipArm) return undefined; const id = setTimeout(() => setSkipArm(false), 3000); return () => clearTimeout(id); }, [skipArm]);
+  useEffect(() => { if (!skipArm) return undefined; const id = setTimeout(() => setSkipArm(false), 6000); return () => clearTimeout(id); }, [skipArm]);
   const skip = (e) => { e.stopPropagation(); if (skipArm) onSkip(); else setSkipArm(true); };
   useEffect(() => {
     let raf;
@@ -89,7 +89,7 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   // 화살표는 말풍선이 대상 바로 옆에 붙을 때만 — 판을 비켜 서면 엉뚱한 모서리를 가리켰다
   const arrow = place === 'below' ? tipTop === hy + hh + 6 : place === 'above' ? vy === hy : false;
   const cx = rect.x + rect.w / 2;
-  const half = Math.min(230, W * 0.44); // 말풍선 반폭 — 화면 밖으로 안 나가게 클램프
+  const half = Math.min(300, W * 0.47); // 말풍선 반폭 — 최대폭 94vw 의 절반. 0.44 면 폭 375 에서 왼쪽이 3px 잘렸다
   const tipLeft = Math.min(Math.max(cx, half + 8), W - half - 8);
   const capShift = tipLeft - cx; // 캡션만 화면 안으로 밀고, 화살표는 타깃 중심을 가리키게 유지
   // 건너뛰기는 말풍선 안에 — 따로 띄우면 단계 이름·심문 제목·대사창 단추를 덮었다
