@@ -888,3 +888,5 @@ body:has(.tut-tip.dock) .s-toast { display: none; }
   linear-gradient(rgba(0,0,0,0), var(--panel) 70%) center bottom / 100% 44px no-repeat local,
   linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.75)) center bottom / 100% 36px no-repeat scroll,
   var(--panel); }
+/* 단서 창이 열려 있으면 「단서 확보」 알림은 맨 위에 작게 — 사진 윗부분을 덮었다(튜토리얼 1차, 둘). 새벽이슬과 같게 */
+body:has(.s-modal) .s-toast:not(.low) { top: 8px; font-size: .8rem; padding: 6px 12px; }

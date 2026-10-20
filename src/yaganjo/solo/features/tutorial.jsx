@@ -18,7 +18,7 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   const [box, setBox] = useState(null);
   // 건너뛰기는 두 번 눌러야 — 말풍선 속 글줄이 누를 대상(사람 그림) 위에 올 때 그냥 지나가다 눌러 튜토리얼이 꺼졌다
   const [skipArm, setSkipArm] = useState(false);
-  useEffect(() => { if (!skipArm) return undefined; const id = setTimeout(() => setSkipArm(false), 3000); return () => clearTimeout(id); }, [skipArm]);
+  useEffect(() => { if (!skipArm) return undefined; const id = setTimeout(() => setSkipArm(false), 6000); return () => clearTimeout(id); }, [skipArm]);
   const skip = (e) => { e.stopPropagation(); if (skipArm) onSkip(); else setSkipArm(true); };
   useEffect(() => {
     let raf;
