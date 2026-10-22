@@ -337,8 +337,10 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
               {app.type === 'photos' && (
                 <div className="s-phone-photos">
                   {(app.photos || []).map((ph, i) => (
-                    <button key={i} className="pph" onClick={() => ph.image && setZoom(ph)}>
+                    // 「최근 삭제된 항목」 사진은 그렇다고 보여 준다 — 공문과 지운 초안이 구분 없이 나란해 제목과 본문이 어긋나 보였다(14회차)
+                    <button key={i} className={`pph${ph.deleted ? ' deleted' : ''}`} onClick={() => ph.image && setZoom(ph)}>
                       {ph.image ? <img src={ph.image} alt="" /> : <div className="pph-no">사진</div>}
+                      {ph.deleted && <span className="pph-del">🗑 최근 삭제된 항목</span>}
                       <div className="pph-cap">{ph.caption}</div>
                     </button>
                   ))}

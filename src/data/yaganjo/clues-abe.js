@@ -92,8 +92,8 @@ export const cluesABE = {
             {
               name: '아내',
               messages: [
-                { from: 'me', text: '오늘도 늦어. 먼저 자요', time: '어제 21:4x' },
-                { from: 'them', text: '조심히 다녀와요', time: '어제 21:4x' },
+                { from: 'me', text: '오늘도 늦어. 먼저 자요', time: '어제 21:42' },
+                { from: 'them', text: '조심히 다녀와요', time: '어제 21:43' },
                 { from: 'them', text: '[사진] 담요에 싸인 아기', time: '어제 22:1x' },
                 { from: 'them', text: '오늘 두 시간 잤어요', time: '어제 22:1x' },
               ],
@@ -205,9 +205,9 @@ export const cluesABE = {
             {
               name: '준영이',
               messages: [
-                { from: 'me', text: '점검한대 미친', time: '어제 22:5x' },
-                { from: 'them', text: '뭔 점검', time: '어제 22:5x' },
-                { from: 'me', text: '몰라 하나씩 부른대 나 낼 시험인데', time: '어제 22:5x' },
+                { from: 'me', text: '점검한대 미친', time: '어제 22:51' },
+                { from: 'them', text: '뭔 점검', time: '어제 22:51' },
+                { from: 'me', text: '몰라 하나씩 부른대 나 낼 시험인데', time: '어제 22:52' },
               ],
             },
           ],
@@ -328,7 +328,7 @@ export const cluesABE = {
               name: '여자친구',
               messages: [
                 { from: 'me', text: '오늘 결과 나온대', time: '어제' },
-                { from: 'them', text: '이번엔 된대?', time: '어제 22:5x' },
+                { from: 'them', text: '이번엔 된대?', time: '어제 22:56' },
               ],
             },
           ],

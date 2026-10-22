@@ -115,8 +115,9 @@ export default function SoloApp() {
     want.forEach((c) => set.add(c));
     soloContent.computeAutoUnlocked(set);
     for (const g of gamsikCodes) if (!collectedSet.has(g) && !(state.labReq || []).includes(g)) set.delete(g);
-    addCollected(set);
-    showToast(`🗂 본사 서버 기록 대조 ${want.length}건 도착 — 수첩에서 확인하세요`);
+    // 알림은 카드 이름 그대로, 카드엔 🆕 — 「본사 서버 기록 대조」로 찾으면 0건이었다(카드는 「기록 대조 — ○○」, 14회차 셋 다)
+    addCollected(set, { labNew: [...new Set([...(state.labNew || []), ...want])] });
+    showToast(`🗂 「기록 대조 — ○○」 ${want.length}장 도착 — 수첩 📓 의 🆕 카드`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progressStage, state.collected.length]);
 
@@ -189,12 +190,14 @@ export default function SoloApp() {
 
   // ── 중간 사건 — 1차 심문(6인)을 마치면 부검 소견이 도착한다 ────────────────
   if (!state.eventSeen && !state.admin && progressStage >= 2 && !suspectId) {
-    return <EventVN onDone={() => update({ eventSeen: true })} />;
+    // 컷신이 끝나면 지도로 — 마지막 심문을 한 방으로 돌아와 「2장」이 어디서 시작하는지 헷갈렸다(14회차)
+    return <EventVN onDone={() => { setSceneId(null); setSuspectId(null); update({ eventSeen: true }); }} />;
   }
 
   // ── 2차 사건 — 모든 조사·1차 심문이 끝나(2차 개방) 정밀 부검 결과(LONS-62)가 도착 ──
-  if (state.eventSeen && !state.event2Seen && !state.admin && progressStage >= 3 && !suspectId && !sceneId) {
-    return <EventVN2 hasTumbler={collectedSet.has('IJEO-08')} onDone={() => { collect(soloContent.autopsyCode); update({ event2Seen: true }); }} />;
+  //   방 안에서도 띄운다 — 지도에서만 띄우자, 방으로 나와 인물을 다시 누르면 2차 부검 없이 2차 심문이 열렸다(14회차)
+  if (state.eventSeen && !state.event2Seen && !state.admin && progressStage >= 3 && !suspectId) {
+    return <EventVN2 hasTumbler={collectedSet.has('IJEO-08')} onDone={() => { collect(soloContent.autopsyCode); setSceneId(null); update({ event2Seen: true }); }} />;
   }
 
   // ── 메인(허브/장면/용의자) ────────────────────────────────────────────────
@@ -306,11 +309,11 @@ export default function SoloApp() {
             //   (화면엔 '딱히 물을 게 없다'는 중립 문구만 뜨는데 몰래 깎이면 억울하게 쫓겨난다)
             onPresent={(stId, code, silent = false) => {
               const confessed = (state.broke?.[suspectId] || []).some((e) => e.confess);
-              const r = presentOn(suspectId, stId, code, confessed);
+              const r = presentOn(suspectId, stId, code, confessed, state.stUnlocked?.[suspectId] || []);
               if (r.result === 'contradict') {
                 const bk = { ...(state.broke || {}) };
                 const cur = bk[suspectId] || [];
-                if (!cur.some((e) => e.id === stId)) bk[suspectId] = [...cur, { id: stId, text: r.text, confess: !!r.confess }];
+                if (!cur.some((e) => e.id === stId)) bk[suspectId] = [...cur, { id: stId, text: r.text, confess: !!r.confess, code }];
                 const patch = { broke: bk };
                 if (r.unlock) { const u = { ...(state.stUnlocked || {}) }; u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])]; patch.stUnlocked = u; }
                 update(patch);

@@ -154,7 +154,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   // 단서 한 줄의 상태 — ❗아직 안 물음 · ✔물어봄 · ✅이걸로 모순을 짚음
   const cKey = (c) => {
     const tgt = clueTargetIn(statements, c.code);
-    const done = tgt && tgt.kind === 'contradict' && brokeOf(tgt.stId);
+    // ✅ 는 이 단서로 깼을 때만 — 같은 대답을 다른 단서로 깨면 내민 적 없는 카드에도 ✅ 가 붙었다(14회차). 옛 저장(code 없음)은 그대로.
+    const bk = tgt && tgt.kind === 'contradict' ? brokeOf(tgt.stId) : null;
+    const done = !!bk && (!bk.code || bk.code === c.code);
     return { done, asked: askedCodes.includes(c.code) };
   };
   const cRank = (c) => { const k = cKey(c); return k.done ? 2 : k.asked ? 1 : 0; };
@@ -200,10 +202,12 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const keyLeft = questionBreakdown(sid, state, phase).key;
   // 캐물은 뒤에는 첫 대답 아래에 캐물어 들은 말을 함께 둔다 — 반박 안내가 뜰 때 첫 대답만 떠서
   //   무엇을 반박하는지 헷갈렸다(튜토리얼 3차, 셋 다).
-  const restText = (st) => (st && typeof st.press === 'string' && pressedIds.includes(st.id) ? `${st.text}
-
-— 더 캐묻자 —
-${st.press}` : st?.text);
+  const restText = (st) => {
+    const pressed = st && typeof st.press === 'string' && pressedIds.includes(st.id) ? `\n\n— 더 캐묻자 —\n${st.press}` : '';
+    // 깬 대답이면 밝혀낸 말도 함께 — 모순을 짚은 뒤에도 원래 대답만 남아 무엇을 밝혔는지 다시 볼 곳이 없었다(14회차)
+    const broken = st && bk && bk.id === st.id && bk.text ? `\n\n— 모순을 짚자 —\n${bk.text}` : '';
+    return st ? `${st.text}${pressed}${broken}` : st?.text;
+  };
   const dlgText = line ? line.text
     : cur ? restText(cur)
     : openTopic ? (leftInTopic > 0
@@ -491,7 +495,7 @@ ${st.press}` : st?.text);
             ? { label: '✅ 모순', onClick: () => setLine({ text: `${bk.text}\n(이미 짚은 모순이다.)`, kind: 'break' }) }
             // 「✕ 취소」 — '반박'을 붙이면 이 상태에서만 폭이 22px 늘어 줄바꿈된다.
             //   피커가 화면을 덮고 있어 무엇을 취소하는지는 이미 보인다.
-            : { label: picker ? '✕ 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPeek(null); setPicker((p) => !p); } }),
+            : { label: picker ? '✕ 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPeek(null); setPPerson(null); setPicker((p) => !p); } }),  // 열 때마다 「전체」로 — 앞의 인물 거르기가 남아 찾던 카드가 없었다(14회차)
           cur && { label: openTopic ? '↩ 이 이야기로' : '↩ 다른 질문', onClick: toMenu },
           !cur && openTopic && { label: '↩ 다른 이야기', onClick: () => { setLine(null); setOpenTopicId(null); } },
           // 분량 대부분이 이 화면인데 20ms/자를 끊을 방법이 화면 탭뿐이었다 — 엄지 자리에도 둔다.
@@ -544,7 +548,7 @@ ${st.press}` : st?.text);
             ? <p style={{ color: 'var(--muted)', fontSize: '.85rem', padding: '4px 2px' }}>이 인물과 관련된 단서가 아직 없습니다. 현장·대화로 단서를 더 모으세요.</p>
             : <>
                 {/* 인물 칩 — 줄을 넘겨 감싼다(가로로 밀게 두니 오른쪽 끝이 잘려 못 눌렀다, 2026-10-07) */}
-                <p style={{ color: 'var(--muted)', fontSize: '.74rem', margin: '0 2px 8px' }}>이 사람의 말과 얽힌 단서와 이 사람의 소지품만 보여요.</p>
+                <p style={{ color: 'var(--muted)', fontSize: '.74rem', margin: '0 2px 8px' }}>이 사람이 반응할 단서만 — 남의 물건·증언도 이 사람 말과 얽히면 올라와요. ❗ 아직 안 댄 것 · ✔ 대 본 것 · ✅ 이 단서로 이미 깬 것</p>
                 {presentPersons.length > 1 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>
                     <button style={chipStyle(!pPerson)} onClick={() => setPPerson(null)}>전체 {presentable.length}</button>

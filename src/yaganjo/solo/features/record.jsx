@@ -66,7 +66,8 @@ function ClueGroups({ clues, onOpen, fresh = [] }) {
   const [q, setQ] = useState('');
   const ft = FILTERS.find((x) => x.id === f);
   const qn = q.trim().replace(/\s+/g, '');
-  const hit = (c) => !qn || `${c.title}${c.person || ''}`.replace(/\s+/g, '').includes(qn);
+  // 제목·인물에 더해 설명 첫 줄까지 — 알림에서 본 낱말(「기록 대조」 「본사 서버」)로 찾아도 나오게
+  const hit = (c) => !qn || `${c.title}${c.person || ''}${c.description || c.desc || ''}`.replace(/\s+/g, '').includes(qn);
   const shown = (ft?.test ? clues.filter(ft.test) : clues).filter(hit);
   const groups = {};
   shown.forEach((c) => { (groups[c.person || '공용'] ||= []).push(c); });
@@ -75,7 +76,7 @@ function ClueGroups({ clues, onOpen, fresh = [] }) {
     <>
       {clues.length === 0 && <p style={{ color: 'var(--muted)' }}>아직 단서가 없습니다. 현장을 조사하세요.</p>}
       {fresh.length > 0 && (
-        <p className="s-fresh-note">🆕 새로 도착한 감식 결과 {fresh.length}건 — 아래 🆕 카드를 열어 보세요</p>
+        <p className="s-fresh-note">🆕 새로 도착한 카드 {fresh.length}장(감식 결과·기록 대조) — 아래 🆕 카드를 열어 보세요</p>
       )}
       {clues.length > 12 && (
         // 누르면 앞 글자 전체 선택(새 검색어가 앞 글자 뒤에 붙었다) · 지우기 단추를 크게(기본 ✕ 는 작아 못 찾았다) — 13회차

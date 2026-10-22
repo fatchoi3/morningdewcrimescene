@@ -40,8 +40,9 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
 
   const brokeIds = new Set(broke.map((e) => e.id));
   // 이 사람의 거짓을 이미 깬 증거 — 심문에서 그 진술을 무너뜨린 코드들
+  //   2차 심문에서 깬 것만 — 튜토리얼에서 깬 순찰 일지가 ✅ 로 맨 위에 서서, 둘이 그 카드부터 내고 졌다(14회차)
   const usedCodes = new Set((DATA[CONFRONT.culprit]?.statements || [])
-    .filter((s) => brokeIds.has(s.id) && s.contradict)
+    .filter((s) => brokeIds.has(s.id) && s.contradict && s.phase === 2)
     .flatMap((s) => s.contradict.codes || [s.contradict.code]));
   // 깼으면 deny · 깨지 않았어도 03:16 인정을 들었으면(TST-H) denyAdmitted · 둘 다 아니면 denyBefore
   const admitted = clues.some((c) => c.code === 'TST-H');
@@ -59,6 +60,8 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
 
   // 틀린 증거의 종류(감식·증언·⭐)에 따라 받아치는 말 — 늘 같은 한 줄이라 무엇이 틀렸는지 몰랐다(9회차)
   const wrongLineOf = (code) => {
+    // 자주 내는 오답은 그 카드에 맞춰 왜 아닌지 — 빈 일지를 내고 「아무것도 증명하지 못합니다」만 듣자 억울했다(14회차)
+    if (CONFRONT.wrongByCode?.[code]) return CONFRONT.wrongByCode[code];
     const c = clues.find((x) => x.code === code);
     const kind = soloContent.gamsikCodes?.has(code) ? '감식' : c?.type;
     return CONFRONT.wrongBy?.[kind] || CONFRONT.wrongLine;
@@ -83,7 +86,8 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   // 「거의 맞았다」 — 그 자리의 증거지만 그 사람을 직접 가리키지는 않는다. 방향은 맞다고 한 줄 붙인다
   //   엉뚱한 증거면 무엇이 필요한지 한 줄 — 「아무것도 증명하지 못합니다」만 두 번 듣고 기준을 몰랐다(2026-10-08 시험)
   const note = beat.kind === 'near' ? '(수사 노트) 방향은 맞다 — 다만 이것만으로는 그를 가리키지 못한다.'
-    : beat.kind === 'wrong' && left > 0 ? '(수사 노트) 필요한 건 그를 범행 시각에 묶는 증거다 — 그 자리에 있었다는 것, 또는 그 시각의 말이 거짓이라는 것. 심문에서 이미 그를 무너뜨린 증거(✅)도 다시 내밀 수 있다.'
+    // 「그 시각의 말이 거짓」은 빈 일지(말과 안 맞는 빈 칸)를 부르는 말이었다(14회차) — 「기록이 그를 어디에 세우는가」로
+    : beat.kind === 'wrong' && left > 0 ? `(수사 노트) 필요한 건 그 시각 그가 어디서 무엇을 했는지 보여 주는 기록이다 — 동쪽으로 들어간 기록, 또는 03:24에 그가 2층에서 한 일의 기록. 빈 칸이나 없는 기록은 그를 어디에도 세우지 못한다.${usedCodes.size > 0 ? ' 2차 심문에서 그를 무너뜨린 증거(✅)도 다시 내밀 수 있다.' : ''}`
       : null;
   const proved = beat.kind === 'accept' || beat.kind === 'note';
 
@@ -115,10 +119,10 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
         <div className="aa-present" onClick={(e) => e.stopPropagation()}>
           <div className="aa-present-h">
             {/* 정답 둘 중 하나(03:24 태블릿 조회)는 현장이 아니라 그 시각의 거짓말을 깨는 증거다 — 「그 자리」만 말하자 현장 증거만 찾았다(13회차) */}
-            <span>⚖️ <b>그를 범행 시각에 묶는 증거</b> — 그 자리에 있었거나, 그 시각의 말이 거짓이라는 증거 한 장 · 남은 기회 {left}</span>
+            <span>⚖️ <b>그 시각 그가 어디서 무엇을 했는지 보여 주는 기록</b> 한 장 · 남은 기회 {left}</span>
           </div>
           {usedCodes.size > 0 && (
-            <p className="cf-used-note">✅ — 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요.</p>
+            <p className="cf-used-note">✅ — 2차 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요.</p>
           )}
           {persons.length > 1 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>

@@ -269,7 +269,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
         <div className="hall-hud-btns">
           {admin && <span className="s-admin-chip">ADMIN</span>}
           <button data-tut="record-btn" className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord} style={{ position: 'relative' }}>📓
-            {(state?.labNew || []).length > 0 && <span className="s-alert" style={{ position: 'absolute', top: -4, right: -4 }} title="새 감식 결과">{state.labNew.length}</span>}
+            {(state?.labNew || []).length > 0 && <span className="s-alert" style={{ position: 'absolute', top: -4, right: -4 }} title="새로 도착한 카드">{state.labNew.length}</span>}
           </button>
           <MenuButton onOpen={onOpenMenu} />
         </div>

@@ -190,21 +190,33 @@ export const DATA = resolveTokens({
         soft: { 'TLBI-94': '(화면에서 눈을 뗀다) …「빨리 와」요. 제가 좀 늦는 줄 아셨나 봐요. 22시 30분에 찍었다니까요.' },
         contradict: { codes: ['DRZS-30', 'ZFDP-41', 'CWZR-46', 'MKYI-94', 'TST-K'],
           text: '…제가 늦었습니다. 뒷문으로 들어왔어요. 23시 40분쯤에요. 태그는… 제가 부탁했습니다. 아주머니는 제가 온 줄 아셨고요.',
-          unlock: 'late', confess: true } },
+          unlock: 'late', confess: true },
+        // 「23시 40분 뒷문」을 한 번 털어놓은 뒤에는 나머지 둘도 같은 사실로 닫힌다 — 자백 직후에도 「정문으로」 「조회 때 있었다」를
+        //   되풀이하고, 깰 때마다 같은 자백이 세 번까지 나왔다(14회차, 둘). ⚖ 도 지운다(contradict: null).
+        after: { when: 'late', text: '…아까 말씀드렸잖아요. 23시 40분쯤 뒷문으로 들어왔어요.', press: '(고개를 숙인다) …그게 다예요. 아주머니는 잘못 없어요.', contradict: null },
+      },
       { id: 'assembly', say: '거짓', needs: ['CWZR-46', 'TST-K', 'MKYI-94'], q: '22:40 조회 때 어디 계셨습니까?',
         text: '조회요? …있었는데요. 뒤에 서 있었습니다.',
         press: '(빠르게) 뒤쪽이라 잘 안 보이셨을 거예요. 말씀도 다 들었어요. 감사 나온다고…',
         soft: { 'TLBI-94': '(화면을 보다가 말이 빨라진다) …22시 45분요. 그건 아주머니가 그냥 보내신 거예요. 저 그때 뒤에… 아니, 그러니까요.' },
         contradict: { codes: ['DRZS-30', 'CWZR-46'],
           text: '…제가 늦었습니다. 뒷문으로 들어왔어요. 23시 40분쯤에요. 태그는… 제가 부탁했습니다. 아주머니는 제가 온 줄 아셨고요.',
-          unlock: 'late', confess: true } },
+          unlock: 'late', confess: true },
+        // 「23시 40분 뒷문」을 한 번 털어놓은 뒤에는 나머지 둘도 같은 사실로 닫힌다 — 자백 직후에도 「정문으로」 「조회 때 있었다」를
+        //   되풀이하고, 깰 때마다 같은 자백이 세 번까지 나왔다(14회차, 둘). ⚖ 도 지운다(contradict: null).
+        after: { when: 'late', text: '…아까 말씀드렸잖아요. 23시 40분쯤 뒷문으로 들어왔어요.', press: '(고개를 숙인다) …그게 다예요. 아주머니는 잘못 없어요.', contradict: null },
+      },
       { id: 'door', say: '거짓', needs: ['TST-K', 'CWZR-46', 'MKYI-94'], q: '센터에는 어느 문으로 들어오셨습니까?',
         text: '정문으로 들어왔습니다.',
         press: '(말이 빨라진다) 정문이요. 다들 정문으로 들어오잖아요. 뒷문은 쓰는 사람 없어요.',
         contradict: { codes: ['ZFDP-41', 'CWZR-46', 'TST-K'],
           textBy: { 'CWZR-46': '…네. 정문이 아니었어요. 뒷문으로 들어왔어요. 23시 40분쯤에요. D 작업대 옆으로 해서요. 태그는 제가 부탁했습니다. 아주머니는 제가 온 줄 아셨고요.' },
           text: '…23시 40분쯤요. …네. 뒷문으로 들어왔어요. D 작업대 옆으로 해서요. 태그는 제가 부탁했습니다. 아주머니는 제가 온 줄 아셨고요.',
-          unlock: 'late', confess: true } },
+          unlock: 'late', confess: true },
+        // 「23시 40분 뒷문」을 한 번 털어놓은 뒤에는 나머지 둘도 같은 사실로 닫힌다 — 자백 직후에도 「정문으로」 「조회 때 있었다」를
+        //   되풀이하고, 깰 때마다 같은 자백이 세 번까지 나왔다(14회차, 둘). ⚖ 도 지운다(contradict: null).
+        after: { when: 'late', text: '…아까 말씀드렸잖아요. 23시 40분쯤 뒷문으로 들어왔어요.', press: '(고개를 숙인다) …그게 다예요. 아주머니는 잘못 없어요.', contradict: null },
+      },
       { id: 'late', say: '사실', hidden: true, q: '왜 늦으셨습니까?',
         text: '시험 기간이었어요. 버스를 늦게 탔습니다. 뒤 주차장에 내렸는데, 정문으로 가면 찍히잖아요. 그래서 뒷문 앞에서 기다렸다가 들어왔어요. …아주머니는 잘못 없어요. 제가 부탁한 거예요.',
         press: '아주머니는 「나중에」라고만 하셨어요. 사람들 앞이라서요. …그 뒤로 말을 못 붙였습니다.' },
@@ -978,7 +990,9 @@ export function visibleStatements(sid, collected = [], unlocked = [], phase = 1)
 //   돌아가던 것(시트 「바꾼 뒤에는 되돌아가지 않는다」, 6회차 #2).
 function voiced(s, open) {
   if (!s || !s.after || !open.has(s.after.when)) return s;
-  return { ...s, text: s.after.text ?? s.text, press: s.after.press ?? s.press };
+  return { ...s, text: s.after.text ?? s.text, press: s.after.press ?? s.press,
+    // contradict: null — 밝힌 뒤에는 더 깰 거짓이 없다(⚖·반박 대상에서 빠진다)
+    ...(s.after.contradict === null ? { contradict: undefined } : {}) };
 }
 export function pressOf(sid, stId, unlocked = []) {
   const s = voiced(stOf(sid, stId), new Set(unlocked));
@@ -1014,8 +1028,14 @@ function usedInOtherStatement(sid, stId, code) {
 /** 증거 제시 → { result: 'contradict'|'soft'|'offtopic'|'wrong', text, unlock?, confess?, grants? }
  *  우선순위: (진술별) 모순 > 진술별 반응 > (인물 단위) 대질 반응 > 다른 진술 몫 > 무관. stId=null이면 인물 반응만.
  *  confessed=true(이미 관여 자백)면 인물 반응에 afterConfess 변형이 있으면 인정 톤으로 대체. */
-export function presentOn(sid, stId, code, confessed = false) {
-  const s = stOf(sid, stId);
+export function presentOn(sid, stId, code, confessed = false, unlocked = []) {
+  const raw = stOf(sid, stId);
+  const s = voiced(raw, new Set(unlocked));
+  // 이미 털어놓은 사실로 닫힌 거짓(after.contradict: null)에 그 증거를 다시 대면 — 같은 자백을 또 하지 않고 「아까 말씀드렸다」로
+  if (raw && s && raw.contradict && !s.contradict) {
+    const rawCodes = raw.contradict.codes || [raw.contradict.code];
+    if (rawCodes.includes(code)) return { result: 'soft', text: s.text };
+  }
   if (s) {
     const codes = s.contradict ? (s.contradict.codes || [s.contradict.code]) : [];
     if (codes.includes(code)) {

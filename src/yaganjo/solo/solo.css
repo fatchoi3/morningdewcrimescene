@@ -909,3 +909,5 @@ body:has(.s-modal) .s-toast, body:has(.s-modal) .s-toast.low { top: 8px; bottom:
 .s-clue-empty { color: var(--muted); font-size: .86rem; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 2px; }
 .s-zone-lab.crowd { opacity: 0 !important; }
 .s-zone:hover ~ .s-zone-lab.crowd, .s-zone:focus-visible ~ .s-zone-lab.crowd { opacity: 1 !important; z-index: 5; }
+.pph { position: relative; }
+.pph-del { position: absolute; left: 6px; top: 6px; background: #3a1d1dcc; color: #ffc9c0; font-size: .68rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; pointer-events: none; }
