@@ -63,6 +63,9 @@ const chipStyle = (on) => ({
   fontSize: '.74rem', fontWeight: 700, padding: '5px 11px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
 });
 
+// 이번 접속에서 이미 인사를 들은 사람 — 다시 들어오면 바로 질문지로
+const GREETED = new Set();
+
 // ── 용의자 심문 (방 안 대화형 — 질문/단서 고르기 → 대답 → 캐묻기/반박) ─────────
 //   화면 문법: 하단 바 없음 · 대사창 우측 하단=이 화면에서 할 것(반박·다른 질문·수첩·나가기).
 //   수첩(📓)만은 다른 화면과 달리 우측 상단이 아니라 대사창 액션행에 둔다 —
@@ -70,7 +73,10 @@ const chipStyle = (on) => ({
 export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, onTutorialSeen, onAsked, onAskedClue, onAskedTopic, onPress, onPresent, onOpenRecord, onExit, onSkipTutorial, onLog, tutorialTarget }) {
   const [curId, setCurId] = useState(null); // 지금 붙잡고 있는 질문(진술 id) — null = 질문 목록
   // 대사창 오버라이드: { text, kind } — 진입 시 인사말(1차/2차 다름)부터
-  const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
+  // 초기값 함수에서 표시를 남기면 개발 모드(초기값 함수를 두 번 부른다)에서 첫 방문 인사까지 사라진다 — 표시는 효과에서
+  const greetKey = suspect ? `${suspect.id}:${phase}` : '';
+  const [line, setLine] = useState(() => (suspect && !GREETED.has(greetKey) ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
+  useEffect(() => { if (greetKey) GREETED.add(greetKey); }, [greetKey]);
   const [picker, setPicker] = useState(false);
   const [pPerson, setPPerson] = useState(null); // 반박 시트 인물 필터 — null = 전체
   const [pKind, setPKind] = useState(null);     // 반박 시트 종류 필터 — null = 전체
@@ -263,7 +269,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const missNote = (st) => {
     const n = (missRef.current[st.id] = (missRef.current[st.id] || 0) + 1);
     const canBreak = (st.contradict?.codes || []).some((c) => collected.includes(c));
-    if (canBreak || n < (st.missHint ? 1 : 2)) return '';
+    // 깰 단서를 이미 쥐었는데 못 찾는 사람 — ⚖ 의 뜻을 짚어 준다(세린 「11분의 공백」에서 손등만 두 번, 15회차)
+    if (canBreak) return n >= 2 ? `${NL}${st.missHint || '(수사 노트) 이 대답을 깰 단서는 지금 수첩에 있다 — ⚖ 표시가 그 뜻이다. 수첩의 단서를 이 말과 하나씩 맞대 보자.'}` : '';
+    if (n < (st.missHint ? 1 : 2)) return '';
     // 진술이 방향을 갖고 있으면 그걸 — 「조카예요」는 아는 사람이 따로 있고, 서지안의 「들어가지 않았다」는 심문이 아니라
     //   대질에서 묶인다. 셋이 같은 자리에서 막혔다(2026-10-12 11회차).
     return `${NL}${st.missHint || '(수사 노트) 이 대답을 깰 증거는 아직 손에 없는 것 같다 — 다른 곳을 더 조사하고 다시 오자.'}`;
@@ -284,6 +292,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     } else if (r.result === 'soft') {
       setLine({ text: (r.text || '') + grantNote(r) + missNote(cur), kind: 'soft' });
       log(`${qLabel(cur)} ← 📁 ${ctitle}`, r.text, 'soft');
+    } else if (r.result === 'offtopic' && (cur.contradict?.codes || []).some((c) => collected.includes(c))) {
+      // ⚖ 대답 앞에서 「⚖ 붙은 대답을 찾아라」고 하면 안내가 거짓이 된다(다영 「종현의 방엔 왜?」에 라벨지, 15회차)
+      setLine({ text: '(…그 얘기라면 지금 이 대답에 꺼낼 게 아닌 것 같다.)' + NL + '(수사 노트) 이 대답을 깰 단서는 따로 있다 — 수첩에 이미 있다(⚖).' + missNote(cur), kind: 'note' });
     } else if (r.result === 'offtopic') {
       // 이 인물의 다른 진술에서 쓰이는 '정답 증거'를 자리만 잘못 짚은 것 — 화낼 일도 감점할 일도 아니다.
       //   흔들림·angry 표정 없이 수사 노트로 알려준다(SoloApp 은 'wrong' 일 때만 신뢰도를 깎는다).
@@ -393,7 +404,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const dlgAdvance = line ? advance : (cur && canPress) ? doPress : undefined;
   const tutEnd = tutorialSeen && !state.tutFinaleSeen;
   const dlgHint = line ? '탭하여 계속 ▶'
-    : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : '거짓이다 싶으면 「📁 반박」 · 「↩ 다른 질문」으로 나간다')
+    : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : (openTopic ? '거짓이다 싶으면 「📁 반박」 · 「↩ 이 이야기로」 돌아간다' : '거짓이다 싶으면 「📁 반박」 · 「↩ 다른 질문」으로 나간다'))
     : openTopic ? (topicHasMore ? '위에서 고르거나 「↩ 다른 이야기」' : '「↩ 다른 이야기」로 돌아가세요')
     // 튜토리얼 마지막 — 질문지로 돌아오면 안내가 그냥 사라져, 셋 모두 글자 없는 🚪 를 짐작으로 눌렀다(튜토리얼 시험).
     //   말풍선으로 띄우면 질문지 아래를 덮어서, 대사창 안내 줄과 빛나는 「🚪 마치기」로 알린다.
@@ -418,9 +429,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       </TopHud>
 
       {/* 상반신 프레이밍 — 인물을 크게 그리고 하반신은 대사창 뒤로 잠기게(역전재판식) */}
+      {/* 「관여 자백」은 살인에 관여했다는 뜻으로 읽혔다(2026-10-08 시험) — 숨긴 일을 털어놓았다는 뜻이다.
+          인물 머리 위에 두면 얼굴을 가리고 반박 시트에 걸려 「자 백」으로 잘렸다(15회차) — 왼쪽 위 장소 칩 아래로, 시트가 열리면 숨긴다 */}
+      {confessed && !picker && <div className="aa-court-tag aa-court-corner">⚖️ 숨긴 일 자백</div>}
       <div className={`aa-room-fig bust${speaking && speakerName ? ' talking' : ''}`}>
-        {/* 「관여 자백」은 살인에 관여했다는 뜻으로 읽혔다(2026-10-08 시험) — 숨긴 일을 털어놓았다는 뜻이다 */}
-        {confessed && <div className="aa-court-tag">⚖️ 숨긴 일 자백</div>}
         <StandingFigure sid={sid} person={suspect.name} image={suspect.image} height={620} fallbackSize={160} mood={mood} />
       </div>
 

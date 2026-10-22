@@ -610,7 +610,7 @@ button { font-family: inherit; }
 .cctv-modal { position: relative; width: 100%; max-width: 460px; background: #161a21; border: 1px solid #333b48; border-radius: 18px; padding: 18px; box-shadow: 0 30px 80px rgba(0,0,0,.55); animation: slideUp .2s ease; }
 .cctv-titlebar { color: #e6e9ef; font-weight: 700; font-size: 1.05rem; margin-bottom: 12px; letter-spacing: .02em; }
 .cctv-timebar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-.cctv-time { border: 1px solid #333b48; background: #222834; color: #9aa4b4; border-radius: 8px; padding: 6px 10px; font-size: .78rem; font-family: monospace; cursor: pointer; transition: background .12s ease, color .12s ease; }
+.cctv-time { border: 1px solid #333b48; background: #222834; color: #9aa4b4; border-radius: 8px; padding: 7px 11px; font-size: .9rem; font-family: monospace; cursor: pointer; transition: background .12s ease, color .12s ease; }
 .cctv-time.active { background: #4a90e2; border-color: #4a90e2; color: #fff; }
 .cctv-screen { position: relative; background: radial-gradient(circle at 50% 40%, #1c2733 0%, #0b0f14 100%); border: 1px solid #2a3340; border-radius: 10px; padding: 14px; min-height: 240px; overflow: hidden; }
 .cctv-osd { position: absolute; left: 12px; right: 12px; display: flex; justify-content: space-between; font-family: monospace; font-size: .72rem; color: #7fe0a0; text-shadow: 0 0 6px rgba(127,224,160,.4); pointer-events: none; }
@@ -623,8 +623,8 @@ button { font-family: inherit; }
 .cctv-room--victim { fill: #241d2b; stroke: #6a5570; }
 .cctv-hall { fill: #10161e; stroke: #3a4858; stroke-width: 1.2; }
 .cctv-door rect { fill: #2b3543; stroke: #55657a; stroke-width: 1; }
-.cctv-room-label text { fill: #c3cdda; font-size: 12px; font-weight: 700; text-anchor: middle; }
-.cctv-map-note { fill: #8a98aa; font-size: 10px; text-anchor: middle; }
+.cctv-room-label text { fill: #c3cdda; font-size: 14px; font-weight: 700; text-anchor: middle; }
+.cctv-map-note { fill: #a3b0c2; font-size: 13px; text-anchor: middle; }
 .cctv-wall { fill: url(#cctvWall); stroke: #4a5a6e; stroke-width: 1; }
 .cctv-wall-label { fill: #7d8a9c; font-size: 9px; font-weight: 700; text-anchor: middle; }
 .cctv-map-cam { fill: #e6e9ef; font-size: 9px; font-weight: 700; text-anchor: middle; }
@@ -646,7 +646,7 @@ button { font-family: inherit; }
 .cctv-flash { margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: .85rem; line-height: 1.45; }
 .cctv-flash.ok { background: rgba(92,184,92,.15); border: 1px solid rgba(92,184,92,.5); color: #aee5b0; }
 .cctv-flash.no { background: rgba(217,83,79,.15); border: 1px solid rgba(217,83,79,.5); color: #f0b3b0; }
-.cctv-help { margin: 12px 0 0; font-size: .74rem; color: #9aa4b4; text-align: center; }
+.cctv-help { margin: 12px 0 0; font-size: .84rem; color: #b4bdca; text-align: center; }
 
 /* 허브 복도 — 전체 이미지가 잘림 없이 보이는 contain 박스(프레임 없음, 6개 방문 모두 표시) */
 .hall-fit { position: absolute; inset: 0; margin: auto; width: min(100%, calc(100dvh * 16 / 9)); aspect-ratio: 16 / 9; max-height: 100%; }
@@ -655,7 +655,7 @@ button { font-family: inherit; }
 .hall-hud { position: absolute; top: 0; left: 0; right: 0; z-index: 8; display: flex; align-items: flex-start; justify-content: space-between; padding: 10px 12px; gap: 8px; pointer-events: none; }
 .hall-hud-chip { pointer-events: auto; background: #0b0d12c2; border: 1px solid #ffffff1f; border-radius: 12px; padding: 7px 12px; backdrop-filter: blur(4px); max-width: 62vw; }
 .hall-hud-chip b { display: block; color: var(--gold); font-size: .82rem; }
-.hall-hud-chip span { display: block; color: var(--muted); font-size: .7rem; margin-top: 2px; }
+.hall-hud-chip span { display: block; color: #b9b6ad; font-size: .78rem; margin-top: 2px; }
 .hall-hud-chip span.hall-objective { color: #ffe9a8; font-size: .74rem; font-weight: 700; margin-top: 5px; padding-top: 5px; border-top: 1px solid #ffffff1f; }
 /* 메인 복도 CCTV — 단서 아님, 클릭 시 독백 안내 */
 .hall-cctv { position: absolute; transform: translate(-50%, -50%); background: #000000b3; border: 1px solid #ffffff33; border-radius: 8px; padding: 2px 7px; font-size: 1.05rem; line-height: 1.2; cursor: pointer; z-index: 8; box-shadow: 0 0 0 2px #e0585833; }
@@ -776,7 +776,7 @@ button { font-family: inherit; }
 .aa-ask { padding-bottom: 22px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); }
 /* 지목까지 몇 단계 */
 .hall-steps { display: flex; gap: 4px; margin-top: 6px; }
-.hall-steps i { font-style: normal; font-size: .64rem; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: #ffffff10; color: var(--muted); border: 1px solid #ffffff1c; white-space: nowrap; }
+.hall-steps i { font-style: normal; font-size: .72rem; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: #ffffff10; color: var(--muted); border: 1px solid #ffffff1c; white-space: nowrap; }
 .hall-steps i.done { color: #9fd6a2; border-color: #9fd6a255; }
 .hall-steps i.now { color: #1a1a1a; background: var(--gold); border-color: var(--gold); }
 .hall-accuse small { display: block; font-size: .66rem; font-weight: 700; opacity: .85; }
@@ -829,7 +829,7 @@ button { font-family: inherit; }
 .s-tl2-ev { margin-top: 4px; font-size: .74rem; line-height: 1.7; color: var(--muted); }
 .s-tl2-ev span { display: inline-block; margin: 0 6px 2px 0; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line); }
 .s-tl2-ev span.got { color: #a6d9a8; border-color: #4f7a52; }
-.s-tl2-ev span.miss { opacity: .65; }
+.s-tl2-ev span.miss { color: #e0b27a; border-color: #7a5a35; }  /* 흐리기만 해선 안 보였다(15회차) */
 /* 그림 눌러 크게 */
 .s-zoomable { cursor: zoom-in; }
 /* 사건 파일 제출 단추 — 화면 아래에 붙는다 */
@@ -884,3 +884,13 @@ body:has(.tut-tip.dock:not(.mid)) .s-toast { display: none; }
 .tut-big { font-size: 1.6em; line-height: 1; vertical-align: -2px; }
 .tut-cap.nudge { animation: tutnudge .45s ease; }
 @keyframes tutnudge { 0%, 100% { transform: translateX(var(--cap-x, 0)); } 25% { transform: translateX(calc(var(--cap-x, 0) - 7px)); } 75% { transform: translateX(calc(var(--cap-x, 0) + 7px)); } }
+/* 자백 배지 — 왼쪽 위 장소 칩 아래(15회차) */
+.aa-court-corner { position: absolute; top: 52px; left: 12px; z-index: 7; white-space: nowrap; }
+/* 폰 창이 열려 있으면 알림은 아래로 — 폰 제목을 덮었다(15회차) */
+body:has(.s-phone) .s-toast { top: auto; bottom: calc(28px + env(safe-area-inset-bottom)); }
+/* CCTV 창은 폰 폭에서 위에 붙인다 — 시각을 누르면 아래 패널이 생겨 창 전체가 위아래로 움직였다(15회차) */
+@media (max-width: 640px) { .modal-overlay:has(.cctv-modal) { align-items: flex-start; } }
+/* 대질 증거 목록 끝 — 「증거를 고르세요」 막대가 마지막 줄을 덮었다(15회차) */
+.aa-present:has(.cf-actions) .s-grid { padding-bottom: 64px; }
+/* 여러 쪽 문서 — 아직 안 본 쪽 */
+.s-page-unread { position: sticky; bottom: -16px; margin: 8px -16px -16px; padding: 10px 16px; background: #241f14f2; border-top: 1px solid var(--gold); color: #ffe9a8; font-size: .82rem; font-weight: 700; text-align: center; }

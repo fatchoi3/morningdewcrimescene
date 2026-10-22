@@ -8,14 +8,14 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getClue, provider } from '../content.js';
 import { Shell } from '../ui/overlays.jsx';
+import { recoverHintFor } from '../../data/recoverHints.js';
 import CctvModal from '../../components/CctvModal.jsx';
 
 const PAGE_IMG_H = 170;   // 그림이 있는 쪽·없는 쪽의 높이를 맞추려고 늘 잡아 두는 자리
 
-// ── 눌러서 크게 보는 그림 — 회계 장부·통장 사진의 작은 글씨를 못 읽었다(2026-10-14 14회차) ──
-function ZoomImg({ src, style }) {
-  const [big, setBig] = useState(false);
-  // 두 손가락으로 키우고 한 손가락으로 끈다. 화면 폭에 맞추기만 해선 원래 그림이 이미 화면 폭이라 커지지 않았다(튜토리얼 3차 시험 셋)
+// ── 크게 보기 창 — 두 손가락으로 키우고 한 손가락으로 끈다. 단서 창 그림과 폰 사진(통장)이 같이 쓴다.
+//   화면 폭에 맞추기만 해선 원래 그림이 이미 화면 폭이라 커지지 않았다(튜토리얼 3차 시험 셋), 통장 글씨는 2~3px(15회차).
+function ZoomOverlay({ src, caption, onClose }) {
   const [tf, setTf] = useState({ s: 1.6, x: 0, y: 0 });
   const ptrs = useRef(new Map());
   const gest = useRef(null);
@@ -25,30 +25,36 @@ function ZoomImg({ src, style }) {
     const p = ptrs.current.get(e.pointerId); if (!p) return;
     const pts = [...ptrs.current.values()];
     if (pts.length >= 2) {
-      const [a, b] = pts; const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      const [q1, q2] = pts; const dist = Math.hypot(q1.x - q2.x, q1.y - q2.y);
       if (!gest.current) gest.current = { dist, s: tf.s };
-      const s = Math.min(6, Math.max(1, gest.current.s * dist / gest.current.dist));
-      setTf((t) => ({ ...t, s }));
+      const sc = Math.min(6, Math.max(1, gest.current.s * dist / gest.current.dist));
+      setTf((t) => ({ ...t, s: sc }));
     } else {
       setTf((t) => ({ ...t, x: t.x + (e.clientX - p.x), y: t.y + (e.clientY - p.y) }));
     }
     moved.current += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y);
     ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
   };
-  const onUp = (e) => { ptrs.current.delete(e.pointerId); gest.current = null; if (ptrs.current.size === 0 && moved.current < 8) setBig(false); };
+  const onUp = (e) => { ptrs.current.delete(e.pointerId); gest.current = null; if (ptrs.current.size === 0 && moved.current < 8) onClose(); };
+  return createPortal(
+    <div className="s-img-zoom" onClick={(e) => e.stopPropagation()}
+      onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+      <img src={src} alt="" draggable={false} style={{ transform: `translate(${tf.x}px, ${tf.y}px) scale(${tf.s})` }} />
+      <div className="pz-cap">{caption ? `${caption} · ` : ''}두 손가락으로 키우고 끌어 보세요 · 눌러서 닫기</div>
+    </div>, document.body);
+}
+
+// ── 눌러서 크게 보는 그림 — 회계 장부·통장 사진의 작은 글씨를 못 읽었다(2026-10-14 14회차) ──
+function ZoomImg({ src, style }) {
+  const [big, setBig] = useState(false);
   return (
     <>
       <span className="s-zoom-wrap">
         <img src={src} alt="" style={style} className="s-zoomable" onClick={(e) => { e.stopPropagation(); setBig(true); }} />
         <span className="s-zoom-badge" aria-hidden>🔍 눌러서 크게</span>
       </span>
-      {/* 단서 창 안에 띄우면 튜토리얼 말풍선이 그림 위에 겹치고, 그림이 거의 안 커졌다(2차 시험) — 화면 맨 위에 띄운다 */}
-      {big && createPortal(
-        <div className="s-img-zoom" onClick={(e) => e.stopPropagation()}
-          onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
-          <img src={src} alt="" draggable={false} style={{ transform: `translate(${tf.x}px, ${tf.y}px) scale(${tf.s})` }} />
-          <div className="pz-cap">두 손가락으로 키우고 끌어 보세요 · 눌러서 닫기</div>
-        </div>, document.body)}
+      {/* 단서 창 안에 띄우면 튜토리얼 말풍선이 그림 위에 겹쳤다(2차 시험) — 화면 맨 위에 띄운다 */}
+      {big && <ZoomOverlay src={src} onClose={() => setBig(false)} />}
     </>
   );
 }
@@ -63,6 +69,16 @@ function PageStack({ pages, collectedSet, onCollect }) {
   //   옛 목록으로 덮어써, 끝까지 읽은 사람의 성경책이 「안 조사」로 돌아갔다(2026-10-20 튜토리얼 2차 시험 셋 모두).
   const cbRef = useRef(onCollect);
   cbRef.current = onCollect;
+  // 본 쪽 — 다 보기 전엔 아래에 「아직 안 본 쪽」을 붙인다(세린 성경책 마지막 쪽 그림을 놓치고 심문에서 먼저 들었다, 15회차)
+  const [seen, setSeen] = useState(() => new Set([0]));
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return undefined;
+    const io2 = new IntersectionObserver((ents) => ents.forEach((e) => {
+      if (e.isIntersecting) setSeen((o) => (o.has(+e.target.dataset.i) ? o : new Set([...o, +e.target.dataset.i])));
+    }), { threshold: 0.4 });
+    refs.current.forEach((el) => el && io2.observe(el));
+    return () => io2.disconnect();
+  }, [pages]);
   // 「아래로 밀어」 안내는 실제로 넘칠 때만 — 한 화면에 다 들어가는 3쪽 다이어리에도 붙었다(튜토리얼 3차 시험)
   const [more, setMore] = useState(false);
   useEffect(() => {
@@ -95,6 +111,7 @@ function PageStack({ pages, collectedSet, onCollect }) {
           <div className="s-detail">{pg.content}</div>
         </section>
       ))}
+      {more && seen.size < pages.length && <div className="s-page-unread">📖 아직 안 본 쪽이 있어요 ({seen.size}/{pages.length}) — 아래로 밀어 보세요</div>}
     </>
   );
 }
@@ -205,18 +222,19 @@ function WalletModal({ clue, onClose }) {
 //   펼침을 목록 아래가 아니라 누른 줄 바로 밑에 둔다 — 방금 고른 줄이 발밑에서 밀려나지 않게.
 function ScheduleModal({ clue, title, onClose }) {
   const entries = clue.schedule?.entries || [];
-  const [open, setOpen] = useState(null);
+  const [open, setOpen] = useState(() => new Set((clue.schedule?.entries || []).map((_, i) => i)));
+  const toggle = (i) => setOpen((o) => { const n = new Set(o); if (n.has(i)) n.delete(i); else n.add(i); return n; });
   return (
     <Shell title={title} onClose={onClose}>
       <p className="s-detail" style={{ marginBottom: 10 }}>{clue.detail || '면담 일정을 눌러 내용을 확인하세요.'}</p>
       {entries.map((e, i) => (
         <div key={i}>
-          <button className="s-topic" style={{ display: 'flex', alignItems: 'center', gap: 10 }} onClick={() => setOpen(open === i ? null : i)}>
+          <button className="s-topic" style={{ display: 'flex', alignItems: 'center', gap: 10 }} onClick={() => toggle(i)}>
             <span style={{ color: 'var(--gold)', fontWeight: 700, flex: 'none' }}>{e.time}</span>
             <span style={{ flex: 1, minWidth: 0 }}>{e.person} · {e.title}</span>
-            <span style={{ color: 'var(--muted)', flex: 'none' }}>{open === i ? '▾' : '›'}</span>
+            <span style={{ color: 'var(--muted)', flex: 'none' }}>{open.has(i) ? '▾' : '›'}</span>
           </button>
-          {open === i && <div className="s-qa"><div className="s-detail">{e.content || '면담 내용이 따로 기재되어 있지 않다.'}</div></div>}
+          {open.has(i) && <div className="s-qa"><div className="s-detail">{e.content || '면담 내용이 따로 기재되어 있지 않다.'}</div></div>}
         </div>
       ))}
     </Shell>
@@ -261,11 +279,8 @@ function HandwritingModal({ clue, title, collectedSet, onClose }) {
 const PHONE_APP_ICON = { contacts: '📇', kakao: '💬', sms: '✉️', calls: '📞', browser: '🌐', photos: '🖼️', gallery: '🖼️', messages: '✉️' };
 // 문자(sms)는 카톡과 같은 chats 구조라 대화 UI를 그대로 쓴다. 전화(calls)는 통화 기록.
 const isChatApp = (t) => t === 'kakao' || t === 'sms';
-// 톡서랍 복구 힌트 — 폰마다 비번의 출처가 달라, 이미 막힌 사람을 엉뚱한 데로 보내면 안 된다.
-// 목사 폰만 생일이 아니라 결혼기념일이고, 그 날짜는 목사님 일기장 뒷장에만 적혀 있다.
-const recoverHint = (clue) => (clue.person === '목사'
-  ? '생일이 아닙니다 — 목사님 일기장을 끝까지 넘겨, 잊은 적 없다는 기념일을 찾아보세요'
-  : '상대의 생일 4자리 — 다이어리를 찾아보세요');
+// 톡서랍 복구 힌트 — QR 앱과 같은 표(src/data/recoverHints.js). 솔로만 따로 적어 두었다가 지안 폰을 엉뚱한 데로 보냈다(15회차).
+const recoverHint = (code) => recoverHintFor(code);
 function PhoneModal({ code, clue, onClose }) {
   const apps = clue.phone.apps || [];
   const [appId, setAppId] = useState(null);   // null = 홈 화면
@@ -383,7 +398,7 @@ function PhoneModal({ code, clue, onClose }) {
                     <div className="kkr-lock">🔒 삭제된 대화</div>
                     <div className="kkr-desc">톡서랍 복구 비밀번호가 필요합니다.</div>
                     {/* 실마리는 처음부터 — 세 번 틀린 뒤에만 떠서 복구 방법을 끝내 몰랐다(2026-10-01 시험) */}
-                    <div className="kkr-hint">🔑 실마리: {recoverHint(clue)}</div>
+                    <div className="kkr-hint">🔑 실마리: {recoverHint(code)}</div>
                     <div className="s-pw"><input value={pw} onChange={(e) => setPw(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="복구 비밀번호 4자리" inputMode="numeric" maxLength={4} /><button className="s-btn sm" onClick={tryRecover}>복구</button></div>
                     {msg && <div className="kkr-err">{msg}</div>}
                   </div>
@@ -423,11 +438,7 @@ function PhoneModal({ code, clue, onClose }) {
           </>
         )}
       </div>
-      {zoom && (
-        <div className="s-phone-zoom" onClick={(e) => { e.stopPropagation(); setZoom(null); }}>
-          <img src={zoom.image} alt="" /><div className="pz-cap">{zoom.caption}</div>
-        </div>
-      )}
+      {zoom && <ZoomOverlay src={zoom.image} caption={zoom.caption} onClose={() => setZoom(null)} />}
     </div>
   );
 }

@@ -243,7 +243,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
           ]
         },
         {
-          time: '10:20',
+          time: '10:20~24',
           location: '목사님 방 앞 복도',
           scene: '한 인물이 목사님 방 쪽 복도에 나타나 방 방향으로 갔다가, 잠시 뒤 다시 나타나 자기 방 쪽으로 돌아간다.',
           people: [
@@ -294,7 +294,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
           ]
         },
         {
-          time: '12:40',
+          time: '12:40~41',
           location: '목사님 방 앞 복도',
           scene: '한 인물이 음료를 들고 목사님 방 방향으로 갔다가, 잠시 뒤 빈손으로 다시 나타나 자기 방 쪽으로 돌아간다.',
           people: [
@@ -456,7 +456,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'TQPA-93': { //
     title: '쉐이크 통',
     description: '목사님 책상 위에서 발견되었다.',
-    detail: '{{S1.short}}의 것으로 보이는 쉐이크 통이다. 내용물이 있다.',
+    detail: '{{S1.short}}의 것으로 보이는 쉐이크 통이다. 마시다 남은 내용물이 조금 있다.',
     image: '/images/쉐이크통.jpg',
     type: '보통',
     person: '목사'
@@ -1656,7 +1656,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'LWFJ-99': { // 방 — 라벨 없는 약봉투
     title: '약봉투',
     description: '{{S2.short}}의 가방에서 발견되었다.',
-    detail: '텔미사르탄 (Telmisartan), 발사르탄 (Valsartan) ,트윈스타, 엑스포지, 카르베디롤 등이 적혀 있다. 약국에서 처방받은 약 봉투이다. 약만 보고 어떤 약인지 모르겠다.',
+    detail: '암로디핀(Amlodipine), 텔미사르탄(Telmisartan), 카르베디롤(Carvedilol)이 적혀 있다. 약국에서 처방받은 약 봉투이다. 약만 보고 어떤 약인지 모르겠다.',
     image: '/images/처방약.jpg',
     type: '보통',
     person: '{{S2}}'
@@ -1886,7 +1886,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'PEDR-58': {
     title: '소아과 진료 영수증',
     description: '',
-    detail: '{{S6.short}}의 지갑에서 나온 소아과 진료 영수증. "○○소아과의원 · 6월 28일" 발행. 환아 이름 칸은 접혀서 흐릿하고, 보호자 란에 "{{S6}}"이 적혀 있다.',
+    detail: '{{S6.short}}의 책상 위, 지갑 옆에 놓여 있던 소아과 진료 영수증. "○○소아과의원 · 6월 28일" 발행. 환아 이름 칸은 접혀서 흐릿하고, 보호자 란에 "{{S6}}"이 적혀 있다.',
     image: '/images/소아과영수증.jpg',
     type: '보통',
     person: '{{S6}}'

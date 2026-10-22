@@ -14,6 +14,7 @@
 //   잠근 것은 카드가 아니라 숫자이므로, 폰을 탁자에 펴 둬도 숫자를 아는 사람만 연다.
 import { evidenceMap as publicMap } from '../data/gameData.js';
 import { mergeSecrets } from '../data/mergeSecrets.js';
+import { recoverHintFor } from '../data/recoverHints.js';
 import secrets from '@secrets';
 
 const evidenceMap = mergeSecrets(publicMap, secrets);
@@ -28,11 +29,7 @@ const APP_ICON = { contacts: '📇', kakao: '💬', sms: '✉️', calls: '📞'
 const isChat = (t) => t === 'kakao' || t === 'sms';
 // 폰마다 복구 비번의 출처가 다르다. 세 번 틀린 사람에게만 알려 준다 — 난이도를 미리 낮추지 않는다.
 // 네 자리마다 나온 곳이 다르다. 셋을 한 문장으로 뭉뚱그리면 한 대는 없는 곳을 가리킨다.
-const RECOVER_HINT = {
-  'LWUY-33': '생일이 아닙니다 — 목사님 일기장을 끝까지 넘겨, 잊은 적 없다는 기념일을 찾아보세요',
-  'YJWR-74': '생일이 아닙니다 — 교단에 낸 그 수료증의 발급번호, 그 뒤 네 자리입니다. 수료증 사진은 목사님 휴대폰 사진첩에 있습니다',
-};
-const recoverHint = () => RECOVER_HINT[code] || '상대의 생일 네 자리 — 그 사람의 다이어리를 찾아보세요';
+const recoverHint = () => recoverHintFor(code); // 표는 솔로와 함께 쓴다(src/data/recoverHints.js)
 
 const root = document.getElementById('clue-root');
 const code = decodeURIComponent(location.hash.replace(/^#/, '')).trim().toUpperCase();

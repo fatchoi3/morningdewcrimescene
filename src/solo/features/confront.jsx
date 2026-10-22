@@ -57,7 +57,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   const again = left > 0 ? `▶ 한 번 더 내민다 (남은 기회 ${left})` : '▶ 탭하여 다음';
   const retry = () => (left > 0 ? setPicking(true) : setBeat({ kind: 'fail', code: beat.code }));
   const LINES = {
-    deny: { speaker: who?.name, text: deny, hint: '▶ 증거를 내민다', next: () => setPicking(true) },
+    deny: { speaker: who?.name, text: deny, hint: '탭하거나 「📁 증거를 내민다」', next: () => setPicking(true), act: { label: '📁 증거를 내민다', tone: 'key', onClick: () => setPicking(true) } },
     press: { speaker: '수사관', text: CONFRONT.press?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'accept', code: beat.code }) },
     accept: { speaker: who?.name, text: (CONFRONT.accept[beat.code] || '') + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
     note: { speaker: '수사 노트', text: CONFRONT.noteBy?.[beat.code] || CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
@@ -95,7 +95,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
       )}
       {!picking && (
         <DialogueBox ref={dlgRef} speaker={line.speaker} text={note ? `${body}\n${note}` : body}
-          onAdvance={line.next} onTyping={setSpeaking} hint={line.hint} />
+          onAdvance={line.next} onTyping={setSpeaking} hint={line.hint} actions={line.act ? [line.act] : undefined} />
       )}
       {picking && (
         <div className="aa-present" onClick={(e) => e.stopPropagation()}>
