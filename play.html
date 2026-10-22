@@ -52,6 +52,12 @@
       .resume { position: absolute; top: 12px; right: 12px; z-index: 1; font-size: .74rem; font-weight: 700; padding: 4px 10px;
         border-radius: 999px; background: rgba(11,13,18,.82); border: 1px solid var(--gold); color: var(--gold); }
       .resume[hidden] { display: none; }
+      /* 진행 중인 사건 — 「이어서 하기」와 「처음부터」를 따로(13회차: 「새 사건」 꼬리표가 붙은 카드를 눌렀더니 묻지 않고 3장으로 들어갔다) */
+      .story.inprog .chip.fresh { display: none; }
+      .restart { display: none; margin-left: 8px; font: inherit; font-size: .86rem; font-weight: 700; color: var(--text); background: rgba(11,13,18,.82);
+        border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px; cursor: pointer; }
+      .story.inprog .restart { display: inline-flex; }
+      .story.locked .restart { display: none; }
       @media (prefers-reduced-motion: reduce) { .story { transition: none; } .story:hover { transform: none; } }
       /* 잠긴 사건 — 카드는 보이되 들어가지 못한다 */
       .story.locked { cursor: default; filter: grayscale(.75) brightness(.7); }
@@ -90,7 +96,7 @@
         <div class="body">
           <p class="title">새벽이슬</p>
           <p class="sub">수련회에서 벌어진 죽음 — 당신은 수사관입니다</p>
-          <div class="meta"><span class="chip">교회 수련회</span><span class="chip">용의자 6명</span><span class="chip">첫 번째 사건</span></div>
+          <div class="meta"><span class="chip">교회 수련회</span><span class="chip">용의자 6명</span><span class="chip fresh">첫 번째 사건</span></div>
           <span class="go">사건 맡기 →</span>
         </div>
       </a>
@@ -101,7 +107,7 @@
         <div class="body">
           <p class="title">야간조</p>
           <p class="sub">심야 물류센터에서 벌어진 죽음 — 당신은 수사관입니다</p>
-          <div class="meta"><span class="chip">심야 물류센터</span><span class="chip">용의자 6명</span><span class="chip">새 사건</span></div>
+          <div class="meta"><span class="chip">심야 물류센터</span><span class="chip">용의자 6명</span><span class="chip fresh">새 사건</span></div>
           <span class="go">사건 맡기 →</span>
         </div>
       </a>
@@ -122,7 +128,21 @@
       document.querySelectorAll('[data-save]').forEach(function (card) {
         try {
           var s = JSON.parse(localStorage.getItem(card.getAttribute('data-save')) || 'null');
-          if (s && s.started && !s.submitted) card.querySelector('.resume').hidden = false;
+          if (s && s.started && !s.submitted) {
+            card.querySelector('.resume').hidden = false;
+            card.classList.add('inprog');
+            card.querySelector('.go').textContent = '이어서 하기 →';
+            // 「처음부터」 — 이 사건의 저장만 지우고 들어간다(묻고 나서). 카드 링크(a) 안이라 링크로 넘어가지 않게 막는다
+            var b = document.createElement('button');
+            b.type = 'button'; b.className = 'restart'; b.textContent = '처음부터';
+            b.addEventListener('click', function (e) {
+              e.preventDefault(); e.stopPropagation();
+              if (!confirm('지금까지의 진행을 지우고 처음부터 시작할까요?')) return;
+              try { localStorage.removeItem(card.getAttribute('data-save')); } catch (err) { /* 못 지워도 들어간다 */ }
+              location.href = card.getAttribute('href');
+            });
+            card.querySelector('.go').after(b);
+          }
         } catch (e) { /* 저장을 못 읽어도 고르기는 된다 */ }
       });
 

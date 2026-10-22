@@ -13,11 +13,12 @@
 //   node tools/playtest/play.mjs <이름> pinch <in|out>   두 손가락으로 오므리기/벌리기
 //   node tools/playtest/play.mjs <이름> type <글>         글자를 친다(입력칸이 눌려 있어야 한다)
 //   node tools/playtest/play.mjs <이름> stop             브라우저를 닫는다
+//   start 는 그 이름의 브라우저 기록을 비우고 새 판으로 연다(이어서 하려면 --keep)
 //   사진과 상태는 tools/playtest/.runs/<이름>/ 에 쌓인다(저장소에 올리지 않는다).
 // ─────────────────────────────────────────────────────────────────────────────
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync, openSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -72,10 +73,10 @@ const LIST_JS = `(() => {
 })()`;
 
 // ── 상주 조종기 ────────────────────────────────────────────────────────────
-async function serve(url, port) {
+async function serve(url, port, profile) {
   const { default: puppeteer } = await import('file:///C:/ictk_repo/morningdewcrimescene/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js');
   const browser = await puppeteer.launch({
-    executablePath: CHROME, headless: true, userDataDir: path.join(dir, 'profile'),
+    executablePath: CHROME, headless: true, userDataDir: profile || path.join(dir, 'profile'),
     args: ['--no-first-run', '--no-default-browser-check', `--window-size=${W},${H}`, '--hide-scrollbars'],
     defaultViewport: { width: W, height: H, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },
   });
@@ -153,18 +154,31 @@ const send = async (c, a) => {
 };
 
 if (cmd === 'serve') {
-  await serve(args[0], +args[1]);
+  await serve(args[0], +args[1], args[2]);
 } else if (cmd === 'start') {
   const url = args[0] || 'http://localhost:5180/solo-play';
+  // 새 판은 새 브라우저 기록으로 — 같은 이름을 다시 쓰면 옛 저장(localStorage)을 이어받아 3장 한가운데서 시작했다
+  //   (2026-10-20 야간조 13회차: 첫 시도가 끊긴 뒤 같은 이름으로 다시 돌린 둘). 이어서 하려면 start <주소> --keep.
+  //   기록 폴더를 지우지 않고 매번 새 폴더를 쓴다 — 닫힌 직후의 크롬이 폴더를 쥐고 있어 지우기가 반쯤 실패했다.
+  //   옛 폴더는 지울 수 있는 것만 치운다.
+  let prev = null;
+  try { prev = JSON.parse(readFileSync(stateFile, 'utf8')).profile || null; } catch { /* 처음 */ }
+  const profile = args.includes('--keep') && prev ? prev : path.join(dir, `profile-${Date.now()}`);
+  try {
+    for (const d of readdirSync(dir)) {
+      const full = path.join(dir, d);
+      if (/^profile(-\d+)?$/.test(d) && full !== profile) { try { rmSync(full, { recursive: true, force: true }); } catch { /* 아직 쥐고 있음 — 다음에 */ } }
+    }
+  } catch { /* 폴더 없음 */ }
   const port = await freePort(portOf(name));
   try { writeFileSync(path.join(dir, 'ready'), ''); } catch { /* 처음 */ }
   const self = fileURLToPath(import.meta.url);
   // 조종기의 오류는 serve.log 로 받는다 — 예전엔 버려서 「못 띄웠다」만 나오고 이유를 알 길이 없었다
   const logFile = path.join(dir, 'serve.log');
   const out = openSync(logFile, 'w');
-  const child = spawn(process.execPath, [self, name, 'serve', url, String(port)], { detached: true, stdio: ['ignore', out, out] });
+  const child = spawn(process.execPath, [self, name, 'serve', url, String(port), profile], { detached: true, stdio: ['ignore', out, out] });
   child.unref();
-  writeFileSync(stateFile, JSON.stringify({ port, pid: child.pid }));
+  writeFileSync(stateFile, JSON.stringify({ port, pid: child.pid, profile }));
   let ok = false;
   for (let i = 0; i < 120 && !ok; i++) { await sleep(250); try { ok = readFileSync(path.join(dir, 'ready'), 'utf8') === String(port); } catch { /* 아직 */ } }
   if (ok) console.log(await send('look', []));
