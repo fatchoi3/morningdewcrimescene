@@ -3,7 +3,7 @@
 //   단서 확보/감식 배달 같은 오케스트레이션만 담당한다.
 //   화면과 기능은 features/·ui/ 로 분리, 순수 규칙/상수는 lib/game.js, 콘텐츠는 content.js.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { cast, t } from '../data/cast.js';
 import {
@@ -52,6 +52,7 @@ export default function SoloApp() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [recordOpen, setRecordOpen] = useState(false);   // 수첩(사건 기록) 오버레이
   const [casefileOpen, setCasefileOpen] = useState(false); // 범인 지목 오버레이
+  const pendingPopup = useRef(null); // 단서 창이 닫히면 띄울 안내창
   const ALL_CODES = useMemo(() => provider.getAllClues().map((c) => c.code), []);
   // 3막 진행도·제출 준비도의 분모 — 콘텐츠에서 세어 온다(숫자를 손으로 적으면 데이터가 늘 때 어긋난다)
   const PHONE_CODES = useMemo(() => provider.getAllClues().filter((c) => c.phone).map((c) => c.code), []);
@@ -112,7 +113,8 @@ export default function SoloApp() {
     if (newSpecials.length && !state.specialTutSeen) {
       const first = getClue(newSpecials[0].code);
       update({ specialTutSeen: true });
-      dlg.popup({
+      // 단서 창 위에 바로 띄우면 창을 덮었다(16회차) — 단서 창이 열려 있으면 닫은 뒤에
+      const show = () => dlg.popup({
         title: '⭐ 추리 단서를 얻었어요!',
         body: (
           <>
@@ -122,6 +124,7 @@ export default function SoloApp() {
           </>
         ),
       });
+      if (modalCode) pendingPopup.current = show; else show();
     }
     return { added: [...codes, ...kept.map((a) => a.code)] };
   }
@@ -208,7 +211,7 @@ export default function SoloApp() {
       + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED}` : '');
   // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
-    : progressStage < 3 ? `목사님 방(현장)에서 단서 ${SCENE_NEEDED}개를 찾으면 2차 심문이 열립니다`
+    : progressStage < 3 ? `목사님 방(현장)의 물건을 ${SCENE_NEEDED}개 이상 조사하면 2차 심문이 열립니다`
     : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요';
   const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
 
@@ -250,7 +253,10 @@ export default function SoloApp() {
             //   (화면엔 '딱히 물을 게 없다'는 중립 문구만 뜨는데 몰래 깎이면 억울하게 쫓겨난다)
             onPresent={(stId, code, silent = false) => {
               const confessed = (state.broke?.[suspectId] || []).some((e) => e.confess);
-              const r = presentOn(suspectId, stId, code, confessed);
+              // 지운 대화를 살리지 않은 폰은 「지운 대화」로 받지 않는다 — 열어 보지도 않은 대화로 깨졌다(16회차)
+              const r = (code === 'YJWR-74' && suspectId === 'S4' && !(state.recovered || []).includes(code))
+                ? { result: 'soft', text: '(휴대폰을 힐끗 본다) …제 휴대폰이요. 보실 거면 보십시오. 숨길 대화는 없습니다.' }
+                : presentOn(suspectId, stId, code, confessed);
               if (r.result === 'contradict') {
                 const bk = { ...(state.broke || {}) };
                 const cur = bk[suspectId] || [];
@@ -354,7 +360,14 @@ export default function SoloApp() {
 
       {modalCode && (
         <ClueModal code={modalCode} collectedSet={collectedSet}
-          onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
+          recovered={state.recovered || []}
+          onRecovered={(c) => {
+            if ((state.recovered || []).includes(c)) return;
+            update({ recovered: [...(state.recovered || []), c] });
+            // 복구한 뒤 「이걸 어디에 쓰라」는 안내가 없어 아무도 안 썼다(16회차, 결정 B·나)
+            showToast(c === 'YJWR-74' ? '🔓 지운 대화를 되살렸다 — 서지안에게 「서류」나 「면담」 얘기를 물을 때 이 폰을 들이대 보자' : '🔓 지운 대화를 되살렸다', 4200);
+          }}
+          onClose={() => { setModalCode(null); const p = pendingPopup.current; pendingPopup.current = null; if (p) setTimeout(p, 250); }} onCollect={collect} onOpen={(c) => setModalCode(c)} />
       )}
       {/* 튜토리얼 중엔 아래로 — 위쪽 코치 말풍선(「✕ 로 닫으세요」)을 덮었다(2026-10-07 시험) */}
       {toast && <div className="s-toast">{toast}</div>}

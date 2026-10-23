@@ -535,7 +535,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
               name: '김민석 형제',
               deleted: true,
               messages: [
-                { from: 'me', text: '민석 형제, 전에 말한 자매 말인데... 좀 걱정이 돼서요.', time: '4일 전' },
+                { from: 'me', text: '민석 형제, 전에 말한 자매 말인데... 상담 때 나한테만 털어놓은 얘기라 조심스럽지만, 좀 걱정이 돼서요.', time: '4일 전' },
                 { from: 'me', text: '{{S6.short|이/}}가 애도 있고, 곧 결혼도 한다더라고요.', time: '4일 전' },
                 { from: 'them', text: '...네? 그게 무슨 말씀이세요. 그 자매가 {{S6}} 회장이라고요?', time: '4일 전' },
                 { from: 'me', text: '민석 형제도 {{S6.short|이/}}를 아시는군요!', time: '4일 전' },
@@ -1092,6 +1092,28 @@ export const evidenceMap = withAssetBase(resolveTokens({
                 { from: 'me', text: '넵 누나! 통 책상에 있어요. 편하게 드세요 ㅎㅎ', time: '오늘 오전 10:24' },
                 { from: 'them', text: 'ㄱㅅㄱㅅ 등산 잘 다녀와~', time: '오늘 오전 10:24' }
               ]
+            },
+            {
+              // 세린 폰의 「종현이」 대화와 짝 — 상대 폰에만 있고 종현 폰엔 없었다(2026-10-22 16회차)
+              name: '{{S6.short}} 누나',
+              messages: [
+                { from: 'them', text: '{{S1.short|아/야}}, 저번에 네가 본 거… 다른 사람들한텐 그냥 비밀로 해줄 수 있지?', time: '4일 전' },
+                { from: 'me', text: '누나 걱정 마세요. 다들 알고 있는 그대로 둘게요.', time: '4일 전' },
+                { from: 'them', text: '고마워. 민석이한테도, 목사님한테도 아직 제대로 말 못 했어.', time: '4일 전' },
+                { from: 'me', text: '네… 근데 누나, 너무 혼자 끙끙 앓지 마요.', time: '4일 전' },
+                { from: 'them', text: '이 얘긴 진짜 둘만 아는 걸로 하자. 약속해줘.', time: '4일 전' },
+                { from: 'me', text: '알겠어요. 약속할게요.', time: '4일 전' }
+              ]
+            },
+            {
+              // 지후 폰의 「막내 종현」 대화와 짝
+              name: '{{S2.short}} 형',
+              messages: [
+                { from: 'them', text: '{{S1.short|아/야}} 요즘 요힘빈 보충제 먹으려는데 어때?', time: '전날 오후 1:30' },
+                { from: 'me', text: '심장 안 좋으면 위험하대여, 형 심장 관련 병 없어요?', time: '전날 오후 1:31' },
+                { from: 'them', text: '나는 괜찮지. 넌 괜찮아?', time: '전날 오후 1:34' },
+                { from: 'me', text: '아 저는 멀쩡해요 ㅋㅋㅋ 감사합니다~!', time: '전날 오후 1:35' }
+              ]
             }
           ]
         },
@@ -1487,13 +1509,13 @@ export const evidenceMap = withAssetBase(resolveTokens({
               name: '서류 봐주시는 분',
               deleted: true,
               messages: [
-                { from: 'me', text: '저번에 해주신 그거요. 발급번호로 조회하면 바로 드러나나요?', time: '3일 전' },
-                { from: 'them', text: '교단 DB 랑 대조하면 걸리죠. 원래 그런 겁니다. 처음에 말씀드렸잖아요.', time: '3일 전' },
-                { from: 'me', text: '목사님이 수련회 끝나면 교단에 직접 알아보시겠대요.', time: '3일 전' },
-                { from: 'them', text: '그건 제가 어떻게 해드릴 수 있는 게 아니에요.', time: '3일 전' },
-                { from: 'me', text: '...조회 전에 일이 정리되면, 굳이 들출 사람은 없겠죠?', time: '3일 전' },
-                { from: 'them', text: '무슨 소리예요. 저한테 그런 말씀 마세요.', time: '3일 전' },
-                { from: 'me', text: '아무것도 아니에요. 신경 쓰지 마세요.', time: '이틀 전', deleted: true }
+                { from: 'me', text: '저번에 해주신 그거요. 발급번호로 조회하면 바로 드러나나요?', time: '전날 오후 8:05' },
+                { from: 'them', text: '교단 DB 랑 대조하면 걸리죠. 원래 그런 겁니다. 처음에 말씀드렸잖아요.', time: '전날 오후 8:06' },
+                { from: 'me', text: '목사님이 수련회 끝나면 교단에 직접 알아보시겠대요.', time: '전날 오후 8:08' },
+                { from: 'them', text: '그건 제가 어떻게 해드릴 수 있는 게 아니에요.', time: '전날 오후 8:09' },
+                { from: 'me', text: '...조회 전에 일이 정리되면, 굳이 들출 사람은 없겠죠?', time: '전날 오후 8:12' },
+                { from: 'them', text: '무슨 소리예요. 저한테 그런 말씀 마세요.', time: '전날 오후 8:13' },
+                { from: 'me', text: '아무것도 아니에요. 신경 쓰지 마세요.', time: '전날 오후 8:20', deleted: true }
               ]
             }
           ]
@@ -1769,7 +1791,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     pages: [
       { title: '6월 27일', content: '가을쯤이면 좋겠다. 언젠간 떳떳하게 말할 날이 오겠지.' },
       { title: '6월 29일', content: '목사님이 따로 보자고 하셨다. 표정이 무거우셨다.\n\n무슨 말씀을 하시려는 걸까. 가슴이 자꾸 내려앉는다.' },
-      { title: '6월 30일', content: '오늘도 정신없이 바빴다. 그래도 해야 할 일은 꼭 해두자. \n\n이제는 전화도 받지 않는다. 누가 무슨 말을 한 걸까. 애써 쌓아 온 것들이 무너지는 것 같다.' }
+      { title: '7월 3일', content: '오늘도 정신없이 바빴다. 그래도 해야 할 일은 꼭 해두자. \n\n이제는 전화도 받지 않는다. 누가 무슨 말을 한 걸까. 애써 쌓아 온 것들이 무너지는 것 같다.' }
     ]
   },
   'TCGA-87': {

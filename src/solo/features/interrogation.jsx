@@ -270,7 +270,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     const n = (missRef.current[st.id] = (missRef.current[st.id] || 0) + 1);
     const canBreak = (st.contradict?.codes || []).some((c) => collected.includes(c));
     // 깰 단서를 이미 쥐었는데 못 찾는 사람 — ⚖ 의 뜻을 짚어 준다(세린 「11분의 공백」에서 손등만 두 번, 15회차)
-    if (canBreak) return n >= 2 ? `${NL}${st.missHint || '(수사 노트) 이 대답을 깰 단서는 지금 수첩에 있다 — ⚖ 표시가 그 뜻이다. 수첩의 단서를 이 말과 하나씩 맞대 보자.'}` : '';
+    if (canBreak) return n >= (st.missHint ? 1 : 2) ? `${NL}${st.missHint || '(수사 노트) ⚖ 는 「이 대답을 깰 단서가 이미 수첩에 있다」는 뜻이다. 반박 창의 다른 종류(감식·증언·CCTV)도 넘겨 보자.'}` : '';
     if (n < (st.missHint ? 1 : 2)) return '';
     // 진술이 방향을 갖고 있으면 그걸 — 「조카예요」는 아는 사람이 따로 있고, 서지안의 「들어가지 않았다」는 심문이 아니라
     //   대질에서 묶인다. 셋이 같은 자리에서 막혔다(2026-10-12 11회차).
@@ -294,11 +294,12 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       log(`${qLabel(cur)} ← 📁 ${ctitle}`, r.text, 'soft');
     } else if (r.result === 'offtopic' && (cur.contradict?.codes || []).some((c) => collected.includes(c))) {
       // ⚖ 대답 앞에서 「⚖ 붙은 대답을 찾아라」고 하면 안내가 거짓이 된다(다영 「종현의 방엔 왜?」에 라벨지, 15회차)
-      setLine({ text: '(…그 얘기라면 지금 이 대답에 꺼낼 게 아닌 것 같다.)' + NL + '(수사 노트) 이 대답을 깰 단서는 따로 있다 — 수첩에 이미 있다(⚖).' + missNote(cur), kind: 'note' });
+      setLine({ text: '(…그 얘기라면 지금 이 대답에 꺼낼 게 아닌 것 같다.)' + NL + '(수사 노트) 이 대답을 깰 단서는 따로 있다 — ⚖ 는 「깰 단서가 이미 수첩에 있다」는 뜻이다. 반박 창의 다른 종류(감식·증언·CCTV)도 넘겨 보자.' + missNote(cur), kind: 'note' });
     } else if (r.result === 'offtopic') {
       // 이 인물의 다른 진술에서 쓰이는 '정답 증거'를 자리만 잘못 짚은 것 — 화낼 일도 감점할 일도 아니다.
       //   흔들림·angry 표정 없이 수사 노트로 알려준다(SoloApp 은 'wrong' 일 때만 신뢰도를 깎는다).
-      setLine({ text: (r.text || '(이 대답에 들이댈 단서는 아니다. 자리를 잘못 짚었다.)') + missNote(cur), kind: 'note' });
+      const head = !cur.contradict && cur.missHint ? '(…그 얘기라면 지금 이 대답에 꺼낼 게 아닌 것 같다.)' : (r.text || '(이 대답에 들이댈 단서는 아니다. 자리를 잘못 짚었다.)');
+      setLine({ text: head + missNote(cur), kind: 'note' });
     } else {
       setShake(true); setTimeout(() => setShake(false), 480);
       const c = getClue(code);
@@ -533,7 +534,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                       ? `「${tutTopic.q}」 — 이 이야기를 꺼내 보세요`
                       : `「${statements.find((x) => x.id === tutT.stId)?.q || '이 질문'}」 — 이 질문을 고르세요` })
             : (line
-              ? { targetSel: '.aa-dialogue', text: tutHit && !tutHitDone ? <>반응을 끌어냈다! 진짜로 깰 수 있는 거짓말에는 <b className="tut-big">⚖</b> 저울 표시가 붙는다 — 탭해서 넘기세요</> : '대사창을 탭해 이야기를 넘기세요' }
+              ? { targetSel: '.aa-dialogue', text: tutHit && !tutHitDone ? <>반응을 끌어냈다! 이 말은 참말이라 모순까진 안 난다 — 진짜로 깰 수 있는 거짓말에는 <b className="tut-big">⚖</b> 저울 표시가 붙는다. 탭해서 넘기세요</> : '대사창을 탭해 이야기를 넘기세요' }
               : cur
                 ? (canPress
                   ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
@@ -584,7 +585,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                           doPresent(c.code);
                         }}>
                         <div className="ck">{clueIcon(c)}</div>
-                        <div className="cn" style={{ fontSize: '.82rem' }}>{k.done ? '✅ ' : k.asked ? '✔ ' : '❗ '}{c.title}</div>
+                        <div className="cn" style={{ fontSize: '.82rem' }}>{k.done ? '✅ ' : k.asked ? '✔ ' : ''}{c.title}</div>
                         <div className="cm">{c.person}</div>
                       </button>
                     );

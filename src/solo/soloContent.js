@@ -23,7 +23,20 @@ const soloOf = (c) => {
   if (pg && Array.isArray(o.pages)) o = { ...o, pages: o.pages.map((p) => (p.title in pg ? { ...p, image: undefined, content: (p.content || '') + pg[p.title] } : p)) };
   return o;
 };
-const byCode = Object.fromEntries(all.map((c) => [c.code, soloOf(c)]));
+// 솔로에서만 글을 바꾸는 단서 — 정본(인쇄물·보드판)과 갈라지므로 여기 한 곳에만 둔다.
+//   손톱 밑 미량 물질: 셋 다 손목시계와 「대질에서야 처음」 이어졌다(12·13·15·16회차, 결정 가) — 출처는 단정하지 않되 재질은 말한다.
+const SOLO_TEXT = {
+  'FIBR-98': { detail: '감식 결과: 손톱 밑 이물질에서 베개 솜·섬유 성분이 검출되었다. 다만 정체를 단정하기 어려운 미량의 물질도 함께 섞여 있다 — 합성 피혁(인조가죽) 계열로 보이나, 출처는 특정되지 않는다.' },
+};
+// 1장의 빈 물건(옷가지·파우치·장갑) — 어떤 대답·단서와도 이어지지 않아, 셋 다 하나하나 열어 보며 지루해했다(16회차, 결정 마).
+//   솔로에서만 방 진척 수에서 빼고 테두리를 흐리게 둔다(누르면 그대로 열린다).
+export const SOLO_FLAVOR = new Set(['NDVA-68', 'NMFM-21', 'OLUX-30', 'VJMU-45', 'HTXI-85', 'LKUJ-60', 'KPVH-32', 'ZNUS-26', 'KTGF-02', 'ALLZ-85']);
+const byCode = Object.fromEntries(all.map((c) => {
+  let o = soloOf(c);
+  if (SOLO_TEXT[c.code]) o = { ...o, ...SOLO_TEXT[c.code] };
+  if (SOLO_FLAVOR.has(c.code)) o = { ...o, flavor: true };
+  return [c.code, o];
+}));
 const cctvSet = new Set(provider.getCctvClueCodes());
 
 // 증언 단서(대화로 확보) — 단서 조회에서 함께 해석되도록 code 형태로 정규화.

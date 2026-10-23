@@ -94,7 +94,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     const counted = loc.kind === 'room' || loc.inner ? [...loc.objects, ...(loc.inner || [])] : null;
     if (!counted) return '열람';
     // 휴대폰은 2차 심문(stage 3)에 해금 — 그 전엔 방 탐색 진척도에서 제외
-    const reach = counted.filter((c) => stage >= 3 || !getClue(c)?.phone);
+    const reach = counted.filter((c) => (stage >= 3 || !getClue(c)?.phone) && !getClue(c)?.flavor); // 빈 물건은 세지 않는다(결정 마)
     const total = reach.length, got = reach.filter((c) => collectedSet.has(c)).length;
     return total > 0 && got === total ? '✓ 물건 다 봄' : `단서 ${got}/${total}`; // 「탐색완료」는 빨간 숫자(남은 모순)와 부딪쳤다(15회차)
   };

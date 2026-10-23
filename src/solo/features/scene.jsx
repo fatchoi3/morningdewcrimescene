@@ -70,7 +70,17 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
     const check = () => {
       const el = talkRef.current; if (!el) return;
       const r = el.getBoundingClientRect();
-      if (r.top >= 76) { setTipFix(null); return; }
+      if (r.top >= 76) {
+        // 위로는 안 걸려도 옆으로 잘리면(지안방 — 인물이 오른쪽 끝, 16회차) 그 모서리에 붙인다
+        const tip = el.querySelector('.s-talkzone-tip');
+        const tr = tip?.getBoundingClientRect();
+        const cur = tip?.style.position === 'fixed';
+        if (tr && !cur && (tr.right > window.innerWidth - 4 || tr.left < 4)) {
+          const side = tr.right > window.innerWidth - 4 ? 'r' : 'l';
+          setTipFix((o) => (o && o.side === side && o.y === Math.round(tr.top) ? o : { side, y: Math.round(tr.top) }));
+        } else if (!cur) setTipFix(null);
+        return;
+      }
       const dlg = document.querySelector('.aa-dialogue');
       const dlgTop = dlg ? dlg.getBoundingClientRect().top : window.innerHeight - 160;
       // 가운데 맞추면 긴 이름이 화면 밖으로 나갔다 — 인물이 선 쪽 모서리에 붙인다
@@ -97,6 +107,9 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
     return c && !(c.phone && stage < 3);
   });
   const missing = shown.filter((code) => !collectedSet.has(code));
+  // 진척 수 — 이야기와 이어지지 않는 빈 물건(옷가지·파우치·장갑)은 세지 않는다(16회차, 결정 마)
+  const countable = shown.filter((code) => !getClue(code)?.flavor);
+  const countGot = countable.filter((code) => collectedSet.has(code)).length;
   const dirs = { left: 0, right: 0, up: 0, down: 0 };
   if (cam?.tw) for (const code of missing) {
     const p = hotspotFor(location, code, location.objects.indexOf(code));
@@ -125,7 +138,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
     <div className="aa-fs">
       {/* 그림을 줄이면 위아래가 빈다 — 같은 그림을 흐리게 깔아 검은 띠 대신 방 분위기로 채운다 */}
       {pannable && <div className="aa-backdrop" aria-hidden="true"><SceneBg location={location} fit="cover" /></div>}
-      <div className="aa-cam" ref={camRef} onScroll={syncCam}>
+      <div className={`aa-cam${zoom.atMin ? ' overview' : ''}`} ref={camRef} onScroll={syncCam}>
         <div className="aa-track" ref={trackRef} style={{ aspectRatio: String(bgRatio) }}>
           <SceneBg location={location} onRatio={setBgRatio} />
 
@@ -180,7 +193,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
               aria-label={zoneLab} onClick={onPick} />
             {/* 표시 전용 — 면은 비우고 '테두리만' 빛낸다(버튼 밖이라 발광이 잘리지 않음) */}
             {/* 선을 두 겹으로 — 아래 어두운 굵은 선, 위 밝은 선. 밝은 책상·흰 종이 위에서 밝은 선 하나는 사라졌다(튜토리얼 3차 시험 셋) */}
-            <svg className={`s-zone-outline${tone}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <svg className={`s-zone-outline${tone}${c.flavor && !have ? ' flavor' : ''}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               {p.poly
                 ? <><polygon className="under" points={p.poly.map((pt) => `${pt[0]},${pt[1]}`).join(' ')} vectorEffect="non-scaling-stroke" />
                     <polygon points={p.poly.map((pt) => `${pt[0]},${pt[1]}`).join(' ')} vectorEffect="non-scaling-stroke" /></>
@@ -217,7 +230,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       </div>
 
       {/* 방 안에서도 '몇 개 남았는지'가 보여야 한다 — 문패에만 있으면 방에 들어온 뒤엔 알 길이 없다 */}
-      <div className="aa-loc-chip">🔦 {location.label}{shown.length > 1 && ` · 단서 ${shown.length - missing.length}/${shown.length}`}</div>
+      <div className="aa-loc-chip">🔦 {location.label}{countable.length > 1 && ` · 단서 ${countGot}/${countable.length}`}</div>
       <TopHud>
         <button className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord}>📓</button>
       </TopHud>
@@ -244,7 +257,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
 
       {listOpen && !isLab && (
         <div className="aa-ask s-room-list" ref={listRef} onScroll={(e) => syncList(e.currentTarget)}>
-          <div className="aa-ask-h">📋 {location.label} — 물건 {shown.length - missing.length}/{shown.length}</div>
+          <div className="aa-ask-h">📋 {location.label} — 단서 {countGot}/{countable.length}</div>
           {location.showBody && <button onClick={() => { setListOpen(false); onOpen('__body__'); }}>🔎 시신을 조사한다</button>}
           {roomSuspect && onTalk && (
             <button className={talkPending > 0 ? 'new' : ''} onClick={() => { setListOpen(false); onTalk(roomSuspect.id); }}>
@@ -299,7 +312,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       <DialogueBox location={isLab ? '감식 의뢰실' : location.label}
         actions={[
           roomSuspect && onTalk && { label: `💬 ${roomSuspect.name}${talkPending > 0 ? ` (${talkPending})` : ''}`, onClick: () => onTalk(roomSuspect.id) },
-          !isLab && shown.length > 0 && { label: listOpen ? '✕ 목록 닫기' : `📋 물건 목록 ${shown.length - missing.length}/${shown.length}`, onClick: () => setListOpen((v) => !v) },
+          !isLab && shown.length > 0 && { label: listOpen ? '✕ 목록 닫기' : `📋 물건 목록 ${countGot}/${countable.length}`, onClick: () => setListOpen((v) => !v) },
           { label: '🚶 나가기', onClick: onBack },
         ]}
         text={isLab

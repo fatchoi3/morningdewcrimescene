@@ -16,31 +16,67 @@ const PAGE_IMG_H = 170;   // 그림이 있는 쪽·없는 쪽의 높이를 맞�
 // ── 크게 보기 창 — 두 손가락으로 키우고 한 손가락으로 끈다. 단서 창 그림과 폰 사진(통장)이 같이 쓴다.
 //   화면 폭에 맞추기만 해선 원래 그림이 이미 화면 폭이라 커지지 않았다(튜토리얼 3차 시험 셋), 통장 글씨는 2~3px(15회차).
 function ZoomOverlay({ src, caption, onClose }) {
-  const [tf, setTf] = useState({ s: 1.6, x: 0, y: 0 });
+  const [tf, setTf] = useState({ s: 1, x: 0, y: 0 });
+  const tfRef = useRef(tf); tfRef.current = tf;
+  const imgRef = useRef(null);
   const ptrs = useRef(new Map());
   const gest = useRef(null);
   const moved = useRef(0);
+  const lastTap = useRef(0);
+  // 처음 배율 — 화면 높이에 맞춰 줄어든 길쭉한 그림(통장)은 폭에 맞춰 키우고 맨 위부터 보여 준다(16회차: 처음부터 양옆이 잘렸다)
+  const onLoad = () => {
+    const el = imgRef.current; if (!el) return;
+    // 상자는 폭 100%·contain 이라 상자 크기가 아니라 실제로 그려진 그림 크기로 잰다
+    const r = el.getBoundingClientRect();
+    const ratio = el.naturalWidth && el.naturalHeight ? el.naturalWidth / el.naturalHeight : r.width / r.height;
+    const drawnW = Math.min(r.width, r.height * ratio), drawnH = drawnW / ratio;
+    const s0 = Math.max(1, Math.min(4, (window.innerWidth * 0.96) / drawnW));
+    const y0 = s0 > 1 ? Math.max(0, (drawnH * s0 - window.innerHeight * 0.86) / 2) : 0;
+    setTf({ s: s0, x: 0, y: y0 });
+  };
+  // 화면 가운데를 원점으로 한 좌표
+  const rel = (x, y) => ({ x: x - window.innerWidth / 2, y: y - window.innerHeight / 2 });
+  const zoomAt = (c, s1, base) => {
+    const t = base || tfRef.current;
+    const k = s1 / t.s;
+    return { s: s1, x: c.x - (c.x - t.x) * k, y: c.y - (c.y - t.y) * k };
+  };
   const onDown = (e) => { e.currentTarget.setPointerCapture?.(e.pointerId); ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY }); gest.current = null; moved.current = 0; };
   const onMove = (e) => {
     const p = ptrs.current.get(e.pointerId); if (!p) return;
     const pts = [...ptrs.current.values()];
     if (pts.length >= 2) {
       const [q1, q2] = pts; const dist = Math.hypot(q1.x - q2.x, q1.y - q2.y);
-      if (!gest.current) gest.current = { dist, s: tf.s };
-      const sc = Math.min(6, Math.max(1, gest.current.s * dist / gest.current.dist));
-      setTf((t) => ({ ...t, s: sc }));
+      const c = rel((q1.x + q2.x) / 2, (q1.y + q2.y) / 2);
+      if (!gest.current) gest.current = { dist, base: tfRef.current, c };
+      const s1 = Math.min(6, Math.max(1, gest.current.base.s * dist / gest.current.dist));
+      setTf(zoomAt(gest.current.c, s1, gest.current.base));
     } else {
       setTf((t) => ({ ...t, x: t.x + (e.clientX - p.x), y: t.y + (e.clientY - p.y) }));
     }
     moved.current += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y);
     ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
   };
-  const onUp = (e) => { ptrs.current.delete(e.pointerId); gest.current = null; if (ptrs.current.size === 0 && moved.current < 8) onClose(); };
+  const onUp = (e) => {
+    const was = ptrs.current.get(e.pointerId);
+    ptrs.current.delete(e.pointerId); gest.current = null;
+    if (ptrs.current.size > 0 || moved.current >= 8) return;
+    // 두 번 탭 — 그 자리를 2.5배로(이미 크면 처음 크기로). 한 번 탭은 잠깐 기다렸다 닫는다
+    const now = Date.now();
+    if (now - lastTap.current < 320) {
+      lastTap.current = 0;
+      const t = tfRef.current;
+      setTf(t.s > 1.5 ? { s: 1, x: 0, y: 0 } : zoomAt(rel(was?.x ?? e.clientX, was?.y ?? e.clientY), 2.5));
+      return;
+    }
+    lastTap.current = now;
+    setTimeout(() => { if (lastTap.current === now) onClose(); }, 330);
+  };
   return createPortal(
     <div className="s-img-zoom" onClick={(e) => e.stopPropagation()}
       onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
-      <img src={src} alt="" draggable={false} style={{ transform: `translate(${tf.x}px, ${tf.y}px) scale(${tf.s})` }} />
-      <div className="pz-cap">{caption ? `${caption} · ` : ''}두 손가락으로 키우고 끌어 보세요 · 눌러서 닫기</div>
+      <img ref={imgRef} src={src} alt="" draggable={false} onLoad={onLoad} style={{ transform: `translate(${tf.x}px, ${tf.y}px) scale(${tf.s})` }} />
+      <div className="pz-cap">{caption ? `${caption} · ` : ''}두 손가락·두 번 탭 = 크게 · 한 번 탭 = 닫기</div>
     </div>, document.body);
 }
 
@@ -117,7 +153,7 @@ function PageStack({ pages, collectedSet, onCollect }) {
 }
 
 // ── 단서 열람 모달 ─────────────────────────────────────────────────────────
-export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
+export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, recovered = [], onRecovered }) {
   const isBody = code === '__body__';
   const c = isBody ? null : getClue(code);
 
@@ -157,7 +193,7 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen }) {
 
   // 폰형
   if (c.phone) {
-    return <PhoneModal code={code} clue={c} collectedSet={collectedSet} onClose={onClose} />;
+    return <PhoneModal code={code} clue={c} collectedSet={collectedSet} onClose={onClose} recoveredInit={recovered.includes(code)} onRecovered={onRecovered} />;
   }
 
   // 지갑형 — 항목을 눌러 내용물 확인
@@ -281,11 +317,12 @@ const PHONE_APP_ICON = { contacts: '📇', kakao: '💬', sms: '✉️', calls: 
 const isChatApp = (t) => t === 'kakao' || t === 'sms';
 // 톡서랍 복구 힌트 — QR 앱과 같은 표(src/data/recoverHints.js). 솔로만 따로 적어 두었다가 지안 폰을 엉뚱한 데로 보냈다(15회차).
 const recoverHint = (code) => recoverHintFor(code);
-function PhoneModal({ code, clue, onClose }) {
+function PhoneModal({ code, clue, onClose, recoveredInit = false, onRecovered }) {
   const apps = clue.phone.apps || [];
   const [appId, setAppId] = useState(null);   // null = 홈 화면
   const [chatIdx, setChatIdx] = useState(null); // 카톡: null = 대화 목록
-  const [recovered, setRecovered] = useState(false);
+  // 복구는 저장한다 — 창 안의 임시 상태라 다시 열면 또 잠겼고, 복구 안 한 폰을 내밀어도 「지운 대화까지」가 나왔다(16회차)
+  const [recovered, setRecovered] = useState(recoveredInit);
   const [pw, setPw] = useState('');
   const [msg, setMsg] = useState('');
   const [fails, setFails] = useState(0);  // 3번 틀리면 힌트 — 난이도로 미리 정하지 않고 막힌 사람만 돕는다
@@ -297,7 +334,7 @@ function PhoneModal({ code, clue, onClose }) {
 
   const tryRecover = async () => {
     const ok = await provider.verifyRecover(code, pw);
-    if (ok) { setRecovered(true); setMsg(''); setFails(0); }
+    if (ok) { setRecovered(true); setMsg(''); setFails(0); onRecovered?.(code); }
     else { setFails((n) => n + 1); setMsg('비밀번호가 맞지 않습니다.'); setPw(''); }
   };
   const tryLookup = async () => {

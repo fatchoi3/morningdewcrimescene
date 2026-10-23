@@ -34,7 +34,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   const [beat, setBeat] = useState(() => (tries >= MAX_TRIES ? { kind: 'fail', code: lastCode } : { kind: 'deny' }));
   const [picking, setPicking] = useState(false);
   const [sel, setSel] = useState(null);
-  const [pPerson, setPPerson] = useState(null);
+  const [pPerson, setPPerson] = useState(who?.name || null); // 「전체 94」에서 한참 찾았다(16회차) — 지목한 사람부터
   const [speaking, setSpeaking] = useState(false);
   const dlgRef = useRef(null);
 
