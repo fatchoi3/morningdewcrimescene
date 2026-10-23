@@ -33,6 +33,8 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   const titleOf = (code) => clues.find((c) => c.code === code)?.title || soloContent.getClue?.(code)?.title || code;
   const [beat, setBeat] = useState(() => (tries >= MAX_TRIES ? { kind: 'fail', code: lastCode } : { kind: 'deny' }));
   const [picking, setPicking] = useState(false);
+  // 둘째 단계 — 첫 정답에 그가 버틴 뒤(hold). { first: 첫 정답 코드, tries: 둘째에서 내민 횟수 }
+  const [round2, setRound2] = useState(null);
   const [sel, setSel] = useState(null);
   const [pPerson, setPPerson] = useState(null);
   const [speaking, setSpeaking] = useState(false);
@@ -51,8 +53,16 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     : (CONFRONT.denyBefore || CONFRONT.deny);
 
   const present = (code) => {
-    const n = tries + 1;
     setPicking(false); setSel(null);
+    // 둘째 단계 — 채점은 첫 증거로 이미 끝났다(onPresent 안 부름). 맞으면 말을 잃고, 두 번 틀리면 버틴 채로 끝난다
+    if (round2) {
+      const t = round2.tries + 1;
+      setRound2({ ...round2, tries: t });
+      if ((CONFRONT.holdAccept?.[round2.first] || []).includes(code)) setBeat({ kind: 'press2', code });
+      else setBeat({ kind: 'wrong2', code, n: t });
+      return;
+    }
+    const n = tries + 1;
     onPresent(code, n);
     if (CONFRONT.accept[code]) setBeat({ kind: CONFRONT.press?.[code] ? 'press' : 'accept', code });
     else setBeat({ kind: CONFRONT.near.includes(code) ? 'near' : 'wrong', code, n });
@@ -70,11 +80,19 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   const again = left > 0 ? `▶ 한 번 더 내민다 (남은 기회 ${left})` : '▶ 탭하여 다음';
   // 한 번 더 내밀 때는 인물 거르기를 「전체」로 되돌린다 — 앞에서 고른 거르기가 남아 엉뚱한 카드를 고를 뻔했다(8회차)
   const retry = () => (left > 0 ? (setPPerson(null), setSel(null), setPicking(true)) : setBeat({ kind: 'fail', code: beat.code }));
+  const left2 = round2 ? MAX_TRIES - round2.tries : MAX_TRIES;
+  const retry2 = () => (left2 > 0 ? (setPPerson(null), setSel(null), setPicking(true)) : setBeat({ kind: 'holdFail', code: round2.first }));
+  const hasHold = (code) => !!CONFRONT.hold?.[code];
   const LINES = {
     // 기회가 두 번뿐이라는 걸 첫 증거를 내고서야 알았다(10회차) — 첫 내밀기 전에 말한다
     deny: { speaker: who?.name, text: deny, hint: `▶ 증거를 내민다 — 기회는 ${MAX_TRIES}번`, next: () => setPicking(true) },
-    press: { speaker: '수사관', text: CONFRONT.press?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'accept', code: beat.code }) },
-    accept: { speaker: who?.name, text: (CONFRONT.accept[beat.code] || '') + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
+    // 첫 정답 — 버팀(hold)이 있으면 그리로, 없으면 바로 말을 잃는다
+    press: { speaker: '수사관', text: CONFRONT.press?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: hasHold(beat.code) ? 'hold' : 'accept', code: beat.code }) },
+    hold: { speaker: who?.name, text: CONFRONT.hold?.[beat.code], hint: `▶ 한 번 더 몰아붙인다 — 기회 ${MAX_TRIES}번`, next: () => { setRound2({ first: beat.code, tries: 0 }); setPPerson(null); setPicking(true); } },
+    press2: { speaker: '수사관', text: CONFRONT.press2?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'accept', code: round2?.first || beat.code, final: true }) },
+    wrong2: { speaker: who?.name, text: wrongLineOf(beat.code), hint: left2 > 0 ? `▶ 한 번 더 내민다 (남은 기회 ${left2})` : '▶ 탭하여 다음', next: retry2 },
+    holdFail: { speaker: '수사 노트', text: CONFRONT.holdFail, hint: '▶ 결말 보기', next: () => onDone(round2?.first || beat.code) },
+    accept: { speaker: who?.name, text: (beat.final && CONFRONT.accept2 ? CONFRONT.accept2 : (CONFRONT.accept[beat.code] || '')) + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
     note: { speaker: '수사 노트', text: CONFRONT.noteBy?.[beat.code] || (CONFRONT.noteStatement && !brokeIds.has(CONFRONT.noteStatement) && CONFRONT.noteBefore) || CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
     near: { speaker: who?.name, text: CONFRONT.nearLine, hint: again, next: retry },
     wrong: { speaker: who?.name, text: wrongLineOf(beat.code), hint: again, next: retry },
@@ -87,9 +105,10 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   //   엉뚱한 증거면 무엇이 필요한지 한 줄 — 「아무것도 증명하지 못합니다」만 두 번 듣고 기준을 몰랐다(2026-10-08 시험)
   const note = beat.kind === 'near' ? '(수사 노트) 방향은 맞다 — 다만 이것만으로는 그를 가리키지 못한다.'
     // 「그 시각의 말이 거짓」은 빈 일지(말과 안 맞는 빈 칸)를 부르는 말이었다(14회차) — 「기록이 그를 어디에 세우는가」로
+    : beat.kind === 'wrong2' && left2 > 0 ? `(수사 노트) ${CONFRONT.holdNeed?.[round2?.first] || ''}`
     : beat.kind === 'wrong' && left > 0 ? `(수사 노트) 필요한 건 그 시각 그가 어디서 무엇을 했는지 보여 주는 기록이다 — 동쪽으로 들어간 기록, 또는 03:24에 그가 2층에서 한 일의 기록. 빈 칸이나 없는 기록은 그를 어디에도 세우지 못한다.${usedCodes.size > 0 ? ' 2차 심문에서 그를 무너뜨린 증거(✅)도 다시 내밀 수 있다.' : ''}`
       : null;
-  const proved = beat.kind === 'accept' || beat.kind === 'note';
+  const proved = beat.kind === 'accept' || beat.kind === 'note' || beat.kind === 'holdFail';
 
   const persons = [...new Set(clues.map((c) => c.person).filter(Boolean))];
   // 이미 깬 증거를 앞에 — 2차 심문에서 쓴 정답 카드를 대질에서 다시 낼 생각을 못 했다(2026-10-07)
@@ -105,7 +124,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
       <div className="aa-loc-chip" style={{ color: '#ffd479', borderColor: '#ffd47944' }}>⚖️ 대질 · {who?.name}</div>
       <div className={`aa-room-fig${speaking && line.speaker === who?.name ? ' talking' : ''}`}>
         <StandingFigure sid={CONFRONT.culprit} person={who?.name} image={who?.image} height={560} fallbackSize={150}
-          mood={proved ? 'shock' : beat.kind === 'near' || beat.kind === 'wrong' ? 'angry' : undefined} />
+          mood={proved ? 'shock' : beat.kind === 'near' || beat.kind === 'wrong' || beat.kind === 'wrong2' || beat.kind === 'hold' ? 'angry' : undefined} />
       </div>
       {proved && <div className="cf-stamp" key={beat.code}>⚖️ 입증</div>}
       {beat.code && beat.kind !== 'deny' && (
@@ -119,7 +138,9 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
         <div className="aa-present" onClick={(e) => e.stopPropagation()}>
           <div className="aa-present-h">
             {/* 정답 둘 중 하나(03:24 태블릿 조회)는 현장이 아니라 그 시각의 거짓말을 깨는 증거다 — 「그 자리」만 말하자 현장 증거만 찾았다(13회차) */}
-            <span>⚖️ <b>그 시각 그가 어디서 무엇을 했는지 보여 주는 기록</b> 한 장 · 남은 기회 {left}</span>
+            {round2
+              ? <span>⚖️ <b>그가 물러선 자리를 무너뜨리는 기록</b> 한 장 — {CONFRONT.holdNeed?.[round2.first]} · 남은 기회 {left2}</span>
+              : <span>⚖️ <b>그 시각 그가 어디서 무엇을 했는지 보여 주는 기록</b> 한 장 · 남은 기회 {left}</span>}
           </div>
           {usedCodes.size > 0 && (
             <p className="cf-used-note">✅ — 2차 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요.</p>

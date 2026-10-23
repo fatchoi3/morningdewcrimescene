@@ -404,6 +404,8 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
                 );
                 return (
                   <div className="s-kk-chat">
+                    {/* 대화방에 붙인 수사관 메모 — 베트남어 원문만 있어 결정적 03:29 메시지를 그냥 지나쳤다(14회차) */}
+                    {ch.memo && <div className="kk-memo">🗒 {ch.memo}</div>}
                     {(ch.messages || []).map((m, j) => (
                       <div key={j} className={`s-kk-msg ${m.from === 'me' ? 'me' : 'them'}`}>
                         {/* 지운 메시지는 글 없이 빈 말풍선으로 그려 고장처럼 보였다 — 카톡처럼 회색 한 줄(13회차) */}
