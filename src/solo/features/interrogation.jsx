@@ -167,7 +167,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const sKey = (s) => {
     const b = brokeOf(s.id);
     const asked = askedIds.includes(s.id) || pressedIds.includes(s.id);
-    return { broke: !!b, asked, isNew: s.hidden && !asked && !b };
+    const reopen = !b && (s.contradict?.codes || []).includes('YJWR-74') && (state.recovered || []).includes('YJWR-74');
+    return { broke: !!b, asked, isNew: (s.hidden && !asked && !b) || reopen };
   };
   // 반박 시트 — 21~30장이 주운 순서대로 깔려 있어 폰에서 3~4화면을 훑어야 했다.
   //   아직 안 써본 것을 위로 올리고, 인물로 좁힐 수 있게 한다(화제 목록과 같은 ❗/✔/✅ 표시).
@@ -495,7 +496,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
       {/* 하단 바 없음 — 이 화면에서 할 것은 전부 대사창 우측 하단에 */}
       <DialogueBox ref={dlgRef} location={dlgLoc} speaker={speakerName} text={dlgText}
-        onAdvance={dlgAdvance} hint={dlgHint} onTyping={setSpeaking}
+        onAdvance={dlgAdvance} hint={dlgHint} onTyping={setSpeaking} guardMs={line?.kind === 'break' ? 1000 : 350}
         actions={[
           cur && (bk
             ? { label: '✅ 모순 확인됨', onClick: () => setLine({ text: `${bk.text}\n(이미 짚은 모순이다.)`, kind: 'break' }) }

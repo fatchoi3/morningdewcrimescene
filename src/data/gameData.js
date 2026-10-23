@@ -276,8 +276,8 @@ export const evidenceMap = withAssetBase(resolveTokens({
         },
         {
           time: '12:00~12:25',
-          location: '식당·숙소·1층 로비 주변',
-          scene: '두 인물이 따로따로 식당·숙소와 1층 로비 주변을 서성인다.',
+          location: '2층 복도 · 1층 가는 길',
+          scene: '두 인물이 따로따로 — 한 사람은 복도를 서성이며 폰을 들여다보고, 다른 한 사람은 1층 가는 길로 내려갔다가 한참 뒤 올라온다.',
           people: [
             { look: '여성 A — 핸드폰을 자주 확인하며 배회', who: '{{S5}}', unlocks: 'TTNA-35', x: 180, y: 140, arrow: { from: { x: 130, y: 150 }, to: { x: 220, y: 150 } } },
             { look: '여성 B — 1층 로비를 초조하게 서성임', who: '{{S3}}', unlocks: 'TQMW-03', x: 322, y: 152, arrow: { from: { x: 300, y: 150 }, to: { x: 360, y: 230 } } }
@@ -431,7 +431,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
     pages: [
       { title: '사건 현황 — 초동 정보', image: '/images/사건현장.png', content: '사망 장소: {{victim.full}}님 개인 방.\n사망 추정 시각: 수련회 마지막 날 오후 1시대(13시경).\n최초 신고자: {{S6}} 회장 — 13:34에 112로 신고.\n\n협심증 병력이 있었으나, 부검상 단순 발작사로 보기 어려운 정황이 있어 수사가 진행 중이다.' },
       { title: '1차 부검 소견', content: '사망 원인은 정확히 추측하긴 어렵지만, 협심증이 있던 목사가 발작을 일으킨 정황으로 보아 심정지로 추정된다.\n\n안구에 출혈이 발견되었고 손에 과하게 힘이 들어간 채 굳어 있다. 입가에서 약간의 딸기향이 느껴진다.' },
-      { title: '목사님 방 위치·구조', image: '/images/방구조.jpg', content: '방 문에 작은 유리창이 있다.\n\n방 내부엔 CCTV가 없다. 단, 방 바깥 복도에는 CCTV가 있다. — 복도에서 누가·언제 움직였는지가 추리의 열쇠다.' },
+      { title: '목사님 방 위치·구조', image: '/images/방구조.jpg', content: '방 문 눈높이에 작은 유리창이 있다 — 복도에서 보면 봉쇄 테이프에 가려 눈에 잘 안 띈다.\n\n방 내부엔 CCTV가 없다. 단, 방 바깥 복도에는 CCTV가 있다. — 복도에서 누가·언제 움직였는지가 추리의 열쇠다.' },
       { title: '용의자가 6명인 이유', content: '수련회 숙소 2층(목사님 방이 있는 층)은 청년부 임원 6명만 사용했다. 일반 청년부원과 외부 참가자는 1층·별관에 묵었고, 사건 시간대(오후 1시 전후) 2층으로 올라온 외부인은 복도 CCTV에 단 한 명도 없다.\n\n또한 사건 전날부터 당일까지 목사님과 단독 접점이 있었던 인원도 정확히 이 여섯 명뿐이다 — 전날 개인 면담을 가진 다섯 명({{S5}}·{{S3}}·{{S4}}·{{S2}}·{{S6}})과, 평소 음료·등산을 전담해 목사님 방을 자주 드나든 {{S1}}.\n\n따라서 수사 대상은 이 여섯 명으로 한정된다.' },
       { title: '시신 발견 경위', content: '최초 발견자({{S6}})의 진술:\n\n"목사님과 할 얘기가 있어서 들렀는데, 이미 쓰러져 계셨어요."' },
     ]
@@ -636,7 +636,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'IWND-38': { 
     title: '설하정 처방전',
     description: '책상 위에서 처방전을 발견했다.',
-    detail: '협심증 응급약 설하정 처방전이다. 정품 알약은 "GTN" 각인이 있다고 적혀 있다. 발작 시 혀 밑에 넣어 복용한다.',
+    detail: '협심증 응급약 설하정 처방전이다. 정품 알약은 "GTN" 각인이 있고 딸기향이 난다고 적혀 있다. 발작 시 혀 밑에 넣어 복용한다.',
     image: '/images/설하정_처방전.png',
     type: '보통',
     person: '목사'
@@ -660,7 +660,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'MEXF-73': {
     title: '설하정 약통',
     description: '책상 위에서 설하정 약통을 발견했다.',
-    detail: '협심증 응급약 설하정 통이다. 겉에는 딸기향 함유라고 적혀 있고 노란 알약이 5알밖에 남아있지 않다. 옅은 딸기향이 난다.',
+    detail: '협심증 응급약 설하정 통이다. 겉에는 딸기향 함유라고 적혀 있고 노란 알약이 5알밖에 남아있지 않다. 그런데 통을 열어도 딸기향이 거의 나지 않는다.',
     image: '/images/설화정약통.jpg',
     type: '보통',
     person: '목사'
@@ -1099,7 +1099,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
               messages: [
                 { from: 'them', text: '{{S1.short|아/야}}, 저번에 네가 본 거… 다른 사람들한텐 그냥 비밀로 해줄 수 있지?', time: '4일 전' },
                 { from: 'me', text: '누나 걱정 마세요. 다들 알고 있는 그대로 둘게요.', time: '4일 전' },
-                { from: 'them', text: '고마워. 민석이한테도, 목사님한테도 아직 제대로 말 못 했어.', time: '4일 전' },
+                { from: 'them', text: '고마워. 목사님께는 상담 때 말씀드렸지만, 민석이한테는 아직 제대로 말 못 했어.', time: '4일 전' },
                 { from: 'me', text: '네… 근데 누나, 너무 혼자 끙끙 앓지 마요.', time: '4일 전' },
                 { from: 'them', text: '이 얘긴 진짜 둘만 아는 걸로 하자. 약속해줘.', time: '4일 전' },
                 { from: 'me', text: '알겠어요. 약속할게요.', time: '4일 전' }
@@ -1859,7 +1859,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
               messages: [
                 { from: 'me', text: '{{S1.short|아/야}}, 저번에 네가 본 거… 다른 사람들한텐 그냥 비밀로 해줄 수 있지?', time: '4일 전' },
                 { from: 'them', text: '누나 걱정 마세요. 다들 알고 있는 그대로 둘게요.', time: '4일 전' },
-                { from: 'me', text: '고마워. 민석이한테도, 목사님한테도 아직 제대로 말 못 했어.', time: '4일 전' },
+                { from: 'me', text: '고마워. 목사님께는 상담 때 말씀드렸지만, 민석이한테는 아직 제대로 말 못 했어.', time: '4일 전' },
                 { from: 'them', text: '네… 근데 누나, 너무 혼자 끙끙 앓지 마요.', time: '4일 전' },
                 { from: 'me', text: '이 얘긴 진짜 둘만 아는 걸로 하자. 약속해줘.', time: '4일 전' },
                 { from: 'them', text: '알겠어요. 약속할게요.', time: '4일 전' }

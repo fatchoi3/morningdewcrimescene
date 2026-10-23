@@ -102,6 +102,17 @@ async function serve(url, port, profile) {
     if (c === 'look') return look();
     if (c === 'click') { const e = list[+a[0]]; if (!e) return '그 번호가 없다 — look 을 먼저\n' + await look(); await tapAt(e.x, e.y); return look(); }
     if (c === 'tap') { await tapAt(+a[0], +a[1]); return look(); }
+    if (c === 'swipe' && await page.evaluate(() => !!document.querySelector('.s-img-zoom'))) {
+      // 확대 창(새벽이슬 솔로)은 스크롤 상자가 아니라 손가락 끌기다 — 터치로 끈다
+      const cdp = await page.createCDPSession();
+      const d = a[0], cx = W / 2, cy = H * 0.5, L = 260;
+      const to = { x: cx + (d === 'left' ? -L : d === 'right' ? L : 0), y: cy + (d === 'up' ? -L : d === 'down' ? L : 0) };
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx, y: cy, id: 1 }] });
+      for (let i = 1; i <= 8; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cx + ((to.x - cx) * i) / 8, y: cy + ((to.y - cy) * i) / 8, id: 1 }] });
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await cdp.detach();
+      return '끌었다: 확대 창' + String.fromCharCode(10) + await look();
+    }
     if (c === 'swipe') {
       // 손가락이 닿는 자리(화면 가운데)에서 위로 올라가며 밀리는 상자를 찾는다 — 사람이 미는 것과 같다.
       //   (예전엔 화면에서 가장 큰 밀리는 상자를 밀어서, 수첩·사건 파일을 열어 둬도 그 뒤 지도가 밀렸다.

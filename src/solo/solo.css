@@ -911,3 +911,17 @@ body:has(.s-phone) .s-toast { top: auto; bottom: calc(28px + env(safe-area-inset
 .cctv-modal .cctv-picks { display: none; }
 /* 확대 창 안내 — 그림 위에 겹쳐 안 읽혔다: 어두운 알약 바탕 */
 .s-img-zoom .pz-cap { left: 50%; right: auto; transform: translateX(-50%); width: max-content; max-width: 92vw; background: #000000d0; color: #e6e2d8; padding: 6px 14px; border-radius: 999px; font-size: .78rem; }
+/* 17회차 — 화면 */
+/* 복도에선 알림을 아래로 — 장 전환 안내(9초)가 「복도 전체 보기」·목표 글을 덮었다 */
+body:has(.hall-hud) .s-toast { top: auto; bottom: calc(86px + env(safe-area-inset-bottom)); }
+/* 복도 전체 보기 — 배지를 이름표 밖(아이콘 오른쪽 위)으로: 「세린방」 글자를 덮었다 */
+.hall-cam.overview .hall-hot > .s-alert { top: -14px; left: auto; right: -12px; transform: scale(.8); }
+/* 심문 단추줄 — 한 줄로(「나가기」가 둘째 줄로 밀려 자리가 바뀌었다) */
+.aa-dlg-actions { flex-wrap: nowrap; }
+.aa-dlg-actions .aa-dlg-act { padding-left: 8px; padding-right: 8px; flex: none; }
+/* 대질 「증거를 고르세요」 — 뒤 그라데이션이 커서 중간 위치에선 한 줄이 반쯤 가렸다 */
+.cf-actions { background: linear-gradient(180deg, transparent, #060a12 22%); }
+/* 「아직 안 본 쪽」 띠가 두 줄이면 여백이 모자랐다 */
+.s-modal-b:has(.s-page-unread) { padding-bottom: 56px; }
+/* CCTV 평면도 이름표 글씨 */
+.cctv-modal .cctv-marker-label { font-size: 12px; }

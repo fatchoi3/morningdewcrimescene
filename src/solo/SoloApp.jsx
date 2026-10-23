@@ -108,7 +108,8 @@ export default function SoloApp() {
     const gamsikNow = [...gamsikCodes].filter((g) => !collectedSet.has(g) && !gamsikReady(g, state.collected) && gamsikReady(g, [...set]));
     // 감식 의뢰실은 2단계에 열린다 — 1차에 이 안내를 띄우면 갈 수 없는 곳으로 보낸다
     const gextra = gamsikNow.length && stage >= 2 ? ' · 🔬 감식 의뢰 가능(감식 의뢰실에서 맡기세요)' : '';
-    showToast(`단서 확보: ${c?.title || code}${extra}${gextra}`);
+    const allFlavor = codes.every((cd) => getClue(cd)?.flavor);
+    showToast(allFlavor ? `살펴봤지만 특별한 건 없다 — ${c?.title || code}` : `단서 확보: ${c?.title || code}${extra}${gextra}`);
     // 첫 추리 단서 안내 — 공용 팝업으로
     if (newSpecials.length && !state.specialTutSeen) {
       const first = getClue(newSpecials[0].code);

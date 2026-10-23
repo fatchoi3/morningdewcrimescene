@@ -110,6 +110,8 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
       {/* 인물 마커 (현재 컷) — arrow가 있으면 동선 경로를 따라 이동.
           컷이 바뀌면 key(cutKey)가 달라져 remount → 애니메이션이 동선 시작점부터 다시 시작. */}
       {people.map((p, i) => {
+        // 앞사람과 30 안으로 붙어 있으면 이름표를 한 줄씩 내린다(10:00 최종현+김호치 목사가 겹쳤다, 새벽이슬 17회차)
+        const near = people.slice(0, i).filter((q) => Math.abs((q.x || 0) - (p.x || 0)) < 40 && Math.abs((q.y || 0) - (p.y || 0)) < 30).length;
         const isScene = !p.unlocks;           // unlocks 없는 인물(목사 동반 등장)은 클릭/수집 불가
         const got = !isScene && collected.has(p.unlocks);
         const cls = `cctv-marker ${got ? 'got' : ''} ${isScene ? 'cctv-marker--scene' : ''}`.trim();
@@ -119,7 +121,7 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
             {!isScene && <circle className="cctv-marker-hit" r="26" fill="transparent" />}
             <circle r={isScene ? 8 : 9} className="cctv-marker-dot" />
             {!isScene && <text className="cctv-marker-glyph" y="4">{got ? '✓' : '?'}</text>}
-            <text className="cctv-marker-label" y={isScene ? 23 : 24}>{isScene ? p.who : (got ? p.who : '인물')}</text>
+            <text className="cctv-marker-label" y={(isScene ? 23 : 24) + near * 13}>{isScene ? p.who : (got ? p.who : '인물')}</text>
           </>
         );
         const clickProps = isScene ? { 'aria-hidden': 'true' } : { onClick: () => onPick(p), role: 'button' };

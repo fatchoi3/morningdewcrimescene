@@ -23,6 +23,16 @@ function ZoomOverlay({ src, caption, onClose }) {
   const gest = useRef(null);
   const moved = useRef(0);
   const lastTap = useRef(0);
+  const [capOn, setCapOn] = useState(true);
+  useEffect(() => { const id = setTimeout(() => setCapOn(false), 2600); return () => clearTimeout(id); }, []);
+  // 그림 가장자리가 화면 안쪽으로 너무 들어오지 않게(넓혔더니 하얀 빈 곳만 보였다, 16·17회차)
+  const clampT = (t) => {
+    const el = imgRef.current; if (!el) return t;
+    const r0 = el.getBoundingClientRect();
+    const baseW = r0.width / (tfRef.current.s || 1), baseH = r0.height / (tfRef.current.s || 1);
+    const mx = Math.max(0, (baseW * t.s - window.innerWidth) / 2 + 40), my = Math.max(0, (baseH * t.s - window.innerHeight) / 2 + 60);
+    return { s: t.s, x: Math.max(-mx, Math.min(mx, t.x)), y: Math.max(-my, Math.min(my, t.y)) };
+  };
   // 처음 배율 — 화면 높이에 맞춰 줄어든 길쭉한 그림(통장)은 폭에 맞춰 키우고 맨 위부터 보여 준다(16회차: 처음부터 양옆이 잘렸다)
   const onLoad = () => {
     const el = imgRef.current; if (!el) return;
@@ -52,7 +62,7 @@ function ZoomOverlay({ src, caption, onClose }) {
       const s1 = Math.min(6, Math.max(1, gest.current.base.s * dist / gest.current.dist));
       setTf(zoomAt(gest.current.c, s1, gest.current.base));
     } else {
-      setTf((t) => ({ ...t, x: t.x + (e.clientX - p.x), y: t.y + (e.clientY - p.y) }));
+      setTf((t) => clampT({ ...t, x: t.x + (e.clientX - p.x), y: t.y + (e.clientY - p.y) }));
     }
     moved.current += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y);
     ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -76,7 +86,7 @@ function ZoomOverlay({ src, caption, onClose }) {
     <div className="s-img-zoom" onClick={(e) => e.stopPropagation()}
       onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
       <img ref={imgRef} src={src} alt="" draggable={false} onLoad={onLoad} style={{ transform: `translate(${tf.x}px, ${tf.y}px) scale(${tf.s})` }} />
-      <div className="pz-cap">{caption ? `${caption} · ` : ''}두 손가락·두 번 탭 = 크게 · 한 번 탭 = 닫기</div>
+      {capOn && <div className="pz-cap">{caption ? `${caption} · ` : ''}한 손가락 = 밀기 · 두 손가락·두 번 탭 = 크게 · 한 번 탭 = 닫기</div>}
     </div>, document.body);
 }
 
