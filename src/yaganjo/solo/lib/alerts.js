@@ -31,7 +31,13 @@ export function questionBreakdown(sid, state, phase = 1) {
   const targetOf = (code) => { const t = clueTargetIn(open, code); return t?.kind === 'contradict' ? t.stId : null; };
   let total = 0;
   for (const s of open) {
-    if (asked.has(s.id)) continue;
+    if (asked.has(s.id)) {
+      // 물어봤지만 못 깬 거짓을 지금 깰 증거를 쥐었으면 다시 센다 — 한 번 물은 뒤로는 그 증거를 주워도 배지가
+      //   영영 안 켜져 「탐색완료」로 남았다(15회차, 차민우). 심문 화면의 ⚖ 와 같은 조건.
+      const codes = s.contradict ? (s.contradict.codes || [s.contradict.code]) : [];
+      if (!broke.has(s.id) && codes.some((c) => collected.includes(c))) { total += 1; markKey(s.id); }
+      continue;
+    }
     total += 1;
     if (s.contradict) markKey(s.id);
   }

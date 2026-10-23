@@ -438,7 +438,7 @@ body:has(.tut-coach) .s-sheet { bottom: 136px; }
 .aa-room-fig.bust .aa-court-tag { position: absolute; top: 16%; left: 50%; transform: translateX(-50%); z-index: 2; }
 .aa-court-name { font-weight: 800; font-size: 1.05rem; color: #fff; background: #00000088; border: 1px solid #ffffff20; border-radius: 9px; padding: 5px 14px; }
 .aa-court-name span { color: var(--muted); font-weight: 600; font-size: .84rem; }
-.aa-court-tag { background: var(--danger); color: #fff; font-weight: 800; font-size: .78rem; padding: 3px 12px; border-radius: 20px; }
+.aa-court-tag { background: var(--danger); color: #fff; font-weight: 800; font-size: .78rem; padding: 3px 12px; border-radius: 20px; white-space: nowrap; }  /* 「⚖️ 숨긴 일 자백」이 두 줄로 꺾여 얼굴을 가렸다(15회차) */
 .aa-tnav { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; background: #000000a8; border: 1px solid #ffffff22; border-radius: 20px; padding: 4px 6px; }
 .aa-tnav button { background: #ffffff14; border: none; color: #fff; width: 34px; height: 30px; border-radius: 14px; font-size: .95rem; cursor: pointer; }
 .aa-tnav button:active { background: #ffffff28; }

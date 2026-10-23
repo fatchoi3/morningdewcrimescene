@@ -356,11 +356,20 @@ function AvatarSVG({ person, size = 64 }) {
 }
 
 /** 인물 초상 — suspect.image가 있으면 우선, 없으면 SVG 아바타. */
+// 인물표의 머그샷(person-s1.png)은 그려 둔 적이 없다 — 범인 지목 화면이 색 동그라미로만 나왔다(15회차).
+//   그 이름에서 스탠딩 그림(people/stand/S1.png)을 찾아 얼굴 쪽을 잘라 쓴다.
+const standOf = (image) => {
+  const m = typeof image === 'string' && image.match(/person-(s\d+)\.\w+$/i);
+  return m ? assetUrl(`/images/yaganjo/people/stand/${m[1].toUpperCase()}.png`) : null;
+};
 export function Avatar({ person, image, size = 64 }) {
-  const [imgOk, setImgOk] = useState(!!image);
-  if (image && imgOk) {
-    return <img src={image} alt="" onError={() => setImgOk(false)}
-      style={{ width: size, height: size, objectFit: 'cover', borderRadius: 12, display: 'block' }} />;
+  const tries = [image, standOf(image)].filter(Boolean);
+  const [k, setK] = useState(0);
+  const src = tries[k];
+  if (src) {
+    const stand = src !== image;
+    return <img src={src} alt="" onError={() => setK((x) => x + 1)}
+      style={{ width: size, height: size, objectFit: 'cover', objectPosition: stand ? '50% 6%' : 'center', borderRadius: 12, display: 'block', background: stand ? '#1a1d24' : undefined }} />;
   }
   return <AvatarSVG person={person} size={size} />;
 }

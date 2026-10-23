@@ -181,6 +181,7 @@ export default function SoloApp() {
         broke={state.broke?.[CONFRONT.culprit] || []}
         tries={state.casefile?.evTries || 0} lastCode={state.casefile?.evidence}
         onPresent={(code, n) => update({ casefile: { ...state.casefile, evidence: code, evTries: n } })}
+        onHold={(code, ok) => update({ casefile: { ...state.casefile, evidence2: ok ? code : null, evHold: !!ok } })}
         onDone={(code) => {
           const cf = { ...state.casefile, evidence: code || state.casefile?.evidence || null };
           update({ casefile: cf, result: scoreCase(cf), screen: 'ending' });

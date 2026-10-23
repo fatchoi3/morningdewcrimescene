@@ -18,7 +18,8 @@ import { DialogueBox } from '../vn.jsx';
 // 결말 — 틀린 수법·동기 옆에 붙이는 「갈랐던 단서」(정본 단서 이름 그대로)
 const DECIDED_BY = {
   수법: '흐엉의 증언(03:28 시동이 켜진 빈 지게차) · 임기석의 증언(03:41 빈 지게차를 몰고 나왔다)',
-  동기: '감사 진술 초안(2층 사무실) · 서장현 휴대폰의 「최근 삭제된 항목」',
+  // 23:20 결심 장면은 조장 휴대폰(센터장 카톡)에서만 닿는다 — 안 열어 본 사람은 결말에서 처음 들었다(15회차)
+  동기: '감사 진술 초안(2층 사무실) · 서장현 휴대폰의 「최근 삭제된 항목」 · 조장 휴대폰의 센터장 카톡(23:20 흡연장)',
 };
 
 export function StartScreen({ started, continueCount, onStart, onContinue, onReset }) {
@@ -206,6 +207,15 @@ export function EndingScreen({ result, onNewCase }) {
                 <div key={c} style={{ color: '#a9b3c4', fontSize: '.78rem', marginLeft: '1.2em' }}>왜 — {CONFRONT.why[c]}</div>
               ))}
             </div>
+            {/* 대질 둘째 단계 — 그가 물러선 자리를 무너뜨린 한 장, 또는 끝까지 버팀(15회차: 마지막에 낸 카드가 결말에 안 적혔다) */}
+            {r.culpritRight && r.evidenceRight && (
+              <div style={{ color: r.holdRight ? 'var(--ok)' : '#a9b3c4', fontSize: '.86rem', marginTop: 4 }}>
+                {r.holdRight && r.evidence2
+                  ? <>✓ 그가 물러선 자리를 무너뜨린 한 장 — {clueTitle(r.evidence2)}
+                      {CONFRONT.why2?.[r.evidence2] && <div style={{ color: '#a9b3c4', fontSize: '.78rem', marginLeft: '1.2em' }}>왜 — {CONFRONT.why2[r.evidence2]}</div>}</>
+                  : '— 그는 물러선 자리에서 끝까지 버텼다(대질 둘째 단계)'}
+              </div>
+            )}
             {perfect && (
               <div style={{ marginTop: 6, color: 'var(--gold)', fontWeight: 800 }}>★ 범인·수법·동기에 결정적 증거까지 — 완벽한 해결</div>
             )}

@@ -28,7 +28,7 @@ const SILENT = '\n(…더는 말을 잇지 못한다.)';
 // clues: 수첩에 있는 단서(제목·인물) · broke: 이 범인에게서 깬 진술(state.broke[범인])
 // tries: 이미 내민 횟수(저장에 남는다 — 새로고침으로 다시 고르지 못하게)
 // onPresent(code, tries) 내밀 때마다 · onDone(code) 결말로
-export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent, onDone }) {
+export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent, onHold, onDone }) {
   const who = suspects.find((s) => s.id === CONFRONT.culprit);
   const titleOf = (code) => clues.find((c) => c.code === code)?.title || soloContent.getClue?.(code)?.title || code;
   const [beat, setBeat] = useState(() => (tries >= MAX_TRIES ? { kind: 'fail', code: lastCode } : { kind: 'deny' }));
@@ -58,7 +58,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     if (round2) {
       const t = round2.tries + 1;
       setRound2({ ...round2, tries: t });
-      if ((CONFRONT.holdAccept?.[round2.first] || []).includes(code)) setBeat({ kind: 'press2', code });
+      if ((CONFRONT.holdAccept?.[round2.first] || []).includes(code)) { onHold?.(code, true); setBeat({ kind: 'press2', code }); }
       else setBeat({ kind: 'wrong2', code, n: t });
       return;
     }
@@ -85,13 +85,15 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   const hasHold = (code) => !!CONFRONT.hold?.[code];
   const LINES = {
     // 기회가 두 번뿐이라는 걸 첫 증거를 내고서야 알았다(10회차) — 첫 내밀기 전에 말한다
-    deny: { speaker: who?.name, text: deny, hint: `▶ 증거를 내민다 — 기회는 ${MAX_TRIES}번`, next: () => setPicking(true) },
+    // ✅ 도 낼 수 있다는 걸 첫 실패 뒤에야 알았다 — 정답이 그 카드였다(15회차). 첫 안내에 넣는다
+    deny: { speaker: who?.name, text: deny, hint: `▶ 증거를 내민다 — 기회는 ${MAX_TRIES}번${usedCodes.size > 0 ? ' · 2차 심문에서 깬 증거(✅)도 됩니다' : ''}`, next: () => setPicking(true) },
     // 첫 정답 — 버팀(hold)이 있으면 그리로, 없으면 바로 말을 잃는다
     press: { speaker: '수사관', text: CONFRONT.press?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: hasHold(beat.code) ? 'hold' : 'accept', code: beat.code }) },
     hold: { speaker: who?.name, text: CONFRONT.hold?.[beat.code], hint: `▶ 한 번 더 몰아붙인다 — 기회 ${MAX_TRIES}번`, next: () => { setRound2({ first: beat.code, tries: 0 }); setPPerson(null); setPicking(true); } },
-    press2: { speaker: '수사관', text: CONFRONT.press2?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'accept', code: round2?.first || beat.code, final: true }) },
+    // 말을 잃는 비트에서도 「📎 내민 증거」는 방금 낸 카드(shown) — 첫 카드로 바뀌어 보였다(15회차)
+    press2: { speaker: '수사관', text: CONFRONT.press2?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'accept', code: round2?.first || beat.code, final: true, shown: beat.code }) },
     wrong2: { speaker: who?.name, text: wrongLineOf(beat.code), hint: left2 > 0 ? `▶ 한 번 더 내민다 (남은 기회 ${left2})` : '▶ 탭하여 다음', next: retry2 },
-    holdFail: { speaker: '수사 노트', text: CONFRONT.holdFail, hint: '▶ 결말 보기', next: () => onDone(round2?.first || beat.code) },
+    holdFail: { speaker: '수사 노트', text: CONFRONT.holdFail, hint: '▶ 결말 보기', next: () => { onHold?.(null, false); onDone(round2?.first || beat.code); } },
     accept: { speaker: who?.name, text: (beat.final && CONFRONT.accept2 ? CONFRONT.accept2 : (CONFRONT.accept[beat.code] || '')) + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
     note: { speaker: '수사 노트', text: CONFRONT.noteBy?.[beat.code] || (CONFRONT.noteStatement && !brokeIds.has(CONFRONT.noteStatement) && CONFRONT.noteBefore) || CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
     near: { speaker: who?.name, text: CONFRONT.nearLine, hint: again, next: retry },
@@ -128,7 +130,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
       </div>
       {proved && <div className="cf-stamp" key={beat.code}>⚖️ 입증</div>}
       {beat.code && beat.kind !== 'deny' && (
-        <div className="cf-shown">📎 내민 증거 — {titleOf(beat.code)}</div>
+        <div className="cf-shown">📎 내민 증거 — {titleOf(beat.shown || beat.code)}</div>
       )}
       {!picking && (
         <DialogueBox ref={dlgRef} speaker={line.speaker} text={note ? `${body}\n${note}` : body}
