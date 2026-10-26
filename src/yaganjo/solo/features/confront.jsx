@@ -147,7 +147,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
               : <span>⚖️ <b>그 시각 그가 어디서 무엇을 했는지 보여 주는 기록</b> 한 장 · 남은 기회 {left}</span>}
           </div>
           {usedCodes.size > 0 && (
-            <p className="cf-used-note">✅ — 2차 심문에서 이 사람의 거짓말을 무너뜨린 증거. 대질에서 다시 내밀 수 있어요.</p>
+            <p className="cf-used-note">✅ — 2차 심문에서 이 사람의 거짓말을 무너뜨린 증거(1차·튜토리얼에서 깬 것은 아님). 대질에서 다시 내밀 수 있어요.</p>
           )}
           {persons.length > 1 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>

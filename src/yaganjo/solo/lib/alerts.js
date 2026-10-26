@@ -28,7 +28,7 @@ export function questionBreakdown(sid, state, phase = 1) {
   //   실제 남은 개수보다 부풀려 찍힌다.
   const keySts = new Set();
   const markKey = (stId) => { if (stId && !broke.has(stId)) keySts.add(stId); };
-  const targetOf = (code) => { const t = clueTargetIn(open, code); return t?.kind === 'contradict' ? t.stId : null; };
+  const targetOf = (code) => { const t = clueTargetIn(open, code, broke); return t?.kind === 'contradict' ? t.stId : null; };
   let total = 0;
   for (const s of open) {
     if (asked.has(s.id)) {

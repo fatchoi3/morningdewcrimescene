@@ -103,8 +103,9 @@ export function BriefingVN({ onDone }) {
 export function EventVN({ onDone }) {
   const beats = [
     { loc: '무전', text: '"…수사관님, 현장 감식 끝났습니다. C통로와 동쪽 구역, 조사 목적으로 들어가셔도 됩니다."' },
-    { loc: '현장', text: '"치운 건 파렛트와 시신뿐입니다. 바닥의 자국, 랙 1단에 나와 있던 것, 3단에 얹혀 있던 것, 시신 옆에 떨어져 있던 종이는 그날 새벽 그대로입니다."' },
-    { loc: '영장', text: '압수수색 영장이 나왔다. 2층 사무실·관제실·계단을 볼 수 있다. 탈의실 끝 조장의 사물함은 자물쇠가 걸려 있다 — 사물함 열쇠가 있어야 열린다.' },
+    // 「치운 건 파렛트와 시신」인데 그림·단서 글에는 파렛트가 그대로 있다(16회차 셋) — 옮긴 건 시신뿐, 파렛트는 사진대로 제자리에
+    { loc: '현장', text: '"옮긴 건 시신뿐입니다. 넘어진 파렛트는 감식반이 들어냈다가 사진 기준으로 제자리에 눕혀 뒀습니다. 바닥의 자국, 랙 1단에 나와 있던 것, 3단에 얹혀 있던 것, 시신 옆에 떨어져 있던 종이는 그날 새벽 그대로입니다."' },
+    { loc: '영장', text: '압수수색 영장이 나왔다. 2층 사무실·관제실·계단을 볼 수 있다. 탈의실 끝 조장의 사물함은 자물쇠가 걸려 있다 — 사물함 마스터키가 있어야 열린다. 여섯 사람의 칸 어딘가에서 나올지도 모른다.' },
     { loc: 'CCTV', text: '본사 보안업체에서 카메라 여섯 대의 원본이 왔다. 그날 밤 전 구간이다. 이 센터의 카메라는 사람이 아니라 물건과 사고를 보려고 달았다 — 얼굴이 남는 것은 정문 G-1 하나뿐이고, 자동문 M-2는 문 위에서 수직으로 내려다봐 안전모와 어깨만 남는다.' },
     { text: '감식반이 합류했다. 들고 있는 채취물이 있으면 감식 의뢰실에 먼저 맡겨 두세요 — 간단한 성분 검사는 맡기는 즉시 나오고, 정밀 감식은 시간이 걸립니다.' },
     { loc: '1차 소견', text: '"사인은 아직 압사로 보고 있습니다. 정밀 부검은 의뢰만 해 둔 상태입니다."' },
@@ -121,7 +122,8 @@ export function EventVN({ onDone }) {
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 40% at 50% 30%, #c0585822, transparent 70%)', animation: 'aablink 2.2s ease-in-out infinite' }} />
       </div>
       <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 중간 점검 · 현장 개방</div>
-      <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
+      {/* 말하는 사람은 무전·젊은 형사다 — 수사관 그림이 입을 움직여 수사관이 말하는 것처럼 보였다(16회차) */}
+      <div className="aa-room-fig"><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
         actions={[{ label: '⏭ 건너뛰기', onClick: onDone }]}
@@ -155,7 +157,8 @@ export function EventVN2({ onDone, hasTumbler }) {
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 40% at 50% 30%, #c0585822, transparent 70%)', animation: 'aablink 2.2s ease-in-out infinite' }} />
       </div>
       <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 2차 사건 · 정밀 부검</div>
-      <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
+      {/* 말하는 사람은 무전·젊은 형사다 — 수사관 그림이 입을 움직여 수사관이 말하는 것처럼 보였다(16회차) */}
+      <div className="aa-room-fig"><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
         actions={[{ label: '⏭ 건너뛰기', onClick: onDone }]}

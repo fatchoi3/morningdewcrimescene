@@ -237,9 +237,10 @@ const isChatApp = (t) => t === 'kakao' || t === 'sms';
 //   폰 잠금 네 자리의 출처는 폰마다 다르고, 그 출처는 카드 본문이 말한다.
 const recoverHint = () => '네 자리 숫자입니다 — 그 사람이 잊지 않는 날짜를 단서에서 찾아보세요';
 // 이미 들은 말 중 비밀번호 이야기 — 잠금 화면에 다시 띄운다(2026-10-01 시험: 「딸 생일」을 듣고도 어디서 들었는지 잊었다)
-const heardPinLines = (talkLog) => {
+// 그 폰 주인이 한 말만 — 조장 폰 잠금 화면에 흐엉의 「딸 생일」이 떠 헷갈렸다(16회차). 주인이 용의자가 아니면(조장) 빈 목록
+const heardPinLines = (talkLog, owner) => {
   const out = [];
-  for (const s of suspects) for (const r of (talkLog?.[s.id] || [])) {
+  for (const s of suspects.filter((x) => !owner || x.name === owner)) for (const r of (talkLog?.[s.id] || [])) {
     if (/비밀번호|비번|잠금/.test(r.a || '')) out.push({ who: s.name, a: String(r.a).replace(/\s+/g, ' ').slice(0, 90) });
   }
   return out.slice(-4);
@@ -309,10 +310,10 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
             {pinMsg && <div style={{ color: 'var(--muted)', fontSize: '.85rem' }}>{pinMsg}</div>}
             {/* 데이터에 적힌 힌트(「시작한 날」 등)는 처음부터 — 예전엔 아예 보이지 않았다 */}
             {clue.phone.lock?.hint && <div className="kkr-hint">힌트 — {clue.phone.lock.hint}</div>}
-            {heardPinLines(talkLog).length > 0 && (
+            {suspects.some((x) => x.name === clue.person) && heardPinLines(talkLog, clue.person).length > 0 && (
               <div className="kkr-heard">
                 <div className="kkr-heard-h">🗣 들은 말 — 비밀번호 이야기</div>
-                {heardPinLines(talkLog).map((h, i) => <div key={i}><b>{h.who}</b> 「{h.a}」</div>)}
+                {heardPinLines(talkLog, clue.person).map((h, i) => <div key={i}><b>{h.who}</b> 「{h.a}」</div>)}
               </div>
             )}
             {pinFails >= 3 && <div className="kkr-hint">힌트: {recoverHint(clue)}</div>}

@@ -136,7 +136,7 @@ export const DATA = resolveTokens({
         text: '…03시 24분이면 순찰 일지 쓰러 올라간 때입니다. 화면에 떠 있었습니다.',
         press: '03시 24분쯤 사무실에 있었던 건 맞습니다. 순찰 일지 쓰러 올라갔습니다.',
         contradict: { codes: ['TST-E', 'LOOKUP-ZVLJ-37'],
-          text: '(오래 말이 없다) …기억이 정확하지 않습니다. 일지 쓰다가 본 것 같은데요. …그래도 저는 형님을 죽이지 않았습니다.' } },
+          text: '(로그를 오래 본다) …제 계정이 맞습니다. 일지 쓰다가… 본 것 같습니다. 순서는 정확하지 않습니다. …그래도 저는 형님을 죽이지 않았습니다.' } },
       { id: 'p2heard', say: '감춤', phase: 2, needs: 'KZBP-76',
         q: '조장님이 그저께 21시에 센터장님께 보낸 카톡입니다 — 「재해조사 보고서는 안전관리자가 단독으로 판단한 걸로 정리해서 올리겠습니다」. 이 얘기, 알고 계셨습니까?',
         text: '…그런 얘기를 형님이 하셨는지 저는 모릅니다. 어젯밤엔 23시 20분쯤 흡연장에서 담배 피우러 나갔다 마주친 게 전부입니다.',
@@ -150,8 +150,9 @@ export const DATA = resolveTokens({
         press: '(짧게) 저는 형을 원망하지 않았습니다.',
         soft: {
           'KZBP-76': '…그러니까 더 그렇습니다. 서면은 월요일이었어요. 그 전에 형을 설득할 수 있었습니다.',
-          'NWVL-86': '초안이잖아요. 날짜도 서명도 없어요. 형이 살아 있어야 고쳐 쓸 수 있는 종이입니다.',
-          'AOBI-88': '(찢긴 자리를 본다) …수첩 얘기를 왜 저한테 하십니까. 저는 형을 원망하지 않았습니다.',
+          // ⚖ 가 떴는데 어느 카드인지 알 길이 없었다(16회차 둘) — 두 달의 「기록」 쪽을 가리키게. 답은 주지 않는다
+          'NWVL-86': '초안이잖아요. 날짜도 서명도 없어요. 형이 살아 있어야 고쳐 쓸 수 있는 종이입니다. …형이 저한테 덮어 준 게 따로 있었다는 걸 아십니까.',
+          'AOBI-88': '(찢긴 자리를 본다) …그 두 달이 누구 건지 알아 오십시오. 그다음에 얘기합시다. 저는 형을 원망하지 않았습니다.',
         },
         contradict: { codes: ['GELH-98-2'],
           text: '(찢긴 두 달을 오래 본다) …그 두 달은 형이 덮어 줄 수 있는 일이었습니다. 보고서는 형이 월요일에 서면을 내면 제 이름으로 끝나는 일이었고요. 둘 다 쥐고 있던 사람은 형 하나였습니다. …그래도 저는 형님을 죽이지 않았습니다.' } },
@@ -209,7 +210,8 @@ export const DATA = resolveTokens({
           unlock: 'late', confess: true },
         // 「23시 40분 뒷문」을 한 번 털어놓은 뒤에는 나머지 둘도 같은 사실로 닫힌다 — 자백 직후에도 「정문으로」 「조회 때 있었다」를
         //   되풀이하고, 깰 때마다 같은 자백이 세 번까지 나왔다(14회차, 둘). ⚖ 도 지운다(contradict: null).
-        after: { when: 'late', text: '…뒷문이요. 23시 40분쯤에요. 아까 말씀드린 그대로예요.', press: '(고개를 숙인다) …그게 다예요. 아주머니는 잘못 없어요.', contradict: null },
+        // 세 대답이 글자까지 같았다(16회차) — 질문마다 그 질문에 맞는 말로
+        after: { when: 'late', text: '…조회 땐 없었어요. 23시 40분에 뒷문으로 들어왔으니까요. 뒤에 서 있었다는 건… 거짓말이에요.', press: '(고개를 숙인다) 아주머니가 「나중에」라고만 하셨어요.', contradict: null },
       },
       { id: 'door', say: '거짓', needs: ['TST-K', 'CWZR-46', 'MKYI-94'], q: '센터에는 어느 문으로 들어오셨습니까?',
         text: '정문으로 들어왔습니다.',
@@ -220,7 +222,7 @@ export const DATA = resolveTokens({
           unlock: 'late', confess: true },
         // 「23시 40분 뒷문」을 한 번 털어놓은 뒤에는 나머지 둘도 같은 사실로 닫힌다 — 자백 직후에도 「정문으로」 「조회 때 있었다」를
         //   되풀이하고, 깰 때마다 같은 자백이 세 번까지 나왔다(14회차, 둘). ⚖ 도 지운다(contradict: null).
-        after: { when: 'late', text: '…뒷문이요. 23시 40분쯤에요. 아까 말씀드린 그대로예요.', press: '(고개를 숙인다) …그게 다예요. 아주머니는 잘못 없어요.', contradict: null },
+        after: { when: 'late', text: '…뒷문이요. D 작업대 옆으로요. 아까 말씀드린 그대로예요.', press: '(고개를 숙인다) …뒷문 앞에서 기다렸다가 들어왔어요.', contradict: null },
       },
       { id: 'late', say: '사실', hidden: true, q: '왜 늦으셨습니까?',
         text: '시험 기간이었어요. 버스를 늦게 탔습니다. 뒤 주차장에 내렸는데, 정문으로 가면 찍히잖아요. 그래서 뒷문 앞에서 기다렸다가 들어왔어요. …아주머니는 잘못 없어요. 제가 부탁한 거예요.',
@@ -236,7 +238,8 @@ export const DATA = resolveTokens({
           text: '(고개를 들지 못한다) …제가 넣었습니다. 손목 때문에 받은 약이에요. 남은 거 서너 알. 그날 밤에 불려가고 싶지 않았어요. 설명서에 졸음 온다고 적혀 있길래… 한 번 주무시면 오늘은 넘어가겠지, 그 생각만 했습니다. …제가 한 겁니다. 조장님 못 피하신 거, 저 때문이에요.\n\n…근데 하나만 말씀드릴게요. 03시 30분에 텀블러가 비어 있었습니다. 그러니까 드신 겁니다. 두 시 전후에 드셨을 거예요 — 그 시간에 늘 채우시니까요.',
           unlock: 'why', confess: true, grants: 'TST-B' },
         // 이미 털어놓은 뒤(why)에는 다른 갈래에서 같은 자백을 되풀이하지 않는다 — 약봉투·텀블러 두 갈래에서 거의 같은 글이 두 번(15회차)
-        after: { when: 'why', text: '…아까 말씀드렸잖아요. 제가 넣었어요. 손목약 서너 알요.', press: '(고개를 숙인다) …그게 다예요.', contradict: null },
+        after: { when: 'why', text: '…아까 말씀드렸잖아요. 제가 넣었어요. 손목약 서너 알요.', press: '(고개를 숙인다) …그게 다예요.', contradict: null,
+          soft: { 'FBWD-37': '…네. 그 약이에요. 서너 알, 조장님 텀블러에요. 아까 말씀드렸잖아요.' } },
       },
       { id: 'why', say: '사실', hidden: true, q: '왜 불려가고 싶지 않았습니까?',
         text: '오늘부터 한 명씩 부른다고 들었어요. …오늘 밤만 넘기면 됐어요. 제 차례만 안 오면요.',
@@ -873,9 +876,11 @@ export const TOPICS = resolveTokens({
       text: '「반품. 박스 내려요. 커터로 테이프. 파손, 안 파손. 스티커. 단말.」',
       press: '「혼자예요. 밤에. 동쪽에 저 혼자.」',
       codes: ['QRDK-68', 'UDBD-88', 'HIEV-34', 'KBPA-97'] },
+    // 또박또박 털어놓은 직후 「…내 거. 내 사물함.」으로 돌아갔다(16회차) — 밝힌 뒤(saw)에는 그 말투로
     { id: 'locker', q: '탈의실과 사물함에 대해',
       text: '「사물함… 열었어요. 내 거.」',
       press: '「…내 거. 내 사물함.」',
+      after: { when: 'saw', text: '조장님 사물함을 열려고 마스터키를 가져왔어요. 제 칸이 아니라요.', press: '03시 35분에 보관함을 찍었습니다. 그 사진이 제 여권이 거기 있었다는 증거예요.' },
       codes: ['OIXS-24', 'CRZR-18', 'AHSG-34', 'GZME-70'] },
     { id: 'center', q: '지원센터에는 왜 가셨습니까?',
       text: '「…상담만 했어요.」',
@@ -913,6 +918,21 @@ export const TOPICS = resolveTokens({
 }, cast);
 
 const clueReactOf = (sid, code) => CLUE_REACT[sid]?.[code];
+// 밝힌 뒤의 인물 반응 — 흐엉은 여권을 밝힌 뒤(saw) 또렷한 한국어로 말한다. 반응만 서툰 말투로 돌아갔다(16회차)
+const CLUE_REACT_AFTER = {
+  S4: { when: 'saw', react: {
+    'GOCI-93': '제 여권입니다. 조장님 바지 주머니에서 빼냈어요.',
+    'OIXS-24': '제가 가져왔습니다. 조장님 사물함을 열려고요.',
+    'AHSG-34': '탈의실에 갔어요. 조장님 사물함이요.',
+    'EBEZ-58': '제 딸입니다. 여섯 살이에요. 하이퐁에 있어요.',
+    'CHOH-86': '지원센터에 사업장 옮기는 걸 물어봤어요.',
+    'LIPT-58': '딸 생일이에요. 찾으셨네요.',
+  } },
+};
+const clueReactAfter = (sid, code, unlocked) => {
+  const a = CLUE_REACT_AFTER[sid];
+  return a && (unlocked || []).includes(a.when) ? a.react[code] : undefined;
+};
 
 /** 이 인물과 '관련 있는' 증거 코드 집합(모순·반응에 쓰이는 코드) — 제시 목록 필터용. */
 export function relatedCodes(sid) {
@@ -930,9 +950,11 @@ export function relatedCodes(sid) {
 const needsOf = (s) => (Array.isArray(s.needs) ? s.needs : [s.needs]).filter(Boolean);
 
 /** 이 인물에게 열려 있는 '화제' — 그 주제 단서를 하나라도 챙기면 질문지에 질문이 생긴다. */
-export function visibleTopics(sid, collected) {
+export function visibleTopics(sid, collected, unlocked = []) {
   const have = new Set(collected || []);
-  return (TOPICS[sid] || []).filter((t) => t.codes.some((c) => have.has(c)));
+  const open = new Set(unlocked || []);
+  // 화제도 밝힌 뒤 말투로(after) — 진술과 같은 장치
+  return (TOPICS[sid] || []).filter((t) => t.codes.some((c) => have.has(c))).map((t) => voiced(t, open));
 }
 
 /** 그 화제로 이어서 물어볼 수 있는 단서 — 보유했고 반응이 있는 것만.
@@ -1006,7 +1028,9 @@ function voiced(s, open) {
   if (!s || !s.after || !open.has(s.after.when)) return s;
   return { ...s, text: s.after.text ?? s.text, press: s.after.press ?? s.press,
     // contradict: null — 밝힌 뒤에는 더 깰 거짓이 없다(⚖·반박 대상에서 빠진다)
-    ...(s.after.contradict === null ? { contradict: undefined } : {}) };
+    ...(s.after.contradict === null ? { contradict: undefined } : {}),
+    // soft 도 밝힌 뒤 말투로 — 자백 뒤에 약봉투를 대자 「먹었다니까요」로 되돌아갔다(16회차). after.soft 가 없으면 닫힌 진술은 soft 를 버린다
+    ...(s.after.soft ? { soft: s.after.soft } : s.after.contradict === null ? { soft: undefined } : {}) };
 }
 export function pressOf(sid, stId, unlocked = []) {
   const s = voiced(stOf(sid, stId), new Set(unlocked));
@@ -1016,14 +1040,20 @@ export function pressOf(sid, stId, unlocked = []) {
 
 /** 단서로 '질문'하면 반응할 (지금 보이는) 진술을 찾는다 — 모순(contradict) 우선, 없으면 반응(soft).
  *  visibleStatements 결과만 대상으로 하므로 아직 안 열린 진술로 건너뛰지 않는다(추리 순서 보존). */
-export function clueTargetIn(statements, code) {
-  let soft = null;
+// broke(선택) — 이미 깬 진술 id 들. 같은 증거로 깨지는 진술이 둘 이상이면(서장현 p2log·p2log24) 아직 안 깬 쪽을 먼저 겨눈다.
+//   안 그러면 먼저 깬 쪽만 계속 겨눠 「이미 짚은 모순이다」만 나오고, 남은 ⚖ 는 끝내 못 깼다(16회차).
+export function clueTargetIn(statements, code, broke = null) {
+  const isBroke = (id) => !!broke && (broke instanceof Set ? broke.has(id) : broke.includes(id));
+  let soft = null, done = null;
   for (const s of statements) {
     const codes = s.contradict ? (s.contradict.codes || [s.contradict.code]) : [];
-    if (codes.includes(code)) return { stId: s.id, kind: 'contradict' };
+    if (codes.includes(code)) {
+      if (!isBroke(s.id)) return { stId: s.id, kind: 'contradict' };
+      if (!done) done = { stId: s.id, kind: 'contradict' };
+    }
     if (!soft && s.soft && s.soft[code]) soft = { stId: s.id, kind: 'soft' };
   }
-  return soft;
+  return done || soft;
 }
 
 /** 이 인물의 '다른 진술'이 쓰는 코드인가 — 관련은 있는데 지금 이 진술이 아닐 때를 가리기 위한 것.
@@ -1064,7 +1094,7 @@ export function presentOn(sid, stId, code, confessed = false, unlocked = []) {
       return typeof v === 'string' ? { result: 'soft', text: v } : { result: 'soft', text: v.text, grants: v.grants };
     }
   }
-  const react = clueReactOf(sid, code);
+  const react = clueReactAfter(sid, code, unlocked) ?? clueReactOf(sid, code);
   if (react) {
     if (typeof react === 'string') return { result: 'soft', text: react };
     const text = (confessed && react.afterConfess) ? react.afterConfess : react.text;

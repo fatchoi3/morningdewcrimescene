@@ -123,11 +123,13 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
 
       {location.showBody && (
         <div className="s-zone-wrap" style={{ left: `${bodyPos.x}%`, top: `${bodyPos.y}%`, '--s': bodyPos.s }}>
-          <button className="s-zone body" onClick={() => onOpen('__body__')} aria-label="시신이 있던 자리 조사" />
+          <button className={`s-zone body${state?.bodySeen ? ' have' : ''}`} onClick={() => onOpen('__body__')} aria-label="시신이 있던 자리 조사" />
           <svg className="s-zone-outline body" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <rect x="2" y="2" width="96" height="96" rx="6" vectorEffect="non-scaling-stroke" />
           </svg>
           {/* 그림에 시신이 없다 — 「시신」 이름표가 빈 바닥을 가리켰다(15회차). 수습 뒤 현장 */}
+          {/* 본 뒤에도 「조사」로 남아 같은 글을 여러 번 읽었다(16회차) — 다른 물건처럼 ✓ */}
+          {state?.bodySeen && <span className="s-zone-check">✓</span>}
           <span className="s-zone-lab">시신이 있던 자리</span>
         </div>
       )}

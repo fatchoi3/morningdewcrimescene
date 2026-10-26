@@ -345,7 +345,7 @@ export default function SoloApp() {
               setSuspectId(id);
               if (progressStage >= 3 && !(state.p2Met || []).includes(id)) update({ p2Met: [...(state.p2Met || []), id] });
             }}
-            onOpen={(code) => setModalCode(code)} onLockedToast={showToast}
+            onOpen={(code) => { setModalCode(code); if (code === '__body__' && !state.bodySeen) update({ bodySeen: true }); }} onLockedToast={showToast}
             onBack={() => goHub()} />
         ) : (
           <HallNav locations={locations} stage={stage} progressStage={progressStage} collectedSet={collectedSet} state={state}

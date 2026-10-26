@@ -18,7 +18,8 @@ const PERSON_SPOTS = [
   { sid: 'S2', person: cast.S2.name, at: mapAt(43.5, 45.5) },
   { sid: 'S3', person: cast.S3.name, at: mapAt(58, 50.2) },
   { sid: 'S5', person: cast.S5.name, at: mapAt(74.5, 40.5) },
-  { sid: 'S4', person: cast.S4.name, at: mapAt(104.5, 51) },
+  // 평면도 밖(x 104.5)이라 폰에서 화면 밖에 걸렸다(16회차) — D 작업대 안쪽으로
+  { sid: 'S4', person: cast.S4.name, at: mapAt(97, 51) },
   { sid: 'S6', person: cast.S6.name, at: mapAt(52.6, 23) },
 ];
 // 공용 공간 — 지도 위 이름은 짧게(방 안 제목은 원래 이름 그대로)
@@ -30,7 +31,7 @@ const COMMON_SPOTS = [
   { id: 'ROOM-V', icon: '📹', label: '관제실 열람대', at: mapAt(47, 13, { floor: 2 }) },
   { id: 'ROOM-J', icon: '🚪', label: '갈림 · D구역 · 뒷문', at: mapAt(89, 58) },
 ];
-const BOSS_AT = mapAt(5.4, 30, { lift: 2.4 }); // 이름표가 휴게실 표식에 덮이지 않게 조금 위로(6·7회차)
+const BOSS_AT = mapAt(9, 30, { lift: 2.4 }); // 왼쪽 끝에 반쯤 잘렸다(16회차) — 조금 안쪽으로 // 이름표가 휴게실 표식에 덮이지 않게 조금 위로(6·7회차)
 const CRIME_AT = mapAt(95.1, 13);
 const LAB_AT = mapAt(62, 66);
 const CAM_L1 = mapAt(17.8, 34.6);
@@ -147,7 +148,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     }
     if (keyLocked(loc)) { onToast(loc.lockedMsg || '🔒 잠겨 있다'); return; }
     // 「열쇠가 필요하다」고 해 놓고 말없이 열려, 왜 열렸는지 몰랐다(8회차 둘) — 무엇으로 열었는지 한 줄
-    if (loc.lockedBy) onToast(`🔑 ${getClue(loc.lockedBy)?.title || '열쇠'}로 자물쇠를 연다`);
+    // 어디서 나온 열쇠인지까지 — 토스트가 짧아 「열쇠 없이 열렸다」고 읽혔다(16회차)
+    if (loc.lockedBy) { const k = getClue(loc.lockedBy); onToast(`🔑 ${k?.person ? `${k.person} 칸에서 나온 ` : ''}${k?.title || '열쇠'}로 자물쇠를 연다`, 4500); }
     onEnter(loc.id);
   };
 

@@ -114,6 +114,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const trust = state.trust?.[sid] ?? TRUST_MAX;
   const statements = sid ? visibleStatements(sid, collected, unlocked, phase) : [];
   const brokeOf = (id) => broke.find((e) => e.id === id);
+  const brokeIdList = broke.map((e) => e.id);
   const confessed = broke.some((e) => e.confess);
 
   const cur = curId ? statements.find((s) => s.id === curId) : null;
@@ -137,7 +138,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   전부 그 안에서만 보인다(트리를 펼쳐 두면 단서가 쌓일수록 남은 걸 못 찾는다).
   const cluesOf = (t) => topicClues(sid, t, collected, statements).map((code) => getClue(code)).filter(Boolean);
   const stsOf = (t) => topicStatements(sid, t, statements);
-  const topics = (sid ? visibleTopics(sid, collected) : [])
+  const topics = (sid ? visibleTopics(sid, collected, state.stUnlocked?.[sid] || []) : [])
     .filter((t) => askedTopics.includes(t.id) || cluesOf(t).length > 0 || stsOf(t).length > 0);
   const openTopic = openTopicId ? topics.find((t) => t.id === openTopicId) : null;
 
@@ -153,7 +154,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const rootSts = statements.filter((s) => !ownedByShownTopic.has(s.id)).sort(byQ);
   // 단서 한 줄의 상태 — ❗아직 안 물음 · ✔물어봄 · ✅이걸로 모순을 짚음
   const cKey = (c) => {
-    const tgt = clueTargetIn(statements, c.code);
+    const tgt = clueTargetIn(statements, c.code, brokeIdList);
     // ✅ 는 이 단서로 깼을 때만 — 같은 대답을 다른 단서로 깨면 내민 적 없는 카드에도 ✅ 가 붙었다(14회차). 옛 저장(code 없음)은 그대로.
     const bk = tgt && tgt.kind === 'contradict' ? brokeOf(tgt.stId) : null;
     const done = !!bk && (!bk.code || bk.code === c.code);
@@ -278,14 +279,17 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const missNote = (st) => {
     const n = (missRef.current[st.id] = (missRef.current[st.id] || 0) + 1);
     const canBreak = (st.contradict?.codes || []).some((c) => collected.includes(c));
-    return n >= 2 && !canBreak ? `${NL}(수사 노트) 이 대답을 깰 증거는 아직 손에 없는 것 같다 — 다른 곳을 더 조사하고 다시 오자.` : '';
+    if (n >= 2 && !canBreak) return `${NL}(수사 노트) 이 대답을 깰 증거는 아직 손에 없는 것 같다 — 다른 곳을 더 조사하고 다시 오자.`;
+    // 쥐고 있는데 두 번 헛치면 방향만 — 「⚖ 인데 어느 카드인지 모른다」(16회차 둘). 카드 이름은 주지 않는다
+    if (n >= 2 && canBreak) return `${NL}(수사 노트) 깰 증거는 이미 손에 있다 — 이 대답의 어느 낱말이 어느 기록과 어긋나는지 다시 보자.`;
+    return '';
   };
   const doPresent = (code) => {
     if (!cur) return;
     setPicker(false);
     // 반박으로 이미 써먹은 단서 — 질문지·방 배지에서도 '들어봤음'으로. 단, 그 단서 질문의 대답과 같은 자리(겨누는 대답)에
     //   들이댔을 때만 — 엉뚱한 대답에 내밀고도 ✔ 가 붙어, 눌러 보니 처음 듣는 대답이 나왔다(튜토리얼 1차, 임기석 지게차 키).
-    const aim = clueTargetIn(statements, code);
+    const aim = clueTargetIn(statements, code, brokeIdList);
     if (!aim || aim.stId === cur.id) onAskedClue?.(code);
     const r = onPresent(cur.id, code) || {};
     const ctitle = getClue(code)?.title || code;
@@ -348,7 +352,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   튀어나와 "요힘빈 얘기를 했는데 왜 일정 얘기로 돌아가지?" 가 된다.
   const askAboutClue = (code) => {
     setPicker(false);
-    const tgt = clueTargetIn(statements, code);
+    const tgt = clueTargetIn(statements, code, brokeIdList);
     const stId = tgt ? tgt.stId : null;
     // 이미 짚은 모순이면 조용히 재확인만(컷인·"새 질문/자백" 오정보 재출력 방지)
     const already = tgt && tgt.kind === 'contradict' && brokeOf(stId);
@@ -499,7 +503,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
             //   피커가 화면을 덮고 있어 무엇을 취소하는지는 이미 보인다.
             : { label: picker ? '✕ 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPeek(null); setPPerson(null); setPicker((p) => !p); } }),  // 열 때마다 「전체」로 — 앞의 인물 거르기가 남아 찾던 카드가 없었다(14회차)
           cur && { label: openTopic ? '↩ 이 이야기로' : '↩ 다른 질문', onClick: toMenu },
-          !cur && openTopic && { label: '↩ 다른 이야기', onClick: () => { setLine(null); setOpenTopicId(null); } },
+          // 단서 질문의 반응이 떠 있으면 「↩」는 그 이야기 목록으로 — 맨 위 질문지로 튕겨 같은 이야기를 다시 열어야 했다(16회차)
+          !cur && openTopic && (line
+            ? { label: '↩ 이 이야기로', onClick: () => setLine(null) }
+            : { label: '↩ 다른 이야기', onClick: () => { setLine(null); setOpenTopicId(null); } }),
           // 분량 대부분이 이 화면인데 20ms/자를 끊을 방법이 화면 탭뿐이었다 — 엄지 자리에도 둔다.
           //   (넘길 곳이 있을 때만 = 버튼이 타이핑 도중에 생겼다 사라지며 줄이 흔들리지 않게)
           dlgAdvance && { label: '⏭', onClick: () => dlgRef.current?.tap() },
