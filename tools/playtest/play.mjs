@@ -20,7 +20,7 @@ import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // 브라우저 — 판 번호를 박아 두면 playwright 가 판을 갈 때 통째로 못 뜬다(2026-10-07 5회차 시험이
 //   chromium-1228 이 사라져 세 명 모두 시작도 못 했다). 있는 판 중 가장 새것 → 없으면 컴퓨터의 크롬.
@@ -34,7 +34,10 @@ const CHROME = (() => {
   } catch { /* playwright 폴더 없음 */ }
   return 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 })();
-const ROOT = 'C:/ictk_repo/morningdewcrimescene/tools/playtest/.runs';
+// 저장소 위치를 박아 두면 폴더를 옮길 때 통째로 못 뜬다(2026-10-26 C:/ictk_repo → C:/C-app) — 이 파일 기준으로 찾는다
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const REPO = path.resolve(HERE, '..', '..');
+const ROOT = path.join(HERE, '.runs').split(path.sep).join('/');
 const [name, cmd, ...args] = process.argv.slice(2);
 if (!name || !cmd) { console.log('사용법은 파일 머리 주석'); process.exit(1); }
 const dir = path.join(ROOT, name);
@@ -74,7 +77,7 @@ const LIST_JS = `(() => {
 
 // ── 상주 조종기 ────────────────────────────────────────────────────────────
 async function serve(url, port, profile) {
-  const { default: puppeteer } = await import('file:///C:/ictk_repo/morningdewcrimescene/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js');
+  const { default: puppeteer } = await import(pathToFileURL(path.join(REPO, 'node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js')).href);
   const browser = await puppeteer.launch({
     executablePath: CHROME, headless: true, userDataDir: profile || path.join(dir, 'profile'),
     args: ['--no-first-run', '--no-default-browser-check', `--window-size=${W},${H}`, '--hide-scrollbars'],
