@@ -9,7 +9,7 @@
 - ✅ **무료 SD 인페인트 웹툴** = 브러시로 칠한 부분만 다시 그리고 나머지는 원본 유지 → 정렬 OK, 무료.
 
 ## 편집할 원본
-`C:\ictk_repo\morningdewcrimescene\public\images\people\stand\PLAYER.png`
+`C:\C-app\morningdewcrimescene\public\images\people\stand\PLAYER.png`
 (투명 배경 PNG, 329×1100)
 
 ## 무료 도구 (하나 골라서)
@@ -31,7 +31,7 @@
 - 뭔가 전체적으로 달라졌다 → ❌ 전체 재생성된 것. 그 도구의 "부분/브러시 편집" 모드가 맞는지 다시 확인.
 
 ## 저장 위치
-`C:\ictk_repo\morningdewcrimescene\art_frames\PLAYER_blink.png` (덮어쓰기)
+`C:\C-app\morningdewcrimescene\art_frames\PLAYER_blink.png` (덮어쓰기)
 - 배경이 흰색/검은색이어도 OK — 코드가 다시 투명 처리 + 정렬합니다.
 
 ## 다 되면

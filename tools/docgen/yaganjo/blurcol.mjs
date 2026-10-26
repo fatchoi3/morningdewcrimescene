@@ -1,4 +1,4 @@
-import sharp from 'file:///C:/ictk_repo/morningdewcrimescene/node_modules/sharp/dist/index.mjs';
+import sharp from 'sharp'; // 저장소 node_modules 에서 찾는다 — 위치를 박아 두면 폴더를 옮길 때 깨진다
 const [src, dst, X, Y, W, H, R = '0'] = process.argv.slice(2);
 const x = +X, y = +Y, w = +W, h = +H, rot = +R;
 const { width, height } = await sharp(src).metadata();
