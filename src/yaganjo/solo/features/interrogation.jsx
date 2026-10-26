@@ -169,7 +169,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   아직 안 써본 것을 위로 올리고, 인물로 좁힐 수 있게 한다(화제 목록과 같은 ❗/✔/✅ 표시).
   const presentPersons = [...new Set(presentable.map((c) => c.person).filter(Boolean))];
   //   (쓴 증거를 뒤로 보내던 정렬은 뺐다 — 같은 자리를 다시 누르면 엉뚱한 증거가 나갔다. 2026-10-01)
-  const presentList = presentable.filter((c) => !pPerson || c.person === pPerson);
+  // 묶음 칩(⭐ 추리 · 🔬 감식 · 🆕 새로 온 것) — 백 장 넘는 목록에서 이름 비슷한 카드를 헷갈렸다(15회차 셋)
+  const GROUP = { '__special': (c) => c.type === '특수', '__lab': (c) => c.type === '감식', '__new': (c) => (state.labNew || []).includes(c.code) };
+  const presentList = presentable.filter((c) => !pPerson || (GROUP[pPerson] ? GROUP[pPerson](c) : c.person === pPerson));
 
   // 화제 안에서 아직 안 물어본 게 남았나 — 다 들었으면 대사창이 그만 나가자고 말해준다
   const leftInTopic = openTopic
@@ -552,6 +554,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                 {presentPersons.length > 1 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>
                     <button style={chipStyle(!pPerson)} onClick={() => setPPerson(null)}>전체 {presentable.length}</button>
+                    {[['__new', '🆕 새로 온'], ['__special', '⭐ 추리'], ['__lab', '🔬 감식']].map(([k, lb]) => {
+                      const n = presentable.filter(GROUP[k]).length;
+                      return n > 0 && <button key={k} style={chipStyle(pPerson === k)} onClick={() => setPPerson(k)}>{lb} {n}</button>;
+                    })}
                     {presentPersons.map((p) => (
                       <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>
                     ))}

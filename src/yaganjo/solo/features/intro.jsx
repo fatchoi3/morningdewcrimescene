@@ -171,8 +171,9 @@ const bold = (s) => String(s || '').split(/\*\*(.+?)\*\*/g).map((p, i) => (i % 2
 export function EndingScreen({ result, onNewCase }) {
   const r = result;
   // 단계 넷 — 감으로 맞힌 사람과 증거로 맞힌 사람이 결말에서 갈린다(대질, 2026-10-07)
-  const perfect = r.culpritRight && r.methodRight && r.motiveRight && r.evidenceRight;
-  const grade = !r.culpritRight ? '오답' : perfect ? '완벽한 해결' : r.evidenceRight ? '증거로 입증' : '범인 정답';
+  // 완벽한 해결은 대질 둘째 단계(그가 물러선 자리)까지 무너뜨려야 — 둘째에서 막히고도 완벽이 나와 맥이 빠졌다(15회차, 2026-10-26 사용자 승인)
+  const perfect = r.culpritRight && r.methodRight && r.motiveRight && r.evidenceRight && r.holdRight;
+  const grade = !r.culpritRight ? '오답' : perfect ? '완벽한 해결' : r.evidenceRight ? (r.holdRight ? '증거로 입증' : '증거로 입증 — 그가 버텼다') : '범인 정답';
   const clueTitle = (code) => soloContent.getClue?.(code)?.title || code;
   return (
     <div className="solo-wrap">
@@ -217,7 +218,7 @@ export function EndingScreen({ result, onNewCase }) {
               </div>
             )}
             {perfect && (
-              <div style={{ marginTop: 6, color: 'var(--gold)', fontWeight: 800 }}>★ 범인·수법·동기에 결정적 증거까지 — 완벽한 해결</div>
+              <div style={{ marginTop: 6, color: 'var(--gold)', fontWeight: 800 }}>★ 범인·수법·동기에 결정적 증거, 그가 물러선 자리까지 — 완벽한 해결</div>
             )}
           </div>
           <div style={{ marginTop: 10, fontSize: '.9rem', color: '#cfcabb' }}>진범 <b style={{ color: '#fff' }}>{cast.S1.name}</b> · 직접 사인 <b style={{ color: '#fff' }}>후두부 가격 뒤 스트레치 랩 질식</b></div>

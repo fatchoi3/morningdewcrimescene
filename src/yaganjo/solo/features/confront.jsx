@@ -110,13 +110,15 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     : beat.kind === 'wrong2' && left2 > 0 ? `(수사 노트) ${CONFRONT.holdNeed?.[round2?.first] || ''}`
     : beat.kind === 'wrong' && left > 0 ? `(수사 노트) 필요한 건 그 시각 그가 어디서 무엇을 했는지 보여 주는 기록이다 — 동쪽으로 들어간 기록, 또는 03:24에 그가 2층에서 한 일의 기록. 빈 칸이나 없는 기록은 그를 어디에도 세우지 못한다.${usedCodes.size > 0 ? ' 2차 심문에서 그를 무너뜨린 증거(✅)도 다시 내밀 수 있다.' : ''}`
       : null;
-  const proved = beat.kind === 'accept' || beat.kind === 'note' || beat.kind === 'holdFail';
+  // 「⚖️ 입증」 도장은 둘째 단계까지 무너뜨렸을 때만 — 버틴 채 끝나면 찍지 않는다(완벽한 해결 조건과 같게)
+  const proved = beat.kind === 'accept' || beat.kind === 'note';
 
   const persons = [...new Set(clues.map((c) => c.person).filter(Boolean))];
   // 이미 깬 증거를 앞에 — 2차 심문에서 쓴 정답 카드를 대질에서 다시 낼 생각을 못 했다(2026-10-07)
   //   그다음 ⭐ 추리 단서 — 30~108장을 두세 번 밀어야 찾았다(9회차 셋 다).
   const rank = (c) => (usedCodes.has(c.code) ? 0 : c.type === '특수' ? 1 : 2);
-  const list = clues.filter((c) => !pPerson || c.person === pPerson)
+  const GROUP = { '__special': (c) => c.type === '특수', '__lab': (c) => soloContent.gamsikCodes?.has(c.code) || c.type === '감식' };
+  const list = clues.filter((c) => !pPerson || (GROUP[pPerson] ? GROUP[pPerson](c) : c.person === pPerson))
     .sort((a, b) => rank(a) - rank(b));
   const icon = (c) => soloContent.clueIcon?.(c) || '📄';
 
@@ -150,6 +152,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
           {persons.length > 1 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>
               <button style={chipStyle(!pPerson)} onClick={() => setPPerson(null)}>전체 {clues.length}</button>
+              {[['__special', '⭐ 추리'], ['__lab', '🔬 감식']].map(([k, lb]) => <button key={k} style={chipStyle(pPerson === k)} onClick={() => setPPerson(k)}>{lb} {clues.filter(GROUP[k]).length}</button>)}
               {persons.map((p) => <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>)}
             </div>
           )}
