@@ -67,7 +67,9 @@ export function CaseFileView({ state, onPick, onSubmit, onConfirmLock }) {
             <Avatar person={picked?.name} image={picked?.image} size={44} />
             <div className="ar-body"><div className="ar-name">{picked?.name}</div><div className="ar-occ">범인으로 확정</div></div>
           </div>
-          <Choice title="수법 — 어떻게 죽였는가" note={soloContent.caseKey.methodNote} items={METHODS} value={cf.method} onPick={(id) => set({ method: id })} />
+          {/* 수법을 고른 뒤 동기 목록이 화면 아래라 못 봤다(19회차) — 고르면 동기 칸으로 내려간다 */}
+          <Choice title="수법 — 어떻게 죽였는가" note={soloContent.caseKey.methodNote} items={METHODS} value={cf.method} onPick={(id) => { set({ method: id }); if (!cf.motive) setTimeout(() => document.getElementById('cf-motive')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); }} />
+          <div id="cf-motive" />
           <Choice title="동기 — 왜 죽였는가" items={MOTIVES} value={cf.motive} onPick={(id) => set({ motive: id })} />
           <div style={{ textAlign: 'center', margin: '20px 0 4px' }}>
             <button className="s-btn" disabled={!ready} style={!ready ? { opacity: 0.5 } : {}} onClick={onSubmit}>

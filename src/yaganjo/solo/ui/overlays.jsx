@@ -32,7 +32,8 @@ export function Shell({ title, onClose, children }) {
     return () => ro.disconnect();
   }, [children]);
   return (
-    <div className="s-modal-ov" onClick={onClose}>
+    // 바깥 탭으로 닫지 않는다(✕·ESC 만) — 빗나간 「다음 →」 탭이 창을 닫고 다음 탭이 방 「나가기」로 샜다(19회차), 빈 곳을 눌러 닫혔다(18회차)
+    <div className="s-modal-ov">
       {/* 본문만 밀린다(머리·바닥 줄은 고정) — 「▼ 아래에 더 있어요」가 본문 글자 위에 겹쳤다(튜토리얼 3차, 셋 다). 바닥 줄은 본문 밖이다. */}
       <div className="s-modal" onClick={(e) => e.stopPropagation()}>
         <div className="s-modal-h"><div className="mt">{title}</div><button className="mx" onClick={onClose}>✕</button></div>

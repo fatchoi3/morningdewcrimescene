@@ -927,3 +927,12 @@ body:has(.s-modal) .s-toast, body:has(.s-modal) .s-toast.low { top: 8px; bottom:
 .kk-memo { margin: 4px 6px 10px; padding: 8px 10px; border-radius: 8px; background: #1d2230; border: 1px dashed #ffe9a866; color: #ffe9a8; font-size: .8rem; line-height: 1.6; }
 .s-conclusion-btn { margin-top: 10px; }
 .s-conclusion { margin-top: 10px; padding: 8px 10px; border-left: 3px solid var(--gold); background: #1a1d24; }
+
+/* 19회차 — 새벽이슬과 같게 */
+/* 증거 고르기 — 머리띠와 칩을 한 덩어리로 위에 붙인다(밀면 칩이 사라졌다) */
+.aa-present-top { position: sticky; top: -10px; z-index: 2; background: #0b1220; margin: -10px -12px 8px; padding: 10px 12px 2px; border-bottom: 1px solid #ffffff14; }
+.aa-present-top .aa-present-h { position: static; margin: 0 0 8px; padding: 0; background: none; }
+/* 꺼 둔 넘기기 — 자리만 지킨다 */
+.aa-dlg-act:disabled { opacity: .35; cursor: default; }
+/* 진행 막대는 span 이라 「.hall-hud-chip span 은 블록」 규칙에 눌려 flex 가 풀려 있었다 */
+@media not all and (orientation: landscape) and (max-height: 500px) { .hall-hud-chip .hall-steps { display: flex; gap: 3px; flex-wrap: nowrap; } }

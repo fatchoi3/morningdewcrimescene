@@ -89,7 +89,7 @@ function ClueGroups({ clues, onOpen, fresh = [] }) {
       {clues.length > 0 && (
         <div className="s-clue-filter">
           {FILTERS.filter((x) => !x.test || clues.some(x.test)).map((x) => (
-            <button key={x.id} className={f === x.id ? 'on' : ''} onClick={() => setF(x.id)}>
+            <button key={x.id} className={f === x.id ? 'on' : ''} onClick={() => { setF(x.id); if (q) setQ(''); }}>
               {x.label} {x.test ? clues.filter(x.test).length : clues.length}
             </button>
           ))}

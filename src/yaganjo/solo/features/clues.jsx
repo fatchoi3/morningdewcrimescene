@@ -34,15 +34,16 @@ const pagerMinH = (pages, hasImage) => {
 
 // ── 단서 열람 모달 ─────────────────────────────────────────────────────────
 // 셈의 결론 — 직접 따져 본 뒤 눌러 펼친다
-function Conclusion({ text }) {
+// label — 셈이 아닌 카드(없어진 두 달)는 「짚어 볼 것」
+function Conclusion({ text, label = '셈의 결론' }) {
   const [open, setOpen] = useState(false);
   return open
-    ? <div className="s-detail s-conclusion">▶ 셈의 결론 — {text}</div>
-    : <button className="s-btn sm s-conclusion-btn" onClick={() => setOpen(true)}>▶ 셈의 결론 펼치기</button>;
+    ? <div className="s-detail s-conclusion">▶ {label} — {text}</div>
+    : <button className="s-btn sm s-conclusion-btn" onClick={() => setOpen(true)}>▶ {label} 펼치기</button>;
 }
 
 // M-2 자동문 다섯 장 — 시각순(V3~V7)
-const M2_SEQ = ['JPAD-03', 'JSFS-29', 'MPXG-54', 'QNWA-14', 'EMSY-33'];
+export const M2_SEQ = ['JPAD-03', 'JSFS-29', 'MPXG-54', 'QNWA-14', 'EMSY-33'];
 
 export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talkLog, notes, onNotes }) {
   const isBody = code === '__body__';
@@ -193,7 +194,7 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talk
     <Shell title={<>{c.title}{tag}{person}</>} onClose={onClose}>
       {c.image && <img src={c.image} alt="" />}
       <div className="s-detail">{c.detail || c.description || '특별한 설명이 없습니다.'}</div>
-      {c.conclusion && <Conclusion text={c.conclusion} />}
+      {c.conclusion && <Conclusion text={c.conclusion} label={c.conclusionLabel} />}
       {Array.isArray(c.unlockedBy) && c.unlockedBy.length > 0 && (
         <p style={{ color: 'var(--muted)', fontSize: '.78rem', marginTop: 10 }}>🔗 연관 단서를 모으면 새로운 사실이 드러날 수 있습니다.</p>
       )}

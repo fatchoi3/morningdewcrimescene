@@ -20,7 +20,7 @@ import { HallNav } from './features/hub.jsx';
 import { LoadingBar } from './art.jsx';
 import { SceneView } from './features/scene.jsx';
 import { CrossExamView, clueUsedAnywhere } from './features/interrogation.jsx';
-import { ClueModal } from './features/clues.jsx';
+import { ClueModal, M2_SEQ } from './features/clues.jsx';
 import { CaseRecord } from './features/record.jsx';
 import { CaseFileView } from './features/casefile.jsx';
 import { StartScreen, BriefingVN, EventVN, EventVN2, EndingScreen } from './features/intro.jsx';
@@ -234,6 +234,9 @@ export default function SoloApp() {
   const p2Count = (state.p2Met || []).filter((id) => suspectIds.includes(id)).length;
   const gamsikGot = [...gamsikCodes].filter((c) => collectedSet.has(c)).length;
   const phoneGot = PHONE_CODES.filter((c) => collectedSet.has(c)).length;
+  // 관제실 M-2 자동문 다섯 장 — 수법(03:28·03:41)과 대질 둘째 단계가 여기서 나온다. 안 보고도 끝까지 갔다(19회차 둘)
+  const m2Got = M2_SEQ.filter((c) => collectedSet.has(c)).length;
+  const p2Left = suspectIds.filter((id) => !(state.p2Met || []).includes(id)).map((id) => suspects.find((s) => s.id === id)?.name).filter(Boolean);
   const specialGot = SPECIAL_CODES.filter((c) => collectedSet.has(c)).length;
   // 3막은 재는 축이 다르다 — 현장 단서는 이미 채워진 뒤라 그대로 두면 분자가 분모를 넘고(C통로 10개/3),
   //   정작 남은 일(2차 심문·감식·폰)은 어디에도 안 보였다. 2막 표기도 목표치까지만 센다.
@@ -276,6 +279,7 @@ export default function SoloApp() {
     `${lookupDone ? '✓' : '①'} 2층 사무실 조장 태블릿 — 관리자 조회(사번·네 자리)`,
     `${bossPhoneDone ? '✓' : '②'} 조장 폰(C통로 현장)`,
     `${p2Count >= suspectIds.length ? '✓' : '③'} 2차 심문 ${p2Count}/${suspectIds.length}`,
+    `${m2Got >= M2_SEQ.length || collectedSet.has('VZBL-10') ? '✓' : '④'} 관제실 열람대 — M-2 자동문 ${m2Got}/${M2_SEQ.length}`,
   ];
   const ch3Extra = phoneLeftAt.filter((x) => x !== '2층 사무실' && x !== 'C통로 현장');
   // 찢긴 두 달을 셋 다 결말에서야 알았다(18회차) — ⭐ 를 쥐고도 그 두 달의 주인을 안 짚었으면 덤에 한 줄
@@ -292,7 +296,7 @@ export default function SoloApp() {
     <>
       {suspectId ? (
           <CrossExamView key={suspectId} suspect={suspects.find((s) => s.id === suspectId)} state={state}
-            phase={progressStage >= 3 ? 2 : 1}
+            phase={progressStage >= 3 ? 2 : 1} openStage={stage}
             tutorialSeen={!!state.tutorialSeen} tutFinaleSeen={!!state.tutFinaleSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
             onSkipTutorial={() => update({ tutorialSeen: true, tutFinaleSeen: true })}
             onIntroSeen={(sid, ph) => { const cur = state.introSeen?.[sid] || []; if (!cur.includes(ph)) update({ introSeen: { ...(state.introSeen || {}), [sid]: [...cur, ph] } }); }}
@@ -320,6 +324,8 @@ export default function SoloApp() {
                   title: '3장으로 넘어갈까요?',
                   body: (<>
                     <p>지금 나가면 <b>3장(2차 심문)</b>이 시작됩니다 — 휴대폰 영장과 감식 결과가 함께 옵니다.</p>
+                    {/* 관제실을 통째로 안 보고 넘어갔다(19회차) — 덜 본 곳을 이름으로 */}
+                    {ch2Unseen.length > 0 && <p style={{ fontSize: '.86rem', color: 'var(--gold)' }}>아직 덜 본 곳: {ch2Unseen.join(' · ')}</p>}
                     <p style={{ fontSize: '.86rem', color: 'var(--muted)' }}>지금까지 본 장소와 사람은 3장에서도 계속 볼 수 있어요. 이 사람에게 더 물을 게 있으면 「더 묻는다」.</p>
                   </>),
                   ok: '넘어간다', cancel: '더 묻는다',
@@ -357,6 +363,8 @@ export default function SoloApp() {
                 const bk = { ...(state.broke || {}) };
                 const cur = bk[suspectId] || [];
                 if (!cur.some((e) => e.id === stId)) bk[suspectId] = [...cur, { id: stId, text: r.text, confess: !!r.confess, code }];
+                // 쌍둥이 대답도 같이 닫는다 — 같은 거짓을 같은 증거로 두 번 깨야 했다(19회차)
+                if (r.twin && !bk[suspectId].some((e) => e.id === r.twin)) bk[suspectId] = [...bk[suspectId], { id: r.twin, text: r.text, confess: !!r.confess, code }];
                 const patch = { broke: bk };
                 if (r.unlock) { const u = { ...(state.stUnlocked || {}) }; u[suspectId] = [...new Set([...(u[suspectId] || []), r.unlock])]; patch.stUnlocked = u; }
                 update(patch);
@@ -448,6 +456,13 @@ export default function SoloApp() {
                     {/* 대질 둘째 단계의 관문 — 「그런 기록을 본 적이 없다」로 셋 다 막혔다(17회차, 사용자 승인). 카드 이름이 아니라 자리만 */}
                     {!collectedSet.has('LOOKUP-ZVLJ-37') && (
                       <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 2층 사무실 조장 태블릿의 「관리자 조회」를 아직 안 했어요 — 사번과 네 자리가 필요합니다. 그가 물러설 자리를 무너뜨릴 기록이 거기 있을 수 있습니다.</p>
+                    )}
+                    {/* 자동문 기록 없이 지목해 수법과 대질 둘째 단계를 놓쳤다(19회차 둘) — 자리만 */}
+                    {!collectedSet.has('VZBL-10') && m2Got < M2_SEQ.length && (
+                      <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 관제실 열람대의 M-2 자동문 기록을 다 보지 않았어요({m2Got}/{M2_SEQ.length}) — 그날 밤 동쪽을 드나든 사람과 지게차가 거기 찍혀 있습니다.</p>
+                    )}
+                    {p2Count > 0 && p2Left.length > 0 && (
+                      <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 아직 2차 심문을 안 한 사람: {p2Left.join(' · ')}</p>
                     )}
                     <p>제출하면 사건이 종결되고 전말이 공개됩니다. <b>수사로 돌아올 수 없습니다.</b></p>
                     <p style={{ fontSize: '.82rem', color: 'var(--muted)', lineHeight: 1.7 }}>

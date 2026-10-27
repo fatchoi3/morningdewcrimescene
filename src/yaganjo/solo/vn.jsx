@@ -63,7 +63,7 @@ export const DialogueBox = forwardRef(function DialogueBox({ location, speaker, 
         {acts.length > 0 && (
           <div className="aa-dlg-actions" onClick={(e) => e.stopPropagation()}>
             {acts.map((a, i) => (
-              <button key={i} className={`aa-dlg-act${a.tone ? ' ' + a.tone : ''}`} onClick={a.onClick}>{a.label}</button>
+              <button key={i} className={`aa-dlg-act${a.tone ? ' ' + a.tone : ''}`} disabled={a.disabled} onClick={a.onClick}>{a.label}</button>
             ))}
           </div>
         )}

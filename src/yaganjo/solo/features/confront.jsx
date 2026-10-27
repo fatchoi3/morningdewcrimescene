@@ -153,6 +153,10 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
       )}
       {picking && (
         <div className="aa-present" onClick={(e) => e.stopPropagation()}>
+          {/* 머리띠·칩을 한 덩어리로 위에 — 밀면 칩이 사라졌다(19회차, 새벽이슬과 같게) */}
+          <div className="aa-present-top">
+          {/* 둘째 단계 — 그의 마지막 말을 놓친 채 골랐다(19회차). 무엇에서 물러섰는지 위에 고정 */}
+          {round2 && CONFRONT.hold?.[round2.first] && <div className="aa-present-q" style={{ marginBottom: 6 }}>{who?.name} — “{CONFRONT.hold[round2.first]}”</div>}
           <div className="aa-present-h">
             {/* 정답 둘 중 하나(03:24 태블릿 조회)는 현장이 아니라 그 시각의 거짓말을 깨는 증거다 — 「그 자리」만 말하자 현장 증거만 찾았다(13회차) */}
             {round2
@@ -169,6 +173,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
               {persons.map((p) => <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>)}
             </div>
           )}
+          </div>
           <div className="s-grid">
             {list.map((c) => (
               <button key={c.code} className={`s-card${usedCodes.has(c.code) ? ' cf-used' : ''}`}

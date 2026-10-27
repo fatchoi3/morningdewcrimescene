@@ -237,7 +237,9 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   const pan = (dir) => camRef.current?.scrollBy({ left: dir * camRef.current.clientWidth * 0.6, behavior: 'smooth' });
   return (
     <div className="aa-fs">
-      <div className={`hall-cam${overview ? ' overview' : ''}`} ref={camRef} onScroll={syncEdge}>
+      {/* 3장 목표 상자가 2층 사무실 칸을 덮었다(19회차) — 3장에서 처음 지도를 손으로 만지면 한 번 접는다(자동 이동은 안 접는다) */}
+      <div className={`hall-cam${overview ? ' overview' : ''}`} ref={camRef} onScroll={syncEdge}
+        onPointerDown={() => { if (progressStage >= 3 && !LAST_SCROLL._objAutoFold) { LAST_SCROLL._objAutoFold = true; setObjFold(true); } }}>
       <div className="hall-fit">
           <CenterMap crimeOpen={crime ? crime.stage <= stage : undefined} />
 
