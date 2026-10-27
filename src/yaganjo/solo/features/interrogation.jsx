@@ -69,10 +69,14 @@ const chipStyle = (on) => ({
 //   화면 문법: 하단 바 없음 · 대사창 우측 하단=이 화면에서 할 것(반박·다른 질문·수첩·나가기).
 //   수첩(📓)만은 다른 화면과 달리 우측 상단이 아니라 대사창 액션행에 둔다 —
 //   심문은 한 화면에 오래 머물고 단서 확인이 잦은데, 폰 세로에서 우측 상단은 엄지가 닿지 않는다.
-export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, tutFinaleSeen = true, onTutorialSeen, onAsked, onAskedClue, onAskedTopic, onPress, onPresent, onOpenRecord, onExit, onSkipTutorial, onLog, tutorialTarget }) {
+export function CrossExamView({ suspect, location, state, collectedClues, phase = 1, tutorialSeen, tutFinaleSeen = true, onTutorialSeen, onAsked, onAskedClue, onAskedTopic, onPress, onPresent, onOpenRecord, onExit, onSkipTutorial, onLog, onIntroSeen, tutorialTarget }) {
   const [curId, setCurId] = useState(null); // 지금 붙잡고 있는 질문(진술 id) — null = 질문 목록
   // 대사창 오버라이드: { text, kind } — 진입 시 인사말(1차/2차 다름)부터
-  const [line, setLine] = useState(() => (suspect ? { text: introOf(suspect.id, phase), kind: 'intro' } : null));
+  // 같은 심문(1차/2차)에 다시 찾아오면 인사는 건너뛰고 바로 질문지 — 매번 같은 인사를 넘겨야 했다(16회차)
+  const [line, setLine] = useState(() => (!suspect ? null
+    : tutorialSeen && (state.introSeen?.[suspect.id] || []).includes(phase) ? null
+    : { text: introOf(suspect.id, phase), kind: 'intro' }));
+  useEffect(() => { if (suspect && tutorialSeen) onIntroSeen?.(suspect.id, phase); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [picker, setPicker] = useState(false);
   const [pPerson, setPPerson] = useState(null); // 반박 시트 인물 필터 — null = 전체
   const [peek, setPeek] = useState(null); // 반박 시트에서 길게 눌러 들춰 본 단서
@@ -93,6 +97,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   첫 심문에는 성공하는 반박을 한 번 직접 해 보게 한다(tutorialTarget) — 튜토리얼이 반박을 말로만
   //   알려 주고 끝나서, 처음 들이민 반박이 빗나가자 「어디다 대야 하는지 감이 안 온다」고 했다.
   const [tutHit, setTutHit] = useState(false);
+  const [askedOpen, setAskedOpen] = useState(false); // 물어본 질문 펼침 — 목록이 길어 남은 걸 찾느라 내렸다(16회차)
   const [qOpen, setQOpen] = useState(false); // 증거 고르기 머리글의 반박할 말 — 세 줄 넘으면 눌러 펼친다(3차, 셋 다)
   const tutT = !tutorialSeen && tutorialTarget && (state.collected || []).includes(tutorialTarget.code)
     && visibleStatements(suspect?.id, state.collected || [], state.stUnlocked?.[suspect?.id] || [], phase).some((x) => x.id === tutorialTarget.stId)
@@ -108,6 +113,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const unlocked = state.stUnlocked?.[sid] || [];
   const pressedIds = state.pressed?.[sid] || [];
   const askedIds = state.askedQ?.[sid] || [];
+  // 들어올 때 이미 물어본 질문 — 접기는 이것만. 이번에 물은 걸 바로 접으면 목록이 밀려 엉뚱한 걸 누른다(2026-10-01과 같은 까닭)
+  const [askedAtEntry] = useState(() => new Set([...(state.askedQ?.[sid] || []), ...(state.pressed?.[sid] || [])]));
   const askedCodes = state.askedC?.[sid] || [];   // 이 인물에게 이미 들어본 단서
   const askedTopics = state.askedT?.[sid] || [];  // 이미 꺼낸 화제 — 그 아래 단서 질문이 열린다
   const broke = state.broke?.[sid] || [];
@@ -202,7 +209,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const syncMore = (el) => setAskMore(!!el && el.scrollHeight - el.scrollTop - el.clientHeight > 12);
   useLayoutEffect(() => { syncMore(askRef.current); });
   const breakableOf = (s) => !brokeOf(s.id) && (s.contradict?.codes || []).some((c) => collected.includes(c));
-  const keyLeft = questionBreakdown(sid, state, phase).key;
+  const { key: keyLeft, need: needLeft } = questionBreakdown(sid, state, phase);
   // 캐물은 뒤에는 첫 대답 아래에 캐물어 들은 말을 함께 둔다 — 반박 안내가 뜰 때 첫 대답만 떠서
   //   무엇을 반박하는지 헷갈렸다(튜토리얼 3차, 셋 다).
   const restText = (st) => {
@@ -223,7 +230,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     : tutorialSeen && !tutFinaleSeen ? '튜토리얼 끝 — 더 물어봐도 되고, 다 됐으면 금색 테두리 🚪 로 나가 마무리하세요.'
     : (hasAsks ? (pendingRoot > 0 ? `무엇을 물어볼까. (아직 안 물은 것 ${pendingRoot}개)` : '무엇을 물어볼까.')
       // 거짓이 숨은 대답(빨간 숫자)은 있는데 깰 증거가 없어 ⚖ 가 하나도 없으면 — 튜토리얼 뒤 여기서 멈췄다(3차, 둘)
-      + (keyLeft > 0 && !statements.some(breakableOf) ? ' 거짓이 숨은 대답이 있지만 깰 증거가 아직 없다 — 단서를 더 모으면 질문 끝에 ⚖ 가 붙는다.' : '')
+      // 물어본 거짓(needLeft)도 — 다 물은 뒤엔 keyLeft 가 0 이라 들어가자마자는 아무 말이 없었다(16회차 셋)
+      + ((keyLeft > 0 || needLeft > 0) && !statements.some(breakableOf) ? ' 거짓이 숨은 대답이 있지만 깰 증거는 다른 곳에 있다 — 단서를 더 모으면 질문 끝에 ⚖ 가 붙는다.' : '')
       : '…(지금은 물어볼 것이 없다. 단서를 모으거나 수사가 진행되면 질문이 생긴다.)');
   // 캐묻기·반응 라인을 닫으면 텍스트가 답변(cur.text)으로 되돌아가는데, DialogueBox 는 텍스트가
   //   바뀐 것으로 보고 방금 읽은 답변을 처음부터 다시 친다. vn.jsx 는 건드릴 수 없으니
@@ -445,7 +453,20 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
         <div className="aa-ask" ref={askRef} onScroll={(e) => { askScroll.current[askKey] = e.currentTarget.scrollTop; syncMore(e.currentTarget); }}>
           <div className="aa-ask-h">🎙 무엇을 물어볼까{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
           {rootSts.length > 0 && <div className="aa-ask-sec">💬 질문</div>}
-          {rootSts.map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} breakable={breakableOf(s)} />)}
+          {/* 이미 물은(또는 깬) 질문은 접어 둔다 — ⚖ 가 붙은 것·튜토리얼 목표는 늘 보인다. 튜토리얼 심문은 접지 않는다 */}
+          {(() => {
+            const folded = (s) => !isTutorial && !breakableOf(s) && !(tutT && s.id === tutT.stId) && askedAtEntry.has(s.id);
+            const shown = rootSts.filter((s) => askedOpen || !folded(s));
+            const nFold = rootSts.filter(folded).length;
+            return (<>
+              {shown.map((s) => <Ask key={s.id} s={s} k={sKey(s)} label={qLabel(s)} onPick={pickStatement} tut={tutT && s.id === tutT.stId} breakable={breakableOf(s)} />)}
+              {nFold > 0 && (
+                <button className="asked" onClick={() => setAskedOpen((v) => !v)}>
+                  {askedOpen ? `▲ 물어본 질문 접기` : `✔ 물어본 질문 ${nFold}개 펼치기`}
+                </button>
+              )}
+            </>);
+          })()}
           {/* 이야깃거리 — 관련 단서를 챙기면 열린다. 파생 질문은 안에 들어가야 보인다 */}
           {topics.length > 0 && <div className="aa-ask-sec">📁 단서로 여는 이야기</div>}
           {topics.map((t) => {

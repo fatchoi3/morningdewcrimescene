@@ -18,7 +18,7 @@ const sidOfPerson = (person) => suspects.find((s) => s.name === person)?.id || n
  *           숫자가 "여기 뭔가 남았다" 말고는 아무것도 못 알려준다.
  */
 export function questionBreakdown(sid, state, phase = 1) {
-  if (!sid) return { total: 0, key: 0 };
+  if (!sid) return { total: 0, key: 0, need: 0 };
   const collected = state.collected || [];
   const open = visibleStatements(sid, collected, state.stUnlocked?.[sid] || [], phase);
   const asked = new Set(state.askedQ?.[sid] || []);
@@ -30,12 +30,16 @@ export function questionBreakdown(sid, state, phase = 1) {
   const markKey = (stId) => { if (stId && !broke.has(stId)) keySts.add(stId); };
   const targetOf = (code) => { const t = clueTargetIn(open, code, broke); return t?.kind === 'contradict' ? t.stId : null; };
   let total = 0;
+  // need — 물어봤고 아직 못 깬 거짓인데 깰 증거가 손에 없는 것. 남은 질문(total)엔 안 세지만, 0 이면 지도가
+  //   「✓ 탐색완료」라 해 거짓이 남은 줄 몰랐다(16회차 셋)
+  let need = 0;
   for (const s of open) {
     if (asked.has(s.id)) {
       // 물어봤지만 못 깬 거짓을 지금 깰 증거를 쥐었으면 다시 센다 — 한 번 물은 뒤로는 그 증거를 주워도 배지가
       //   영영 안 켜져 「탐색완료」로 남았다(15회차, 차민우). 심문 화면의 ⚖ 와 같은 조건.
       const codes = s.contradict ? (s.contradict.codes || [s.contradict.code]) : [];
       if (!broke.has(s.id) && codes.some((c) => collected.includes(c))) { total += 1; markKey(s.id); }
+      else if (!broke.has(s.id) && codes.length) need += 1;
       continue;
     }
     total += 1;
@@ -53,7 +57,7 @@ export function questionBreakdown(sid, state, phase = 1) {
     total += left.length;
     left.forEach((c) => markKey(targetOf(c)));
   }
-  return { total, key: keySts.size };
+  return { total, key: keySts.size, need };
 }
 
 /** 인물에게 지금 물어볼 수 있는데 아직 안 물어본 것의 개수.
@@ -89,10 +93,10 @@ export function pendingClues(loc, state, stage = 1) {
  *   잠긴 장소(stage 미달)는 셀 필요가 없으므로 0.
  */
 export function locationAlerts(loc, state, stage = 1, phase = 1) {
-  if (!loc || loc.stage > stage) return { clues: 0, questions: 0, key: 0, total: 0 };
+  if (!loc || loc.stage > stage) return { clues: 0, questions: 0, key: 0, need: 0, total: 0 };
   const clues = pendingClues(loc, state, stage);
-  const q = loc.kind === 'room' ? questionBreakdown(sidOfPerson(loc.person), state, phase) : { total: 0, key: 0 };
-  return { clues, questions: q.total, key: q.key, total: clues + q.total };
+  const q = loc.kind === 'room' ? questionBreakdown(sidOfPerson(loc.person), state, phase) : { total: 0, key: 0, need: 0 };
+  return { clues, questions: q.total, key: q.key, need: q.need, total: clues + q.total };
 }
 
 /** 배지에 띄울 짧은 사유(툴팁용). */

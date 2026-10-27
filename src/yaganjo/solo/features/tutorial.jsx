@@ -13,7 +13,8 @@ const toRect = (r) => ({ x: r.left, y: r.top, w: r.width, h: r.height });
 
 // ── 튜토리얼 코치마크 — 클릭할 곳만 밝히고 주변은 어둡게+클릭 차단, 깜빡이는 화살표 안내 ──
 //   targetSel(선택자)의 실제 위치를 추적해 '구멍'을 내고, 나머지 4개 마스크가 클릭을 막는다.
-export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
+// top — 말풍선을 화면 맨 위에 붙인다(단서 창). 아래에 붙으면 창의 마지막 줄과 「▼ 아래에 더 있어요」를 덮었다(16회차)
+export function TutorialCoach({ targetSel, text, onSkip, dim = true, top = false }) {
   const [rect, setRect] = useState(null);
   const [box, setBox] = useState(null);
   // 건너뛰기는 두 번 눌러야 — 말풍선 속 글줄이 누를 대상(사람 그림) 위에 올 때 그냥 지나가다 눌러 튜토리얼이 꺼졌다
@@ -79,7 +80,7 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
   const NEED = 112;
   const roomUp = vy, roomDown = H - vb;
   const lower = vy + vh / 2 > H / 2;
-  const place = lower
+  const place = top ? 'dock' : lower
     ? (roomUp >= NEED ? 'above' : roomDown >= NEED ? 'below' : 'dock')
     : (roomDown >= NEED ? 'below' : roomUp >= NEED ? 'above' : 'dock');
   // 복도의 목표판(🎯 할 일·장 막대) — 말풍선이 그 위를 덮었다. 아래로 내려 비켜 선다
@@ -117,7 +118,7 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
       {blocks.map((b, i) => <div key={i} className="tut-mask clear" style={b} />)}
       <div className="tut-ring" style={{ left: hx, top: hy, width: hw, height: hh }} />
       {place === 'dock'
-        ? <div className={`tut-tip dock${dim ? ' mid' : ''}`} style={dim ? { top: 'auto', bottom: H - Math.min(dlgTop, vb) + 14 } : undefined}>{cap()}</div>
+        ? <div className={`tut-tip dock${top ? ' top' : dim ? ' mid' : ''}`} style={dim ? { top: 'auto', bottom: H - Math.min(dlgTop, vb) + 14 } : undefined}>{cap()}</div>
         : (
           <div className="tut-tip" style={{ left: cx, top: tipTop, transform: place === 'below' ? 'translate(-50%,0)' : 'translate(-50%,-100%)' }}>
             {place === 'below'

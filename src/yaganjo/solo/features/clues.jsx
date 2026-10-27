@@ -41,6 +41,9 @@ function Conclusion({ text }) {
     : <button className="s-btn sm s-conclusion-btn" onClick={() => setOpen(true)}>▶ 셈의 결론 펼치기</button>;
 }
 
+// M-2 자동문 다섯 장 — 시각순(V3~V7)
+const M2_SEQ = ['JPAD-03', 'JSFS-29', 'MPXG-54', 'QNWA-14', 'EMSY-33'];
+
 export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talkLog }) {
   const isBody = code === '__body__';
   const c = isBody ? null : getClue(code);
@@ -74,6 +77,24 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talk
           title={c.title}
           style={{ width: '100%', height: 'min(72vh, 760px)', border: 0, borderRadius: 10, background: '#090c11', display: 'block' }}
         />
+        {/* M-2 다섯 장을 오가며 세려면 열람대로 나갔다 들어와야 했다(16회차) — 이전·다음 구간만. 누계는 여전히 형사 몫 */}
+        {M2_SEQ.includes(code) && (() => {
+          const i = M2_SEQ.indexOf(code);
+          const nav = (to, txt) => {
+            if (!to) return <span style={{ flex: 1 }} />;
+            const ok = collectedSet.has(to);
+            return (
+              <button className="s-btn sm" style={{ flex: 1, opacity: ok ? 1 : 0.45 }} disabled={!ok}
+                title={ok ? '' : '열람대에서 아직 안 본 구간'} onClick={() => ok && onOpen?.(to)}>{txt}</button>
+            );
+          };
+          return (
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              {nav(M2_SEQ[i - 1], '◀ 이전 구간')}
+              {nav(M2_SEQ[i + 1], '다음 구간 ▶')}
+            </div>
+          );
+        })()}
       </Shell>
     );
   }

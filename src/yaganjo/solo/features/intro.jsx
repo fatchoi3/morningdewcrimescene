@@ -194,8 +194,8 @@ export function EndingScreen({ result, onNewCase }) {
             {[['수법', r.methodRight, r.method, soloContent.caseKey.choiceMethods, 'm_kill'], ['동기', r.motiveRight, r.motive, soloContent.caseKey.choiceMotives, 'mo_draft']].map(([k, ok, id, list, answer]) => (
               // 범인을 틀렸으면 수법·동기는 매기지 않는다 — 회색 「—」. 틀린 줄에는 정답을 작게 붙인다(디자인 점검 3)
               <div key={k} style={{ color: !r.culpritRight ? 'var(--muted)' : ok ? 'var(--ok)' : 'var(--danger)' }}>
-                {!r.culpritRight ? '—' : ok ? '✓' : '✗'} {k} — {list.find((m) => m.id === id)?.label || '고르지 않음'}
-                {!ok && <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>정답: {list.find((m) => m.id === answer)?.label}</div>}
+                {!r.culpritRight ? '—' : ok ? '✓' : '✗'} {k} — {(() => { const m = list.find((x) => x.id === id); return m ? (m.full || m.label) : '고르지 않음'; })()}
+                {!ok && <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>정답: {(() => { const m = list.find((x) => x.id === answer); return m?.full || m?.label; })()}</div>}
                 {/* 무엇이 답을 갈랐는지 — 틀린 둘이 왜 틀렸는지 몰랐다(11회차) */}
                 {!ok && r.culpritRight && DECIDED_BY[k] && <div style={{ color: '#a9b3c4', fontSize: '.78rem', marginLeft: '1.2em' }}>갈랐던 단서: {DECIDED_BY[k]}</div>}
               </div>

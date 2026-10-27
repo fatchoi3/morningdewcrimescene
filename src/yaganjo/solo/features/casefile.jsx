@@ -11,10 +11,11 @@ import { Avatar } from '../art.jsx';
 const METHODS = soloContent.caseKey.choiceMethods;
 const MOTIVES = soloContent.caseKey.choiceMotives;
 
-function Choice({ title, items, value, onPick }) {
+function Choice({ title, note, items, value, onPick }) {
   return (
     <div style={{ marginTop: 18 }}>
       <div className="s-eye" style={{ marginBottom: 8 }}>{title}</div>
+      {note && <div style={{ color: '#a9b3c4', fontSize: '.8rem', lineHeight: 1.6, margin: '-2px 0 8px' }}>{note}</div>}
       <div className="s-accuse-list">
         {items.map((m) => (
           <button key={m.id} className={`s-accuse-row${value === m.id ? ' on' : ''}`} onClick={() => onPick(m.id)}>
@@ -66,7 +67,7 @@ export function CaseFileView({ state, onPick, onSubmit, onConfirmLock }) {
             <Avatar person={picked?.name} image={picked?.image} size={44} />
             <div className="ar-body"><div className="ar-name">{picked?.name}</div><div className="ar-occ">범인으로 확정</div></div>
           </div>
-          <Choice title="수법 — 어떻게 죽였는가" items={METHODS} value={cf.method} onPick={(id) => set({ method: id })} />
+          <Choice title="수법 — 어떻게 죽였는가" note={soloContent.caseKey.methodNote} items={METHODS} value={cf.method} onPick={(id) => set({ method: id })} />
           <Choice title="동기 — 왜 죽였는가" items={MOTIVES} value={cf.motive} onPick={(id) => set({ motive: id })} />
           <div style={{ textAlign: 'center', margin: '20px 0 4px' }}>
             <button className="s-btn" disabled={!ready} style={!ready ? { opacity: 0.5 } : {}} onClick={onSubmit}>

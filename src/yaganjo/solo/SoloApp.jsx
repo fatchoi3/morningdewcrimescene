@@ -216,7 +216,7 @@ export default function SoloApp() {
     const TUT_CODE = 'NUMF-40';
     const jhExamined = jhObjs.includes(TUT_CODE) ? collectedSet.has(TUT_CODE) : jhObjs.some((c) => collectedSet.has(c));
     // 단서 창이 먼저 — 수첩에서 단서 카드를 열면 말풍선이 여전히 「← 로」라 창 뒤의 ← 를 가리켰다(튜토리얼 1차)
-    if (modalCode) coach = { sel: '.s-modal .mx', dim: false, text: recordOpen ? '다 봤으면 ✕ 로 닫고, 수첩은 ← 로 나가세요' : '단서를 확보했습니다. 아래로 끝까지 밀어 읽은 뒤 ✕ 로 닫으세요' };
+    if (modalCode) coach = { sel: '.s-modal .mx', dim: false, top: true, text: recordOpen ? '다 봤으면 ✕ 로 닫고, 수첩은 ← 로 나가세요' : '단서를 확보했습니다. 아래로 끝까지 밀어 읽은 뒤 ✕ 로 닫으세요' };
     else if (recordOpen) coach = { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽었으면 ← 로 나가세요' };
     else if (suspectId) coach = null;      // 심문 안에서는 그 화면이 직접 안내한다(아래 CrossExamView)
     else if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
@@ -253,8 +253,20 @@ export default function SoloApp() {
     ...(lockerLeft ? [`사람 사물함 ${lockerLeft}곳`] : []),
     ...phoneLeftLocs.filter((l) => !isLocker(l)).map(shortLoc),
   ];
+  // 2장 — 긴 한 문장이라 무엇이 남았는지 못 읽었다(16회차) — 남은 일을 목록으로, 덜 본 곳은 이름으로
+  const ch2Left = [
+    ...(sceneClueCount(state) < SCENE_NEEDED ? [`C통로 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}`] : []),
+    ...((state.labReq || []).length < 1 ? ['감식 의뢰 1건'] : []),
+  ];
+  const ch2Unseen = progressStage === 2
+    ? locations.all.filter((l) => l.stage <= stage && !l.lockedBy && (l.objects || []).some((c) => !collectedSet.has(c) && getClue(c) && !getClue(c).phone && getClue(c).type !== '감식')).map(shortLoc).slice(0, 4)
+    : [];
+  const ch2Objective = (ch2Left.length
+      ? `남은 일: ${ch2Left.join(' · ')} → 그 뒤 한 사람을 심문하고 나오면 3장(2차 심문)`
+      : '다음 심문을 끝내고 나오면 3장(2차 심문)이 열립니다 — 둘러볼 곳은 그 전에')
+    + (ch2Unseen.length ? ` · 아직 덜 본 곳: ${ch2Unseen.join(' · ')}` : '');
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
-    : progressStage < 3 ? `C통로 현장 단서 ${SCENE_NEEDED}개를 찾고 감식을 한 건 이상 맡긴 뒤(여러 건 맡겨도 된다), 한 사람을 더 심문하고 나오면 곧바로 2차 심문이 열립니다 — 둘러볼 곳은 그 전에`
+    : progressStage < 3 ? ch2Objective
     : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요'
       + (phoneLeftAt.length ? ` — 아직 열지 않은 휴대폰·태블릿: ${phoneLeftAt.join(' · ')}` : '');
   const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
@@ -266,6 +278,7 @@ export default function SoloApp() {
             phase={progressStage >= 3 ? 2 : 1}
             tutorialSeen={!!state.tutorialSeen} tutFinaleSeen={!!state.tutFinaleSeen} onTutorialSeen={() => update({ tutorialSeen: true })}
             onSkipTutorial={() => update({ tutorialSeen: true, tutFinaleSeen: true })}
+            onIntroSeen={(sid, ph) => { const cur = state.introSeen?.[sid] || []; if (!cur.includes(ph)) update({ introSeen: { ...(state.introSeen || {}), [sid]: [...cur, ph] } }); }}
             tutorialTarget={{ stId: 'night', code: 'NUMF-40' }}
             // 들은 말을 수첩 「대화 기록」에 남긴다 — 캐묻기로 나온 말은 넘기면 다시 볼 길이 없었다
             onLog={(e) => {
@@ -392,7 +405,7 @@ export default function SoloApp() {
                   <>
                     <p><b>{pickName}</b> — 이 사람을 범인으로 지목합니다.</p>
                     <p style={{ fontSize: '.88rem', lineHeight: 1.7 }}>
-                      수법 · {soloContent.caseKey.choiceMethods.find((m) => m.id === state.casefile?.method)?.label}<br />
+                      수법 · {soloContent.caseKey.choiceMethods.find((m) => m.id === state.casefile?.method)?.full || soloContent.caseKey.choiceMethods.find((m) => m.id === state.casefile?.method)?.label}<br />
                       동기 · {soloContent.caseKey.choiceMotives.find((m) => m.id === state.casefile?.motive)?.label}
                     </p>
                     {p2Count === 0 && (
@@ -429,7 +442,7 @@ export default function SoloApp() {
       {/* 튜토리얼 중엔 아래로 — 위쪽 코치 말풍선(「✕ 로 닫으세요」)을 덮었다(2026-10-07 시험) */}
       {toast && <div className={`s-toast${!state.tutorialSeen ? ' low' : ''}`}>{toast}</div>}
       <LoadingBar />
-      {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
+      {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} top={!!coach.top} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (
         <TutorialFinale onClose={() => update({ tutFinaleSeen: true })} />
       )}

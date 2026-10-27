@@ -134,8 +134,12 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     const total = reach.length, got = reach.filter((c) => collectedSet.has(c)).length;
     // 물건은 다 봤는데 물을 것이 남으면 그 말을 붙인다 — 빨간 배지의 뜻은 툴팁에만 있어 폰에선
     //   「탐색완료인데 왜 1?」이 됐다(튜토리얼 1차, 둘).
-    const q = got === total ? alertsOf(loc).questions : 0;
-    return total > 0 && got === total ? (q ? `✓ 다 봄 · 남은 질문 ${q}` : '✓ 탐색완료') : `단서 ${got}/${total}`;
+    const a = got === total ? alertsOf(loc) : null;
+    const q = a ? a.questions : 0;
+    // 못 깬 거짓이 남았는데 깰 증거가 아직 없으면 그 말을 — 「✓ 탐색완료」라 셋 다 헷갈렸다(16회차)
+    return total > 0 && got === total
+      ? (q ? `✓ 다 봄 · 남은 질문 ${q}` : a?.need ? `✓ 다 봄 · 거짓 ${a.need} · 증거 필요` : '✓ 탐색완료')
+      : `단서 ${got}/${total}`;
   };
   const enter = (loc, isCrime) => {
     if (!loc) return;

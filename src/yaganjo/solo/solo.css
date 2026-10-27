@@ -881,6 +881,10 @@ body:has(.tut-coach) .s-sheet { bottom: 136px; }
 .tut-skip-in.arm { color: #ffb4a8; text-decoration: none; font-weight: 700; }
 .tut-tip.dock { left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom)); }
 .tut-tip.dock.mid { bottom: auto; top: 12%; }
+/* 단서 창 튜토리얼 — 말풍선을 맨 위에, 창은 그 아래로 내린다(16회차: 아래 말풍선이 창 끝을 덮었다) */
+.tut-tip.dock.top { bottom: auto; top: calc(8px + env(safe-area-inset-top)); }
+body:has(.tut-tip.dock.top) .s-modal-ov { padding-top: 136px; }
+body:has(.tut-tip.dock.top) .s-modal { max-height: calc(100vh - 152px); max-height: calc(100dvh - 152px); }
 /* 말풍선이 아래에 붙어 있으면 단서 창·수첩 끝을 그만큼 더 밀어 올릴 수 있게 — 순찰 일지 03:00 줄이 말풍선 밑에 갇혀
    밀어도 안 보였다. 「단서 확보」 알림은 말풍선이 같은 말을 하니 그동안 숨긴다(일지 줄 위에 떴다). */
 body:has(.tut-tip.dock) .s-sheet-body { padding-bottom: 140px; }
