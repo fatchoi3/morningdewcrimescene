@@ -103,8 +103,12 @@ async function serve(url, port, profile) {
     const tops = [...document.querySelectorAll('.s-modal, .s-phone, .s-sheet, .modal-overlay, .aa-present, .tut-finale')]
       .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 40 && r.height > 40 && getComputedStyle(el).visibility !== 'hidden'; });
     const top = tops[tops.length - 1];
-    if (!top) return clean(document.body.innerText).slice(0, 3000);
-    return '[맨 위 창]\n' + clean(top.innerText).slice(0, 3000) + '\n[그 뒤 화면]\n' + clean(document.body.innerText).slice(0, 800);
+    // 같은 출처 안쪽 틀(iframe)의 글 — innerText 에 안 잡혀 「CCTV 표가 그림에만 있다」고 했다(야간조 19회차 관제실)
+    const frames = [...document.querySelectorAll('iframe')].filter((f) => { const r = f.getBoundingClientRect(); return r.width > 40 && r.height > 40; })
+      .map((f) => { try { return clean(f.contentDocument?.body?.innerText); } catch (e) { return ''; } }).filter(Boolean);
+    const inner = frames.length ? '\n[안쪽 틀]\n' + frames.join('\n').slice(0, 2500) : '';
+    if (!top) return clean(document.body.innerText).slice(0, 3000) + inner;
+    return '[맨 위 창]\n' + clean(top.innerText).slice(0, 3000) + inner + '\n[그 뒤 화면]\n' + clean(document.body.innerText).slice(0, 800);
   });
   async function look() {
     await sleep(500);
@@ -146,9 +150,19 @@ async function serve(url, port, profile) {
         const can = (el, axis) => { const cs = getComputedStyle(el); const ov = axis === 'x' ? cs.overflowX : cs.overflowY; return /(auto|scroll)/.test(ov) && (axis === 'x' ? el.scrollWidth > el.clientWidth + 4 : el.scrollHeight > el.clientHeight + 4); };
         const axis = d === 'left' || d === 'right' ? 'x' : 'y';
         let el = document.elementFromPoint(W0 / 2, H0 * 0.45);
-        const by = (t) => { const w = t.clientWidth || W0, h = t.clientHeight || H0; return { left: d === 'left' ? w * 0.6 : d === 'right' ? -w * 0.6 : 0, top: d === 'up' ? h * 0.5 : d === 'down' ? -h * 0.5 : 0 }; };
-        if (el && el.tagName === 'IFRAME') { const se = el.contentDocument?.scrollingElement; if (se) { se.scrollBy(by(el)); return 'iframe'; } }
-        for (; el && el !== document.documentElement; el = el.parentElement) if (can(el, axis)) { el.scrollBy(by(el)); return String(el.className).slice(0, 30) || el.tagName; }
+        // 즉시 밀기 — 부드러운 스크롤이면 바로 위치가 안 바뀌어 「안 밀렸다」로 잘못 보고 바깥까지 밀었다
+        const by = (t) => { const w = t.clientWidth || W0, h = t.clientHeight || H0; return { behavior: 'instant', left: d === 'left' ? w * 0.6 : d === 'right' ? -w * 0.6 : 0, top: d === 'up' ? h * 0.5 : d === 'down' ? -h * 0.5 : 0 }; };
+        // 안쪽 틀이 더 안 밀리면(끝이거나 밀 것이 없으면) 바깥 스크롤 상자로 넘긴다 — 틀에서 멈춰 창 본문이 안 밀렸다(야간조 19회차)
+        if (el && el.tagName === 'IFRAME') {
+          const se = el.contentDocument?.scrollingElement;
+          if (se) { const x0 = se.scrollLeft, y0 = se.scrollTop; se.scrollBy(by(el)); if (se.scrollLeft !== x0 || se.scrollTop !== y0) return 'iframe'; }
+          el = el.parentElement;
+        }
+        for (; el && el !== document.documentElement; el = el.parentElement) {
+          if (!can(el, axis)) continue;
+          const x0 = el.scrollLeft, y0 = el.scrollTop; el.scrollBy(by(el));
+          if (el.scrollLeft !== x0 || el.scrollTop !== y0) return String(el.className).slice(0, 30) || el.tagName;
+        }
         const se = document.scrollingElement; se.scrollBy(by(se)); return 'page';
       }, a[0]);
       return '밀었다: ' + moved + String.fromCharCode(10) + await look();
