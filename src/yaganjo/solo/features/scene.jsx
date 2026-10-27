@@ -270,18 +270,21 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       {isLab && (
         <div className="aa-ask">
           <div className="aa-ask-h">🧑‍🔬 감식원 — 어떤 걸 분석해 드릴까요?</div>
+          {/* 줄 글이 「— 결과 보기」로 길어져 두 줄로 넘치고 목록이 대사창 밑으로 밀렸다(18회차 셋) — 상태는 앞 기호로만 */}
+          <div style={{ fontSize: '.75rem', color: 'var(--muted)', padding: '0 2px 4px' }}>✅ 결과 보기 · 🔬 의뢰하기 · ⏳ 분석 중 · 🔒 채취물 필요</div>
           {location.objects.map((code) => {
             const c = getClue(code); if (!c) return null;
             const have = collectedSet.has(code);
             const req = lab?.requested(code);
             const ready = lab?.ready(code);
             const cls = have ? 'done' : (ready && !req) ? 'new' : req ? 'asked' : '';
-            const label = have ? `✅ ${c.title} — 결과 보기`
-              : req ? `🔬 ${c.title} — 분석 중…`
-              : ready ? `🔬 ${c.title} — 감식 의뢰`
-              : `🔒 ${c.title} — 채취물 필요`;
+            const label = have ? `✅ ${c.title}`
+              : req ? `⏳ ${c.title}`
+              : ready ? `🔬 ${c.title}`
+              : `🔒 ${c.title}`;
             return (
               <button key={code} className={cls} onClick={() => {
+                if (uiJustChanged()) return; // 결과 창을 닫은 탭이 다음 줄·나가기로 새 지도로 튕겼다(18회차)
                 if (have) { onOpen(code); return; }
                 if (!ready) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
                 if (lab.stage >= 3) { onOpen(code); return; }
@@ -308,9 +311,9 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
 
       {/* 하단 바 없음 — 나가기는 대사창 우측 하단에. 조사는 상시(테두리가 빛나는 물건을 누르면 된다) */}
       <DialogueBox location={isLab ? '감식 의뢰실' : location.label}
-        actions={[{ label: '🚶 나가기', onClick: onBack }]}
+        actions={[{ label: '🚶 나가기', onClick: () => { if (!uiJustChanged()) onBack(); } }]}
         text={isLab
-          ? '감식원이 결과를 기다린다. 분석할 단서를 고르자 — 채취물을 확보한 것만 의뢰할 수 있고, 결과는 바로 오는 것도, 2차 심문이 열려야 오는 것도 있다.'
+          ? '분석할 단서를 고르자. 결과는 바로 오기도, 2차 심문이 열려야 오기도 한다.'
           : ('테두리가 빛나는 물건을 누르면 조사할 수 있다.' + (roomSuspect ? ` ${t(`{{${roomSuspect.id}|을/를}}`)} 누르면 이야기할 수 있다.` : ''))} />
     </div>
   );

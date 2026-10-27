@@ -103,6 +103,8 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talk
     }
     return (
       <Shell title={<>{c.title}{tag}</>} onClose={onClose}>
+        {/* 영상(72vh) 아래라 끝까지 밀어야 보였다(18회차) — 영상 위로 */}
+        {M2_SEQ.includes(code) && m2Have.length > 1 && <button className="s-btn sm" style={{ marginBottom: 8, width: '100%' }} onClick={() => setM2All(true)}>📋 본 구간 {m2Have.length}장 이어 보기</button>}
         <iframe
           src={cameraSrc(code)}
           title={c.title}
@@ -125,7 +127,6 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talk
                 {nav(M2_SEQ[i - 1], '◀ 이전 구간')}
                 {nav(M2_SEQ[i + 1], '다음 구간 ▶')}
               </div>
-              {m2Have.length > 1 && <button className="s-btn sm" style={{ marginTop: 8, width: '100%' }} onClick={() => setM2All(true)}>📋 본 구간 {m2Have.length}장 이어 보기</button>}
             </>
           );
         })()}
@@ -141,6 +142,8 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talk
     if (pg?.unlocks && !collectedSet.has(pg.unlocks)) onCollect(pg.unlocks);
     return (
       <Shell title={<>{c.title}{tag}{person}</>} onClose={onClose}>
+        {/* 「다음 →」이 맨 아래라 못 보고 빈 곳을 눌러 닫았다(18회차) — 첫 쪽 맨 위에 쪽수와 넘기는 곳 */}
+        {page === 0 && <div style={{ fontSize: '.8rem', color: 'var(--gold)', marginBottom: 6 }}>1 / {c.pages.length}쪽 · 맨 아래 「다음 →」으로 넘겨요</div>}
         {/* 그림이 한 쪽에만 있으면 그 쪽에서만 아래가 밀려 버튼이 도망간다 — 자리를 늘 잡아 둔다 */}
         {hasPageImage && (
           <div style={{ height: PAGE_IMG_H, marginBottom: 10 }}>
@@ -419,12 +422,13 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
               )}
 
               {app.type === 'browser' && (
-                <div className="s-phone-browser">
+                // 입력칸이 전표 목록 맨 아래라 두 번 밀어야 보였다(18회차) — 조회 칸을 위로(order)
+                <div className="s-phone-browser" style={{ display: 'flex', flexDirection: 'column' }}>
                   {(app.searches || []).map((s, i) => (
                     <div key={i} className="pbr-card"><div className="pbr-q">🔍 {s.query}</div><div className="pbr-t">{s.title}</div><div className="pbr-s">{s.snippet}</div></div>
                   ))}
                   {app.lookup && (
-                    <div className="pbr-lookup">
+                    <div className="pbr-lookup" style={{ order: -1, marginBottom: 10 }}>
                       <div className="pbr-site">🌐 {app.lookup.site}</div>
                       <div className="pbr-desc">{app.lookup.desc}</div>
                       <div className="s-pw"><input value={lookup} onChange={(e) => setLookup(e.target.value)} placeholder={app.lookup.placeholder || app.lookup.label} /><button className="s-btn sm" onClick={tryLookup}>조회</button></div>

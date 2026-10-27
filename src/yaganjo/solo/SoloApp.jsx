@@ -278,8 +278,10 @@ export default function SoloApp() {
     `${p2Count >= suspectIds.length ? '✓' : '③'} 2차 심문 ${p2Count}/${suspectIds.length}`,
   ];
   const ch3Extra = phoneLeftAt.filter((x) => x !== '2층 사무실' && x !== 'C통로 현장');
+  // 찢긴 두 달을 셋 다 결말에서야 알았다(18회차) — ⭐ 를 쥐고도 그 두 달의 주인을 안 짚었으면 덤에 한 줄
+  const twoLeft = collectedSet.has('AOBI-88') && !(state.broke?.[CONFRONT.culprit] || []).some((e) => e.id === 'p2two');
   const ch3Objective = `꼭 할 것: ${ch3Must.join(' · ')}`
-    + (ch3Extra.length ? ` / 덤: 아직 안 연 폰 — ${ch3Extra.join(' · ')}` : '')
+    + (ch3Extra.length || twoLeft ? ` / 덤: ${[ch3Extra.length ? `아직 안 연 폰 — ${ch3Extra.join(' · ')}` : '', twoLeft ? '⭐ 없어진 두 달 — 그 두 달의 사정이 담긴 물건을 주인에게' : ''].filter(Boolean).join(' · ')}` : '')
     + ' → 그 뒤 범인 지목';
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
     : progressStage < 3 ? ch2Objective

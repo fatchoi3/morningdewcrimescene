@@ -82,7 +82,7 @@ function ClueGroups({ clues, onOpen, fresh = [] }) {
       {clues.length > 12 && (
         // 누르면 앞 글자 전체 선택(새 검색어가 앞 글자 뒤에 붙었다) · 지우기 단추를 크게(기본 ✕ 는 작아 못 찾았다) — 13회차
         <div className="s-clue-search-row">
-          <input className="s-clue-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} onFocus={(e) => e.target.select()} placeholder="🔎 단서 찾기 — 제목이나 인물 이름" />
+          <input className="s-clue-search" type="search" value={q} onChange={(e) => { setQ(e.target.value); if (e.target.value.trim() && f !== 'all') setF('all'); }} onFocus={(e) => e.target.select()} placeholder="🔎 단서 찾기 — 제목이나 인물 이름" />
           {q && <button className="s-clue-search-x" onClick={() => setQ('')} aria-label="검색어 지우기">✕ 지우기</button>}
         </div>
       )}

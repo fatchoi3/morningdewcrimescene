@@ -10,7 +10,7 @@
 //   - 정답이면 수사관이 먼저 그 증거를 짚고(press), 범인이 말을 잃고, 「입증」 도장이 찍힌다.
 //   - 고르기 판에서 이 사람의 거짓을 이미 깬 증거에 ✅ 를 단다.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { suspects, soloContent, locations } from '../content.js';
 import { CONFRONT, isUiTap } from '../lib/game.js';
 import { DATA } from '../interrogation.js';
@@ -36,6 +36,9 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   // 둘째 단계 — 첫 정답에 그가 버틴 뒤(hold). { first: 첫 정답 코드, tries: 둘째에서 내민 횟수 }
   const [round2, setRound2] = useState(null);
   const [sel, setSel] = useState(null);
+  // 대사를 넘기려던 탭이 막 뜬 카드 판에 떨어져 엉뚱한 카드가 골라졌다(18회차) — 판이 뜬 직후 400ms 는 카드 탭을 받지 않는다
+  const pickAt = useRef(0);
+  useEffect(() => { if (picking) pickAt.current = Date.now(); }, [picking]);
   const [pPerson, setPPerson] = useState(null);
   const [speaking, setSpeaking] = useState(false);
   const dlgRef = useRef(null);
@@ -96,8 +99,9 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     press2: { speaker: '수사관', text: CONFRONT.press2?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'accept', code: round2?.first || beat.code, final: true, shown: beat.code }) },
     wrong2: { speaker: who?.name, text: wrongLineOf(beat.code), hint: left2 > 0 ? `▶ 한 번 더 내민다 (남은 기회 ${left2})` : '▶ 탭하여 다음', next: retry2 },
     holdFail: { speaker: '수사 노트', text: CONFRONT.holdFail, hint: '▶ 결말 보기', next: () => { onHold?.(null, false); onDone(round2?.first || beat.code); } },
-    accept: { speaker: who?.name, text: (beat.final && CONFRONT.accept2 ? CONFRONT.accept2 : (CONFRONT.accept[beat.code] || '')) + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
-    note: { speaker: '수사 노트', text: CONFRONT.noteBy?.[beat.code] || (CONFRONT.noteStatement && !brokeIds.has(CONFRONT.noteStatement) && CONFRONT.noteBefore) || CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
+    accept: { speaker: who?.name, text: (beat.final && CONFRONT.accept2 ? CONFRONT.accept2 : (CONFRONT.accept[beat.code] || '')) + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code, shown: beat.shown }) },
+    // 결정타는 둘째 카드였는데 마지막 노트가 첫 증거 얘기로 끝나 흐려졌다(18회차) — 둘째 카드가 무너뜨린 것을 먼저
+    note: { speaker: '수사 노트', text: (beat.shown && beat.shown !== beat.code && CONFRONT.why2?.[beat.shown] ? `${CONFRONT.why2[beat.shown]}\n` : '') + (CONFRONT.noteBy?.[beat.code] || (CONFRONT.noteStatement && !brokeIds.has(CONFRONT.noteStatement) && CONFRONT.noteBefore) || CONFRONT.note), hint: '▶ 결말 보기', next: () => onDone(beat.code) },
     near: { speaker: who?.name, text: CONFRONT.nearLine, hint: again, next: retry },
     wrong: { speaker: who?.name, text: wrongLineOf(beat.code), hint: again, next: retry },
     fail: { speaker: '수사 노트', text: CONFRONT.failNote, hint: '▶ 결말 보기', next: () => onDone(beat.code || null) },
@@ -169,7 +173,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
             {list.map((c) => (
               <button key={c.code} className={`s-card${usedCodes.has(c.code) ? ' cf-used' : ''}`}
                 style={sel === c.code ? { borderColor: 'var(--gold)', background: '#241f14' } : undefined}
-                onClick={() => setSel(c.code)}>
+                onClick={() => { if (Date.now() - pickAt.current >= 400) setSel(c.code); }}>
                 <div className="ck">{icon(c)}</div>
                 <div className="cn" style={{ fontSize: '.82rem' }}>{usedCodes.has(c.code) ? '✅ ' : ''}{c.title}</div>
                 <div className="cm">{c.person}</div>

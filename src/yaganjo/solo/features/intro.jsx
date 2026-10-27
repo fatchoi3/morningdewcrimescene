@@ -243,10 +243,11 @@ export function EndingScreen({ result, onNewCase }) {
           {REVEAL.order.map((id) => {
             const s = suspects.find((x) => x.id === id);
             return (
-              <div key={id} style={{ marginTop: 16 }}>
-                <h3>{s?.name} <span className="role">— {REVEAL.people[id].role}</span></h3>
+              // 다섯 사람의 구멍과 시간표가 한없이 길었다(18회차) — 진범만 펼치고 나머지는 접는다
+              <details key={id} open={id === CONFRONT.culprit} style={{ marginTop: 16 }}>
+                <summary style={{ cursor: 'pointer', listStyle: 'none' }}><h3 style={{ display: 'inline' }}>▸ {s?.name} <span className="role">— {REVEAL.people[id].role}</span></h3></summary>
                 <p style={{ lineHeight: 1.8 }}>{bold(REVEAL.people[id].text)}</p>
-              </div>
+              </details>
             );
           })}
           <h3 style={{ borderBottom: '1px solid var(--line)', paddingBottom: 6, marginTop: 24 }}>🕰 그날의 진실 — 시간 순</h3>

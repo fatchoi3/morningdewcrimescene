@@ -94,8 +94,8 @@ export const cluesABE = {
               messages: [
                 { from: 'me', text: '오늘도 늦어. 먼저 자요', time: '어제 21:42' },
                 { from: 'them', text: '조심히 다녀와요', time: '어제 21:43' },
-                { from: 'them', text: '[사진] 담요에 싸인 아기', time: '어제 22:1x' },
-                { from: 'them', text: '오늘 두 시간 잤어요', time: '어제 22:1x' },
+                { from: 'them', text: '[사진] 담요에 싸인 아기', time: '어제 22:14' },
+                { from: 'them', text: '오늘 두 시간 잤어요', time: '어제 22:15' },
               ],
             },
           ],

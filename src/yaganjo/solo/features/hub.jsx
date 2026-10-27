@@ -166,6 +166,9 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   // 전체 보기도 기억한다 — 전체 보기에서 방을 눌러 들어갔다 나오면 확대 화면 처음 자리로 돌아갔다(2026-10-08 시험)
   const [overview, setOverview] = useState(() => !!LAST_SCROLL._overview);
   useEffect(() => { LAST_SCROLL._overview = overview; }, [overview]);
+  // 3장 목표 상자가 지도 위쪽 절반을 덮었다(18회차) — 상자를 누르면 목표 줄을 접는다
+  const [objFold, setObjFold] = useState(() => !!LAST_SCROLL._objFold);
+  useEffect(() => { LAST_SCROLL._objFold = objFold; }, [objFold]);
   const syncEdge = () => {
     const cam = camRef.current;
     if (!cam) return;
@@ -308,7 +311,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
 
       {/* 지도 위 HUD — 단계 안내(좌) + 수첩·메뉴(우) */}
       <div className="hall-hud">
-        <div className="hall-hud-chip"><b>🔎 {stageLabel}</b><span>{progressText}</span>{objective && <span className="hall-objective">🎯 {objective}</span>}<Steps at={Math.min(4, progressStage || 1)} /></div>
+        <div className="hall-hud-chip" onClick={() => objective && setObjFold((v) => !v)} style={objective ? { cursor: 'pointer' } : undefined}><b>🔎 {stageLabel}{objective ? <small style={{ color: 'var(--muted)', fontWeight: 600 }}> {objFold ? '▾ 목표 펴기' : '▴ 접기'}</small> : null}</b><span>{progressText}</span>{objective && !objFold && <span className="hall-objective">🎯 {objective}</span>}<Steps at={Math.min(4, progressStage || 1)} /></div>
         <div className="hall-hud-btns">
           {admin && <span className="s-admin-chip">ADMIN</span>}
           <button data-tut="record-btn" className="hall-hud-btn" title="수첩(사건 기록)" onClick={onOpenRecord} style={{ position: 'relative' }}>📓

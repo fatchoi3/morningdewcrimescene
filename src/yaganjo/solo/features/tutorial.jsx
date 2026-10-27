@@ -131,7 +131,14 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true, top = false
 }
 
 // 표시의 뜻 — 마무리 멘트와 수첩(「❓ 표시 뜻」)이 같이 쓴다. 한 번 읽고 잊으면 다시 볼 곳이 없었다(17회차 둘)
-export function Legend({ className, style }) {
+// short — 튜토리얼 끝 화면엔 셋만. 일곱 가지가 한 화면에 몰려 머리에 안 들어왔다(18회차). 나머지는 수첩 「❓ 표시 뜻」에
+export function Legend({ className, style, short }) {
+  if (short) return (
+    <p className={className} style={style}>
+      <b>⚖ 저울</b> 깰 수 있는 대답 · <b style={{ color: '#e8706e' }}>♥</b> 신뢰도 · 지도의 <b style={{ color: '#ff8a80' }}>빨간 숫자</b> 거짓이 숨은 대답의 수<br />
+      나머지 표시의 뜻은 사건 기록의 「❓ 표시 뜻」에 있습니다.
+    </p>
+  );
   return (
     <p className={className} style={style}>
       지도 배지 — <b style={{ color: '#ff8a80' }}>빨간 숫자</b> 아직 안 물은 것 중 거짓이 숨은 대답의 수 · <b style={{ color: '#e8c76b' }}>노란 !</b> 아직 볼 것·물을 것이 남음<br />
@@ -152,8 +159,10 @@ export function TutorialFinale({ onClose }) {
           확보한 단서는 <b>사건 기록</b>에서 인물·유형별로 확인할 수 있습니다.<br />
           여섯 명을 <b>한 번씩 다 만나면</b> C통로 현장·공용 공간·관제실 열람대·감식 의뢰실이 열립니다.<br />
           2차 심문이 열리면 <b>사건 파일</b>을 제출해 사건을 마무리하세요.</p>
+        {/* 튜토리얼엔 맞는 카드만 떠서, 본편에 모든 카드가 뜨자 규칙이 바뀐 줄 몰랐다(18회차 둘) */}
+        <p className="tf-legend">이제부터 반박 목록엔 <b>가진 카드가 다</b> 뜹니다. 어느 대답에도 안 쓰이는 카드를 내면 <b style={{ color: '#e8706e' }}>♥</b>가 하나 줄어요.</p>
         {/* 표시의 뜻 — 지도 배지 빨간 숫자와 노란 ! 의 차이를 아무도 몰랐다(튜토리얼 2차, 셋 다). 새벽이슬과 같게 */}
-        <Legend className="tf-legend" />
+        <Legend className="tf-legend" short />
         <button className="s-btn" onClick={onClose}>수사 시작</button>
       </div>
     </div>

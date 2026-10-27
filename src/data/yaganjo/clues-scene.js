@@ -76,7 +76,7 @@ export const cluesScene = {
   'ATXE-85': {
     title: '반출 전표 목록 3장',
     description: '시신이 있던 자리에서 3m쯤 떨어진 바닥에 흩어져 있던 종이 세 장.',
-    detail: '태블릿에서 뽑은 자재 반출 서류 목록이다. 장마다 품목·수량·반출 일자·신청 계정·상태 칸이 찍혀 있다.\n\n신청 계정은 세 장 다 「{{S5}}」다. 상태 칸은 세 장 다 비어 있다.\n\n품목 줄 옆에 볼펜 체크가 한 줄씩 그어져 있고, 그 옆 여백에 눌러 쓴 글씨로 「없음」. 세 장 모두 같다.\n\n종이에는 접힌 자국이 없다. 뽑은 그대로 들고 다닌 것이다.',
+    detail: '태블릿에서 뽑은 자재 반출 서류 목록이다. 장마다 품목·수량·반출 일자·신청 계정·상태 칸이 찍혀 있다.\n\n신청 계정은 세 장 모두 「{{S5}}」 계정이다. 상태 칸은 세 장 다 비어 있다.\n\n품목 줄 옆에 볼펜 체크가 한 줄씩 그어져 있고, 그 옆 여백에 눌러 쓴 글씨로 「없음」. 세 장 모두 같다.\n\n종이에는 접힌 자국이 없다. 뽑은 그대로 들고 다닌 것이다.',
     image: '/images/yaganjo/x5-slips.jpg',
     type: '보통',
     person: '조장',
@@ -129,7 +129,8 @@ export const cluesScene = {
     person: '조장',
     phone: {
       owner: '{{victim}} 조장의 휴대폰',
-      lock: { digits: 4 },
+      // 0519 를 「찍은 느낌」이었다(18회차 한 명) — 다른 폰처럼 약한 힌트 하나
+      lock: { digits: 4, hint: '잠금 화면 배경의 그 아이' },
       apps: [
         {
           id: 'contacts',
@@ -174,6 +175,14 @@ export const cluesScene = {
                 { from: 'me', text: '아빠 내일 아침에 봐. 수시 원서 낸 거 축하해.', time: '어제 22:16' }
               ]
             },
+            // 서장현 「흡연장에서 마주친 게 전부」를 깰 글이 폰 어디에도 없었다(18회차 셋 다 ⚖ 못 깸) — 조장이 불렀다
+            {
+              name: '{{S1}} 안전관리자',
+              messages: [
+                { from: 'me', text: '장현아 흡연장으로 잠깐 와라. 할 얘기 있다', time: '어제 23:17' },
+                { from: 'them', text: '네 형님', time: '어제 23:17' }
+              ]
+            },
             {
               name: '아내',
               messages: [
@@ -203,7 +212,7 @@ export const cluesScene = {
           name: '사진',
           photos: [
             { caption: '수빈이 보낸 실기 과제 사진', image: '/images/yaganjo/x10-photo-subin.jpg' },
-            { caption: '무재해 게시판 숫자판 (지난주)', image: '/images/yaganjo/x10-photo-board.jpg' }
+            { caption: '무재해 게시판 숫자판 (지난주 — 1,240)', image: '/images/yaganjo/x10-photo-board.jpg' }
           ]
         },
         {
