@@ -33,7 +33,9 @@ const SOLO_TEXT = {
 };
 // 1장의 빈 물건(옷가지·파우치·장갑) — 어떤 대답·단서와도 이어지지 않아, 셋 다 하나하나 열어 보며 지루해했다(16회차, 결정 마).
 //   솔로에서만 방 진척 수에서 빼고 테두리를 흐리게 둔다(누르면 그대로 열린다).
-export const SOLO_FLAVOR = new Set(['NDVA-68', 'NMFM-21', 'OLUX-30', 'VJMU-45', 'HTXI-85', 'LKUJ-60', 'KPVH-32', 'ZNUS-26', 'KTGF-02', 'ALLZ-85']);
+export const SOLO_FLAVOR = new Set(['NDVA-68', 'NMFM-21', 'OLUX-30', 'VJMU-45', 'HTXI-85', 'LKUJ-60', 'KPVH-32', 'ZNUS-26', 'KTGF-02', 'ALLZ-85',
+  // 지후 파우치 — 혼자 「단서 확보」로 떴다(19회차). 종현 파우치(YPYZ-13)는 「요힘빈도 원래 여기」 한 줄이 있어 남긴다
+  'PMIK-13']);
 const byCode = Object.fromEntries(all.map((c) => {
   let o = soloOf(c);
   if (SOLO_TEXT[c.code]) o = { ...o, ...SOLO_TEXT[c.code] };

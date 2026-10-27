@@ -14,7 +14,10 @@ const MOTIVES = soloContent.caseKey.motives.filter((m) => m.id !== 'mo_none');
 function Choice({ title, items, value, onPick }) {
   return (
     <div style={{ marginTop: 18 }}>
-      <div className="s-eye" style={{ marginBottom: 8 }}>{title}</div>
+      {/* 소제목 — 작고 흐려 「직접 사인이 된 것 하나」 조건이 묻혔다(19회차) */}
+      <div style={{ marginBottom: 8, fontSize: '.95rem', fontWeight: 800, color: 'var(--text)' }}>
+        {title.replace(/\s*\(.*\)$/, '')}{/\(.*\)$/.test(title) && <b style={{ color: 'var(--gold)', marginLeft: 6 }}>{title.match(/\(.*\)$/)[0]}</b>}
+      </div>
       <div className="s-accuse-list">
         {items.map((m) => (
           <button key={m.id} className={`s-accuse-row${value === m.id ? ' on' : ''}`} onClick={() => onPick(m.id)}>

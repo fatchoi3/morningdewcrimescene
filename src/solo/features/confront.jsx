@@ -50,7 +50,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     setPicking(false); setSel(null);
     onPresent(code, n);
     if (CONFRONT.accept[code]) setBeat({ kind: CONFRONT.press?.[code] ? 'press' : 'accept', code });
-    else setBeat({ kind: CONFRONT.near.includes(code) ? 'near' : 'wrong', code, n });
+    else setBeat({ kind: CONFRONT.near.includes(code) ? 'near' : CONFRONT.alibi?.includes(code) ? 'alibi' : 'wrong', code, n });
   };
 
   const left = MAX_TRIES - tries;
@@ -62,6 +62,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     accept: { speaker: who?.name, text: (CONFRONT.accept[beat.code] || '') + SILENT, hint: '▶ 탭하여 다음', next: () => setBeat({ kind: 'note', code: beat.code }) },
     note: { speaker: '수사 노트', text: CONFRONT.noteBy?.[beat.code] || CONFRONT.note, hint: '▶ 결말 보기', next: () => onDone(beat.code) },
     near: { speaker: who?.name, text: CONFRONT.nearLine, hint: again, next: retry },
+    alibi: { speaker: who?.name, text: CONFRONT.alibiLine, hint: again, next: retry },
     wrong: { speaker: who?.name, text: CONFRONT.wrongLine, hint: again, next: retry },
     fail: { speaker: '수사 노트', text: CONFRONT.failNote, hint: '▶ 결말 보기', next: () => onDone(beat.code || null) },
   };
@@ -71,6 +72,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   // 「거의 맞았다」 — 그 자리의 증거지만 그 사람을 직접 가리키지는 않는다. 방향은 맞다고 한 줄 붙인다
   //   엉뚱한 증거면 무엇이 필요한지 한 줄 — 「아무것도 증명하지 못합니다」만 두 번 듣고 기준을 몰랐다(2026-10-08 시험)
   const note = beat.kind === 'near' ? '(수사 노트) 방향은 맞다 — 다만 이것만으로는 범인을 가리키지 못한다.'
+    : beat.kind === 'alibi' ? CONFRONT.alibiNote
     : beat.kind === 'wrong' && left > 0 ? '(수사 노트) 필요한 건 그 시각, 그 자리에 범인을 묶는 증거다. 심문에서 이미 범인을 무너뜨린 증거(✅)도 다시 내밀 수 있다.'
       : null;
   const proved = beat.kind === 'accept' || beat.kind === 'note';
@@ -95,10 +97,12 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
       )}
       {!picking && (
         <DialogueBox ref={dlgRef} speaker={line.speaker} text={note ? `${body}\n${note}` : body}
-          onAdvance={line.next} onTyping={setSpeaking} hint={line.hint} actions={line.act ? [line.act] : undefined} />
+          onAdvance={line.next} onTyping={setSpeaking} hint={line.hint}
+          guardMs={['press', 'accept', 'note'].includes(beat.kind) ? 1000 : undefined} actions={line.act ? [line.act] : undefined} />
       )}
       {picking && (
         <div className="aa-present" onClick={(e) => e.stopPropagation()}>
+          <div className="aa-present-top">
           <div className="aa-present-h">
             <span>⚖️ <b>그 시각, 그 자리에 범인을 묶는 증거</b> 한 장을 고르세요 · 남은 기회 {left}</span>
           </div>
@@ -111,6 +115,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
               {persons.map((p) => <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>)}
             </div>
           )}
+          </div>
           <div className="s-grid">
             {list.map((c) => (
               <button key={c.code} className={`s-card${usedCodes.has(c.code) ? ' cf-used' : ''}`}

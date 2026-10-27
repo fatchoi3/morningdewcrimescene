@@ -88,15 +88,18 @@ export function BriefingVN({ onDone }) {
 }
 
 // ── 중간 사건 — 1차 심문 완료 후 부검 소견 도착(살인 전환) 연출 ───────────────
-export function EventVN({ onDone }) {
-  const beats = [
+// 수첩 「📻 무전 기록」에서도 다시 본다(19회차) — 한 번 넘기면 다시 볼 곳이 없었다
+export const event1Beats = () => [
     { loc: '무전', text: t('"…수사관님, 국과수입니다. {{victim.full}} 1차 부검 소견이 나왔습니다."') },
     { loc: '부검 소견', text: '"사인은 단순 심장 발작이 아닙니다. 코와 입 주변의 압박흔, 안면의 점상출혈 — 질식 소견입니다."' },
     { loc: '수사 전환', text: '단순 발작사가 아니다. 사건은 지금부로 살인 사건으로 전환된다.' },
     { text: '통제 중이던 목사님 방이 개방되었다. 압수했던 CCTV 원본과 관계자 휴대폰도 열람할 수 있다.' },
-    { text: '감식반이 합류했다. 채취물을 가져가면 감식 의뢰실에서 분석을 맡길 수 있다 — 결과는 2차 심문이 열릴 때 한꺼번에 도착한다.' },
+    // 3장에 맡기면 곧바로 나온다 — 「한꺼번에」만 적어 두니 틀린 말이 됐다(19회차)
+    { text: '감식반이 합류했다. 채취물을 가져가면 감식 의뢰실에서 분석을 맡길 수 있다 — 지금 맡기면 결과는 2차 심문이 열릴 때 한꺼번에, 그 뒤에 맡기면 곧바로 나온다.' },
     { text: '…낮의 진술들을 물증으로 검증할 차례다. 거짓말은 반드시 무너진다.' },
-  ];
+];
+export function EventVN({ onDone }) {
+  const beats = event1Beats();
   const [i, setI] = useState(0);
   const dlgRef = useRef(null);
   const [speaking, setSpeaking] = useState(false);
@@ -118,13 +121,14 @@ export function EventVN({ onDone }) {
 }
 
 // ── 2차 사건 — 2차 심문 개시 직전, 정밀(2차) 부검 결과가 급히 도착 ──────────────
-export function EventVN2({ onDone }) {
-  const beats = [
+export const event2Beats = () => [
     { loc: '복도', text: '"잠깐, 수사관님!" — 젊은 형사가 서류 봉투를 들고 달려온다.' },
     { loc: '2차 부검', text: '"국과수 정밀(2차) 부검 결과입니다. 방금 나왔어요. 이건 꼭 보셔야 합니다."' },
     { loc: '2차 부검', text: '"베개에서 나온 솜·섬유가 피해자 기도에서도 검출됐습니다. 압박 방향과 힘까지 — 타살에 의한 질식사, 확정입니다."' },
     { text: '「2차 부검」 소견이 사건 기록에 등록되었다. 이제 이 확정된 사인으로 용의자들을 다시 몰아붙일 수 있다.' },
-  ];
+];
+export function EventVN2({ onDone }) {
+  const beats = event2Beats();
   const [i, setI] = useState(0);
   const dlgRef = useRef(null);
   const [speaking, setSpeaking] = useState(false);

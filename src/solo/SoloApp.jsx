@@ -14,14 +14,14 @@ import {
   STAGE_LABEL, STAGE_BANNER, SCENE_NEEDED, TRUST_MAX,
   computeStage, interrogatedCount, sceneClueCount, scoreCase, CONFRONT,
 } from './lib/game.js';
-import { pressOf, presentOn } from './interrogation.js';
+import { pressOf, presentOn, sameGrantCodes } from './interrogation.js';
 import { HallNav } from './features/hub.jsx';
 import { SceneView } from './features/scene.jsx';
 import { CrossExamView, clueUsedAnywhere } from './features/interrogation.jsx';
 import { ClueModal } from './features/clues.jsx';
 import { CaseRecord } from './features/record.jsx';
 import { CaseFileView } from './features/casefile.jsx';
-import { StartScreen, BriefingVN, EventVN, EventVN2, EndingScreen } from './features/intro.jsx';
+import { StartScreen, BriefingVN, EventVN, EventVN2, EndingScreen, event1Beats, event2Beats } from './features/intro.jsx';
 import { ConfrontView } from './features/confront.jsx';
 import { TutorialCoach, TutorialFinale } from './features/tutorial.jsx';
 import { AdminPanel } from './features/admin.jsx';
@@ -188,12 +188,13 @@ export default function SoloApp() {
     // 첫 심문에서 성공 반박을 해 보려면 그 단서가 손에 있어야 한다 — 그 물건부터 짚게 한다
     const TUT_CODE = 'VNTD-61';
     const jhExamined = jhObjs.includes(TUT_CODE) ? collectedSet.has(TUT_CODE) : jhObjs.some((c) => collectedSet.has(c));
-    if (recordOpen) coach = modalCode ? null : { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽고, 아래 「사건 브리핑」 카드도 열어 보세요 — 다 봤으면 ← 로 나가기' };
+    // 단서 탭이 아닐 땐 말풍선을 접는다 — 아래에 서서 인물 카드를 가렸다(19회차)
+    if (recordOpen) coach = modalCode ? null : { sel: '.s-sheet-back', dim: false, hideSel: '.s-record-tabs button.on:not(:first-child)', text: '맨 위 「📋 사건 개요」를 읽고, 아래 「사건 브리핑」 카드도 열어 보세요 — 다 봤으면 ← 로 나가기' };
     else if (modalCode) coach = { sel: '.s-modal .mx', dim: false, text: '단서를 확보했습니다. 다 읽었으면 ✕ 로 닫으세요' };
     else if (suspectId) coach = null;      // 심문 안에서는 그 화면이 직접 안내한다(아래 CrossExamView)
     else if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
     else if (!sceneId) coach = { sel: '[data-tut="door"]', text: t('이제 {{S1.short}}방을 눌러 들어가세요') };
-    else if (sceneId !== 'ROOM-JH') coach = { sel: '.aa-dlg-act', text: t('먼저 {{S1.short}}방부터 봅시다 — 나가기를 눌러 복도로') };
+    else if (sceneId !== 'ROOM-JH') coach = { sel: '.aa-dlg-act:last-child', text: t('먼저 {{S1.short}}방부터 봅시다 — 나가기를 눌러 복도로') };
     else if (!jhExamined) coach = { sel: jhObjs.includes(TUT_CODE) ? `.aa-track .s-zone-wrap[data-code="${TUT_CODE}"] .s-zone` : ".aa-track .s-zone", text: '테두리가 빛나는 이 물건을 눌러 조사하세요' };
     // 배경에 인물이 그려진 방은 .s-talkzone, 떠 있는 스탠딩은 .s-figure — 둘 다 잡아야 한다
     //   (예전엔 .s-figure 만 봐서 종현방에선 코치마크가 통째로 사라졌다)
@@ -257,7 +258,7 @@ export default function SoloApp() {
               // 지운 대화를 살리지 않은 폰은 「지운 대화」로 받지 않는다 — 열어 보지도 않은 대화로 깨졌다(16회차)
               const r = (code === 'YJWR-74' && suspectId === 'S4' && !(state.recovered || []).includes(code))
                 ? { result: 'soft', text: '(휴대폰을 힐끗 본다) …제 휴대폰이요. 보실 거면 보십시오. 숨길 대화는 없습니다.' }
-                : presentOn(suspectId, stId, code, confessed);
+                : presentOn(suspectId, stId, code, confessed, state.collected || []);
               if (r.result === 'contradict') {
                 const bk = { ...(state.broke || {}) };
                 const cur = bk[suspectId] || [];
@@ -274,6 +275,9 @@ export default function SoloApp() {
                 else { tr[suspectId] = t; update({ trust: tr }); }
               }
               if (r.grants) collect(r.grants); // 추궁 성공으로 추리(특수) 단서 확보
+              // 같은 단서를 주는 나머지 물건은 물은 것으로 — 같은 고백을 세 번 더 듣고 「(3)」도 안 꺼졌다(19회차)
+              const sib = r.grants ? sameGrantCodes(suspectId, r.grants) : [];
+              if (sib.length > 1) setState((p) => { const a = { ...(p.askedC || {}) }; a[suspectId] = [...new Set([...(a[suspectId] || []), ...sib])]; return { ...p, askedC: a }; });
               return r; // 자식이 컷인/대사창에 결과 표시
             }} />
         ) : sceneId ? (
@@ -314,13 +318,25 @@ export default function SoloApp() {
           <CaseRecord clues={recordClues} fresh={state.labNew}
             onOpen={(code) => { setModalCode(code); if ((state.labNew || []).includes(code)) update({ labNew: state.labNew.filter((c) => c !== code) }); }}
             notes={state.notes} onNotes={(v) => update({ notes: v })}
-            talkLog={state.talkLog} briefOpen={!state.tutorialSeen} />
+            talkLog={state.talkLog} briefOpen={!state.tutorialSeen}
+            radio={[
+              state.eventSeen && { title: '살인 전환 — 1차 부검 소견', lines: event1Beats().map((b) => b.text) },
+              state.event2Seen && { title: '2차 부검 — 질식사 확정', lines: event2Beats().map((b) => b.text) },
+            ].filter(Boolean)} />
         </SheetOverlay>
       )}
       {casefileOpen && (
         <SheetOverlay title="🔍 범인 지목" onClose={() => setCasefileOpen(false)}>
           <CaseFileView state={state} onPick={(cf) => update({ casefile: cf })}
-            onConfirmLock={(who) => dlg.confirm({ title: '범인 확정', body: <p><b>{who?.name}</b> — 이 사람으로 확정하면 바꿀 수 없습니다. 확정할까요?</p>, ok: '확정한다', cancel: '더 생각한다', tone: 'danger' })}
+            // 2차 심문 경고를 확정 전에 — 범인을 잠근 뒤 제출 창에서야 떠서 당황했다(19회차)
+            onConfirmLock={(who) => dlg.confirm({ title: '범인 확정', body: (
+              <>
+                <p><b>{who?.name}</b> — 이 사람으로 확정하면 바꿀 수 없습니다. 확정할까요?</p>
+                {p2Count < suspectIds.length && (
+                  <p style={{ color: '#ffd479', fontWeight: 700, fontSize: '.88rem', lineHeight: 1.7 }}>⚠ 2차 심문은 지목의 조건이 아니에요. 다만 {p2Count === 0 ? '아직 2차 심문을 한 명도 하지 않았어요' : `아직 2차 심문을 하지 않은 사람 — ${suspects.filter((s) => !(state.p2Met || []).includes(s.id)).map((s) => s.name).join(' · ')}`}. 듣지 못한 사실이 있을 수 있어요.</p>
+                )}
+              </>
+            ), ok: '확정한다', cancel: '더 생각한다', tone: 'danger' })}
             // 제출은 되돌릴 수 없다(엔딩의 「새 사건」은 clearSave라 기록까지 사라진다) — 확인창에서
             //   '얼마나 조사하고 지목하는지'를 숫자로 보여준 뒤 물어본다.
             onSubmit={async () => {
@@ -373,7 +389,7 @@ export default function SoloApp() {
       {/* 튜토리얼 중엔 아래로 — 위쪽 코치 말풍선(「✕ 로 닫으세요」)을 덮었다(2026-10-07 시험) */}
       {toast && <div className="s-toast">{toast}</div>}
       <LoadingBar />
-      {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
+      {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} hideSel={coach.hideSel} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (
         <TutorialFinale onClose={() => update({ tutFinaleSeen: true })} />
       )}

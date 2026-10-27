@@ -84,9 +84,9 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
 
       {/* 방 이름 */}
       <g className="cctv-room-label">
-        <text x="102" y="84">한다영</text><text x="197" y="84">한소미</text><text x="290" y="84">서지안</text>
+        <text x="102" y="62">한다영</text><text x="197" y="62">한소미</text><text x="290" y="62">서지안</text>
         <text x="360" y="55">목사님</text>
-        <text x="102" y="212">최종현</text><text x="197" y="212">문세린</text><text x="290" y="212">강지후</text>
+        <text x="102" y="238">최종현</text><text x="197" y="238">문세린</text><text x="290" y="238">강지후</text>
       </g>
 
       {/* CCTV 카메라 */}
@@ -113,7 +113,9 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
           컷이 바뀌면 key(cutKey)가 달라져 remount → 애니메이션이 동선 시작점부터 다시 시작. */}
       {people.map((p, i) => {
         // 앞사람과 30 안으로 붙어 있으면 이름표를 한 줄씩 내린다(10:00 최종현+김호치 목사가 겹쳤다, 새벽이슬 17회차)
-        const near = people.slice(0, i).filter((q) => Math.abs((q.x || 0) - (p.x || 0)) < 40 && Math.abs((q.y || 0) - (p.y || 0)) < 30).length;
+        //   함께 움직이는 장면(meet)은 서 있는 자리가 아니라 같은 길을 가므로, 앞의 이동 인물 수만큼 내린다(19회차 「최김호치 목사」)
+        const near = meet && p.arrow ? people.slice(0, i).filter((q) => q.arrow).length
+          : people.slice(0, i).filter((q) => Math.abs((q.x || 0) - (p.x || 0)) < 40 && Math.abs((q.y || 0) - (p.y || 0)) < 30).length;
         const isScene = !p.unlocks;           // unlocks 없는 인물(목사 동반 등장)은 클릭/수집 불가
         const got = !isScene && collected.has(p.unlocks);
         const cls = `cctv-marker ${got ? 'got' : ''} ${isScene ? 'cctv-marker--scene' : ''}`.trim();
@@ -123,10 +125,11 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
             {!isScene && <circle className="cctv-marker-hit" r="26" fill="transparent" />}
             <circle r={isScene ? 8 : 9} className="cctv-marker-dot" />
             {!isScene && <text className="cctv-marker-glyph" y="4">{got ? '✓' : '?'}</text>}
-            <text className="cctv-marker-label" y={(isScene ? 23 : 24) + near * 13}>{isScene ? p.who : (got ? p.who : '인물')}</text>
+            <text className="cctv-marker-label" y={(isScene ? 23 : 24) + near * 16}>{isScene ? p.who : (got ? p.who : '인물')}</text>
           </>
         );
-        const clickProps = isScene ? { 'aria-hidden': 'true' } : { onClick: () => onPick(p), role: 'button' };
+        // 이름표 — 없으면 화면 읽기·시험 도구에 「이름 없는 단추」로 잡혔다(19회차)
+        const clickProps = isScene ? { 'aria-hidden': 'true' } : { onClick: () => onPick(p), role: 'button', 'aria-label': got ? p.who : '이 장면의 인물' };
         if (p.arrow) {
           const m = markerMotion(p.arrow, meet);
           const fade = blindFade(routePoints(p.arrow, meet), m);

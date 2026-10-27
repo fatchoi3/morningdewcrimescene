@@ -127,8 +127,12 @@ function PageStack({ pages, collectedSet, onCollect }) {
   }, [pages]);
   // 「아래로 밀어」 안내는 실제로 넘칠 때만 — 한 화면에 다 들어가는 3쪽 다이어리에도 붙었다(튜토리얼 3차 시험)
   const [more, setMore] = useState(false);
+  const [headH, setHeadH] = useState(0);
   useEffect(() => {
-    const check = () => { const sc = refs.current[0]?.closest('.s-modal'); setMore(!!sc && sc.scrollHeight > sc.clientHeight + 8); };
+    const check = () => {
+      const sc = refs.current[0]?.closest('.s-modal'); setMore(!!sc && sc.scrollHeight > sc.clientHeight + 8);
+      setHeadH(sc?.querySelector('.s-modal-h')?.offsetHeight || 0);
+    };
     const ids = [0, 200, 800].map((ms) => setTimeout(check, ms));
     window.addEventListener('resize', check);
     return () => { ids.forEach(clearTimeout); window.removeEventListener('resize', check); };
@@ -149,7 +153,12 @@ function PageStack({ pages, collectedSet, onCollect }) {
   }, [pages]);
   return (
     <>
-      {pages.length > 1 && <p className="s-pager-more">📖 {pages.length}쪽{more ? ' — 아래로 밀어 끝까지 읽어 보세요' : ''}</p>}
+      {/* 남은 쪽 수는 위 안내 하나로 — 아래 띠가 본문 마지막 줄을 덮었다(19회차). 넘칠 때만 창 머리 밑에 붙어 따라온다 */}
+      {pages.length > 1 && (
+        <p className={`s-pager-more${more ? ' stick' : ''}`} style={more ? { top: headH } : undefined}>
+          📖 {pages.length}쪽{more ? (seen.size < pages.length ? ` · 아직 안 본 쪽 ${pages.length - seen.size} — 아래로 밀어 끝까지` : ' · 다 봤어요') : ''}
+        </p>
+      )}
       {pages.map((pg, i) => (
         <section key={i} className="s-page" data-i={i} ref={(el) => { refs.current[i] = el; }}>
           {pg.image && <ZoomImg src={pg.image} style={{ height: PAGE_IMG_H, width: '100%', objectFit: 'contain', marginBottom: 8 }} />}
@@ -157,7 +166,6 @@ function PageStack({ pages, collectedSet, onCollect }) {
           <div className="s-detail">{pg.content}</div>
         </section>
       ))}
-      {more && seen.size < pages.length && <div className="s-page-unread">📖 아직 안 본 쪽이 있어요 ({seen.size}/{pages.length}) — 아래로 밀어 보세요</div>}
     </>
   );
 }

@@ -102,5 +102,9 @@ export function usePinchZoom(camRef, trackRef, { ratio, resetKey, onChange }) {
       }
     }
   };
-  return { z, atMin, canZoomOut, toggle };
+  /** 그 점을 고정한 채 「크게 보기」 배율로 */
+  const zoomAt = (cx, cy) => { zoomTo(bigZ(), cx, cy); setZ(zRef.current); };
+  // 기본 배율보다 작게 줄여 둔 상태 — 세로 그림처럼 기본이 곧 전체 보기인 방은 해당하지 않는다
+  const belowBase = z < baseZoom() - 0.02;
+  return { z, atMin, canZoomOut, toggle, zoomAt, belowBase };
 }

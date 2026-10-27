@@ -892,8 +892,6 @@ body:has(.s-phone) .s-toast { top: auto; bottom: calc(28px + env(safe-area-inset
 @media (max-width: 640px) { .modal-overlay:has(.cctv-modal) { align-items: flex-start; } }
 /* 대질 증거 목록 끝 — 「증거를 고르세요」 막대가 마지막 줄을 덮었다(15회차) */
 .aa-present:has(.cf-actions) .s-grid { padding-bottom: 64px; }
-/* 여러 쪽 문서 — 아직 안 본 쪽 */
-.s-page-unread { position: sticky; bottom: -16px; margin: 8px -16px -16px; padding: 10px 16px; background: #241f14f2; border-top: 1px solid var(--gold); color: #ffe9a8; font-size: .82rem; font-weight: 700; text-align: center; }
 /* 16회차 — 화면 */
 /* 단서 창의 알림은 아래로(위로 올리니 세 줄짜리 개방 알림이 창 제목을 덮었다) — 위 규칙에서 위치만 바꿨다 */
 /* 방 전체 보기 — 이름표는 숨기고 ✓ 만(220px 띠 위에서 겹치고 잘렸다). 그림에 없는 물건 이름표(📖 책)는 남긴다 */
@@ -904,9 +902,6 @@ body:has(.s-phone) .s-toast { top: auto; bottom: calc(28px + env(safe-area-inset
 /* 반박 창 — ✕ 는 머리띠 첫 줄 오른쪽 위, 목록 끝 여백(맨 아래 카드가 반쯤 잘려 보였다) */
 .aa-present-h { align-items: flex-start; }
 .aa-present .s-grid { padding-bottom: 28px; }
-/* 「아직 안 본 쪽」 띠 — 반투명·한 줄(본문 끝줄을 덮었다) */
-.s-page-unread { background: #241f14b8; padding: 6px 16px; font-size: .78rem; }
-.s-modal-b:has(.s-page-unread) { padding-bottom: 40px; }
 /* CCTV — 솔로는 장면을 고르면 자동으로 확보하므로 「이 장면의 인물」 단추를 숨긴다(누르면 아래가 생겨 창이 밀렸다) */
 .cctv-modal .cctv-picks { display: none; }
 /* 확대 창 안내 — 그림 위에 겹쳐 안 읽혔다: 어두운 알약 바탕 */
@@ -921,8 +916,6 @@ body:has(.hall-hud) .s-toast { top: auto; bottom: calc(86px + env(safe-area-inse
 .aa-dlg-actions .aa-dlg-act { padding-left: 8px; padding-right: 8px; flex: none; }
 /* 대질 「증거를 고르세요」 — 뒤 그라데이션이 커서 중간 위치에선 한 줄이 반쯤 가렸다 */
 .cf-actions { background: linear-gradient(180deg, transparent, #060a12 22%); }
-/* 「아직 안 본 쪽」 띠가 두 줄이면 여백이 모자랐다 */
-.s-modal-b:has(.s-page-unread) { padding-bottom: 56px; }
 /* CCTV 평면도 이름표 글씨 */
 .cctv-modal .cctv-marker-label { font-size: 12px; }
 /* 18회차 — 화면 */
@@ -934,5 +927,22 @@ body:has(.hall-hud) .s-toast { top: auto; bottom: calc(86px + env(safe-area-inse
 .cctv-modal .cctv-marker-label { font-size: 14px; }
 .cctv-modal .cctv-map-note { font-size: 14px; }
 .cctv-modal { padding: 12px; }
-/* 여러 쪽 문서의 「아직 안 본 쪽」 띠를 「단서 확보」 알림이 덮었다 — 그때만 알림을 위로 */
-body:has(.s-page-unread) .s-toast { top: calc(64px + env(safe-area-inset-top)); bottom: auto; }
+/* 19회차 — 화면 */
+/* 여러 쪽 문서 — 남은 쪽 안내는 창 머리 밑에 붙어 따라온다(아래 띠가 본문 끝줄을 덮었다) */
+.s-pager-more.stick { position: sticky; z-index: 1; margin: 0 -16px 8px; border-radius: 0; border-width: 0 0 1px; padding: 7px 16px; }
+/* 증거 고르기 — 머리띠와 칩을 한 덩어리로 위에 붙인다(밀면 칩이 사라졌다) */
+.aa-present-top { position: sticky; top: -10px; z-index: 2; background: #0b1220; margin: -10px -12px 8px; padding: 10px 12px 2px; border-bottom: 1px solid #ffffff14; }
+.aa-present-top .aa-present-h { position: static; margin: 0 0 8px; padding: 0; background: none; }
+/* 꺼 둔 넘기기 — 자리만 지킨다 */
+.aa-dlg-act:disabled { opacity: .35; cursor: default; }
+/* 복도 진행 패널 — 눈이 침침하면 안 읽혔다, 「지목」이 둘째 줄로 넘어갔다 */
+.hall-hud-chip { max-width: 74vw; }
+.hall-hud-chip b { font-size: .9rem; }
+.hall-hud-chip span { font-size: .86rem; }
+.hall-hud-chip span.hall-objective { font-size: .82rem; }
+/*   진행 막대는 span 이라 위 「span 은 블록」 규칙에 눌려 flex 가 풀려 있었다 — 그래서 「지목」이 줄을 넘겼다 */
+.hall-hud-chip .hall-steps { display: flex; gap: 3px; flex-wrap: nowrap; }
+.hall-steps i { padding: 2px 6px; font-size: .7rem; }
+/* 밝은 벽 앞에서 테두리가 흐렸다 — 밑선을 굵고 진하게 */
+.s-zone-outline { stroke-width: 2.8; }
+.s-zone-outline .under { stroke-width: 7; opacity: .85; }

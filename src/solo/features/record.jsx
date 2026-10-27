@@ -27,6 +27,29 @@ function CaseBrief({ defaultOpen }) {
   );
 }
 
+// ── 무전 기록 — 중간 사건 대사를 다시 본다(19회차: 한 번 넘기면 다시 볼 곳이 없었다) ──
+function RadioLog({ items }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="s-brief">
+      <button className="s-brief-h" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span>📻 무전 기록 · {items.length}건</span>
+        <span className="s-brief-t">{open ? '접기 ▲' : '펼치기 ▼'}</span>
+      </button>
+      {open && (
+        <div className="s-brief-b">
+          {items.map((it) => (
+            <div key={it.title}>
+              <p className="s-brief-sub">{it.title}</p>
+              {it.lines.map((l, i) => <p key={i}>{l}</p>)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── 인물 카드(피해자/용의자 프로필) ──
 function PersonCard({ p, role }) {
   return (
@@ -135,13 +158,14 @@ function TalkLog({ talkLog }) {
 }
 
 // ── 사건 기록 — 사건 개요 / 단서 정보 / 인물 정보 / 대화 기록 / 메모 ──
-export function CaseRecord({ clues, onOpen, notes, onNotes, talkLog, briefOpen, fresh }) {
+export function CaseRecord({ clues, onOpen, notes, onNotes, talkLog, briefOpen, fresh, radio }) {
   const [tab, setTab] = useState('clues'); // clues | people | talk | notes
   const hasNotes = typeof onNotes === 'function';
   const talkCount = Object.values(talkLog || {}).reduce((n, a) => n + a.length, 0);
   return (
     <>
       <CaseBrief defaultOpen={briefOpen} />
+      {radio?.length > 0 && <RadioLog items={radio} />}
       <div className="s-record-tabs">
         <button className={tab === 'clues' ? 'on' : ''} onClick={() => setTab('clues')}>단서 ({clues.length})</button>
         <button className={tab === 'people' ? 'on' : ''} onClick={() => setTab('people')}>인물</button>

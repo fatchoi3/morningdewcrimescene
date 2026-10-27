@@ -75,7 +75,7 @@ const JONGHYUN_BIBLE_PAGES = [
   },
   {
     title: '책갈피가 끼워진 면 — 갈라디아서 6:9',
-    content: '우리가 선을 행하되 낙심하지 말지니 포기하지 아니하면 때가 이르매 거두리라. (갈라디아서 6:9)\n\n— 책갈피 대신 영수증이 꽂혀 있다.'
+    content: '우리가 선을 행하되 낙심하지 말지니 포기하지 아니하면 때가 이르매 거두리라. (갈라디아서 6:9)\n\n— 책갈피 대신 등산 코스 안내 쪽지가 꽂혀 있다.'
   }
 ];
 
@@ -612,7 +612,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
       },
       {
         title: '7월 2일 (수)',
-        content: '내일이면 수련회다. 짐을 꾸리며 사물함도 다시 잠갔다. 잠가 둘 것은 늘 결혼기념일 4월 19일 — 그 네 자리(0419)에 맞춰 둔다. 무슨 일이 있어도 이 날짜만큼은 잊은 적이 없다.'
+        content: '내일이면 수련회다. 짐을 꾸리며 사물함도 다시 잠갔다. 잠가 둘 것은 늘 결혼기념일 4월 19일에 맞춰 둔다. 무슨 일이 있어도 이 날짜만큼은 잊은 적이 없다.'
       }
     ]
   },
@@ -627,7 +627,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
       entries: [
         { time: '전날 13:00', person: '{{S5}} 총무', title: '개인 면담 (15분)', content: '면담 후 {{S5|이/가}} 불안한 표정으로 나오는 것이 목격되었다.' },
         { time: '전날 13:20', person: '{{S3}} 회계', title: '개인 면담 (15분)', content: '회계 업무 보고.' },
-        { time: '전날 14:00', person: '{{S4}} 전도사', title: '개인 면담 (20분)', content: '면담 이후 평소와 같은 모습이었다.'  },
+        { time: '전날 14:00', person: '{{S4}} 전도사', title: '개인 면담 (20분)', content: '면담 이후에도 겉으로는 평소와 다름없어 보였다고 한다.'  },
         { time: '전날 14:30', person: '{{S2}} 팀장', title: '개인 면담 (20분)', content: '면담 후 {{S2.short|은/는}} 매우 화난듯한 표정으로 나왔다고 한다.'  },
         { time: '전날 15:00', person: '{{S6}} 회장', title: '개인 면담 (20분)', content: '면담 이후 {{S6.short|이/}} 목사님과 눈도 마주치지 않았다고 한다' }
       ]
@@ -725,7 +725,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'IHKX-61': { // 현장(목사 방) — 베개
     title: '베개',
     description: '목사님 방에서 발견되었다.',
-    detail: '목사님 배 위에 놓여 있었다. 겉보기엔 특별할 것 없는 일반적인 베개다.\n배게? 베개? 베게? 항상 헷갈리는 단어인 것 같다.',
+    detail: '목사님 배 위에 놓여 있었다. 겉보기엔 특별할 것 없는 일반적인 베개다.',
     image: '/images/베개.png',
     type: '보통',
     person: '목사'
@@ -1383,7 +1383,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'UTUW-73': { // 방 — 요일별 약통 (핵심)
     title: '요일별 약통',
     description: '{{S4.short}}의 책상 위에서 발견되었다.',
-    detail: '요일별(월·화·수·목·금·토)로 나뉜 약통. 칸을 열면 비타민C·루테인·오메가3 같은 영양제와 어디서 본 적이 있는 알약이 섞여 있다.',
+    detail: '요일별(월·화·수·목·금·토)로 나뉜 약통. 칸을 열면 비타민C·루테인·오메가3 같은 영양제가 들어 있는데, 토요일 칸에만 영양제 같지 않은 작은 흰 알약이 몇 알 섞여 있다. 자세히 보면 무언가 새겨져 있다.',
     image: '/images/약통.jpg',
     type: '보통',
     person: '{{S4}}'
@@ -1391,7 +1391,7 @@ export const evidenceMap = withAssetBase(resolveTokens({
   'HIDN-37': { // 요일별 약통(UTUW-73) 발견 시 성분 감식이 이어서 해금
     title: '요일별 약통 성분 감식',
     description: '',
-    detail: '감식 결과: 영양제 사이에 섞여 있던 흰 알약에서 협심증 응급약 성분(니트로글리세린, GTN)이 검출되었다.',
+    detail: '감식 결과: 영양제 사이에 섞여 있던 흰 알약 여섯 알에서 협심증 응급약 성분(니트로글리세린, GTN)이 검출되었다.',
     type: '감식',
     person: '{{S4}}',
     unlockedBy: ['UTUW-73'],

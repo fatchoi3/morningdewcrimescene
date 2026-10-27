@@ -13,8 +13,9 @@ const toRect = (r) => ({ x: r.left, y: r.top, w: r.width, h: r.height });
 
 // ── 튜토리얼 코치마크 — 클릭할 곳만 밝히고 주변은 어둡게+클릭 차단, 깜빡이는 화살표 안내 ──
 //   targetSel(선택자)의 실제 위치를 추적해 '구멍'을 내고, 나머지 4개 마스크가 클릭을 막는다.
-export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
+export function TutorialCoach({ targetSel, text, onSkip, dim = true, hideSel }) {
   const [rect, setRect] = useState(null);
+  const [hidden, setHidden] = useState(false); // hideSel 이 화면에 있으면 잠시 접는다
   const [box, setBox] = useState(null);
   // 대사창은 글자가 찍히며 위로 자란다 — 처음 한 번만 재면 말풍선이 자란 대사창에 덮였다(튜토리얼 3차 시험 셋)
   const [dlgTopSt, setDlgTopSt] = useState(() => window.innerHeight);
@@ -43,6 +44,8 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
       const d = document.querySelector('.aa-dialogue');
       const dt = d ? d.getBoundingClientRect().top : window.innerHeight;
       setDlgTopSt((o) => (o === dt ? o : dt));
+      const hd = !!(hideSel && document.querySelector(hideSel));
+      setHidden((o) => (o === hd ? o : hd));
       if (el) {
         const r = toRect(el.getBoundingClientRect());
         setRect((o) => (o && o.x === r.x && o.y === r.y && o.w === r.w && o.h === r.h ? o : r));
@@ -54,10 +57,11 @@ export function TutorialCoach({ targetSel, text, onSkip, dim = true }) {
     };
     tick();
     return () => cancelAnimationFrame(raf);
-  }, [targetSel]);
+  }, [targetSel, hideSel]);
   // 대상을 못 찾아도 안내를 지우지 않는다 — 예전엔 여기서 null 을 돌려줘 마스크까지 사라졌고,
   //   그 순간 플레이어가 아무 데나 눌러 딴 길로 샜다(선택자가 바뀌면 조용히 이렇게 된다).
   //   대신 화면을 살짝 덮고 할 일만 가운데 띄운다 — 클릭은 막지 않아 갇히지도 않는다.
+  if (hidden) return null;
   if (!rect || rect.w === 0) {
     return (
       <div className="tut-coach">
@@ -153,7 +157,7 @@ export function TutorialFinale({ onClose }) {
           충분히 조사했다면 <b>사건 파일</b>을 제출해 사건을 마무리하세요.</p>
         {/* 화면 표시의 뜻 — 셋 중 둘이 「빨간 1·노란 !·하트가 뭔지 모르겠다」고 했다(튜토리얼 2차 시험) */}
         <ul className="tf-legend">
-          <li><span className="tf-badge-red">1</span> 문 옆 빨간 숫자 — 그 방 사람에게 아직 깰 수 있는 거짓말이 남았다</li>
+          <li><span className="tf-badge-red">1</span> 문 옆 빨간 숫자 — 지금 가진 단서로 깰 수 있는 거짓말이 그 방에 남았다</li>
           <li><span className="tf-badge-amber">!</span> 노란 느낌표 — 볼 것·물어볼 것만 남았다</li>
           <li><span style={{ color: '#e8706e' }}>♥</span> 심문의 하트 — 그 사람의 신뢰도. 엉뚱한 단서를 내밀면 하나씩 준다</li>
         </ul>

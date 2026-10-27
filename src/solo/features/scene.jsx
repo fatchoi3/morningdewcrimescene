@@ -106,16 +106,18 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
     const c = getClue(code);
     return c && !(c.phone && stage < 3);
   });
-  const missing = shown.filter((code) => !collectedSet.has(code));
   // 진척 수 — 이야기와 이어지지 않는 빈 물건(옷가지·파우치·장갑)은 세지 않는다(16회차, 결정 마)
   const countable = shown.filter((code) => !getClue(code)?.flavor);
+  // 화살표 수도 같은 기준 — 빈 물건까지 세어 「◀ 단서 N」이 남은 수보다 많았다(19회차)
+  const missing = countable.filter((code) => !collectedSet.has(code));
   const countGot = countable.filter((code) => collectedSet.has(code)).length;
   const dirs = { left: 0, right: 0, up: 0, down: 0 };
   if (cam?.tw) for (const code of missing) {
     const p = hotspotFor(location, code, location.objects.indexOf(code));
     const x = (cam.ox || 0) + p.x / 100 * cam.tw, y = (cam.oy || 0) + p.y / 100 * cam.th;
+    // 한 물건은 한 방향으로만 — 가로·세로 둘 다 세어 두 번 셌다(19회차)
     if (x < cam.l) dirs.left++; else if (x > cam.l + cam.w) dirs.right++;
-    if (y < cam.t) dirs.up++; else if (y > cam.t + cam.h - DLG_COVER) dirs.down++;
+    else if (y < cam.t) dirs.up++; else if (y > cam.t + cam.h - DLG_COVER) dirs.down++;
   }
   const offscreen = dirs.left + dirs.right + dirs.up + dirs.down;
   const pickCode = (code) => {
@@ -183,7 +185,11 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
           // 몸의 상처(손등·손목)는 인물 터치존(z10) 위에 얹는다 — 그래야 그 부위를 직접 누른다
           ...(p.onPerson ? { zIndex: 11 } : null),
         };
-        const onPick = () => pickCode(code);
+        const onPick = (e) => {
+          // 「방 전체 보기」로 줄여 둔 상태면 첫 탭은 그 자리로 확대 — 손톱만 한 테두리를 겨눠야 했다(19회차)
+          if (pannable && zoom.belowBase && e?.clientX != null) { zoom.zoomAt(e.clientX, e.clientY); onLockedToast('🔍 크게 봤어요 — 한 번 더 누르면 조사해요'); return; }
+          pickCode(code);
+        };
         const tone = have ? ' have' : req ? ' req' : '';
         return (
           <div key={code} className={`s-zone-wrap${boxed ? ' boxed' : ''}`} style={wrapStyle} data-code={code}>
@@ -311,8 +317,9 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
       {/* 하단 바 없음 — 나가기는 대사창 우측 하단에. 조사는 상시(테두리가 빛나는 물건을 누르면 된다) */}
       <DialogueBox location={isLab ? '감식 의뢰실' : location.label}
         actions={[
-          roomSuspect && onTalk && { label: `💬 ${roomSuspect.name}${talkPending > 0 ? ` (${talkPending})` : ''}`, onClick: () => onTalk(roomSuspect.id) },
+          // 폭이 바뀌는 목록 단추를 맨 왼쪽에 — 열고 닫을 때 「💬 인물」이 밀려 같은 자리를 누르면 목록이 닫혔다(19회차)
           !isLab && shown.length > 0 && { label: listOpen ? '✕ 목록 닫기' : `📋 물건 목록 ${countGot}/${countable.length}`, onClick: () => setListOpen((v) => !v) },
+          roomSuspect && onTalk && { label: `💬 ${roomSuspect.name}${talkPending > 0 ? ` (${talkPending})` : ''}`, onClick: () => onTalk(roomSuspect.id) },
           { label: '🚶 나가기', onClick: onBack },
         ]}
         text={isLab

@@ -6,16 +6,18 @@
 //   "남은 것"만 세고 "이미 한 것"은 세지 않는다 — 다 하면 배지가 사라져 진행도가 보인다.
 // ─────────────────────────────────────────────────────────────────────────────
 import { getClue, suspects, gamsikReady } from '../content.js';
-import { visibleStatements, visibleTopics, topicClues, clueTargetIn, isFlavorClue } from '../interrogation.js';
+import { visibleStatements, visibleTopics, topicClues, isFlavorClue } from '../interrogation.js';
 
 const sidOfPerson = (person) => suspects.find((s) => s.name === person)?.id || null;
 
 /**
  * 남은 질문거리를 { total, key } 로 나눠 센다.
  *   total = 아직 안 물어본 것 전부(진술 질문 + 화제 + 화제 아래 단서 질문)
- *   key   = 그 안에 남아 있는 '아직 못 짚은 모순' 수 — 사건을 여는 모순은 통틀어 16개뿐인데
+ *   key   = 지금 가진 단서로 깰 수 있는데 아직 안 깬 거짓말 수 — 사건을 여는 모순은 통틀어 16개뿐인데
  *           잡담 한 줄과 같은 무게로 합산하면 2차 진입 때 인당 10~16(합 74)이 찍혀,
  *           숫자가 "여기 뭔가 남았다" 말고는 아무것도 못 알려준다.
+ *           예전엔 「아직 안 물은 질문 중 모순이 있는 것」이라 깰 단서가 없어도 빨간 1이 떴고(뭘 내도 안 깨짐),
+ *           물어본 뒤엔 안 깼어도 꺼졌다(19회차). 이제 물었든 안 물었든 「지금 가서 깰 수 있다」일 때만 켜진다.
  */
 export function questionBreakdown(sid, state, phase = 1) {
   if (!sid) return { total: 0, key: 0 };
@@ -27,13 +29,17 @@ export function questionBreakdown(sid, state, phase = 1) {
   // 한 모순에 질문으로도 단서로도 닿으므로 진술 id 로 접어 센다 — 안 접으면 같은 모순을 둘로 세서
   //   실제 남은 개수보다 부풀려 찍힌다.
   const keySts = new Set();
-  const markKey = (stId) => { if (stId && !broke.has(stId)) keySts.add(stId); };
-  const targetOf = (code) => { const t = clueTargetIn(open, code); return t?.kind === 'contradict' ? t.stId : null; };
+  const have = new Set(collected);
+  // 지운 대화를 살리지 않은 지안 폰은 깨는 단서로 치지 않는다(SoloApp onPresent 와 같은 기준)
+  const usable = (code) => have.has(code) && (code !== 'YJWR-74' || (state.recovered || []).includes(code));
+  for (const s of open) {
+    if (!s.contradict || broke.has(s.id)) continue;
+    if ((s.contradict.codes || [s.contradict.code]).some(usable)) keySts.add(s.id);
+  }
   let total = 0;
   for (const s of open) {
     if (asked.has(s.id)) continue;
     total += 1;
-    if (s.contradict) markKey(s.id);
   }
   // 화제와 그 아래 단서도 세야 '단서를 주웠으니 다시 가서 물어보라'는 신호가 방 문에 뜬다.
   //   아직 안 꺼낸 화제는 1개로만 센다 — 꺼내야 그 아래가 열리므로.
@@ -43,10 +49,8 @@ export function questionBreakdown(sid, state, phase = 1) {
     // 물어도 사건이 안 움직이는 소지품은 남은 일로 세지 않는다(질문은 화면에 그대로 있다)
     const inTopic = topicClues(sid, t, collected, open).filter((c) => !isFlavorClue(sid, c, open, getClue(c)));
     if (!inTopic.length) continue;                    // 이어질 게 없는 화제는 화면에도 안 뜬다
-    if (!askedT.has(t.id)) { total += 1; inTopic.forEach((c) => markKey(targetOf(c))); continue; }
-    const left = inTopic.filter((code) => !askedC.has(code));
-    total += left.length;
-    left.forEach((c) => markKey(targetOf(c)));
+    if (!askedT.has(t.id)) { total += 1; continue; }
+    total += inTopic.filter((code) => !askedC.has(code)).length;
   }
   return { total, key: keySts.size };
 }
@@ -87,13 +91,15 @@ export function locationAlerts(loc, state, stage = 1, phase = 1) {
   if (!loc || loc.stage > stage) return { clues: 0, questions: 0, key: 0, total: 0 };
   const clues = pendingClues(loc, state, stage);
   const q = loc.kind === 'room' ? questionBreakdown(sidOfPerson(loc.person), state, phase) : { total: 0, key: 0 };
-  return { clues, questions: q.total, key: q.key, total: clues + q.total };
+  // 깰 거짓말이 남았으면 물을 것이 없어도 배지를 띄운다 — 물어 둔 뒤 단서를 주운 경우(19회차, 빨간 숫자 뜻 바꿈)
+  return { clues, questions: q.total, key: q.key, total: clues + q.total + (q.total ? 0 : q.key) };
 }
 
 /** 배지에 띄울 짧은 사유(툴팁용). */
 export function alertReason({ clues, questions, key = 0 }) {
   const parts = [];
   if (clues) parts.push(`살펴볼 것 ${clues}`);
-  if (questions) parts.push(`물어볼 것 ${questions}${key ? ` (모순 ${key})` : ''}`);
+  if (questions) parts.push(`물어볼 것 ${questions}`);
+  if (key) parts.push(`지금 깰 수 있는 거짓말 ${key}`);
   return parts.join(' · ');
 }

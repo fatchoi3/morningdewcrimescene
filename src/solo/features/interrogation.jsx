@@ -193,7 +193,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     + cluesOf(t).filter(clueLeft).length;
   // 튜토리얼 목표 질문이 이야깃거리 안에 들어 있으면 그 이야깃거리부터 가리킨다
   const tutTopic = tutT ? topics.find((t) => stsOf(t).some((x) => x.id === tutT.stId)) : null;
-  const pendingRoot = rootSts.filter((x) => !sKey(x).asked && !sKey(x).broke).length + topics.filter((t) => topicLeft(t) > 0).length;
+  const pendingRoot = rootSts.filter((x) => !sKey(x).asked && !sKey(x).broke).length + topics.filter((t) => topicLeft(t) > 0 || !askedTopics.includes(t.id)).length; // 💬(안 꺼낸 화제)도 센다 — 숫자와 줄이 달랐다(19회차)
   // 질문지가 떠 있는 동안 대사창에 나가는 글은 인물의 말이 아니라 화면 안내다 — 타이핑 판정에도 쓴다
   const menuOpen = !line && !cur;
   // 질문지를 밀어 둔 자리 — 대답을 보고 돌아오면 목록이 맨 위로 돌아가 다시 찾아야 했다(2026-10-01)
@@ -362,7 +362,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     //   그 진술은 ✅로 닫혀 캐묻기로만 주는 증언까지 지나치게 된다.
     if (tgt?.kind === 'contradict' && !askedIds.includes(stId) && !pressedIds.includes(stId)) {
       const st = statements.find((s) => s.id === stId);
-      setLine({ kind: 'note', text: `(이 단서를 들이대기 전에, 본인 입으로 하는 말을 먼저 들어야 한다.\n질문지 「💬 질문」 칸의 「${st?.q || '그 질문'}」(❗ 표시)을 물어본 다음 「📁 반박」으로 꺼내자.)` });
+      // 화제 안에 있으면 한 겹 나가야 그 질문이 보인다(19회차)
+      const out = openTopic && !stsOf(openTopic).some((x) => x.id === stId) ? '「↩ 다른 이야기」로 나가 맨 위 ' : '';
+      setLine({ kind: 'note', text: `(이 단서를 들이대기 전에, 본인 입으로 하는 말을 먼저 들어야 한다.\n질문지 ${out}「💬 질문」 칸의 「${st?.q || '그 질문'}」(❗ 표시)을 물어본 다음 「📁 반박」으로 꺼내자.)` });
       return;
     }
     onAskedClue?.(code);                            // 질문지에서 ✔ 처리 · 방 알림(❗) 집계에 반영
@@ -507,7 +509,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
           !cur && openTopic && { label: '↩ 다른 이야기', onClick: () => { setLine(null); setOpenTopicId(null); } },
           // 분량 대부분이 이 화면인데 20ms/자를 끊을 방법이 화면 탭뿐이었다 — 엄지 자리에도 둔다.
           //   (넘길 곳이 있을 때만 = 버튼이 타이핑 도중에 생겼다 사라지며 줄이 흔들리지 않게)
-          dlgAdvance && { label: '⏭', sub: '넘기기', aria: '대사 넘기기', onClick: () => dlgRef.current?.tap() },
+          //   대답 화면에선 늘 둔다(꺼 둔 채) — 생겼다 사라지면 「↩ 다른 질문」이 옆으로 옮겨 다녔다(19회차)
+          (cur || dlgAdvance) && { label: '⏭', sub: '넘기기', aria: '대사 넘기기', disabled: !dlgAdvance, onClick: () => dlgRef.current?.tap() },
           { label: '📓', sub: '수첩', aria: '수첩(사건 기록)', onClick: () => { setPicker(false); onOpenRecord?.(); } },
           // 아이콘만 — 답변 화면에선 버튼이 5개라, 글자를 달면 375px 에서 두 줄로 넘어가
           //   대사창이 42px 두꺼워진다. 심문마다 한 번 쓰는 버튼이라 ⏭·📓 처럼 아이콘으로 둔다.
@@ -545,32 +548,37 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
       {picker && cur && !bk && (
         <div className="aa-present">
-          <div className="aa-present-h">
-            {/* 반박할 말을 끝까지 — 22자에서 자르면 무엇을 반박하는지 몰랐다(튜토리얼 시험 셋 모두) */}
-            <span>📁 반박할 증거를 고르세요<span className="aa-present-q">“{cur.text}”</span></span>
-            <button className="aa-close" onClick={() => setPicker(false)}>✕</button>
+          {/* 머리띠와 칩을 한 덩어리로 위에 붙인다 — 칩이 목록과 함께 밀려 사라졌다(19회차) */}
+          <div className="aa-present-top">
+            <div className="aa-present-h">
+              {/* 반박할 말을 끝까지 — 22자에서 자르면 무엇을 반박하는지 몰랐다(튜토리얼 시험 셋 모두) */}
+              <span>📁 반박할 증거를 고르세요<span className="aa-present-q">“{cur.text}”</span></span>
+              <button className="aa-close" onClick={() => setPicker(false)}>✕</button>
+            </div>
+            {presentable.length > 0 && <>
+              {/* 인물 칩 — 줄을 넘겨 감싼다(가로로 밀게 두니 오른쪽 끝이 잘려 못 눌렀다, 2026-10-07) */}
+              <p style={{ color: 'var(--muted)', fontSize: '.74rem', margin: '0 2px 8px' }}>이 사람의 말과 얽힌 단서와 이 사람의 소지품만 보여요.</p>
+              {KINDS.length > 1 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 6 }}>
+                  <button style={chipStyle(!pKind)} onClick={() => setPKind(null)}>모든 종류</button>
+                  {KINDS.map(([k, label]) => (
+                    <button key={k} style={chipStyle(pKind === k)} onClick={() => setPKind(k)}>{label} {presentable.filter((c) => kindOf(c) === k).length}</button>
+                  ))}
+                </div>
+              )}
+              {presentPersons.length > 1 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>
+                  <button style={chipStyle(!pPerson)} onClick={() => setPPerson(null)}>전체 {presentable.length}</button>
+                  {presentPersons.map((p) => (
+                    <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>
+                  ))}
+                </div>
+              )}
+            </>}
           </div>
           {presentable.length === 0
             ? <p style={{ color: 'var(--muted)', fontSize: '.85rem', padding: '4px 2px' }}>이 인물과 관련된 단서가 아직 없습니다. 현장·대화로 단서를 더 모으세요.</p>
             : <>
-                {/* 인물 칩 — 줄을 넘겨 감싼다(가로로 밀게 두니 오른쪽 끝이 잘려 못 눌렀다, 2026-10-07) */}
-                <p style={{ color: 'var(--muted)', fontSize: '.74rem', margin: '0 2px 8px' }}>이 사람의 말과 얽힌 단서와 이 사람의 소지품만 보여요.</p>
-                {KINDS.length > 1 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 6 }}>
-                    <button style={chipStyle(!pKind)} onClick={() => setPKind(null)}>모든 종류</button>
-                    {KINDS.map(([k, label]) => (
-                      <button key={k} style={chipStyle(pKind === k)} onClick={() => setPKind(k)}>{label} {presentable.filter((c) => kindOf(c) === k).length}</button>
-                    ))}
-                  </div>
-                )}
-                {presentPersons.length > 1 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>
-                    <button style={chipStyle(!pPerson)} onClick={() => setPPerson(null)}>전체 {presentable.length}</button>
-                    {presentPersons.map((p) => (
-                      <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>
-                    ))}
-                  </div>
-                )}
                 <div className="s-grid">
                   {presentList.map((c) => {
                     const k = cKey(c);
