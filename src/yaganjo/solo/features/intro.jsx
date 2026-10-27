@@ -8,7 +8,7 @@
 import { useRef, useState } from 'react';
 import { briefing, victim, suspects, soloContent } from '../content.js';
 import { cast, t } from '../../../scenarios/yaganjo/cast.js';
-import { isUiTap, REVEAL, TIMELINE, CONFRONT } from '../lib/game.js';
+import { isUiTap, REVEAL, TIMELINE, TIMELINE_SRC, CONFRONT } from '../lib/game.js';
 import { BriefingArt, EndingArt, StandingFigure } from '../art.jsx';
 import { DialogueBox } from '../vn.jsx';
 
@@ -217,7 +217,19 @@ export function EndingScreen({ result, onNewCase }) {
                 {r.holdRight && r.evidence2
                   ? <>✓ 그가 물러선 자리를 무너뜨린 한 장 — {clueTitle(r.evidence2)}
                       {CONFRONT.why2?.[r.evidence2] && <div style={{ color: '#a9b3c4', fontSize: '.78rem', marginLeft: '1.2em' }}>왜 — {CONFRONT.why2[r.evidence2]}</div>}</>
-                  : '— 그는 물러선 자리에서 끝까지 버텼다(대질 둘째 단계)'}
+                  : <>— 그는 물러선 자리에서 끝까지 버텼다(대질 둘째 단계)
+                      {/* 무엇을 놓쳤는지 — 둘이 「그런 기록을 본 적이 없다」로 끝났다(17회차). 끝난 판이라 정답을 적는다 */}
+                      {(() => {
+                        const miss = [
+                          ...(CONFRONT.holdAccept?.[r.evidence] || []).map(clueTitle),
+                          ...Object.entries(CONFRONT.holdCombo?.[r.evidence] || {}).map(([a2, b2]) => `${clueTitle(a2)} + ${clueTitle(b2)}`),
+                        ];
+                        return miss.length > 0 && (
+                          <div style={{ color: '#cfcabb', fontSize: '.8rem', marginLeft: '1.2em' }}>놓친 한 장: {miss.join(' 또는 ')}
+                            {r.evidence === 'VZBL-10' && <div style={{ color: '#a9b3c4', fontSize: '.78rem' }}>있던 곳 — 2층 사무실 조장 태블릿(관리자 조회: 사번과 조장 폰의 네 자리)</div>}
+                          </div>
+                        );
+                      })()}</>}
               </div>
             )}
             {perfect && (
@@ -242,7 +254,9 @@ export function EndingScreen({ result, onNewCase }) {
             {TIMELINE.map(([t, d], i) => (
               <div className="s-tl2-row" key={i}>
                 <div className="s-tl2-t">{t}</div>
-                <div className="s-tl2-d">{bold(d)}</div>
+                <div className="s-tl2-d">{bold(d)}
+                  {TIMELINE_SRC[t] && <div style={{ color: '#8f99aa', fontSize: '.74rem', marginTop: 2 }}>→ {TIMELINE_SRC[t].map(clueTitle).map((x) => `「${x}」`).join(' · ')}</div>}
+                </div>
               </div>
             ))}
           </div>

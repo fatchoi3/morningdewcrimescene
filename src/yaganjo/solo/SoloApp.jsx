@@ -6,6 +6,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { loadSave, saveSave, defaultState, clearSave } from './soloStore.js';
 import { cast, t } from '../../scenarios/yaganjo/cast.js';
+import { AUTOPSY1_CODE } from './soloContent.js';
 import {
   locations, suspects, getClue, provider, soloContent,
   gamsikCodes, gamsikReady, startingClues, suspectIds,
@@ -217,7 +218,9 @@ export default function SoloApp() {
     const jhExamined = jhObjs.includes(TUT_CODE) ? collectedSet.has(TUT_CODE) : jhObjs.some((c) => collectedSet.has(c));
     // 단서 창이 먼저 — 수첩에서 단서 카드를 열면 말풍선이 여전히 「← 로」라 창 뒤의 ← 를 가리켰다(튜토리얼 1차)
     if (modalCode) coach = { sel: '.s-modal .mx', dim: false, top: true, text: recordOpen ? '다 봤으면 ✕ 로 닫고, 수첩은 ← 로 나가세요' : '단서를 확보했습니다. 아래로 끝까지 밀어 읽은 뒤 ✕ 로 닫으세요' };
-    else if (recordOpen) coach = { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽었으면 ← 로 나가세요' };
+    // 1차 검안 소견서는 2차 부검 반전의 복선이다 — 「← 로 나가세요」만 시켜 둘이 한참 뒤에야 읽었다(17회차, 사용자 승인)
+    else if (recordOpen && !state.tutAutopsyRead) coach = { sel: `[data-code="${AUTOPSY1_CODE}"]`, dim: false, top: true, text: '「📋 사건 개요」를 읽었으면, 「1차 검안 소견서」를 눌러 읽어 보세요' };
+    else if (recordOpen) coach = { sel: '.s-sheet-back', dim: false, text: '다 읽었으면 ← 로 나가세요' };
     else if (suspectId) coach = null;      // 심문 안에서는 그 화면이 직접 안내한다(아래 CrossExamView)
     else if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };
     else if (!sceneId) coach = { sel: '[data-tut="door"]', text: t('이제 지도에서 {{S1|을/를}} 눌러 찾아가세요') };
@@ -265,10 +268,22 @@ export default function SoloApp() {
       ? `남은 일: ${ch2Left.join(' · ')} → 그 뒤 한 사람을 심문하고 나오면 3장(2차 심문)`
       : '다음 심문을 끝내고 나오면 3장(2차 심문)이 열립니다 — 둘러볼 곳은 그 전에')
     + (ch2Unseen.length ? ` · 아직 덜 본 곳: ${ch2Unseen.join(' · ')}` : '');
+  // 3장 — 폰 8대·2차 심문 여섯·감식이 한꺼번에 열려 셋 다 폰 1대만 열고 지목했다(17회차, 사용자 승인).
+  //   「꼭 할 것」과 「덤」으로 나누고, 대질 둘째 단계의 관문인 2층 태블릿 조회를 맨 앞에 — 자리까지만 말한다
+  const lookupDone = collectedSet.has('LOOKUP-ZVLJ-37');
+  const bossPhoneDone = collectedSet.has('KZBP-76');
+  const ch3Must = [
+    `${lookupDone ? '✓' : '①'} 2층 사무실 조장 태블릿 — 관리자 조회(사번·네 자리)`,
+    `${bossPhoneDone ? '✓' : '②'} 조장 폰(C통로 현장)`,
+    `${p2Count >= suspectIds.length ? '✓' : '③'} 2차 심문 ${p2Count}/${suspectIds.length}`,
+  ];
+  const ch3Extra = phoneLeftAt.filter((x) => x !== '2층 사무실' && x !== 'C통로 현장');
+  const ch3Objective = `꼭 할 것: ${ch3Must.join(' · ')}`
+    + (ch3Extra.length ? ` / 덤: 아직 안 연 폰 — ${ch3Extra.join(' · ')}` : '')
+    + ' → 그 뒤 범인 지목';
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
     : progressStage < 3 ? ch2Objective
-    : '물증으로 2차 심문을 마친 뒤 범인을 지목하세요'
-      + (phoneLeftAt.length ? ` — 아직 열지 않은 휴대폰·태블릿: ${phoneLeftAt.join(' · ')}` : '');
+    : ch3Objective;
   const recordClues = state.collected.map((c) => getClue(c)).filter((x) => x && x.type !== '방');
 
   return (
@@ -295,9 +310,21 @@ export default function SoloApp() {
             location={sceneId ? locations.all.find((l) => l.id === sceneId) : null}
             collectedClues={state.collected.map((c) => getClue(c)).filter((c) => c && c.type !== '방')}
             onOpenRecord={() => setRecordOpen(true)}
-            onExit={() => {
+            onExit={async () => {
               // 감식을 맡긴 뒤 심문을 한 번 마치고 나오면 2차 심문 조건 하나가 선다(4회차 #1)
-              if ((state.labReq || []).length && sceneClueCount(state) >= SCENE_NEEDED && !state.talkAfterLab) update({ talkAfterLab: true });
+              if ((state.labReq || []).length && sceneClueCount(state) >= SCENE_NEEDED && !state.talkAfterLab) {
+                // 반박이 재미있어지던 참에 갑자기 3장으로 넘어가 당황했다(17회차 둘, 사용자 승인) — 나가기 전에 한 번 묻는다
+                const go = await dlg.confirm({
+                  title: '3장으로 넘어갈까요?',
+                  body: (<>
+                    <p>지금 나가면 <b>3장(2차 심문)</b>이 시작됩니다 — 휴대폰 영장과 감식 결과가 함께 옵니다.</p>
+                    <p style={{ fontSize: '.86rem', color: 'var(--muted)' }}>지금까지 본 장소와 사람은 3장에서도 계속 볼 수 있어요. 이 사람에게 더 물을 게 있으면 「더 묻는다」.</p>
+                  </>),
+                  ok: '넘어간다', cancel: '더 묻는다',
+                });
+                if (!go) return;
+                update({ talkAfterLab: true });
+              }
               // 「03:24 2층에서 일지」를 들었는데 2층 사무실을 덜 봤으면 한 번 짚는다 — 11회차 셋 중 둘이 2층 사무실
               //   (감사 진술 초안·조장 태블릿)을 거의 안 열어 동기를 소거법으로 고르고 대질 정답에 못 닿았다.
               if (suspectId === 'S1' && stage >= 2 && !state.officeHintSeen && (state.askedQ?.S1 || []).includes('t0300')) {
@@ -378,7 +405,7 @@ export default function SoloApp() {
       {recordOpen && (
         <SheetOverlay title={`사건 기록 · 단서 ${recordClues.length}`} onClose={() => setRecordOpen(false)}>
           <CaseRecord clues={recordClues} fresh={state.labNew}
-            onOpen={(code) => { setModalCode(code); if ((state.labNew || []).includes(code)) update({ labNew: state.labNew.filter((c) => c !== code) }); }}
+            onOpen={(code) => { setModalCode(code); if ((state.labNew || []).includes(code)) update({ labNew: state.labNew.filter((c) => c !== code) }); if (code === AUTOPSY1_CODE && !state.tutAutopsyRead) update({ tutAutopsyRead: true }); }}
             notes={state.notes} onNotes={(v) => update({ notes: v })}
             talkLog={state.talkLog} briefOpen={!state.tutorialSeen} />
         </SheetOverlay>
@@ -416,6 +443,10 @@ export default function SoloApp() {
                     {(phoneGot * 2 < PHONE_CODES.length || specialGot * 2 < SPECIAL_CODES.length) && (
                       <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 아직 안 본 것이 많아요 — 휴대폰 {phoneGot}/{PHONE_CODES.length} · ⭐ 추리 단서 {specialGot}/{SPECIAL_CODES.length}. 지목 뒤 대질에서 그를 그 자리에 묶을 한 장이 손에 없을 수 있습니다.</p>
                     )}
+                    {/* 대질 둘째 단계의 관문 — 「그런 기록을 본 적이 없다」로 셋 다 막혔다(17회차, 사용자 승인). 카드 이름이 아니라 자리만 */}
+                    {!collectedSet.has('LOOKUP-ZVLJ-37') && (
+                      <p style={{ color: 'var(--danger)', fontWeight: 700 }}>⚠ 2층 사무실 조장 태블릿의 「관리자 조회」를 아직 안 했어요 — 사번과 네 자리가 필요합니다. 그가 물러설 자리를 무너뜨릴 기록이 거기 있을 수 있습니다.</p>
+                    )}
                     <p>제출하면 사건이 종결되고 전말이 공개됩니다. <b>수사로 돌아올 수 없습니다.</b></p>
                     <p style={{ fontSize: '.82rem', color: 'var(--muted)', lineHeight: 1.7 }}>
                       지금까지 — 2차 심문 {p2Count}/{suspectIds.length}명 · 추리 단서 ⭐ {specialGot}/{SPECIAL_CODES.length}
@@ -437,10 +468,12 @@ export default function SoloApp() {
 
       {modalCode && (
         <ClueModal code={modalCode} collectedSet={collectedSet} talkLog={state.talkLog}
-          onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)} />
+          onClose={() => setModalCode(null)} onCollect={collect} onOpen={(c) => setModalCode(c)}
+          notes={state.notes} onNotes={(v) => update({ notes: v })} />
       )}
       {/* 튜토리얼 중엔 아래로 — 위쪽 코치 말풍선(「✕ 로 닫으세요」)을 덮었다(2026-10-07 시험) */}
-      {toast && <div className={`s-toast${!state.tutorialSeen ? ' low' : ''}`}>{toast}</div>}
+      {/* 눌러 닫는다 — 장 전환 안내가 크고 오래 떠 지도 위쪽과 목표 칸을 덮었다(17회차) */}
+      {toast && <div className={`s-toast${!state.tutorialSeen ? ' low' : ''}`} style={{ pointerEvents: 'auto', cursor: 'pointer' }} onClick={() => setToast(null)}>{toast}</div>}
       <LoadingBar />
       {coach && <TutorialCoach targetSel={coach.sel} text={coach.text} dim={coach.dim} top={!!coach.top} onSkip={() => update({ tutorialSeen: true, tutFinaleSeen: true })} />}
       {state.tutorialSeen && !state.tutFinaleSeen && !suspectId && !modalCode && !recordOpen && !casefileOpen && (

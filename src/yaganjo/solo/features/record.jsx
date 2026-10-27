@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { victim, suspects, briefing } from '../content.js';
 import { Avatar } from '../art.jsx';
+import { Legend } from './tutorial.jsx';
 
 // ── 사건 개요 — 브리핑을 건너뛰면 사건을 다시 볼 곳이 없었다(2026-09-30 시험: 세 사람 모두) ──
 function CaseBrief({ defaultOpen }) {
@@ -108,7 +109,7 @@ function ClueGroups({ clues, onOpen, fresh = [] }) {
           <div style={{ fontSize: '.78rem', color: 'var(--muted)', margin: '8px 2px 4px' }}>{g} · {groups[g].length}</div>
           <div className="s-grid">
             {groups[g].map((c) => (
-              <button key={c.code} className={cardCls(c)} onClick={() => onOpen(c.code)}>
+              <button key={c.code} className={cardCls(c)} data-code={c.code} onClick={() => onOpen(c.code)}>
                 <div className="cn" style={{ fontSize: '.9rem' }}>{fresh.includes(c.code) ? '🆕 ' : ''}{c.title}</div>
                 <div className="cm">{c.type === '특수' ? '⭐ 추리' : (c.type || '보통')}</div>
               </button>
@@ -156,6 +157,10 @@ export function CaseRecord({ clues, onOpen, notes, onNotes, talkLog, briefOpen, 
   return (
     <>
       <CaseBrief defaultOpen={briefOpen} />
+      <details className="s-brief" style={{ marginTop: 6 }}>
+        <summary className="s-brief-h" style={{ cursor: 'pointer', listStyle: 'none' }}><span>❓ 표시 뜻</span><span className="s-brief-t">펼치기 ▼</span></summary>
+        <Legend className="s-brief-b" style={{ fontSize: '.82rem', lineHeight: 1.8 }} />
+      </details>
       <div className="s-record-tabs">
         <button className={tab === 'clues' ? 'on' : ''} onClick={() => setTab('clues')}>단서 ({clues.length})</button>
         <button className={tab === 'people' ? 'on' : ''} onClick={() => setTab('people')}>인물</button>

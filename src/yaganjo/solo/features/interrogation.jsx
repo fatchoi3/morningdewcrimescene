@@ -250,6 +250,16 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
 
   // 「다른 질문」 = 지금 있는 겹으로 복귀(화제 안이면 그 화제 목록, 아니면 최상위)
   const toMenu = () => { setLine(null); setCurId(null); setPicker(false); };
+  // ⚖ 가 붙은 대답을 반박 없이 나가면 그 자리에서 한 번만 짚는다 — 탭만 하다 반박 기회를 그냥 지나쳤다(17회차)
+  const warnedRef = useRef(new Set());
+  const leaveAnswer = () => {
+    if (cur && !brokeOf(cur.id) && breakableOf(cur) && !warnedRef.current.has(cur.id)) {
+      warnedRef.current.add(cur.id);
+      setLine({ kind: 'note', text: '(수사 노트) 이 대답은 지금 가진 증거로 깰 수 있다(⚖) — 「📁 반박」으로 맞대 보자. 그래도 나가려면 「↩ 돌아가기」를 한 번 더.' });
+      return;
+    }
+    toMenu();
+  };
   const log = (q, a, kind) => { if (a) onLog?.({ q, a, kind }); };
   const pickStatement = (s) => { onAsked?.(s.id); setCurId(s.id); log(qLabel(s), s.text, 'answer'); };
 
@@ -309,7 +319,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(숨긴 일을 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
       log(`${qLabel(cur)} ← 📁 ${ctitle}`, r.text, 'break');
     } else if (r.result === 'soft') {
-      setLine({ text: (r.text || '') + grantNote(r) + missNote(cur), kind: 'soft' });
+      // 이 카드가 이 사람의 다른(아직 안 깬) 대답을 깨는 카드면 그렇다고만 — 「모순까지는 아니다」만 듣고 규칙이 헷갈렸다(17회차)
+      const elsewhere = aim && aim.kind === 'contradict' && aim.stId !== cur.id && !brokeOf(aim.stId)
+        ? `${NL}(수사 노트) 이 카드가 겨누는 대답은 이 사람의 다른 질문에 있다.` : '';
+      setLine({ text: (r.text || '') + grantNote(r) + (elsewhere || missNote(cur)), kind: 'soft' });
       log(`${qLabel(cur)} ← 📁 ${ctitle}`, r.text, 'soft');
     } else if (r.result === 'offtopic') {
       // 이 인물의 다른 진술에서 쓰이는 '정답 증거'를 자리만 잘못 짚은 것 — 화낼 일도 감점할 일도 아니다.
@@ -416,8 +429,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   //   나가는 길은 액션행의 「↩ 다른 질문」 하나로 못 박고, 힌트가 그걸 가리킨다.
   const dlgAdvance = line ? advance : (cur && canPress) ? doPress : undefined;
   const dlgHint = line ? '탭하여 계속 ▶'
-    : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : bk ? `모순을 짚었다 — 「${openTopic ? '↩ 이 이야기로' : '↩ 다른 질문'}」으로 나간다` : `거짓이다 싶으면 「📁 반박」 · 「${openTopic ? '↩ 이 이야기로' : '↩ 다른 질문'}」으로 나간다`)
-    : openTopic ? (topicHasMore ? '위에서 고르거나 「↩ 다른 이야기」' : '「↩ 다른 이야기」로 돌아가세요')
+    // 「↩ 다른 질문 / 이 이야기로 / 다른 이야기」로 이름이 바뀌어 잘못 눌렀다(17회차 둘) — 「↩ 돌아가기」 하나로, 가는 곳은 힌트가 말한다
+    : cur ? (canPress ? '탭하여 더 캐묻는다 ▶' : bk ? `모순을 짚었다 — 「↩ 돌아가기」로 ${openTopic ? '이 이야기 목록' : '질문지'}로` : `거짓이다 싶으면 「📁 반박」 · 「↩ 돌아가기」로 ${openTopic ? '이 이야기 목록' : '질문지'}로`)
+    : openTopic ? (line ? '「↩ 돌아가기」로 이 이야기 목록으로' : topicHasMore ? '위에서 고르거나 「↩ 돌아가기」로 처음 질문지로' : '「↩ 돌아가기」로 처음 질문지로')
     : (hasAsks ? '위 목록에서 질문이나 이야깃거리를 고르세요' : '');
 
   return (
@@ -523,11 +537,11 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
             // 「✕ 취소」 — '반박'을 붙이면 이 상태에서만 폭이 22px 늘어 줄바꿈된다.
             //   피커가 화면을 덮고 있어 무엇을 취소하는지는 이미 보인다.
             : { label: picker ? '✕ 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPeek(null); setPPerson(null); setPicker((p) => !p); } }),  // 열 때마다 「전체」로 — 앞의 인물 거르기가 남아 찾던 카드가 없었다(14회차)
-          cur && { label: openTopic ? '↩ 이 이야기로' : '↩ 다른 질문', onClick: toMenu },
+          cur && { label: '↩ 돌아가기', onClick: leaveAnswer },
           // 단서 질문의 반응이 떠 있으면 「↩」는 그 이야기 목록으로 — 맨 위 질문지로 튕겨 같은 이야기를 다시 열어야 했다(16회차)
           !cur && openTopic && (line
-            ? { label: '↩ 이 이야기로', onClick: () => setLine(null) }
-            : { label: '↩ 다른 이야기', onClick: () => { setLine(null); setOpenTopicId(null); } }),
+            ? { label: '↩ 돌아가기', onClick: () => setLine(null) }
+            : { label: '↩ 돌아가기', onClick: () => { setLine(null); setOpenTopicId(null); } }),
           // 분량 대부분이 이 화면인데 20ms/자를 끊을 방법이 화면 탭뿐이었다 — 엄지 자리에도 둔다.
           //   (넘길 곳이 있을 때만 = 버튼이 타이핑 도중에 생겼다 사라지며 줄이 흔들리지 않게)
           dlgAdvance && { label: '⏭', onClick: () => dlgRef.current?.tap() },
@@ -551,7 +565,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                     ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
                     : { targetSel: '.aa-dlg-act.key', text: `「${getClue(tutT.code)?.title || '방금 본 물건'}」에 적힌 것과 이 사람의 대답이 맞는가 — 「📁 반박」을 눌러 맞대 보자` })
                   : cur
-                    ? { targetSel: '.aa-dlg-actions', text: openTopic ? '「↩ 이 이야기로」로 질문지로 돌아가세요' : '「↩ 다른 질문」으로 질문지로 돌아가세요' }
+                    ? { targetSel: '.aa-dlg-actions', text: '「↩ 돌아가기」로 질문지로 돌아가세요' }
                     : { targetSel: '[data-tut="tut-q"]', text: tutTopic && !openTopic
                       ? `「${tutTopic.q}」 — 이 이야기를 꺼내 보세요`
                       : `「${statements.find((x) => x.id === tutT.stId)?.q || '이 질문'}」 — 이 질문을 고르세요. 끝의 「⚖ 저울」은 가진 증거로 깰 수 있는 대답이라는 표시` })
@@ -560,7 +574,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
               : cur
                 ? (canPress
                   ? { targetSel: '.aa-dialogue', text: '한 번 더 탭하면 더 깊은 이야기를 들을 수 있어요' }
-                  : { targetSel: '.aa-dlg-actions', text: openTopic ? '「↩ 이 이야기로」로 질문지로 돌아가세요' : '「↩ 다른 질문」으로 질문지로 돌아가세요' })
+                  : { targetSel: '.aa-dlg-actions', text: '「↩ 돌아가기」로 질문지로 돌아가세요' })
                 : { targetSel: '.aa-ask', text: '질문지에서 하나를 골라 물어보세요' }))} />
       )}
 

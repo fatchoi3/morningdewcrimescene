@@ -11,7 +11,7 @@
 //   - 고르기 판에서 이 사람의 거짓을 이미 깬 증거에 ✅ 를 단다.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState } from 'react';
-import { suspects, soloContent } from '../content.js';
+import { suspects, soloContent, locations } from '../content.js';
 import { CONFRONT, isUiTap } from '../lib/game.js';
 import { DATA } from '../interrogation.js';
 import { StandingFigure } from '../art.jsx';
@@ -58,7 +58,9 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
     if (round2) {
       const t = round2.tries + 1;
       setRound2({ ...round2, tries: t });
-      if ((CONFRONT.holdAccept?.[round2.first] || []).includes(code)) { onHold?.(code, true); setBeat({ kind: 'press2', code }); }
+      const pair = CONFRONT.holdCombo?.[round2.first]?.[code];
+      const okCombo = !!pair && clues.some((c) => c.code === pair);
+      if ((CONFRONT.holdAccept?.[round2.first] || []).includes(code) || okCombo) { onHold?.(code, true); setBeat({ kind: 'press2', code }); }
       else setBeat({ kind: 'wrong2', code, n: t });
       return;
     }
@@ -117,7 +119,14 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   // 이미 깬 증거를 앞에 — 2차 심문에서 쓴 정답 카드를 대질에서 다시 낼 생각을 못 했다(2026-10-07)
   //   그다음 ⭐ 추리 단서 — 30~108장을 두세 번 밀어야 찾았다(9회차 셋 다).
   const rank = (c) => (usedCodes.has(c.code) ? 0 : c.type === '특수' ? 1 : 2);
-  const GROUP = { '__special': (c) => c.type === '특수', '__lab': (c) => soloContent.gamsikCodes?.has(c.code) || c.type === '감식' };
+  // 자동문·2층 묶음 — 대질은 백 장 가까이에서 골라야 해 막막했다(17회차, 사용자 승인). 자리로만 묶는다
+  const office = new Set([...(locations.all.find((l) => l.id === 'ROOM-U')?.objects || []), 'LOOKUP-ZVLJ-37']);
+  const GROUP = {
+    '__special': (c) => c.type === '특수',
+    '__lab': (c) => soloContent.gamsikCodes?.has(c.code) || c.type === '감식',
+    '__door': (c) => /M-2/.test(c.title || ''),
+    '__office': (c) => office.has(c.code),
+  };
   const list = clues.filter((c) => !pPerson || (GROUP[pPerson] ? GROUP[pPerson](c) : c.person === pPerson))
     .sort((a, b) => rank(a) - rank(b));
   const icon = (c) => soloContent.clueIcon?.(c) || '📄';
@@ -152,7 +161,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
           {persons.length > 1 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>
               <button style={chipStyle(!pPerson)} onClick={() => setPPerson(null)}>전체 {clues.length}</button>
-              {[['__special', '⭐ 추리'], ['__lab', '🔬 감식']].map(([k, lb]) => <button key={k} style={chipStyle(pPerson === k)} onClick={() => setPPerson(k)}>{lb} {clues.filter(GROUP[k]).length}</button>)}
+              {[['__special', '⭐ 추리'], ['__lab', '🔬 감식'], ['__door', '🚪 M-2 자동문'], ['__office', '🗄 2층 사무실']].map(([k, lb]) => <button key={k} style={chipStyle(pPerson === k)} onClick={() => setPPerson(k)}>{lb} {clues.filter(GROUP[k]).length}</button>)}
               {persons.map((p) => <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>)}
             </div>
           )}

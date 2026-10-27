@@ -18,7 +18,10 @@ export function Shell({ title, onClose, children }) {
   const sync = () => {
     const el = boxRef.current;
     if (!el) return;
-    setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 24);
+    // 남은 스크롤이 아니라 마지막 내용의 아래 끝으로 잰다 — 본문 아래 여백만 남았는데도 떠서 밀어 봐도 새 글이 없었다(17회차 둘)
+    const last = el.lastElementChild;
+    const hidden = last ? last.getBoundingClientRect().bottom - el.getBoundingClientRect().bottom : el.scrollHeight - el.scrollTop - el.clientHeight;
+    setMore(hidden > 40);
   };
   useEffect(() => {
     sync();

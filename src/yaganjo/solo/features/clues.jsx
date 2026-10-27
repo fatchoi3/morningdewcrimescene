@@ -44,10 +44,13 @@ function Conclusion({ text }) {
 // M-2 자동문 다섯 장 — 시각순(V3~V7)
 const M2_SEQ = ['JPAD-03', 'JSFS-29', 'MPXG-54', 'QNWA-14', 'EMSY-33'];
 
-export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talkLog }) {
+export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talkLog, notes, onNotes }) {
   const isBody = code === '__body__';
   const c = isBody ? null : getClue(code);
   const [page, setPage] = useState(0);
+  // 관제실 — 다섯 장 이어 보기 · 창 안 메모(17회차: 카드를 하나씩 열고 닫으며 머리로 이어야 했다, 사용자 승인)
+  const [m2All, setM2All] = useState(false);
+  const [memoOpen, setMemoOpen] = useState(false);
 
   // 열람 시 확보(신규면 수집 + 특수 연쇄)
   // 열람 시 확보. 단, 잠긴 폰은 **잠금을 풀어야** 확보한다 — 집기만 해서 가진 것으로 치면
@@ -70,6 +73,34 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talk
   //   같은 화면을 쓰면 종이 판과 앱 판의 카메라가 한 글자도 다르지 않다.
   //   그 페이지 청크에는 카메라 14장과 cast 만 실린다 — 비밀팩도 다른 더미 코드도 없다.
   if (CAMERA_CODES.has(code)) {
+    const m2Have = M2_SEQ.filter((x) => collectedSet.has(x));
+    const memo = typeof onNotes === 'function' && (
+      <div style={{ marginTop: 8 }}>
+        <button className="s-btn sm" onClick={() => setMemoOpen((v) => !v)}>{memoOpen ? '📝 메모 접기' : '📝 메모(수첩 메모와 같음)'}</button>
+        {memoOpen && (
+          <textarea value={notes || ''} onChange={(e) => onNotes(e.target.value)} placeholder="시각과 방향을 적어 두세요 — 예) 01:18 사람 동"
+            style={{ width: '100%', minHeight: 110, marginTop: 6, background: 'var(--panel)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: 10, padding: 10, fontFamily: 'inherit', fontSize: '.9rem' }} />
+        )}
+      </div>
+    );
+    // 이어 보기 — 이미 본 M-2 구간을 시각순으로 한 창에. 누계·합계는 여전히 주지 않는다(세는 것은 형사 몫)
+    if (M2_SEQ.includes(code) && m2All) {
+      const fit = (e) => { try { const d = e.currentTarget.contentDocument; e.currentTarget.style.height = `${Math.max(200, d.documentElement.scrollHeight)}px`; } catch { /* noop */ } };
+      return (
+        <Shell title={<>[CCTV] M-2 자동문 — 이어 보기{tag}</>} onClose={onClose}>
+          <button className="s-btn sm" onClick={() => setM2All(false)}>↩ 한 장씩 보기</button>
+          {m2Have.map((x) => (
+            <div key={x} style={{ marginTop: 10 }}>
+              <div style={{ fontWeight: 800, fontSize: '.86rem', marginBottom: 4 }}>{getClue(x)?.title}</div>
+              <iframe src={cameraSrc(x)} title={getClue(x)?.title} onLoad={(e) => { fit(e); const el = e.currentTarget; setTimeout(() => fit({ currentTarget: el }), 600); }}
+                style={{ width: '100%', height: 320, border: 0, borderRadius: 10, background: '#090c11', display: 'block' }} />
+            </div>
+          ))}
+          {m2Have.length < M2_SEQ.length && <p style={{ color: 'var(--muted)', fontSize: '.8rem', marginTop: 8 }}>열람대에서 아직 안 본 구간 {M2_SEQ.length - m2Have.length}장은 빠져 있다.</p>}
+          {memo}
+        </Shell>
+      );
+    }
     return (
       <Shell title={<>{c.title}{tag}</>} onClose={onClose}>
         <iframe
@@ -89,12 +120,16 @@ export function ClueModal({ code, collectedSet, onClose, onCollect, onOpen, talk
             );
           };
           return (
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              {nav(M2_SEQ[i - 1], '◀ 이전 구간')}
-              {nav(M2_SEQ[i + 1], '다음 구간 ▶')}
-            </div>
+            <>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                {nav(M2_SEQ[i - 1], '◀ 이전 구간')}
+                {nav(M2_SEQ[i + 1], '다음 구간 ▶')}
+              </div>
+              {m2Have.length > 1 && <button className="s-btn sm" style={{ marginTop: 8, width: '100%' }} onClick={() => setM2All(true)}>📋 본 구간 {m2Have.length}장 이어 보기</button>}
+            </>
           );
         })()}
+        {memo}
       </Shell>
     );
   }
@@ -348,6 +383,11 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
                 <button key={a.id} className="s-app-ic" onClick={() => { setAppId(a.id); setChatIdx(null); }}>
                   <span className="ai-badge">{PHONE_APP_ICON[a.type] || '📱'}</span>
                   <span className="ai-lb">{a.name || a.type}</span>
+                  {/* 지운 사진·대화가 있으면 아이콘에 — 폰을 열고도 「최근 삭제」를 못 봤다(17회차) */}
+                  {(() => {
+                    const n = (a.photos || []).filter((ph) => ph.deleted).length + (a.chats || []).filter((ch) => ch.deleted).length;
+                    return n > 0 && <span style={{ display: 'block', fontSize: '.64rem', color: '#ff9d9d', fontWeight: 700 }}>🗑 삭제 {n}</span>;
+                  })()}
                 </button>
               ))}
             </div>

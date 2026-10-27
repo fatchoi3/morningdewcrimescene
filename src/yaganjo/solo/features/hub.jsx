@@ -7,7 +7,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { locationAlerts, alertReason } from '../lib/alerts.js';
 import { getClue } from '../content.js';
-import { StandingFigure } from '../art.jsx';
+import { StandingFigure, Avatar } from '../art.jsx';
 import { cast } from '../../../scenarios/yaganjo/cast.js';
 import { CenterMap, mapAt } from './centerMap.jsx';
 
@@ -43,10 +43,10 @@ const ALERT_SOFT = {
   color: '#2a2114', boxShadow: '0 0 0 2px #00000059, 0 0 10px #e8c76b8c', animation: 'none',
 };
 
-function HallHot({ x, y, icon, label, sub, locked, tone, recommend, alert, alertKey = 0, alertTitle, onClick }) {
+function HallHot({ x, y, icon, label, sub, locked, tone, recommend, alert, alertKey = 0, alertTitle, focus, onClick }) {
   return (
     <button className={`hall-hot${locked ? ' locked' : ''}${tone ? ' ' + tone : ''}`}
-      data-tut={recommend ? 'door' : undefined}
+      data-tut={recommend ? 'door' : undefined} data-focus={focus}
       style={{ left: `${x}%`, top: `${y}%` }} onClick={onClick}>
       {/* 알림 배지 — 그 방에 아직 볼 것/물어볼 것이 남아 있을 때.
           모순이 남은 방은 그 개수를 붉게, 잡담·주울 것만 남은 방은 호박색 '!' —
@@ -82,7 +82,7 @@ function MenuButton({ onOpen }) {
 const FIG_H = 58;
 function PersonPin({ at, sid, name, sub, locked, recommend, alert, alertKey = 0, alertTitle, onClick }) {
   return (
-    <button className={`map-person${locked ? ' locked' : ''}`} data-tut={recommend ? 'door' : undefined}
+    <button className={`map-person${locked ? ' locked' : ''}`} data-tut={recommend ? 'door' : undefined} data-focus={sid}
       style={{ left: `${at.x}%`, top: `calc(${at.y}% - var(--fig-h, ${FIG_H}px))` }} onClick={onClick} aria-label={`${name} — ${sub}`}>
       {!locked && alert > 0 && (
         <span className="s-alert" title={alertTitle} style={alertKey > 0 ? undefined : ALERT_SOFT}>{alertKey > 0 ? alertKey : '!'}</span>
@@ -193,6 +193,28 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
     syncEdge();
     /* eslint-disable-next-line */
   }, [recommendPerson]);
+  // 장이 바뀌거나 조장 사물함이 열리면 새로 할 곳을 한 번 가운데로 — 감식 의뢰실이 왼쪽 끝에 걸려 안 눌리고,
+  //   조장 사물함이 ‹ 단추 밑에 반쯤 가렸다(17회차 셋). 화면 안에 다 들어와 있으면 밀지 않는다.
+  const centerOn = (sel) => {
+    const cam = camRef.current;
+    const el = cam?.querySelector(sel);
+    if (!cam || !el || overview) return false;
+    const c = cam.getBoundingClientRect(), r = el.getBoundingClientRect();
+    if (r.left >= c.left + 48 && r.right <= c.right - 48) return true;
+    cam.scrollLeft += (r.left + r.width / 2) - (c.left + c.width / 2);
+    syncEdge();
+    return true;
+  };
+  const bossOpen = !!bossLocker && bossLocker.stage <= stage && !keyLocked(bossLocker);
+  const focusKey = bossOpen && !LAST_SCROLL._bossSeen ? 'boss' : progressStage >= 3 ? 'ROOM-U' : progressStage === 2 ? 'lab' : null;
+  useEffect(() => {
+    if (!focusKey || LAST_SCROLL._focused === `${focusKey}:${progressStage}`) return;
+    if (centerOn(`[data-focus="${focusKey}"]`)) {
+      LAST_SCROLL._focused = `${focusKey}:${progressStage}`;
+      if (focusKey === 'boss') LAST_SCROLL._bossSeen = true;
+    }
+    /* eslint-disable-next-line */
+  }, [focusKey, progressStage, overview]);
   // 떠나는 순간에 자리를 적는다 — 스크롤 신호로만 적으면 신호가 안 오는 때가 있어, 방에 들어갔다 나오면
   //   지도·복도가 처음 자리로 돌아갔다(2026-10-07 시험, 세 사람 모두). 레이아웃 정리 단계는 DOM 이 떼이기 전이라 값이 살아 있다.
   useLayoutEffect(() => {
@@ -224,14 +246,14 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
               recommend={recommendPerson === d.person} onClick={() => enter(loc, false)} />;
           })}
           {bossLocker && (
-            <HallHot x={BOSS_AT.x} y={BOSS_AT.y} icon="🗄" label="조장 사물함"
+            <HallHot x={BOSS_AT.x} y={BOSS_AT.y} icon="🗄" label="조장 사물함" focus="boss"
               sub={subOf(bossLocker, false)} locked={bossLocker.stage > stage || keyLocked(bossLocker)} {...alertProps(bossLocker)}
               onClick={() => enter(bossLocker, false)} />
           )}
           <button className="hall-cctv" style={{ left: `${CAM_L1.x}%`, top: `${CAM_L1.y}%` }} aria-label="탈의실 입구 카메라"
             onClick={() => onToast('탈의실 입구 위에 카메라가 하나 있다(L-1). 남·여 탈의실 모두 이 입구 하나로 드나든다. 녹화는 관제실 열람대에서 볼 수 있다.')}>📹</button>
           {commons.map((c) => (
-            <HallHot key={c.id} x={c.at.x} y={c.at.y} icon={c.icon} label={c.label}
+            <HallHot key={c.id} x={c.at.x} y={c.at.y} icon={c.icon} label={c.label} focus={c.id}
               sub={subOf(c.loc, false)} locked={c.loc.stage > stage} {...alertProps(c.loc)}
               onClick={() => enter(c.loc, false)} />
           ))}
@@ -241,7 +263,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
               onClick={() => enter(crime, true)} />
           )}
           {lab && (
-            <HallHot x={LAB_AT.x} y={LAB_AT.y} icon="🔬" label="감식 의뢰실" sub={subOf(lab)} locked={lab.stage > stage}
+            <HallHot x={LAB_AT.x} y={LAB_AT.y} icon="🔬" label="감식 의뢰실" focus="lab" sub={subOf(lab)} locked={lab.stage > stage}
               {...alertProps(lab)} onClick={() => enter(lab)} />
           )}
       </div>
@@ -265,6 +287,21 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
       {!overview && <div className="hall-swipe-hint" aria-hidden="true">← 밀어서 둘러보기 →</div>}
       {!overview && edge.l && <button className="hall-pan l" aria-label="서쪽 더 보기" onClick={() => pan(-1)}>‹</button>}
       {!overview && edge.r && <button className="hall-pan r" aria-label="동쪽 더 보기" onClick={() => pan(1)}>›</button>}
+      {/* 여섯 얼굴 — 화면 밖 둘을 못 보고 다섯 명인 줄 알았다(17회차). 누르면 그 사람 자리로 민다(들어가지는 않는다) */}
+      {pannable && !overview && (
+        <div className="hall-faces" aria-label="용의자 여섯">
+          {PERSON_SPOTS.map((d) => {
+            const loc = roomByPerson(d.person);
+            const a = loc ? alertsOf(loc) : null;
+            return (
+              <button key={d.sid} className="hall-face" aria-label={`${d.person} 자리로`} onClick={() => centerOn(`[data-focus="${d.sid}"]`) || null}>
+                <Avatar person={d.person} image={cast[d.sid]?.image} size={34} />
+                {a && a.total > 0 && loc.stage <= stage && <span className="hall-face-dot" style={a.key > 0 ? undefined : { background: '#e8c76b' }} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {(pannable || overview) && (
         <button className="view-toggle hall" onClick={() => setOverview((v) => !v)}>{overview ? '🔍 크게 보기' : '🗺 지도 전체 보기'}</button>
       )}
