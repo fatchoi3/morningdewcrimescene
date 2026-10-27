@@ -89,15 +89,36 @@ async function serve(url, port, profile) {
   await page.goto(url, { waitUntil: 'networkidle2' }).catch(() => {});
   let list = [];
 
+  // 대사가 아직 찍히는 중인가 — ▶ 가 없고 안내 줄이 숨어 있으면 찍히는 중이다(두 솔로 게임의 대사창 공통)
+  const isTyping = () => page.evaluate(() => {
+    const d = document.querySelector('.aa-dialogue');
+    if (!d || !d.querySelector('.aa-text')) return false;
+    const h = d.querySelector('.aa-hint');
+    return !d.querySelector('.aa-next') && !!h && getComputedStyle(h).visibility === 'hidden';
+  });
+  // 위에 덮인 창(단서·폰·수첩·증거 고르기)의 글을 먼저 — 몸 전체 글을 1800자에서 자르니 창 속 목록이
+  //   뒤 화면 글에 밀려 잘렸다(새벽이슬 19회차 「통화 기록에 13:16 이 없다」)
+  const readText = () => page.evaluate(() => {
+    const clean = (t) => (t || '').replace(/\n{2,}/g, '\n').trim();
+    const tops = [...document.querySelectorAll('.s-modal, .s-phone, .s-sheet, .modal-overlay, .aa-present, .tut-finale')]
+      .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 40 && r.height > 40 && getComputedStyle(el).visibility !== 'hidden'; });
+    const top = tops[tops.length - 1];
+    if (!top) return clean(document.body.innerText).slice(0, 3000);
+    return '[맨 위 창]\n' + clean(top.innerText).slice(0, 3000) + '\n[그 뒤 화면]\n' + clean(document.body.innerText).slice(0, 800);
+  });
   async function look() {
     await sleep(500);
+    // 대사가 다 찍힐 때까지 최대 3초 — 찍히는 중에 읽어 「대사가 잘린다」「안내가 없다」는 거짓 지적이 셋 나왔다(새벽이슬 19회차)
+    let typing = await isTyping();
+    for (let i = 0; i < 30 && typing; i++) { await sleep(100); typing = await isTyping(); }
     const shot = path.join(dir, 'screen.png').replace(/\\/g, '/');
     await page.screenshot({ path: shot });
     list = await page.evaluate(LIST_JS);
-    const text = await page.evaluate(() => (document.body.innerText || '').replace(/\n{2,}/g, '\n').slice(0, 1800));
+    const text = await readText();
     return ['화면 사진: ' + shot, '── 누를 수 있는 것 (번호 · 글 · 가운데 좌표) ──',
       ...list.map((e, i) => `[${i}] ${e.label || '(글자 없음 ' + e.tag + ')'} @${e.x},${e.y}`),
-      '── 화면에 보이는 글 ──', text].join('\n');
+      '── 화면에 보이는 글 ──', text,
+      ...(typing ? ['(대사가 아직 찍히는 중 — look 을 한 번 더 하면 끝까지 보인다)'] : [])].join('\n');
   }
   const tapAt = async (x, y) => { await page.touchscreen.tap(x, y); await sleep(900); };
 
