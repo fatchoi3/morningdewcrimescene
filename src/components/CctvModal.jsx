@@ -64,8 +64,10 @@ function FloorPlan({ people, collected, onPick, meet, cutKey, svgRef }) {
       {/* 복도 */}
       <rect className="cctv-hall" x="55" y="122" width="279" height="38" />
       <rect className="cctv-hall" x="334" y="92" width="52" height="166" />
-      <text x="360" y="196" className="cctv-map-note">1층 가는 길</text>
-      <path d="M360 204 l0 30 m-7 -9 l7 9 l7 -9" stroke="#8a98aa" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {/* 한 줄이면 오른쪽 벽(x 386~) 그림에 「길」이 잘렸다 — 두 줄로 */}
+      <text x="360" y="186" className="cctv-map-note">1층</text>
+      <text x="360" y="200" className="cctv-map-note">가는 길</text>
+      <path d="M360 206 l0 28 m-7 -9 l7 9 l7 -9" stroke="#8a98aa" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
 
       {/* 벽 */}
       <rect className="cctv-wall" x="18" y="119" width="13" height="44" rx="1" />
@@ -253,7 +255,7 @@ function CctvModal({ item, evidence = [], onCollect, onClose, autoCollect = fals
             const done = picks.length > 0 && picks.every((p) => collected.has(p.unlocks));
             return (
               <button key={t.time} className={`cctv-time ${t.time === cutTime ? 'active' : ''}${done ? ' done' : ''}`} onClick={() => selectCut(t)}>
-                {done ? '✓' : '❓'} {t.time}
+                <span className="cctv-time-g">{done ? '✓' : '❓'}</span> {t.time}
               </button>
             );
           })}

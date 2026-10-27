@@ -136,7 +136,8 @@ export function EventVN2({ onDone }) {
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 40% at 50% 30%, #c0585822, transparent 70%)', animation: 'aablink 2.2s ease-in-out infinite' }} />
       </div>
       <div className="aa-loc-chip" style={{ color: '#e07a7a', borderColor: '#e07a7a44' }}>🚨 2차 사건 · 정밀 부검</div>
-      <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>
+      {/* 첫 장은 「젊은 형사가 달려온다」 — 주인공 그림이 서 있으면 누가 말하는지 헷갈렸다(18회차) */}
+      {i > 0 && <div className={`aa-room-fig${speaking ? ' talking' : ''}`}><StandingFigure sid="PLAYER" person="수사관" height={520} fallbackSize={140} /></div>}
       <DialogueBox ref={dlgRef} location={beat.loc} text={beat.text}
         onAdvance={() => { if (last) onDone(); else setI((n) => n + 1); }} onTyping={setSpeaking}
         actions={[last ? { label: '▶ 2차 심문 시작', tone: 'key', onClick: onDone } : { label: '⏭ 건너뛰기', onClick: onDone }]}

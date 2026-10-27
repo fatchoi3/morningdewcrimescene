@@ -196,7 +196,7 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
 
       {/* 2차 심문이 어느 정도 쌓이기 전엔 까딱임을 멈춘다 — 3막 첫 순간부터 시선을 끌면
           아직 아무것도 캐묻지 않은 채로 사건이 끝나 버린다 */}
-      {canAccuse && view === 'main' && (
+      {canAccuse && accuseReady && view === 'main' && (
         <button className="hall-accuse" style={accuseReady ? undefined : { animation: 'none', opacity: 0.6 }}
           onClick={onAccuse}>🔍 범인 지목하기{!accuseReady && accuseNote ? <small>{accuseNote}</small> : null}</button>
       )}

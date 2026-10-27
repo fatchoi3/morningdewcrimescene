@@ -925,3 +925,14 @@ body:has(.hall-hud) .s-toast { top: auto; bottom: calc(86px + env(safe-area-inse
 .s-modal-b:has(.s-page-unread) { padding-bottom: 56px; }
 /* CCTV 평면도 이름표 글씨 */
 .cctv-modal .cctv-marker-label { font-size: 12px; }
+/* 18회차 — 화면 */
+/* CCTV 칩 — ✓·❓ 자리 폭을 고정(칩 폭이 바뀌어 줄이 밀렸다), 창은 위에 붙여 아래 상자가 생겨도 안 움직이게 */
+.cctv-time-g { display: inline-block; width: 1.3em; text-align: center; }
+.modal-overlay:has(.cctv-modal) { align-items: flex-start; }
+/* CCTV 평면도 글씨 — 폰에선 0.79배로 그려져 8~9px 이었다 */
+.cctv-modal .cctv-room-label text { font-size: 16px; }
+.cctv-modal .cctv-marker-label { font-size: 14px; }
+.cctv-modal .cctv-map-note { font-size: 14px; }
+.cctv-modal { padding: 12px; }
+/* 여러 쪽 문서의 「아직 안 본 쪽」 띠를 「단서 확보」 알림이 덮었다 — 그때만 알림을 위로 */
+body:has(.s-page-unread) .s-toast { top: calc(64px + env(safe-area-inset-top)); bottom: auto; }

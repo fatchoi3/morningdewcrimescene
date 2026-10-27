@@ -188,7 +188,7 @@ export default function SoloApp() {
     // 첫 심문에서 성공 반박을 해 보려면 그 단서가 손에 있어야 한다 — 그 물건부터 짚게 한다
     const TUT_CODE = 'VNTD-61';
     const jhExamined = jhObjs.includes(TUT_CODE) ? collectedSet.has(TUT_CODE) : jhObjs.some((c) => collectedSet.has(c));
-    if (recordOpen) coach = modalCode ? null : { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽었으면 ← 로 나가세요' };
+    if (recordOpen) coach = modalCode ? null : { sel: '.s-sheet-back', dim: false, text: '맨 위 「📋 사건 개요」를 읽고, 아래 「사건 브리핑」 카드도 열어 보세요 — 다 봤으면 ← 로 나가기' };
     else if (modalCode) coach = { sel: '.s-modal .mx', dim: false, text: '단서를 확보했습니다. 다 읽었으면 ✕ 로 닫으세요' };
     else if (suspectId) coach = null;      // 심문 안에서는 그 화면이 직접 안내한다(아래 CrossExamView)
     else if (!state.tutRecordDone) coach = { sel: '[data-tut="record-btn"]', text: '먼저 여기, 수첩을 눌러 사건 개요를 확인하세요' };

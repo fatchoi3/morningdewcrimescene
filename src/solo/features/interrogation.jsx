@@ -18,7 +18,7 @@ import { TutorialCoach } from './tutorial.jsx';
 function ClueAsk({ c, k, onPick }) {
   return (
     <button className={k.done ? 'done' : k.asked ? 'asked' : k.flavor ? 'flavor' : 'new'} onClick={() => onPick(c.code)}>
-      {k.done ? '✅ ' : k.asked ? '✔ ' : k.flavor ? '· ' : '❗ '}{clueIcon(c)} “{c.title}” 에 대해 묻는다
+      {k.done ? '✅ ' : k.asked ? '✔ ' : k.flavor ? '💬 ' : '❗ '}{clueIcon(c)} “{c.title}” 에 대해 묻는다
     </button>
   );
 }
@@ -362,7 +362,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     //   그 진술은 ✅로 닫혀 캐묻기로만 주는 증언까지 지나치게 된다.
     if (tgt?.kind === 'contradict' && !askedIds.includes(stId) && !pressedIds.includes(stId)) {
       const st = statements.find((s) => s.id === stId);
-      setLine({ kind: 'note', text: `(이 단서를 들이대기 전에, 본인 입으로 하는 말을 먼저 들어야 한다.\n「${st?.q || '그 질문'}」을 물어본 다음 「📁 반박」으로 꺼내자.)` });
+      setLine({ kind: 'note', text: `(이 단서를 들이대기 전에, 본인 입으로 하는 말을 먼저 들어야 한다.\n질문지 「💬 질문」 칸의 「${st?.q || '그 질문'}」(❗ 표시)을 물어본 다음 「📁 반박」으로 꺼내자.)` });
       return;
     }
     onAskedClue?.(code);                            // 질문지에서 ✔ 처리 · 방 알림(❗) 집계에 반영
@@ -455,7 +455,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
             return (
               <button key={t.id} className={left > 0 ? 'new' : askedTopics.includes(t.id) ? 'asked' : 'flavor'} onClick={() => askTopic(t)}
                 data-tut={tutT && !tutHit && stsOf(t).some((x) => x.id === tutT.stId) ? 'tut-q' : undefined}>
-                {left > 0 ? '❗ ' : askedTopics.includes(t.id) ? '✔ ' : '· '}{t.q}{left > 0 ? ` (${left})` : ''}
+                {left > 0 ? '❗ ' : askedTopics.includes(t.id) ? '✔ ' : '💬 '}{t.q}{left > 0 ? ` (${left})` : ''}
               </button>
             );
           })}

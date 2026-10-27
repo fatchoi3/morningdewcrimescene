@@ -328,7 +328,9 @@ const isChatApp = (t) => t === 'kakao' || t === 'sms';
 // 톡서랍 복구 힌트 — QR 앱과 같은 표(src/data/recoverHints.js). 솔로만 따로 적어 두었다가 지안 폰을 엉뚱한 데로 보냈다(15회차).
 const recoverHint = (code) => recoverHintFor(code);
 function PhoneModal({ code, clue, onClose, recoveredInit = false, onRecovered }) {
-  const apps = clue.phone.apps || [];
+  // 폰마다 앱 순서가 달라 매번 자리를 찾았다(18회차) — 솔로에서만 같은 순서로
+  const APP_ORDER = ['contacts', 'calls', 'kakao', 'sms', 'browser', 'photos'];
+  const apps = [...(clue.phone.apps || [])].sort((a, b) => (APP_ORDER.indexOf(a.type) + 99) % 99 - (APP_ORDER.indexOf(b.type) + 99) % 99);
   const [appId, setAppId] = useState(null);   // null = 홈 화면
   const [chatIdx, setChatIdx] = useState(null); // 카톡: null = 대화 목록
   // 복구는 저장한다 — 창 안의 임시 상태라 다시 열면 또 잠겼고, 복구 안 한 폰을 내밀어도 「지운 대화까지」가 나왔다(16회차)

@@ -66,7 +66,7 @@ export function CaseFileView({ state, onPick, onSubmit, onConfirmLock }) {
             <Avatar person={picked?.name} image={picked?.image} size={44} />
             <div className="ar-body"><div className="ar-name">{picked?.name}</div><div className="ar-occ">범인으로 확정</div></div>
           </div>
-          <Choice title="수법 — 어떻게 죽였는가" items={METHODS} value={cf.method} onPick={(id) => set({ method: id })} />
+          <Choice title="수법 — 어떻게 죽였는가 (직접 사인이 된 것 하나)" items={METHODS} value={cf.method} onPick={(id) => set({ method: id })} />
           <Choice title="동기 — 왜 죽였는가" items={MOTIVES} value={cf.motive} onPick={(id) => set({ motive: id })} />
           {/* 목록이 길어 제출 단추가 화면 밖에 있었다(14회차) — 아래에 붙여 둔다 */}
           <div className="s-cf-submit">
