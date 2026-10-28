@@ -269,7 +269,7 @@ export default function SoloApp() {
     : [];
   const ch2Objective = (ch2Left.length
       ? `남은 일: ${ch2Left.join(' · ')} → 그 뒤 한 사람을 심문하고 나오면 3장(2차 심문)`
-      : '다음 심문을 끝내고 나오면 3장(2차 심문)이 열립니다 — 둘러볼 곳은 그 전에')
+      : '다음 심문을 끝내고 나오면 3장(2차 심문)이 열립니다 — 덜 본 곳은 3장에서도 볼 수 있어요')
     + (ch2Unseen.length ? ` · 아직 덜 본 곳: ${ch2Unseen.join(' · ')}` : '');
   // 3장 — 폰 8대·2차 심문 여섯·감식이 한꺼번에 열려 셋 다 폰 1대만 열고 지목했다(17회차, 사용자 승인).
   //   「꼭 할 것」과 「덤」으로 나누고, 대질 둘째 단계의 관문인 2층 태블릿 조회를 맨 앞에 — 자리까지만 말한다
@@ -387,7 +387,7 @@ export default function SoloApp() {
               stage,
               requested: (code) => (state.labReq || []).includes(code),
               ready: (code) => gamsikReady(code, state.collected),
-              request: (code) => { update({ labReq: [...new Set([...(state.labReq || []), code])] }); showToast(soloContent.earlyLab.has(code) || stage >= 3 ? '🔬 감식 의뢰 접수 — 결과가 곧 도착합니다' : '🔬 감식 의뢰 접수 — 결과는 2차 심문이 열리면 도착합니다'); },
+              request: (code) => { update({ labReq: [...new Set([...(state.labReq || []), code])] }); showToast(soloContent.earlyLab.has(code) || stage >= 3 ? '🔬 감식 의뢰 접수 — 결과가 곧 도착합니다' : '🔬 감식 의뢰 접수 — 결과는 3장(2차 심문)이 열리면 도착합니다'); },
             }}
             // 3막 진행도는 '2차 심문을 몇 명과 했는가'로 잰다 — 열리는 질문 수가 인물마다 달라
             //   물어본 질문 수로는 셀 수 없다. 여기(대화 시작)가 유일한 심문 진입점이다.

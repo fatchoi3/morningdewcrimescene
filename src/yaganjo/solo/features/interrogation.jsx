@@ -58,6 +58,8 @@ function wrongHint(sid, code) {
 }
 
 // 반박 시트 인물 필터 칩 — solo.css 는 다른 담당자 소유라 여기서 인라인으로 그린다
+// 반박 시트 안내 문단은 처음 한 번만 — 머리 덩어리가 시트 절반을 먹어 카드가 두세 줄만 보였다(20회차)
+const PRESENT_SEEN = { help: false };
 const NL = String.fromCharCode(10); // 수사 노트 줄바꿈
 const chipStyle = (on) => ({
   flex: 'none', background: on ? '#241f14' : '#ffffff10',
@@ -79,6 +81,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   useEffect(() => { if (suspect && tutorialSeen) onIntroSeen?.(suspect.id, phase); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [picker, setPicker] = useState(false);
   const [pPerson, setPPerson] = useState(null); // 반박 시트 인물 필터 — null = 전체
+  const [whoOpen, setWhoOpen] = useState(false); // 인물 칩 줄 — 접어 두고 「👤 인물별」로 편다(20회차, 머리 덩어리 줄이기)
+  useEffect(() => { if (!picker) return undefined; return () => { PRESENT_SEEN.help = true; }; }, [picker]);
   const [peek, setPeek] = useState(null); // 반박 시트에서 길게 눌러 들춰 본 단서
   const [openTopicId, setOpenTopicId] = useState(null); // 지금 들어와 있는 화제 — null = 최상위 질문지
   // 이번 방문에 캐물어 본 화제 — 세이브(askedT)에는 화제를 꺼냈는지만 남아 화제 press 는 여기서만 센다.
@@ -123,6 +127,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   const brokeOf = (id) => broke.find((e) => e.id === id);
   const brokeIdList = broke.map((e) => e.id);
   const confessed = broke.some((e) => e.confess);
+  // 머리표가 계속 붙어 매 대답이 자백처럼 읽혔다(20회차) — 크게는 자백하는 그 대사에만, 그 뒤엔 작게
+  const confessNow = line?.kind === 'break' && String(line.text || '').includes('숨긴 일을 인정');
 
   const cur = curId ? statements.find((s) => s.id === curId) : null;
   const bk = cur ? brokeOf(cur.id) : null;
@@ -198,7 +204,10 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     + cluesOf(t).filter((c) => !cKey(c).asked && !cKey(c).done).length;
   // 튜토리얼 목표 질문이 이야깃거리 안에 들어 있으면 그 이야깃거리부터 가리킨다
   const tutTopic = tutT ? topics.find((t) => stsOf(t).some((x) => x.id === tutT.stId)) : null;
-  const pendingRoot = rootSts.filter((x) => !sKey(x).asked && !sKey(x).broke).length + topics.filter((t) => topicLeft(t) > 0).length;
+  // 「안 물은 것 12개」라는데 9개만 보였다(20회차 셋) — 이야깃거리는 질문 아래 접힌 자리에 있어 따로 센다
+  const pendingQ = rootSts.filter((x) => !sKey(x).asked && !sKey(x).broke).length;
+  const pendingT = topics.filter((t) => topicLeft(t) > 0).length;
+  const pendingRoot = pendingQ + pendingT;
   // 질문지가 떠 있는 동안 대사창에 나가는 글은 인물의 말이 아니라 화면 안내다 — 타이핑 판정에도 쓴다
   const menuOpen = !line && !cur;
   // 질문지를 밀어 둔 자리 — 대답을 보고 돌아오면 목록이 맨 위로 돌아가 다시 찾아야 했다(2026-10-01)
@@ -237,12 +246,13 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
     // 튜토리얼 마지막 한 걸음 — 질문지로 돌아오면 안내가 말없이 사라져, 마무리 화면이 🚪 로 나가야 뜬다는 걸
     //   셋 다 몰랐다(튜토리얼 1차). 말풍선은 질문 목록을 덮어서, 여기 한 줄 + 🚪 를 금색으로.
     : tutorialSeen && !tutFinaleSeen ? '튜토리얼 끝 — 더 물어봐도 되고, 다 됐으면 금색 테두리 🚪 로 나가 마무리하세요.'
-    : (hasAsks ? (pendingRoot > 0 ? `무엇을 물어볼까. (아직 안 물은 것 ${pendingRoot}개)` : '무엇을 물어볼까.')
+    : (hasAsks ? (pendingRoot > 0 ? `무엇을 물어볼까. (안 물은 질문 ${pendingQ}${pendingT > 0 ? ` · 아래 📁 이야깃거리 ${pendingT}` : ''})` : '무엇을 물어볼까.')
       // 거짓이 숨은 대답(빨간 숫자)은 있는데 깰 증거가 없어 ⚖ 가 하나도 없으면 — 튜토리얼 뒤 여기서 멈췄다(3차, 둘)
       // 물어본 거짓(needLeft)도 — 다 물은 뒤엔 keyLeft 가 0 이라 들어가자마자는 아무 말이 없었다(16회차 셋)
       + ((keyLeft > 0 || needLeft > 0) && !statements.some(breakableOf)
         // 언제 깰 수 있는지 몰랐다(19회차 셋) — 깰 증거가 놓인 곳이 모두 아직 안 열렸으면 그렇다고. 방 이름은 안 댄다
-        ? (laterOnly ? ' 거짓이 숨은 대답이 있지만 깰 증거는 아직 열리지 않은 곳에 있다 — 수사가 다음 장으로 넘어가면 찾을 수 있다.' : ' 거짓이 숨은 대답이 있지만 깰 증거는 지금 갈 수 있는 다른 곳에 있다 — 단서를 더 모으면 질문 끝에 ⚖ 가 붙는다.')
+        // 두 갈래를 셋 다 기억 못 했다(20회차) — 문장을 줄여 갈래만 남긴다
+        ? (laterOnly ? ' 거짓이 숨었다 — 깰 증거는 다음 장에서 열린다.' : ' 거짓이 숨었다 — 깰 증거는 지금 열린 곳에 있다(단서를 더 모으면 ⚖).')
         : '')
       : '…(지금은 물어볼 것이 없다. 단서를 모으거나 수사가 진행되면 질문이 생긴다.)');
   // 캐묻기·반응 라인을 닫으면 텍스트가 답변(cur.text)으로 되돌아가는데, DialogueBox 는 텍스트가
@@ -415,7 +425,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       setLine({ text: (r.text || '') + (r.confess ? '\n⚖️ …(숨긴 일을 인정합니다.)' : '') + (r.unlock ? '\n❗ 새로운 질문이 열렸다.' : '') + grantNote(r), kind: 'break' });
       log(`📁 ${ctitle}에 대해`, r.text, 'break');
     } else if (r.result === 'soft') {
-      setLine({ text: (r.text || '') + grantNote(r), kind: 'soft' });
+      // 반박 경로와 같게 수사 노트도 — 이 길로 들으면 실언 노트가 빠졌다(20회차)
+      setLine({ text: (r.text || '') + grantNote(r) + (r.note ? `${NL}${r.note}` : ''), kind: 'soft' });
       log(`📁 ${ctitle}에 대해`, r.text, 'soft');
     } else {
       // 'offtopic'(다른 진술에서는 쓰이는 단서)이면 그쪽 안내문을 그대로 쓴다 — 둘 다 인물이 아닌 독백이다
@@ -469,14 +480,14 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
       {/* 상반신 프레이밍 — 인물을 크게 그리고 하반신은 대사창 뒤로 잠기게(역전재판식) */}
       <div className={`aa-room-fig bust${speaking && speakerName ? ' talking' : ''}`}>
         {/* 「관여 자백」은 살인에 관여했다는 뜻으로 읽혔다(2026-10-08 시험) — 숨긴 일을 털어놓았다는 뜻이다 */}
-        {confessed && <div className="aa-court-tag">⚖️ 숨긴 일 자백</div>}
+        {confessed && <div className={`aa-court-tag${confessNow ? '' : ' quiet'}`}>{confessNow ? '⚖️ 숨긴 일 자백' : '⚖️ 털어놓음'}</div>}
         <StandingFigure sid={sid} person={suspect.name} image={suspect.image} height={620} fallbackSize={160} mood={mood} />
       </div>
 
       {cutin && <div className="aa-cutin"><span>{cutin}</span></div>}
 
       {/* 질문지 — 최상위(기본 질문 + 이야깃거리) 또는 화제 안. 한 화면에 한 겹만 보인다 */}
-      {menuOpen && askMore && <div className="aa-ask-more" aria-hidden="true">▼ 아래에 더 있어요</div>}
+      {menuOpen && askMore && <div className="aa-ask-more" aria-hidden="true">▼ 아래에 더 있어요{pendingT > 0 ? ` — 📁 이야깃거리 ${pendingT}` : ''}</div>}
       {menuOpen && !openTopic && (
         <div className="aa-ask" ref={askRef} onScroll={(e) => { askScroll.current[askKey] = e.currentTarget.scrollTop; syncMore(e.currentTarget); }}>
           <div className="aa-ask-h">🎙 무엇을 물어볼까{isTutorial ? ' · 📖 튜토리얼' : ''}</div>
@@ -538,7 +549,6 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
               이 이야기에서 더 들을 것은 없습니다.
             </p>
           )}
-          <button className="end" onClick={() => setOpenTopicId(null)}>↩ 다른 이야기를 꺼낸다</button>
         </div>
       )}
 
@@ -551,21 +561,23 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
             // 「✕ 취소」 — '반박'을 붙이면 이 상태에서만 폭이 22px 늘어 줄바꿈된다.
             //   피커가 화면을 덮고 있어 무엇을 취소하는지는 이미 보인다.
             : { label: picker ? '✕ 취소' : '📁 반박', tone: 'key', onClick: () => { setLine(null); setPeek(null); setPPerson(null); setPicker((p) => !p); } }),  // 열 때마다 「전체」로 — 앞의 인물 거르기가 남아 찾던 카드가 없었다(14회차)
+          // 「↩ 돌아가기」와 「⤴ 처음」이 자리를 바꿔 엉뚱한 질문을 다시 물었다(20회차 둘) —
+          //   왼쪽 칸 = 📁 반박 또는 ⤴ 처음, 오른쪽 묶음 = 늘 [↩][⏭][📓][🚪] 네 개 그대로
+          // 이야기 안에서 처음 질문지까지 두 번 눌러야 했다(18회차) — 한 번에
+          !cur && openTopic && line && { label: '⤴ 처음', tone: 'left', onClick: () => { setLine(null); setOpenTopicId(null); } },
           cur && { label: '↩ 돌아가기', onClick: leaveAnswer },
           // 단서 질문의 반응이 떠 있으면 「↩」는 그 이야기 목록으로 — 맨 위 질문지로 튕겨 같은 이야기를 다시 열어야 했다(16회차)
           !cur && openTopic && (line
             ? { label: '↩ 돌아가기', onClick: () => setLine(null) }
             : { label: '↩ 돌아가기', onClick: () => { setLine(null); setOpenTopicId(null); } }),
-          // 이야기 안에서 처음 질문지까지 두 번 눌러야 했다(18회차) — 한 번에
-          !cur && openTopic && line && { label: '⤴ 처음', onClick: () => { setLine(null); setOpenTopicId(null); } },
           // 분량 대부분이 이 화면인데 20ms/자를 끊을 방법이 화면 탭뿐이었다 — 엄지 자리에도 둔다.
-          //   (넘길 곳이 있을 때만 = 버튼이 타이핑 도중에 생겼다 사라지며 줄이 흔들리지 않게)
-          //   대답 화면에선 늘 둔다(꺼 둔 채) — 생겼다 사라지면 📓 가 그 자리로 미끄러져 수첩이 열렸다(19회차, 새벽이슬과 같게)
-          (cur || dlgAdvance) && { label: '⏭', disabled: !dlgAdvance, onClick: () => dlgRef.current?.tap() },
+          //   늘 둔다(꺼 둔 채) — 생겼다 사라지면 📓 가 그 자리로 미끄러져 수첩이 열렸다(19회차, 새벽이슬과 같게)
+          { label: '⏭', disabled: !dlgAdvance, onClick: () => dlgRef.current?.tap() },
           { label: '📓', onClick: () => { setPicker(false); onOpenRecord?.(); } },
           // 아이콘만 — 답변 화면에선 버튼이 5개라, 글자를 달면 375px 에서 두 줄로 넘어가
           //   대사창이 42px 두꺼워진다. 심문마다 한 번 쓰는 버튼이라 ⏭·📓 처럼 아이콘으로 둔다.
-          { label: '🚪', tone: tutorialSeen && !tutFinaleSeen && !cur ? 'key' : undefined, onClick: onExit },
+          // 강조는 테두리만 — 「key」는 왼쪽으로 붙어 🚪 가 왼쪽 끝으로 튀었다(20회차)
+          { label: '🚪', tone: tutorialSeen && !tutFinaleSeen && !cur ? 'lit' : undefined, onClick: onExit },
         ]} />
 
       {/* 첫 심문 코치마크 — 심문 화면에도 '지금 할 것'이 계속 붙어 있게 한다.
@@ -609,7 +621,7 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
             {typeof cur.press === 'string' && pressedIds.includes(cur.id) && <div className="aa-present-q press">캐물어 들은 말 — “{cur.press}”</div>}
             {presentable.length > 0 && <>
               {/* 인물 칩 — 줄을 넘겨 감싼다(가로로 밀게 두니 오른쪽 끝이 잘려 못 눌렀다, 2026-10-07) */}
-              <p style={{ color: 'var(--muted)', fontSize: '.74rem', margin: '0 2px 8px' }}>이 사람이 반응할 단서만 — 남의 물건·증언도 이 사람 말과 얽히면 올라와요. ❗ 아직 안 댄 것 · ✔ 대 본 것 · ✅ 이 단서로 이미 깬 것</p>
+              {!PRESENT_SEEN.help && <p style={{ color: 'var(--muted)', fontSize: '.74rem', margin: '0 2px 8px' }}>이 사람이 반응할 단서만 — 남의 물건·증언도 이 사람 말과 얽히면 올라와요. ❗ 아직 안 댄 것 · ✔ 대 본 것 · ✅ 이 단서로 이미 깬 것</p>}
               {presentPersons.length > 1 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingBottom: 8 }}>
                   <button style={chipStyle(!pPerson)} onClick={() => setPPerson(null)}>전체 {presentable.length}</button>
@@ -617,9 +629,11 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                     const n = presentable.filter(GROUP[k]).length;
                     return n > 0 && <button key={k} style={chipStyle(pPerson === k)} onClick={() => setPPerson(k)}>{lb} {n}</button>;
                   })}
-                  {presentPersons.map((p) => (
-                    <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>
-                  ))}
+                  {!(whoOpen || presentPersons.includes(pPerson))
+                    ? <button style={chipStyle(false)} onClick={() => setWhoOpen(true)}>👤 인물별 ▾</button>
+                    : presentPersons.map((p) => (
+                      <button key={p} style={chipStyle(pPerson === p)} onClick={() => setPPerson(p)}>{p}</button>
+                    ))}
                 </div>
               )}
             </>}

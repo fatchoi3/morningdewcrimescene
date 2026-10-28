@@ -167,7 +167,8 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   const [overview, setOverview] = useState(() => !!LAST_SCROLL._overview);
   useEffect(() => { LAST_SCROLL._overview = overview; }, [overview]);
   // 3장 목표 상자가 지도 위쪽 절반을 덮었다(18회차) — 상자를 누르면 목표 줄을 접는다
-  const [objFold, setObjFold] = useState(() => !!LAST_SCROLL._objFold);
+  // 2·3장엔 목표가 2층 사무실·관제실 이름표를 덮어 누를 수 없었다(20회차 둘) — 2장부터는 접힌 채로 시작
+  const [objFold, setObjFold] = useState(() => LAST_SCROLL._objFold ?? progressStage >= 2);
   useEffect(() => { LAST_SCROLL._objFold = objFold; }, [objFold]);
   const syncEdge = () => {
     const cam = camRef.current;
@@ -237,9 +238,9 @@ export function HallNav({ locations, stage, progressStage, collectedSet, state, 
   const pan = (dir) => camRef.current?.scrollBy({ left: dir * camRef.current.clientWidth * 0.6, behavior: 'smooth' });
   return (
     <div className="aa-fs">
-      {/* 3장 목표 상자가 2층 사무실 칸을 덮었다(19회차) — 3장에서 처음 지도를 손으로 만지면 한 번 접는다(자동 이동은 안 접는다) */}
+      {/* 목표 상자가 2층 사무실 칸을 덮었다(19·20회차) — 2장부터는 펴 둔 채 지도를 만지면 늘 접는다(자동 이동은 안 접는다) */}
       <div className={`hall-cam${overview ? ' overview' : ''}`} ref={camRef} onScroll={syncEdge}
-        onPointerDown={() => { if (progressStage >= 3 && !LAST_SCROLL._objAutoFold) { LAST_SCROLL._objAutoFold = true; setObjFold(true); } }}>
+        onPointerDown={() => { if (progressStage >= 2 && !objFold) setObjFold(true); }}>
       <div className="hall-fit">
           <CenterMap crimeOpen={crime ? crime.stage <= stage : undefined} />
 

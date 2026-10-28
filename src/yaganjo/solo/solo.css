@@ -936,3 +936,17 @@ body:has(.s-modal) .s-toast, body:has(.s-modal) .s-toast.low { top: 8px; bottom:
 .aa-dlg-act:disabled { opacity: .35; cursor: default; }
 /* 진행 막대는 span 이라 「.hall-hud-chip span 은 블록」 규칙에 눌려 flex 가 풀려 있었다 */
 @media not all and (orientation: landscape) and (max-height: 500px) { .hall-hud-chip .hall-steps { display: flex; gap: 3px; flex-wrap: nowrap; } }
+
+/* 20회차 — 반박 시트 머리 덩어리가 절반을 먹어 카드가 두세 줄만 보였다: 시트를 키우고 머리 글을 줄인다 */
+.aa-present { max-height: 80vh; }
+.aa-present-q { -webkit-line-clamp: 2; }
+.aa-present-q.press { -webkit-line-clamp: 1; }
+/* 대사창 단추 — 왼쪽 칸(⤴ 처음)과 테두리만 밝히는 강조(🚪). key 는 왼쪽으로 붙어 🚪 가 튀었다 */
+.aa-dlg-act.left { margin-right: auto; }
+.aa-dlg-act.lit { border-color: var(--gold); color: #ffe9a8; }
+/* 결말 — 접힌 인물 줄의 맛보기 */
+.s-reveal-teaser { display: block; margin: 4px 0 0 14px; color: var(--muted); font-size: .84rem; line-height: 1.6; }
+.s-reveal-teaser b { color: var(--gold); font-size: .78rem; white-space: nowrap; }
+details[open] > summary .s-reveal-teaser { display: none; }
+/* 자백 뒤 머리표는 작게 — 매 대답이 자백처럼 읽혔다 */
+.aa-court-tag.quiet { background: #000000a0; color: #e8c9c8; font-size: .68rem; font-weight: 700; padding: 2px 10px; }

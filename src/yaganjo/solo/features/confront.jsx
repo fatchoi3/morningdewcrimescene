@@ -111,7 +111,8 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   const body = line.speaker === '수사 노트' ? String(line.text || '').replace(/^\(수사 노트\)\s*/, '') : line.text;
   // 「거의 맞았다」 — 그 자리의 증거지만 그 사람을 직접 가리키지는 않는다. 방향은 맞다고 한 줄 붙인다
   //   엉뚱한 증거면 무엇이 필요한지 한 줄 — 「아무것도 증명하지 못합니다」만 두 번 듣고 기준을 몰랐다(2026-10-08 시험)
-  const note = beat.kind === 'near' ? '(수사 노트) 방향은 맞다 — 다만 이것만으로는 그를 가리키지 못한다.'
+  // 「방향은 맞다」만 듣고 무엇이 모자란지 몰랐다(20회차) — 이 한 장엔 그라는 표시가 없다고
+  const note = beat.kind === 'near' ? '(수사 노트) 방향은 맞다 — 다만 이 한 장엔 그 사람이 그라는 표시가 없다. 그를 직접 그 자리에 세우는 기록이 필요하다.'
     // 「그 시각의 말이 거짓」은 빈 일지(말과 안 맞는 빈 칸)를 부르는 말이었다(14회차) — 「기록이 그를 어디에 세우는가」로
     : beat.kind === 'wrong2' && left2 > 0 ? `(수사 노트) ${CONFRONT.holdNeed?.[round2?.first] || ''}`
     : beat.kind === 'wrong' && left > 0 ? `(수사 노트) 필요한 건 그 시각 그가 어디서 무엇을 했는지 보여 주는 기록이다 — 동쪽으로 들어간 기록, 또는 03:24에 그가 2층에서 한 일의 기록. 빈 칸이나 없는 기록은 그를 어디에도 세우지 못한다.${usedCodes.size > 0 ? ' 2차 심문에서 그를 무너뜨린 증거(✅)도 다시 내밀 수 있다.' : ''}`
@@ -156,12 +157,14 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
           {/* 머리띠·칩을 한 덩어리로 위에 — 밀면 칩이 사라졌다(19회차, 새벽이슬과 같게) */}
           <div className="aa-present-top">
           {/* 둘째 단계 — 그의 마지막 말을 놓친 채 골랐다(19회차). 무엇에서 물러섰는지 위에 고정 */}
-          {round2 && CONFRONT.hold?.[round2.first] && <div className="aa-present-q" style={{ marginBottom: 6 }}>{who?.name} — “{CONFRONT.hold[round2.first]}”</div>}
+          {round2 && CONFRONT.hold?.[round2.first] && <div className="aa-present-q open" style={{ marginBottom: 6 }}>{who?.name} — “{CONFRONT.hold[round2.first]}”</div>}
+          {/* 첫 단계도 그가 버티는 말을 위에 — 요구가 모호해 「방향은 맞다」에 기회 하나를 잃었다(20회차 둘) */}
+          {!round2 && <div className="aa-present-q open" style={{ marginBottom: 6 }}>{who?.name} — “{deny}”</div>}
           <div className="aa-present-h">
             {/* 정답 둘 중 하나(03:24 태블릿 조회)는 현장이 아니라 그 시각의 거짓말을 깨는 증거다 — 「그 자리」만 말하자 현장 증거만 찾았다(13회차) */}
             {round2
               ? <span>⚖️ <b>그가 물러선 자리를 무너뜨리는 기록</b> 한 장 — {CONFRONT.holdNeed?.[round2.first]} · 남은 기회 {left2}</span>
-              : <span>⚖️ <b>그 시각 그가 어디서 무엇을 했는지 보여 주는 기록</b> 한 장 · 남은 기회 {left}</span>}
+              : <span>⚖️ <b>위 말을 무너뜨리는 기록</b> 한 장 — 그 시각 그가 어디서 무엇을 했는지 보여 주는 것 · 남은 기회 {left}</span>}
           </div>
           {usedCodes.size > 0 && (
             <p className="cf-used-note">✅ — 2차 심문에서 이 사람의 거짓말을 무너뜨린 증거(1차·튜토리얼에서 깬 것은 아님). 대질에서 다시 내밀 수 있어요.</p>
@@ -186,9 +189,10 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
             ))}
           </div>
           <div className="cf-actions">
-            <button className="s-btn" disabled={!sel} onClick={() => sel && present(sel)}>
-              {sel ? `이 증거를 내민다 — ${titleOf(sel)}` : '증거를 고르세요'}
-            </button>
+            {/* 꺼진 단추가 누를 수 있는 단추처럼 보였다(20회차) — 고르기 전엔 안내 글만 */}
+            {sel
+              ? <button className="s-btn" onClick={() => present(sel)}>이 증거를 내민다 — {titleOf(sel)}</button>
+              : <p style={{ color: 'var(--muted)', fontSize: '.8rem', textAlign: 'center', margin: '4px 0' }}>카드를 고르면 여기에 「내민다」가 뜹니다</p>}
           </div>
         </div>
       )}

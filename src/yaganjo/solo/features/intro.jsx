@@ -169,6 +169,8 @@ export function EventVN2({ onDone, hasTumbler }) {
 
 // 전말·타임라인의 **굵게** 를 굵은 글씨로 — 그대로 두면 별표가 보였다(2026-10-01 시험)
 const bold = (s) => String(s || '').split(/\*\*(.+?)\*\*/g).map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
+// 접힌 인물 줄의 맛보기 — 본문 첫 문장(굵게 표시는 뗀다)
+const teaser = (s) => { const t = String(s || '').replace(/\*\*/g, ''); const m = t.match(/^[\s\S]*?[.!?…](?=\s|$)/); return (m ? m[0] : t.slice(0, 60)).trim(); };
 
 // ── 엔딩 — 정/오답 + 사건 전말 + 그날의 진실(타임라인) ────────────────────────
 export function EndingScreen({ result, onNewCase }) {
@@ -245,7 +247,9 @@ export function EndingScreen({ result, onNewCase }) {
             return (
               // 다섯 사람의 구멍과 시간표가 한없이 길었다(18회차) — 진범만 펼치고 나머지는 접는다
               <details key={id} open={id === CONFRONT.culprit} style={{ marginTop: 16 }}>
-                <summary style={{ cursor: 'pointer', listStyle: 'none' }}><h3 style={{ display: 'inline' }}>▸ {s?.name} <span className="role">— {REVEAL.people[id].role}</span></h3></summary>
+                <summary style={{ cursor: 'pointer', listStyle: 'none' }}><h3 style={{ display: 'inline' }}>▸ {s?.name} <span className="role">— {REVEAL.people[id].role}</span></h3>
+                  {/* 접힌 한 줄만으론 뒷이야기가 있는 줄 몰랐다(20회차 둘) — 첫 문장을 맛보기로 */}
+                  <span className="s-reveal-teaser">{teaser(REVEAL.people[id].text)} <b>▾ 펼쳐 읽기</b></span></summary>
                 <p style={{ lineHeight: 1.8 }}>{bold(REVEAL.people[id].text)}</p>
               </details>
             );

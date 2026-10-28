@@ -195,7 +195,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
             // 감식은 '의뢰 → 2차 심문 때 결과' 흐름 (2차 개방 후엔 즉시 결과)
             if (!lab || !lab.ready(code)) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
             if (lab.stage >= 3) { onOpen(code); return; }
-            if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
+            if (req) { onLockedToast('🔬 분석 중입니다 — 결과는 3장(2차 심문)이 열리면 도착합니다'); return; }
             lab.request(code); return;
           }
           onOpen(code);
@@ -271,7 +271,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
         <div className="aa-ask">
           <div className="aa-ask-h">🧑‍🔬 감식원 — 어떤 걸 분석해 드릴까요?</div>
           {/* 줄 글이 「— 결과 보기」로 길어져 두 줄로 넘치고 목록이 대사창 밑으로 밀렸다(18회차 셋) — 상태는 앞 기호로만 */}
-          <div style={{ fontSize: '.75rem', color: 'var(--muted)', padding: '0 2px 4px' }}>✅ 결과 보기 · 🔬 의뢰하기 · ⏳ 분석 중 · 🔒 채취물 필요</div>
+          <div style={{ fontSize: '.75rem', color: 'var(--muted)', padding: '0 2px 4px' }}>✅ 결과 보기 · 🔬 의뢰하기 · ⏳ 분석 중(3장에 도착) · 🔒 채취물 필요</div>
           {location.objects.map((code) => {
             const c = getClue(code); if (!c) return null;
             const have = collectedSet.has(code);
@@ -288,7 +288,7 @@ export function SceneView({ location, collectedSet, roomSuspect, lab, stage = 1,
                 if (have) { onOpen(code); return; }
                 if (!ready) { onLockedToast('🧪 채취물이 부족합니다 — 관련 실물 단서를 먼저 확보하세요'); return; }
                 if (lab.stage >= 3) { onOpen(code); return; }
-                if (req) { onLockedToast('🔬 분석 중입니다 — 2차 심문이 열리면 결과가 도착합니다'); return; }
+                if (req) { onLockedToast('🔬 분석 중입니다 — 결과는 3장(2차 심문)이 열리면 도착합니다'); return; }
                 lab.request(code);
               }}>{ready && !req && !have ? '❗ ' : ''}{label}</button>
             );
