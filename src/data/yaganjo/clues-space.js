@@ -61,7 +61,7 @@ export const cluesSpace = {
 
   'OVGS-58': { // W5
     title: '흡연장',
-    description: '정문 옆 쪽문 밖. 재떨이 하나와 모래통이 있다.',
+    description: '정문 옆 쪽문 밖. 담으로 둘러싸인 마당이라 쪽문 말고 드나들 데가 없다. 재떨이 하나와 모래통이 있다.',
     detail: '드럼통을 잘라 만든 재떨이 위에 불을 붙이지 않은 담배 한 개비가 가로로 놓여 있다.\n\n모래통에는 꽁초가 여럿 박혀 있고, 그중 하나만 비벼 끄지 않은 채 옆으로 누워 있다.\n\n여기에는 카메라가 없고, 정문 카메라 화각에서도 벗어나 있다.',
     image: '/images/yaganjo/w5-smoking-area.jpg',
     type: '보통',
