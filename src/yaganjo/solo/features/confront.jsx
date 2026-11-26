@@ -91,7 +91,8 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
   const LINES = {
     // 기회가 두 번뿐이라는 걸 첫 증거를 내고서야 알았다(10회차) — 첫 내밀기 전에 말한다
     // ✅ 도 낼 수 있다는 걸 첫 실패 뒤에야 알았다 — 정답이 그 카드였다(15회차). 첫 안내에 넣는다
-    deny: { speaker: who?.name, text: deny, hint: `▶ 증거를 내민다 — 기회는 ${MAX_TRIES}번${usedCodes.size > 0 ? ' · 2차 심문에서 깬 증거(✅)도 됩니다' : ''}`, next: () => setPicking(true) },
+    // 첫 단계 정답은 둘 다 기록(⭐ 자동문 셈 · 태블릿 조회 결과)인데 증언을 먼저 냈다 — 처음부터 「사람 말이 아니라 기록」
+    deny: { speaker: who?.name, text: deny, hint: `▶ 증언이 아니라 기록 한 장을 내민다 — 기회는 ${MAX_TRIES}번${usedCodes.size > 0 ? ' · 2차 심문에서 깬 증거(✅)도 됩니다' : ''}`, next: () => setPicking(true) },
     // 첫 정답 — 버팀(hold)이 있으면 그리로, 없으면 바로 말을 잃는다
     press: { speaker: '수사관', text: CONFRONT.press?.[beat.code], hint: '▶ 탭하여 다음', next: () => setBeat({ kind: hasHold(beat.code) ? 'hold' : 'accept', code: beat.code }) },
     hold: { speaker: who?.name, text: CONFRONT.hold?.[beat.code], hint: `▶ 한 번 더 몰아붙인다 — 기회 ${MAX_TRIES}번`, next: () => { setRound2({ first: beat.code, tries: 0 }); setPPerson(null); setPicking(true); } },
@@ -165,7 +166,7 @@ export function ConfrontView({ clues, broke = [], tries = 0, lastCode, onPresent
             {/* 정답 둘 중 하나(03:24 태블릿 조회)는 현장이 아니라 그 시각의 거짓말을 깨는 증거다 — 「그 자리」만 말하자 현장 증거만 찾았다(13회차) */}
             {round2
               ? <span>⚖️ <b>그가 물러선 자리를 무너뜨리는 기록</b> 한 장 — {CONFRONT.holdNeed?.[round2.first]} · 남은 기회 {left2}</span>
-              : <span>⚖️ <b>위 말을 무너뜨리는 기록</b> 한 장 — 그 시각 그가 어디서 무엇을 했는지 보여 주는 것 · 남은 기회 {left}</span>}
+              : <span>⚖️ <b>위 말을 무너뜨리는 기록</b> 한 장 — 사람 말(증언) 말고, 그 시각 그가 있던 곳과 한 일이 남은 것 · 남은 기회 {left}</span>}
           </div>
           {usedCodes.size > 0 && (
             <p className="cf-used-note">✅ — 2차 심문에서 이 사람의 거짓말을 무너뜨린 증거(1차·튜토리얼에서 깬 것은 아님). 대질에서 다시 내밀 수 있어요.</p>

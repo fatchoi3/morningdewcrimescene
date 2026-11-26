@@ -333,7 +333,6 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
     if (ok) { setRecovered(true); setMsg(''); setFails(0); }
     else { setFails((n) => n + 1); setMsg('비밀번호가 맞지 않습니다.'); }
   };
-  const [lookupFails, setLookupFails] = useState(0);
   const tryLookup = async () => {
     const res = await provider.verifyLookup(code, lookup);
     if (res.ok) {
@@ -341,7 +340,6 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
       // 조회에 성공하면 그 화면이 기록으로 들어온다 — 그래야 인물에게 들이밀 수 있다.
       if (code === 'ZVLJ-37' && !collectedSet.has(soloContent.lookupCode)) onCollect?.(soloContent.lookupCode);
     } else {
-      setLookupFails((n) => n + 1);
       setLookupRes(app?.lookup?.notFound || '조회되지 않습니다.');
     }
   };
@@ -433,16 +431,14 @@ function PhoneModal({ code, clue, collectedSet, onClose, onCollect, talkLog }) {
                       <div className="pbr-site">🌐 {app.lookup.site}</div>
                       <div className="pbr-desc">{app.lookup.desc}</div>
                       <div className="s-pw"><input value={lookup} onChange={(e) => setLookup(e.target.value)} placeholder={app.lookup.placeholder || app.lookup.label} /><button className="s-btn sm" onClick={tryLookup}>조회</button></div>
+                      {/* 다른 폰 잠금처럼 처음부터 한 줄 — 세 번 틀려야 보이던 힌트는 같은 말이라 이것으로 합쳤다 */}
+                      {code === 'ZVLJ-37' && <div className="kkr-hint">힌트 — 사번은 조장 사원증 · 네 자리는 쪽지대로, 폰과 같게</div>}
                       {lookupRes && (typeof lookupRes === 'string'
                         ? <p className="pbr-res">{lookupRes}</p>
                         : <div className="pbr-res">
                             {lookupRes.title && <div style={{ fontWeight: 800, marginBottom: 6 }}>{lookupRes.title}</div>}
                             {(lookupRes.lines || []).map((ln, i) => <div key={i} style={{ fontVariantNumeric: 'tabular-nums' }}>{ln}</div>)}
                           </div>)}
-                      {/* 막힌 사람만 돕는다 — 정본 §10: 조장 비번은 폰 잠금과 같은 번호다 */}
-                      {lookupFails >= 3 && typeof lookupRes === 'string' && code === 'ZVLJ-37' && (
-                        <div className="kkr-hint">힌트: 사번은 사원증에 있습니다. 네 자리는 조장 휴대폰 잠금과 같은 번호입니다.</div>
-                      )}
                     </div>
                   )}
                 </div>

@@ -135,8 +135,12 @@ export default function SoloApp() {
     // 심문·조회에서 새로 생긴 카드(증언·관리자 조회 결과·둘째 구간)도 🆕 에 — 토스트 한 줄만 뜨고 묶음에 안 들어가
     //   새 카드인 줄 모르고 옛 카드를 냈다(21회차 둘)
     const fresh = c && (c.type === '증언' || code === soloContent.lookupCode || code === soloContent.q2segCode);
-    addCollected(set, fresh ? { labNew: [...new Set([...(state.labNew || []), code])] } : {});
     const newSpecials = kept.filter((a) => a.code !== code && getClue(a.code)?.type === '특수');
+    // ⭐「동쪽에 한 사람이 남는다」는 M-2 다섯째 장을 줍는 순간 저절로 선다 — 왜 생겼는지 몰라 지나쳤다.
+    //   🆕 로 남기고 알림에 까닭 한 줄. 셈의 결론(나온 수가 하나 많다)은 카드에서 눌러야 펼치므로 알림에도 적지 않는다.
+    const eastCount = newSpecials.some((a) => a.code === 'VZBL-10');
+    const newMarks = [...(fresh ? [code] : []), ...(eastCount ? ['VZBL-10'] : [])];
+    addCollected(set, newMarks.length ? { labNew: [...new Set([...(state.labNew || []), ...newMarks])] } : {});
     const extra = newSpecials.length
       ? ` · ⭐ 추리 단서 해금: ${newSpecials.map((a) => getClue(a.code)?.title || a.code).join(' · ')}`
       : '';
@@ -147,7 +151,10 @@ export default function SoloApp() {
     showToast(fresh ? `🆕 새 카드 — ${c.title} (반박·대질에 낼 수 있음)${extra}` : `단서 확보: ${c?.title || code}${extra}${gextra}`);
     // 첫 추리 단서 안내 — 막는 팝업이 아니라 길게 머무는 알림 한 줄로. 팝업은 단서 창 위에 뜨거나(창을 닫은 뒤로
     //   미뤄도) 다음 조사·수첩 넘김을 막았다(6·8·9회차 다섯 사람).
-    if (newSpecials.length && !state.specialTutSeen) {
+    if (eastCount) {
+      if (!state.specialTutSeen) update({ specialTutSeen: true });
+      showToast('⭐ 추리 완성 「동쪽에 한 사람이 남는다」 — M-2 자동문 다섯 장으로 들어간 사람 · 나온 사람을 이어 셌다 · 📓 수첩의 🆕 카드', 7000);
+    } else if (newSpecials.length && !state.specialTutSeen) {
       const first = getClue(newSpecials[0].code);
       update({ specialTutSeen: true });
       showToast(`⭐ 추리 단서 「${first?.title || ''}」 — 관련 단서를 모으면 저절로 사건 기록에 등록됩니다. 📓 수첩과 질문지의 「📁 단서」에서 쓰세요`, 6500);
