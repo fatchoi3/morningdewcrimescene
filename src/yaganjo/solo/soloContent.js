@@ -34,7 +34,31 @@ const all = provider.getAllClues();
     ] };
   }
 }
+// ⭐「동쪽에 한 사람이 남는다」(VZBL-10) — 솔로에서는 M-2 자동문 다섯 장만으로 선다(21회차, 사용자 승인).
+//   보드판 재료는 다섯 장 + 충전소 거치대의 무전기(UTVE-09)인데, 무전기는 셈에 쓰이지 않아 스스로 떠올릴 길이 없었다 —
+//   셋 다 M-2 5/5 를 세고도 카드가 0명이었다. 데이터팩·rules.js 는 그대로 두고 여기서만 재료와 설명을 덮어쓴다(아래 computeAutoUnlocked).
+const SOLO_UNLOCK = { 'VZBL-10': ['JPAD-03', 'JSFS-29', 'MPXG-54', 'QNWA-14', 'EMSY-33'] };
+{
+  const i = all.findIndex((c) => c.code === 'VZBL-10');
+  if (i >= 0) all[i] = { ...all[i], unlockedBy: SOLO_UNLOCK['VZBL-10'], description: '자동문 통행 기록 다섯 장이 한자리에 모였다.' };
+}
 const byCode = Object.fromEntries(all.map((c) => [c.code, c]));
+// provider 의 해금 연쇄 + 솔로 덮어쓴 재료. codeSet 을 변형하고 새로 열린 것을 돌려준다(provider 와 같은 모양)
+function soloAutoUnlocked(codeSet) {
+  const out = [...(provider.computeAutoUnlocked(codeSet) || [])];
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [code, reqs] of Object.entries(SOLO_UNLOCK)) {
+      if (codeSet.has(code) || !byCode[code] || !reqs.every((r) => codeSet.has(r))) continue;
+      codeSet.add(code);
+      out.push({ ...byCode[code] });
+      out.push(...(provider.computeAutoUnlocked(codeSet) || [])); // 이 카드를 재료로 쓰는 연쇄가 있으면 이어서
+      changed = true;
+    }
+  }
+  return out;
+}
 
 // 증언 단서(대화로 확보) — 단서 조회에서 함께 해석되도록 code 형태로 정규화.
 const testimonyByCode = Object.fromEntries(
@@ -96,7 +120,9 @@ const DERIVED = {
     detail: '텀블러에서 나온 성분은 사인과 관계없습니다. …뒤에서 오는 건 멀쩡한 사람도 못 봤을 겁니다.',
   },
   // 데이터팩 GELH-98.segment2 그대로 — 「없어진 두 달」(AOBI-88)이 선 뒤에 들어온다
-  ...(q2seg ? { [Q2SEG_CODE]: { code: Q2SEG_CODE, type: '보통', person: byCode['GELH-98'].person, ...q2seg } } : {}),
+  //   제목만 솔로에서 덮어쓴다 — 「기록 대조 — 서장현 · 6/3~7/28」이 기존 「기록 대조 — 서장현」과 거의 같아 옛 카드를 냈다(21회차)
+  ...(q2seg ? { [Q2SEG_CODE]: { code: Q2SEG_CODE, type: '보통', person: byCode['GELH-98'].person, ...q2seg,
+    title: `없어진 두 달의 출퇴근 — ${byCode['GELH-98'].person}(6/3~7/28)` } } : {}),
 };
 
 // 2차 심문에 도착하는 기록 대조 7장(보드판 Q1~Q7). 1·2단계에서는 장소에 뿌리지 않는다.
@@ -301,13 +327,13 @@ export const soloContent = {
   // Q2 둘째 구간이 배달되는 조건 — 「없어진 두 달」(S7)
   q2segGate: 'AOBI-88',
   clueIcon,
-  computeAutoUnlocked: (codeSet) => provider.computeAutoUnlocked(codeSet),
+  computeAutoUnlocked: soloAutoUnlocked,
   gamsikCodes: new Set(all.filter((c) => c.type === '감식').map((c) => c.code)),
   // 맡기는 즉시 도착하는 감식 — 질식·흉기·랩·시신을 말하지 않는 셋(텀블러·약봉투·보온병)
   earlyLab: new Set(['IJEO-08', 'FBWD-37', 'PNOQ-92']),
   gamsikReady: (code, collected) => {
     const s = new Set(collected);
-    provider.computeAutoUnlocked(s);
+    soloAutoUnlocked(s);
     return s.has(code);
   },
   provider,

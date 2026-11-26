@@ -131,8 +131,11 @@ export default function SoloApp() {
     const stripped = autos.filter((a) => gamsikCodes.has(a.code) && a.code !== code && !collectedSet.has(a.code));
     stripped.forEach((a) => set.delete(a.code));
     const kept = autos.filter((a) => !stripped.includes(a));
-    addCollected(set);
     const c = getClue(code);
+    // 심문·조회에서 새로 생긴 카드(증언·관리자 조회 결과·둘째 구간)도 🆕 에 — 토스트 한 줄만 뜨고 묶음에 안 들어가
+    //   새 카드인 줄 모르고 옛 카드를 냈다(21회차 둘)
+    const fresh = c && (c.type === '증언' || code === soloContent.lookupCode || code === soloContent.q2segCode);
+    addCollected(set, fresh ? { labNew: [...new Set([...(state.labNew || []), code])] } : {});
     const newSpecials = kept.filter((a) => a.code !== code && getClue(a.code)?.type === '특수');
     const extra = newSpecials.length
       ? ` · ⭐ 추리 단서 해금: ${newSpecials.map((a) => getClue(a.code)?.title || a.code).join(' · ')}`
@@ -141,7 +144,7 @@ export default function SoloApp() {
     const gamsikNow = [...gamsikCodes].filter((g) => !collectedSet.has(g) && !gamsikReady(g, state.collected) && gamsikReady(g, [...set]));
     // 감식 의뢰실은 2단계에 열린다 — 1차에 이 안내를 띄우면 갈 수 없는 곳으로 보낸다
     const gextra = gamsikNow.length && stage >= 2 ? ' · 🔬 감식 의뢰 가능(감식 의뢰실에서 맡기세요)' : '';
-    showToast(`단서 확보: ${c?.title || code}${extra}${gextra}`);
+    showToast(fresh ? `🆕 새 카드 — ${c.title} (반박·대질에 낼 수 있음)${extra}` : `단서 확보: ${c?.title || code}${extra}${gextra}`);
     // 첫 추리 단서 안내 — 막는 팝업이 아니라 길게 머무는 알림 한 줄로. 팝업은 단서 창 위에 뜨거나(창을 닫은 뒤로
     //   미뤄도) 다음 조사·수첩 넘김을 막았다(6·8·9회차 다섯 사람).
     if (newSpecials.length && !state.specialTutSeen) {
@@ -244,7 +247,7 @@ export default function SoloApp() {
     // ⭐ 도 센다 — 알림 한 줄로는 ⭐ 가 대질의 핵심이라는 걸 몰랐다(10회차)
     ? `2차 심문 ${p2Count}/${suspectIds.length} · ⭐ ${specialGot}/${SPECIAL_CODES.length} · 감식 ${gamsikGot}/${gamsikCodes.size} · 폰 ${phoneGot}/${PHONE_CODES.length}`
     : `용의자 심문 ${interrogatedCount(state)}/${suspectIds.length}`
-      + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED} · 감식 의뢰 ${Math.min((state.labReq || []).length, 1)}/1 · 그 뒤 심문 ${state.talkAfterLab ? 1 : 0}/1` : '');
+      + (progressStage >= 2 ? ` · 현장 단서 ${Math.min(sceneClueCount(state), SCENE_NEEDED)}/${SCENE_NEEDED} · 감식 의뢰 ${Math.min((state.labReq || []).length, 1)}/1 · 그 뒤 아무나 한 명 심문 ${state.talkAfterLab ? 1 : 0}/1` : '');
   // 다음에 뭘 하면 단계가 열리는지 상시 안내(진행 막힘 방지)
   // 3장 — 아직 안 연 휴대폰·태블릿이 어느 방에 있는지 짚어 준다. 6회차 두 사람이 「폰 1/8」이라는 숫자만 보고
   //   조장 태블릿(2층 사무실)을 끝내 못 찾았다. 물건 이름은 말하지 않고 자리만 말한다.
@@ -264,9 +267,11 @@ export default function SoloApp() {
     ...(sceneClueCount(state) < SCENE_NEEDED ? [`C통로 현장 단서 ${sceneClueCount(state)}/${SCENE_NEEDED}`] : []),
     ...((state.labReq || []).length < 1 ? ['감식 의뢰 1건'] : []),
   ];
-  const ch2Unseen = progressStage === 2
-    ? locations.all.filter((l) => l.stage <= stage && !l.lockedBy && (l.objects || []).some((c) => !collectedSet.has(c) && getClue(c) && !getClue(c).phone && getClue(c).type !== '감식')).map(shortLoc).slice(0, 4)
-    : [];
+  // 잠긴 방은 열쇠를 쥐었으면 센다 — 마스터키를 주워 놓고 조장 사물함에 한 번도 안 갔다(21회차 둘)
+  const unseenLocs = locations.all.filter((l) => l.stage <= stage && (!l.lockedBy || collectedSet.has(l.lockedBy)) && (l.objects || []).some((c) => !collectedSet.has(c) && getClue(c) && !getClue(c).phone && getClue(c).type !== '감식')).map(shortLoc);
+  const ch2Unseen = progressStage === 2 ? unseenLocs.slice(0, 4) : [];
+  // 3장에도 덜 본 곳을 덤에 — 셋 다 충전소에 한 번도 안 들어가 ⭐ 두 장을 못 세웠다(21회차). 자리만, 셋까지
+  const ch3Unseen = progressStage >= 3 ? unseenLocs.slice(0, 3) : [];
   const ch2Objective = (ch2Left.length
       ? `남은 일: ${ch2Left.join(' · ')} → 그 뒤 한 사람을 심문하고 나오면 3장(2차 심문)`
       : '다음 심문을 끝내고 나오면 3장(2차 심문)이 열립니다 — 덜 본 곳은 3장에서도 볼 수 있어요')
@@ -275,17 +280,29 @@ export default function SoloApp() {
   //   「꼭 할 것」과 「덤」으로 나누고, 대질 둘째 단계의 관문인 2층 태블릿 조회를 맨 앞에 — 자리까지만 말한다
   const lookupDone = collectedSet.has('LOOKUP-ZVLJ-37');
   const bossPhoneDone = collectedSet.has('KZBP-76');
+  // 2차 심문 여섯을 다 꼭 할 것에 두니 한도에 걸렸다(21회차) — 진범과 증언을 쥔 두 사람만 꼭, 나머지는 덤(사용자 승인)
+  const P2_MUST = ['S1', 'S4', 'S6'].filter((id) => suspectIds.includes(id));
+  const p2Name = (id) => suspects.find((s) => s.id === id)?.name;
+  const p2MustGot = P2_MUST.filter((id) => (state.p2Met || []).includes(id)).length;
+  const p2RestLeft = suspectIds.filter((id) => !P2_MUST.includes(id) && !(state.p2Met || []).includes(id)).map(p2Name).filter(Boolean);
   const ch3Must = [
     `${lookupDone ? '✓' : '①'} 2층 사무실 조장 태블릿 — 관리자 조회(사번·네 자리)`,
     `${bossPhoneDone ? '✓' : '②'} 조장 폰(C통로 현장)`,
-    `${p2Count >= suspectIds.length ? '✓' : '③'} 2차 심문 ${p2Count}/${suspectIds.length}`,
-    `${m2Got >= M2_SEQ.length || collectedSet.has('VZBL-10') ? '✓' : '④'} 관제실 열람대 — M-2 자동문 ${m2Got}/${M2_SEQ.length}`,
+    `${p2MustGot >= P2_MUST.length ? '✓' : '③'} 2차 심문 — ${P2_MUST.map(p2Name).join('·')} ${p2MustGot}/${P2_MUST.length}`,
+    // ⭐ 는 이제 다섯 장으로 선다 — 카드와 같이 ✓(예전엔 5/5 인데 카드가 안 생겨도 ✓ 였다)
+    `${collectedSet.has('VZBL-10') ? '✓' : '④'} 관제실 열람대 — M-2 자동문 ${m2Got}/${M2_SEQ.length}`,
   ];
   const ch3Extra = phoneLeftAt.filter((x) => x !== '2층 사무실' && x !== 'C통로 현장');
   // 찢긴 두 달을 셋 다 결말에서야 알았다(18회차) — ⭐ 를 쥐고도 그 두 달의 주인을 안 짚었으면 덤에 한 줄
   const twoLeft = collectedSet.has('AOBI-88') && !(state.broke?.[CONFRONT.culprit] || []).some((e) => e.id === 'p2two');
+  const ch3Bonus = [
+    p2RestLeft.length ? `2차 심문 — ${p2RestLeft.join('·')}` : '',
+    ch3Unseen.length ? `아직 덜 본 곳 — ${ch3Unseen.join(' · ')}` : '',
+    ch3Extra.length ? `아직 안 연 폰 — ${ch3Extra.join(' · ')}` : '',
+    twoLeft ? '⭐ 없어진 두 달 — 그 두 달의 사정이 담긴 물건을 주인에게' : '',
+  ].filter(Boolean);
   const ch3Objective = `꼭 할 것: ${ch3Must.join(' · ')}`
-    + (ch3Extra.length || twoLeft ? ` / 덤: ${[ch3Extra.length ? `아직 안 연 폰 — ${ch3Extra.join(' · ')}` : '', twoLeft ? '⭐ 없어진 두 달 — 그 두 달의 사정이 담긴 물건을 주인에게' : ''].filter(Boolean).join(' · ')}` : '')
+    + (ch3Bonus.length ? ` / 덤: ${ch3Bonus.join(' · ')}` : '')
     + ' → 그 뒤 범인 지목';
   const objective = progressStage < 2 ? `용의자 ${suspectIds.length}명을 모두 심문하면 사건이 전환됩니다`
     : progressStage < 3 ? ch2Objective

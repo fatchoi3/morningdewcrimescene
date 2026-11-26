@@ -7,9 +7,9 @@
 //   (증언/진술 데이터·판정 로직은 ../interrogation.js 를 참조)
 // ─────────────────────────────────────────────────────────────────────────────
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { getClue, clueIcon, locations } from '../content.js';
+import { getClue, clueIcon, locations, soloContent } from '../content.js';
 import { TRUST_MAX, isUiTap } from '../lib/game.js';
-import { DATA, TESTIMONY, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
+import { DATA, TESTIMONY, GRANTS, visibleStatements, relatedCodes, introOf, clueTargetIn, clueTalkable, visibleTopics, topicClues, topicStatements, rootStatements } from '../interrogation.js';
 import { SceneBg, StandingFigure } from '../art.jsx';
 import { DialogueBox, TopHud } from '../vn.jsx';
 import { TutorialCoach } from './tutorial.jsx';
@@ -56,6 +56,59 @@ function wrongHint(sid, code) {
   if (Object.keys(DATA).some((id) => id !== sid && usedBy(id))) return '(수사 노트) 이 단서는 다른 사람의 말과 맞대 보는 편이 낫겠다.';
   return '(수사 노트) 이 단서는 누구의 거짓을 깨는 물증이라기보다 배경 사정에 가깝다.';
 }
+
+// 이 카드가 손에 들어올 수 있는 가장 이른 장(1~3) — 「거짓이 숨었다 — 깰 증거는 다음 장/지금」을 가른다.
+//   방에 놓인 카드는 그 방의 장(휴대폰은 3장), 방에 안 놓인 카드는 아래 표: ⭐ 는 재료 중 가장 늦은 장,
+//   기록 대조·조회 결과·둘째 구간·2차 부검은 3장, 감식은 맡기면 바로 오는 셋만 2장, 증언은 그 증언이 나오는 대답의 장.
+//   모르는 카드는 null — 부르는 쪽이 「지금」으로 친다(예전 동작).
+const STAGE_MEMO = new Map();
+const maxOf = (xs) => (xs.length && xs.every((x) => x != null) ? Math.max(...xs) : null);
+const minOf = (xs) => { const v = xs.filter((x) => x != null); return v.length ? Math.min(...v) : null; };
+const codesOf = (s) => (s?.contradict ? (s.contradict.codes || [s.contradict.code]).filter(Boolean) : []);
+const needsList = (s) => (Array.isArray(s?.needs) ? s.needs : s?.needs ? [s.needs] : []);
+function statementStage(sid, s, seen) {
+  const base = (s.phase || 1) >= 2 ? 3 : 1;
+  const sts = DATA[sid]?.statements || [];
+  let at = s.needs ? minOf(needsList(s).map((c) => cardStageIn(c, seen))) : base;
+  if (s.hidden) {
+    // 숨은 대답은 그것을 여는 대답(모순 unlock · 캐묻기 pressUnlock)이 열리는 장
+    at = minOf(sts.filter((o) => o.contradict?.unlock === s.id || o.after?.contradict?.unlock === s.id)
+      .map((o) => maxOf([statementStage(sid, o, seen), minOf(codesOf(o).map((c) => cardStageIn(c, seen)))]))
+      .concat(sts.filter((o) => o.pressUnlock === s.id || o.after?.pressUnlock === s.id).map((o) => statementStage(sid, o, seen))));
+  }
+  return at == null ? null : Math.max(base, at);
+}
+function cardStageIn(code, seen) {
+  if (STAGE_MEMO.has(code)) return STAGE_MEMO.get(code);
+  if (seen.has(code)) return null;
+  seen.add(code);
+  const c = getClue(code);
+  let st = null;
+  const loc = locations.all.find((l) => (l.objects || []).includes(code) || (l.inner || []).includes(code));
+  const mats = Array.isArray(c?.unlockedBy) && c.unlockedBy.length ? c.unlockedBy.map((m) => cardStageIn(m, seen)) : [];
+  if (!c) st = null;
+  else if ((soloContent.startingClues || []).includes(code)) st = 1;
+  else if ([soloContent.lookupCode, soloContent.q2segCode, soloContent.autopsyCode, soloContent.autopsyTumblerCode].includes(code) || soloContent.isRecordCode(code)) st = 3;
+  else if (c.type === '감식') st = maxOf([soloContent.earlyLab.has(code) ? 2 : 3, ...mats]);
+  else if (loc) st = maxOf([c.phone ? Math.max(loc.stage, 3) : loc.stage, ...mats]);
+  else if (c.type === '특수') st = mats.length ? maxOf(mats) : null;
+  else if (c.type === '증언') {
+    const from = [];
+    for (const sid of Object.keys(DATA)) {
+      for (const s of DATA[sid].statements) {
+        const sst = () => statementStage(sid, s, seen);
+        if (GRANTS[sid]?.[s.id] === code) from.push(sst());
+        if (s.contradict?.grants === code) from.push(maxOf([sst(), minOf(codesOf(s).map((x) => cardStageIn(x, seen)))]));
+        for (const [k, v] of Object.entries(s.soft || {})) if (v && typeof v === 'object' && v.grants === code) from.push(maxOf([sst(), cardStageIn(k, seen)]));
+      }
+    }
+    st = minOf(from);
+  }
+  seen.delete(code);
+  if (st != null) STAGE_MEMO.set(code, st);
+  return st;
+}
+export const cardStage = (code) => cardStageIn(code, new Set());
 
 // 반박 시트 인물 필터 칩 — solo.css 는 다른 담당자 소유라 여기서 인라인으로 그린다
 // 반박 시트 안내 문단은 처음 한 번만 — 머리 덩어리가 시트 절반을 먹어 카드가 두세 줄만 보였다(20회차)
@@ -189,6 +242,9 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   // 묶음 칩(⭐ 추리 · 🔬 감식 · 🆕 새로 온 것) — 백 장 넘는 목록에서 이름 비슷한 카드를 헷갈렸다(15회차 셋)
   const GROUP = { '__special': (c) => c.type === '특수', '__lab': (c) => c.type === '감식', '__new': (c) => (state.labNew || []).includes(c.code) };
   const presentList = presentable.filter((c) => !pPerson || (GROUP[pPerson] ? GROUP[pPerson](c) : c.person === pPerson));
+  // 「이 사람 것」을 맨 위 묶음으로 — 29~30장을 다 훑느라 지쳤다(21회차 셋). 묶음 안 순서는 주운 순서 그대로(19회차에 순서를 바꿨다 되돌렸다)
+  const presentOwn = presentList.filter((c) => c.person === suspect?.name);
+  const presentRest = presentList.filter((c) => c.person !== suspect?.name);
 
   // 화제 안에서 아직 안 물어본 게 남았나 — 다 들었으면 대사창이 그만 나가자고 말해준다
   const leftInTopic = openTopic
@@ -222,7 +278,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
   useLayoutEffect(() => { syncMore(askRef.current); });
   const breakableOf = (s) => !brokeOf(s.id) && (s.contradict?.codes || []).some((c) => collected.includes(c));
   // 못 깬 거짓의 깰 카드가 놓인 곳 — 전부 지금 단계보다 뒤에 열리면 「다음 장」. 놓인 곳을 모르는 카드(증언 등)가 하나라도 있으면 「지금」
-  const placeStage = (c) => locations.all.find((l) => (l.objects || []).includes(c))?.stage;
+  //   방에 안 놓인 카드(⭐·증언·기록 대조·조회 결과)를 「지금」으로 쳐서 1장에 「지금 열린 곳에 있다」고 거짓말했다(21회차 셋) — cardStage 가 단계를 센다
+  const placeStage = (c) => cardStage(c);
   const laterOnly = (() => {
     const codes = statements.filter((s) => s.contradict && !brokeOf(s.id)).flatMap((s) => s.contradict.codes || []);
     return codes.length > 0 && codes.every((c) => { const st = placeStage(c); return st != null && st > openStage; });
@@ -641,8 +698,13 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
           {presentable.length === 0
             ? <p style={{ color: 'var(--muted)', fontSize: '.85rem', padding: '4px 2px' }}>이 인물과 관련된 단서가 아직 없습니다. 현장·대화로 단서를 더 모으세요.</p>
             : <>
+                {[[presentOwn, `${suspect.name}의 것`], [presentRest, '그 밖']].map(([list, lb]) => list.length > 0 && (
+                <Fragment key={lb}>
+                {presentOwn.length > 0 && presentRest.length > 0 && (
+                  <p style={{ color: 'var(--muted)', fontSize: '.74rem', fontWeight: 700, margin: '6px 2px 6px' }}>{lb} {list.length}</p>
+                )}
                 <div className="s-grid">
-                  {presentList.map((c) => {
+                  {list.map((c) => {
                     const k = cKey(c);
                     return (
                       <button key={c.code} className="s-card" style={(k.done || k.asked) ? { opacity: .62 } : undefined}
@@ -662,6 +724,8 @@ export function CrossExamView({ suspect, location, state, collectedClues, phase 
                     );
                   })}
                 </div>
+                </Fragment>
+                ))}
               </>}
         </div>
       )}

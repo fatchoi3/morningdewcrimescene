@@ -77,7 +77,7 @@ function ClueGroups({ clues, onOpen, fresh = [] }) {
     <>
       {clues.length === 0 && <p style={{ color: 'var(--muted)' }}>아직 단서가 없습니다. 현장을 조사하세요.</p>}
       {fresh.length > 0 && (
-        <p className="s-fresh-note">🆕 새로 도착한 카드 {fresh.length}장(감식 결과·기록 대조) — 아래 🆕 카드를 열어 보세요</p>
+        <p className="s-fresh-note">🆕 새로 도착한 카드 {fresh.length}장 — 아래 🆕 카드를 열어 보세요</p>
       )}
       {clues.length > 12 && (
         // 누르면 앞 글자 전체 선택(새 검색어가 앞 글자 뒤에 붙었다) · 지우기 단추를 크게(기본 ✕ 는 작아 못 찾았다) — 13회차
