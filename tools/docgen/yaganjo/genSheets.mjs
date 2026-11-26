@@ -65,14 +65,14 @@ function splitBy(blocks, level) {
 }
 
 // 제목 한 줄 + 본문을 장으로 나눈다. 넘치는 장은 PAGE_FIT 가 줄여 담는다.
-function pagesOf(title, blocks, { stage = '', budget = 55, softAt = 3, foot = '', before = '' } = {}) {
+function pagesOf(title, blocks, { stage = '', budget = 55, softAt = 3, foot = '', before = '', cls = '' } = {}) {
   const chunks = paginate(blocks, { breakAt: 2, budget, softAt });
   if (!chunks.length) chunks.push([]);
   return chunks.map((chunk, i) => page(
     (i === 0 ? before : '')
     + (i === 0 && title ? `<h1>${inline(title)}</h1>` : '')
     + renderBlocks(chunk),
-    { stage: i === 0 ? stage : '', foot },
+    { stage: i === 0 ? stage : '', foot, cls },
   )).join('');
 }
 
@@ -136,41 +136,91 @@ export function genProgress(parsed, data = {}) {
 
   const numbered = /^\s*\d+\./;
   let body = '';
+  let coverPart = null;
   for (const p of parts) {
     if (IS_DETECTIVE.test(p.title)) continue;                    // 인물 시트로 간다
     if (IS_START.test(p.title)) body += startSheet(p);
     else if (IS_EVENT.test(p.title)) body += eventCards(p) + roundTrack();
     else if (IS_RECORD.test(p.title)) body += recordBoard(p);
-    else if (IS_BASIC.test(p.title)) body += basicSheet(p);
-    else if (!numbered.test(p.title)) body = coverPage(p, parts) + body;   // 문서 제목 → 표지
+    else if (IS_BASIC.test(p.title)) body += basicSheet(p, pagesIn(body).length + 1);
+    else if (!numbered.test(p.title)) coverPart = coverPart || p;   // 문서 제목 → 표지
     else body += pagesOf(p.title, p.blocks, { foot: '야간조 · 진행물' });
   }
+  if (coverPart) body = coverPage(coverPart, parts, body) + body;
 
   return {
     filename: '보드_야간조_진행물.html',
-    html: docShell('야간조 — 진행물', body, { css: RUN_CSS, script: PAGE_FIT }),
+    html: docShell('야간조 — 진행물', body, { css: RUN_CSS, script: PAGE_FIT + PAGE_NO }),
   };
 }
+
+// ── 쪽 범위 ───────────────────────────────────────────────────────────────────
+//   장마다 `sec-…` 표시를 달아 두고, 표지의 인쇄 표가 「몇 쪽부터 몇 쪽」을 적는다.
+//   생성할 때는 장 하나 = 한 면으로 어림해 적고(아래 rangeOf), 인쇄 직전에 PAGE_NO 가
+//   맞춘 뒤의 실제 높이로 다시 센다 — 한 장이 두 면으로 넘치면 뒤 번호가 밀리기 때문이다.
+//   `before` 는 이 본문 앞에 놓이는 장 수(표지 1장)다.
+const pagesIn = (body) => [...body.matchAll(/class="ypage ([^"]*)"/g)].map((m) => m[1].split(/\s+/));
+function rangeOf(body, sec, before = 1) {
+  let first = 0;
+  let last = 0;
+  pagesIn(body).forEach((c, i) => {
+    if (!c.includes(sec)) return;
+    if (!first) first = i + 1 + before;
+    last = i + 1 + before;
+  });
+  return { first, last };
+}
+const rangeText = (r) => (r.first ? (r.first === r.last ? `${r.first}쪽` : `${r.first}–${r.last}쪽`) : '');
+const rangeCell = (body, sec) => `<td class="pgr" data-range="${sec}">${rangeText(rangeOf(body, sec, 1))}</td>`;
+
+const PAGE_NO = `<script>
+(function () {
+  function count() {
+    var mm = 96 / 25.4, pages = document.querySelectorAll(".ypage"), no = 1, seen = {};
+    for (var i = 0; i < pages.length; i++) {
+      var el = pages[i], h = el.getBoundingClientRect().height / mm;
+      var n = Math.max(1, Math.ceil((h - 0.5) / (+(el.getAttribute("data-h") || 297))));
+      var m = (el.className.match(/sec-[A-Za-z]+/) || [])[0];
+      if (m) {
+        if (!seen[m]) seen[m] = [no, no + n - 1];
+        else seen[m][1] = no + n - 1;
+      }
+      no += n;
+    }
+    var cells = document.querySelectorAll("[data-range]");
+    for (var j = 0; j < cells.length; j++) {
+      var r = seen[cells[j].getAttribute("data-range")];
+      if (r) cells[j].textContent = r[0] === r[1] ? r[0] + "쪽" : r[0] + "–" + r[1] + "쪽";
+    }
+  }
+  window.addEventListener("beforeprint", count);
+})();
+</script>`;
 
 // 표지 — 이 묶음에 무엇이 몇 장 들어 있고, 어느 것을 어떻게 뽑는지.
 //   진행물은 성격이 다른 종이 넷이 한 파일에 들어 있어서, 이 한 장이 없으면
 //   「사람 수만큼 뽑을 것」과 「한 장만 뽑을 것」이 섞인 채로 나온다.
-function coverPage(part, parts) {
+function coverPage(part, parts, body) {
   const has = (re) => parts.some((p) => re.test(p.title));
+  const ev = parts.find((p) => IS_EVENT.test(p.title));
+  const evN = ev ? splitBy(ev.blocks, 2).parts.length : 0;
+  const evLabel = evN > 4 ? `이벤트 카드 4장 + 「④-추가」 쪽지` : '이벤트 카드 4장';
   return page(
     `<h1>${inline(part.title)}</h1>${renderBlocks(part.blocks)}
      <table class="mdtable">
-       <tr><th style="width:26%">이 안에 있는 것</th><th style="width:16%">인쇄</th><th>뽑는 수</th></tr>
-       ${has(IS_START) ? '<tr><td><b>시작 시트</b> — 사건 브리핑</td><td>A4 세로 · 단면</td>'
+       <tr><th style="width:24%">이 안에 있는 것</th><th style="width:11%">쪽</th><th style="width:17%">인쇄</th><th>부수</th></tr>
+       ${has(IS_START) ? `<tr><td><b>시작 시트</b> — 사건 브리핑</td>${rangeCell(body, 'sec-start')}<td>A4 세로 · 단면</td>`
          + '<td>한 벌. 한 사람이 한 절씩 소리 내어 돌려 읽습니다</td></tr>' : ''}
-       ${has(IS_EVENT) ? '<tr><td><b>이벤트 카드 4장</b></td><td>A4 세로 · 단면</td>'
-         + '<td>한 벌(넉 장). <b>오려서 글이 안으로 오게 접습니다</b> — 접으면 바깥이 백지라, 라운드 트랙 ①②③④ 자리에 그대로 얹어 두면 아무것도 안 보입니다</td></tr>' : ''}
-       ${has(IS_EVENT) ? '<tr><td><b>라운드 트랙</b></td><td>A4 세로 · 단면</td>'
+       ${has(IS_EVENT) ? `<tr><td><b>${evLabel}</b></td>${rangeCell(body, 'sec-event')}<td>A4 세로 · 단면</td>`
+         + '<td>한 벌. <b>오려서 글이 안으로 오게 접습니다</b> — 접으면 바깥이 백지라, 라운드 트랙 ①②③④ 자리에 그대로 얹어 두면 아무것도 안 보입니다</td></tr>' : ''}
+       ${has(IS_EVENT) ? `<tr><td><b>라운드 트랙</b></td>${rangeCell(body, 'sec-track')}<td>A4 세로 · 단면</td>`
          + '<td>한 벌. <b>인원에 맞는 줄 하나만</b> 씁니다 — 여섯이면 6칸, 일곱이면 5칸</td></tr>' : ''}
-       ${has(IS_RECORD) ? '<tr><td><b>사건 기록판</b></td><td>A4 세로 · 단면</td>'
+       ${has(IS_RECORD) ? `<tr><td><b>사건 기록판</b></td>${rangeCell(body, 'sec-record')}<td>A4 세로 · 단면</td>`
          + '<td>한 벌. 손으로 적는 종이라 <b>여유 있게 뽑아 두면 좋습니다</b></td></tr>' : ''}
-       ${has(IS_BASIC) ? '<tr><td><b>기본 규칙 시트</b></td><td>A4 <b>양면</b></td>'
-         + '<td><b>사람 수만큼.</b> 1라운드가 훨씬 빨라집니다</td></tr>' : ''}
+       ${has(IS_BASIC) ? `<tr><td><b>기본 규칙 시트</b></td>${rangeCell(body, 'sec-basic')}<td>A4 <b>양면</b> — 이 두 쪽만</td>`
+         + '<td><b>사람 수만큼</b>(여섯 또는 일곱). 1라운드가 훨씬 빨라집니다</td></tr>' : ''}
+       <tr><td><b>현장 판</b> — 센터 1층 평면도</td><td>따로 —<br>06 현장판</td><td><b>A3 가로</b> · 단면</td>
+         <td>한 장. 탁자 가운데에 폅니다(룰북 준비 1번)</td></tr>
      </table>
      <div class="warn"><b>먼저 뽑을 것이 둘 있습니다.</b> <b>진상 해설서</b>와 <b>인물 시트</b>는
        남의 비밀과 답이 들어 있어 <b>혼자 있을 때</b> 뽑아야 합니다. 그 둘을 먼저 치우고 이 묶음을 뽑으세요.<br>
@@ -182,8 +232,9 @@ function coverPage(part, parts) {
 // 1. 시작 시트 — 한 사람이 한 절씩 소리 내어 돌려 읽는다. 읽는 물건이라 그냥 흘려 담는다.
 function startSheet(part) {
   return pagesOf(part.title, part.blocks, {
-    stage: '준비 순서 5 · 전원이 돌려 읽습니다',
+    stage: '준비 순서 9 · 전원이 돌려 읽습니다',
     foot: '야간조 · 시작 시트',
+    cls: 'sec-start',
   });
 }
 
@@ -209,7 +260,7 @@ function eventCards(part) {
        접으면 <b>바깥 두 면이 백지</b>라 아무것도 안 보입니다.<br>
        접은 넉 장을 라운드 트랙의 ①②③④ 자리에 그대로 얹어 두고,
        그 라운드가 끝나면 <b>펼쳐서 위(앞면)부터 아래(뒷면)로</b> 읽습니다.</div>`,
-    { stage: '준비할 때 오려 둡니다', foot: '야간조 · 이벤트 카드' },
+    { stage: '준비할 때 오려 둡니다', foot: '야간조 · 이벤트 카드', cls: 'sec-event' },
   );
 
   for (const ev of parts) {
@@ -231,7 +282,7 @@ function eventCards(part) {
         <div class="evFold">— 여기를 접습니다 (글이 안으로) —</div>
         ${box('뒷면', sub(bk, '뒷면'), [...(bk?.blocks || []), ...other.flatMap((o) => [{ type: 'h', level: 4, text: o.title }, ...o.blocks])])}
       </div>`,
-      { cls: 'evPage', foot: '야간조 · 이벤트 카드' },
+      { cls: 'evPage sec-event', foot: '야간조 · 이벤트 카드' },
     );
   }
   return out;
@@ -266,7 +317,7 @@ function roundTrack() {
        그 차이가 이 두 줄의 전부입니다.</p>
      <p class="rtNote">아래 빈 칸은 그 라운드에 <b>무엇이 열렸는지</b> 적는 자리입니다 —
        더미가 열리거나 카드가 섞여 들어온 것을 한 줄로 적어 두면 나중에 되짚기 쉽습니다.</p>`,
-    { stage: '준비 순서 1 · 판 가운데에 폅니다', foot: '야간조 · 라운드 트랙' },
+    { stage: '준비 순서 10 · 판 가운데에 폅니다', foot: '야간조 · 라운드 트랙', cls: 'sec-track' },
   );
 }
 
@@ -282,30 +333,33 @@ function recordBoard(part) {
       stage: i === 0 ? '판 옆에 펴 두고 라운드마다 적습니다' : '',
       foot: '야간조 · 사건 기록판',
       before: i === 0 ? `${head}<h2>${inline(sec.title)}</h2>` : '',
+      cls: 'sec-record',
     });
   });
-  if (!parts.length) out = page(head, { foot: '야간조 · 사건 기록판' });
+  if (!parts.length) out = page(head, { foot: '야간조 · 사건 기록판', cls: 'sec-record' });
   return out;
 }
 
 // 5. 기본 규칙 시트 — A4 한 장 양면. 앞면과 뒷면이 각각 한 면에 들어가야 한다.
-function basicSheet(part) {
+function basicSheet(part, before = 0) {
   const { lead, parts } = splitBy(part.blocks, 2);
   let out = '';
   if (lead.length) {
+    const from = before + 2;                          // 이 안내 장 다음 장부터
+    const span = parts.length > 1 ? `${from}–${from + parts.length - 1}쪽` : `${from}쪽`;
     out += page(`<h1>${inline(part.title)}</h1>${renderBlocks(lead)}
-      <div class="warn"><b>다음 두 면 — 이 묶음의 마지막 두 면 — 이 이 시트입니다.</b>
+      <div class="warn"><b>다음 두 면(<span data-range="sec-basic">${span}</span>) — 이 묶음의 마지막 두 면 — 이 이 시트입니다.</b>
         그 두 면만 따로 <b>A4 한 장에 양면</b>으로 뽑으면 한 장이 됩니다(넘김 방향은 상관없습니다).
         단면으로 뽑아도 되고, 그러면 두 장이 될 뿐입니다.<br>
         <b>사람 수만큼</b> 뽑아 각자 앞에 두면 1라운드가 훨씬 빨라집니다 —
         규칙을 물으러 룰북을 뒤지는 일이 거의 없어집니다.</div>`,
-      { stage: '사람 수만큼 뽑습니다', foot: '야간조 · 기본 규칙 시트' });
+      { stage: '사람 수만큼 뽑습니다', foot: '야간조 · 기본 규칙 시트', cls: 'sec-basicIntro' });
   }
   for (const sec of parts) {
     // 한 면에 담아야 하는 종이다 — 쪼개지 않고 한 장에 넣고, 넘치면 PAGE_FIT 가 줄인다.
     out += page(
       `<h1>${inline(sec.title)}</h1>${renderBlocks(sec.blocks)}`,
-      { cls: 'basic', stage: '기본 규칙 시트', foot: '야간조 · 기본 규칙 시트' },
+      { cls: 'basic sec-basic', stage: '기본 규칙 시트', foot: '야간조 · 기본 규칙 시트' },
     );
   }
   return out;
@@ -330,20 +384,66 @@ const RUN_CSS = `
 .evBody h4 { font-size: 10pt; margin: 3mm 0 1mm; }
 .evFold { margin: 4mm 0; text-align: center; font-size: 7pt; color: #a09880;
           border-top: 0.4mm dashed #c9bb8a; padding-top: 1.5mm; }
-/* 기본 규칙 시트 — 한 면에 담는다. 글이 많아 본문을 한 단계 줄여 둔다. */
-.basic { font-size: 8.8pt; }
-.basic h1 { font-size: 15pt; }
-.basic h2 { font-size: 10.6pt; margin: 3.5mm 0 1.4mm; }
-.basic h3 { font-size: 9.4pt; margin: 2.8mm 0 1mm; }
-.basic p, .basic .mdlist { line-height: 1.5; }
-.basic .mdtable td, .basic .mdtable th { padding: 1mm 1.6mm; font-size: 8.2pt; }
+.pgr { white-space: nowrap; font-weight: 700; }
+/* 기본 규칙 시트 — 한 면에 담는다. 글이 많아 본문을 한 단계 줄이고 여백·문단 사이를 좁힌다.
+   PAGE_FIT 바닥(0.78)에서도 본문이 6.5pt 이상이다. 앞면이 넘쳐 셋째 면이 생기면 양면 한 장이 깨진다. */
+.ypage.basic { padding: 9mm 12mm 8mm; }
+.basic { font-size: 8.4pt; }
+.basic .stg { margin-bottom: 1.4mm; }
+.basic h1 { font-size: 14pt; margin-bottom: 1.6mm; }
+.basic h2 { font-size: 10.2pt; margin: 2.4mm 0 1mm; }
+.basic h3 { font-size: 9.2pt; margin: 2.2mm 0 0.8mm; }
+.basic p, .basic .mdlist { line-height: 1.4; }
+.basic p { margin-bottom: 1.2mm; }
+.basic .mdlist { margin-bottom: 1.2mm; }
+.basic .mdlist li { margin-bottom: 0.4mm; }
+.basic .mdq { margin: 1.2mm 0 1.4mm; padding: 1.2mm 2.4mm; font-size: 8.4pt; }
+.basic .mdhr { margin: 2mm 0; }
+.basic .mdtable { margin: 1.2mm 0 1.6mm; }
+.basic .mdtable td, .basic .mdtable th { padding: 0.7mm 1.4mm; font-size: 8.2pt; line-height: 1.35; }
 `;
 
-/* ── 두 문서를 한 번에 ───────────────────────────────────────────────────── */
+/* ── ③ 현장 판 ─────────────────────────────────────────────────────────── */
+//   룰북 준비 1번 「현장 판을 탁자 가운데에 편다」의 종이. A3 가로 한 장.
+//   그림은 docs/야간조-자료/평면도.html 의 SVG 에서 답 표시를 걷어 낸 것이다(buildY.mjs
+//   loadFloorPlan — 평면도.png 에는 지게차 경로가 그려져 있어 그대로 못 쓴다). 생성기는 fs 를
+//   쓰지 않으므로 data.floorPlanSvg 로 받는다. 없으면 빈 자리에 그 사실을 적는다 —
+//   빈 종이로 나가면 「원래 그림이 없나 보다」로 읽힌다.
+export function genFieldBoard(parsed, data = {}) {
+  const svg = data.floorPlanSvg || '';
+  const pic = svg
+    ? svg
+    : '<div class="fbNo">평면도 그림을 넣지 못했습니다 — <code>npm run docs:yaganjo</code> 로 만든 PDF 를 쓰세요.<br>'
+      + '그때까지는 시작 시트 절 ⑤ 를 보고 손으로 그립니다.</div>';
+  const body = `<div class="fb">
+    <div class="fbHd"><b>현장 판</b> — GH로지스 3센터 1층 평면도
+      <span>서쪽 2/3 · 동쪽 1/3 · 그 사이의 자동문 하나</span></div>
+    <div class="fbPic">${pic}</div>
+    <div class="fbFt">A3 가로 · 단면 · 한 장 — 탁자 가운데에 폅니다(룰북 준비 1번)</div></div>`;
+  return {
+    filename: '보드_야간조_현장판.html',
+    html: docShell('야간조 — 현장 판', body, { css: FIELD_CSS }),
+  };
+}
+
+const FIELD_CSS = `
+@page { size: A3 landscape; margin: 0; }
+.fb { width: 420mm; height: 296mm; padding: 10mm 12mm 8mm; display: flex; flex-direction: column;
+      overflow: hidden; }
+.fbHd { font-size: 16pt; margin-bottom: 4mm; }
+.fbHd span { font-size: 11pt; color: #6b6760; margin-left: 4mm; }
+.fbPic { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.fbPic svg { display: block; width: 100%; height: 100%; }
+.fbNo { font-size: 14pt; color: #6b6760; text-align: center; line-height: 1.7;
+        border: 0.6mm dashed #b9b0a0; padding: 20mm; }
+.fbFt { font-size: 8pt; color: #9a9384; text-align: right; margin-top: 3mm; }
+`;
+
+/* ── 문서 셋을 한 번에 ───────────────────────────────────────────────────── */
 //   index.mjs 가 `[...genSheets(parsed, data)]` 로 받아 쓰도록 배열을 돌려준다.
-//   낱개가 필요하면 genRulebook / genProgress 를 쓴다 — 둘 다 (parsed, data) => {filename, html}.
+//   낱개가 필요하면 genRulebook / genProgress / genFieldBoard 를 쓴다 — 셋 다 (parsed, data) => {filename, html}.
 export function genSheets(parsed, data = {}) {
-  return [genRulebook(parsed, data), genProgress(parsed, data)];
+  return [genRulebook(parsed, data), genProgress(parsed, data), genFieldBoard(parsed, data)];
 }
 
 export default genSheets;

@@ -69,6 +69,49 @@ function loadMdSources() {
   return md;
 }
 
+// ── 현장 판 그림 ─────────────────────────────────────────────────────────────
+//   평면도.png 는 설계용 그림이라 **답이 그려져 있다**(지게차가 간 길 03:15~03:17 · 「박스로 가려짐」).
+//   탁자 가운데 펴 두는 종이에 그대로 찍으면 첫 장부터 답이 보인다. 그래서 그 그림의 원본인
+//   평면도.html 의 SVG 를 가져와 답 표시만 걷어 낸다. 걷어 낼 자리를 못 찾거나 걷은 뒤에도
+//   답 문구가 남아 있으면 **그림을 넣지 않는다**(현장 판은 빈 자리로 나가고 결함으로 센다).
+const FLOOR_PLAN = 'docs/야간조-자료/평면도.html';
+const PLAN_SPOILERS = [
+  /\s*<!-- ★ 지게차 경로[\s\S]*?D구역엔 가지 않았다<\/text>/,
+  /\s*<text[^>]*>↑ 박스로 가려짐<\/text>/,
+  /\s*<text[^>]*>B가 충전소보다 자동문에 가깝다[^<]*<\/text>/,
+  /\s*<marker id="arp"[\s\S]*?<\/marker>/,             // 지게차 경로 화살촉(보라)
+  // C-3 위에 얹힌 갈색 박스와 C통로까지 닿는 시야 — 오정숙이 가린 것과 그 카메라가 C통로를 본다는 것은 판에서 밝혀질 일
+  /\s*<rect x="788" y="272"[^>]*fill="#8a6b4a"[^>]*\/>/,
+  /\s*<path d="M800 284 L770 190 L830 190 Z"[^>]*\/>/,
+];
+const PLAN_LEFTOVER = /지게차가 간 길|박스로 가려짐|가지 않았다|03:1\d|#7a3b9c|충전소보다 자동문에/;
+function loadFloorPlan(warnings) {
+  const path = join(ROOT, ...FLOOR_PLAN.split('/'));
+  if (!existsSync(path)) {
+    warnings.push(`현장 판 그림의 원본이 없다(${FLOOR_PLAN}) — 현장 판이 빈 자리로 나간다.`);
+    return '';
+  }
+  const html = readFileSync(path, 'utf8');
+  let svg = (html.match(/<svg[\s\S]*?<\/svg>/) || [])[0] || '';
+  for (const re of PLAN_SPOILERS) {
+    if (!re.test(svg)) {
+      warnings.push(`현장 판 — 평면도에서 걷어 낼 답 표시(${re.source.slice(0, 24)}…)를 못 찾았다. 그림을 넣지 않았다.`);
+      return '';
+    }
+    svg = svg.replace(re, '');
+  }
+  if (!svg || PLAN_LEFTOVER.test(svg)) {
+    warnings.push('현장 판 — 평면도에 답 표시가 남아 있어 그림을 넣지 않았다.');
+    return '';
+  }
+  // 글자 모양은 평면도.html 의 <style> 에 있다. SVG 안으로 옮겨 따로 떼어도 같게 그려지게 한다.
+  const rules = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || '';
+  const css = rules.split(/\r?\n/).filter((l) => /^\s*\.(rname|rtag|num|cnum|dim|zone)\s*\{/.test(l)).join('\n');
+  return svg
+    .replace(/width="100%" height="700"/, 'width="100%" height="100%" preserveAspectRatio="xMidYMid meet"')
+    .replace(/(<svg[^>]*>)/, `$1<style>${css}</style>`);
+}
+
 // ── 카드 수 세기 ─────────────────────────────────────────────────────────────
 // 세 곳을 따로 세어 나란히 놓는다. 한 숫자만 찍으면 「무엇을 센 것인가」가 사라진다.
 //   ① 사상표(cards.js)          — 종이와 화면을 잇는 손작업
@@ -105,6 +148,8 @@ async function main() {
     ...yaganjo,
     // 인물 시트의 「내 폰 번호」. 새벽이슬 loadData.mjs 와 같은 자리다.
     recover: yaganjo.secrets?.recover || {},
+    // 현장 판(A3)의 평면도. 생성기는 fs 를 쓰지 않으므로 여기서 읽어 SVG 문자열로 넘긴다.
+    floorPlanSvg: loadFloorPlan(warnings),
   };
 
   let docs;
@@ -198,14 +243,15 @@ async function makePdfs(docs, warnings) {
     for (const [i, d] of docs.entries()) {
       const stem = `${String(i + 1).padStart(2, '0')}_${d.filename}`;
       const src = join(HTML_DIR, stem);
-      await page.goto('file:///' + src.replace(/\\/g, '/'), { waitUntil: 'networkidle0', timeout: 30000 });
+      await page.goto('file:///' + src.replace(/\\/g, '/'), { waitUntil: 'networkidle0', timeout: 120000 });
       // 문서마다 인쇄 직전에 스스로 크기를 맞추는 스크립트가 있다. load 때는 아직 화면
       // 모드라 인쇄 배치와 다르다 — 인쇄에서만 넘치는 장을 못 잡는다. 사람이 브라우저에서
       // 인쇄하면 beforeprint 가 알아서 뜨지만 page.pdf() 는 그 사건을 안 띄운다.
       await page.emulateMediaType('print');
       await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
       const pdfName = stem.replace(/\.html$/, '.pdf');
-      await page.pdf({ path: join(PDF_DIR, pdfName), ...paperOf(d.html), printBackground: true, margin: MARGIN });
+      // 인물 시트는 면마다 맞춤을 다시 돌려 30초 기본값을 넘길 때가 있다.
+      await page.pdf({ path: join(PDF_DIR, pdfName), ...paperOf(d.html), printBackground: true, margin: MARGIN, timeout: 180000 });
       console.log('   PDF:', pdfName);
     }
   } catch (e) {

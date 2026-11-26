@@ -85,6 +85,7 @@ function norm(raw) {
   // 둘 다 준다. 쪼개 놓은 쪽을 먼저 쓴다 — 여기서 같은 정규식을 또 돌릴 이유가 없다.
   const rawLines = raw.linesMeta ?? raw.lines ?? raw.bottom ?? raw.notes ?? raw.hints ?? [];
   const lines = [];
+  let inside = '';                                    // 「봉투 속 — 접어 붙이는 아래쪽」(C2)
   const unquote = (s) => String(s || '').replace(/`/g, '').trim();
   let back = unquote(raw.back ?? raw.backText ?? raw['뒷면']);
   for (const l of (Array.isArray(rawLines) ? rawLines : [])) {
@@ -104,6 +105,8 @@ function norm(raw) {
     const bare = label.replace(MARK_RE, '').trim();
     if (DROP_LABEL.test(bare)) continue;              // 제작 주석은 종이에 안 간다
     if (bare === '뒷면') { if (!back) back = text.replace(/`/g, '').trim(); continue; }
+    // 앞면에 찍으면 개봉 조건이 차기 전에 답이 읽힌다 — 카드 밖의 접는 띠로 뺀다(stripRow).
+    if (/^봉투\s*속/.test(bare)) { inside = text; continue; }
     lines.push({ label, text });
   }
 
@@ -114,6 +117,7 @@ function norm(raw) {
     body,
     lines,
     back,
+    inside,
     place: String(raw.place ?? raw.placeTitle ?? raw.section ?? '').trim(),
   };
 }
@@ -194,16 +198,40 @@ function back(card) {
 /* ── 3×3 쪽 나누기 ──────────────────────────────────────────────────────── */
 //   뒷면은 행마다 좌우를 뒤집는다. 모자란 줄은 빈 칸으로 세 칸을 채운 뒤에 뒤집어야
 //   그 줄만 좌우가 어긋나지 않는다.
+//   머리말은 카드 면에 얹지 않는다 — 첫 면만 카드 판이 머리말만큼 내려가 양면의 앞뒤가
+//   어긋났다. 머리말은 따로 한 장(그 뒷면은 빈 면)으로 두어, 모든 면의 카드 판이 같은 y 에서 시작한다.
+//
+//   「봉투 속」(C2) — 카드 판 아래 남는 띠 자리에 그 카드와 같은 칸(열)으로 찍는다.
+//   뒷면 면에는 좌우가 뒤집힌 자리에 띠의 바깥 면을 찍는다 — 접으면 그 면이 바깥으로 온다.
+function stripRow(pageCards, side) {
+  const slots = [null, null, null];
+  pageCards.forEach((c, k) => {
+    if (!c?.inside) return;
+    const col = k % 3;
+    slots[side === 'front' ? col : 2 - col] = c;
+  });
+  if (!slots.some(Boolean)) return '';
+  return `<div class="strips">${slots.map((c) => {
+    if (!c) return '<div></div>';
+    if (side === 'front') {
+      return `<div class="strip"><div class="stripHd">${esc(c.no)} 봉투 속 — 오려서 ${esc(c.no)} 아래 변에 붙이고 앞면 쪽으로 접어 봉합니다</div>`
+        + `<div class="stripBd">${inline(c.inside)}</div></div>`;
+    }
+    return `<div class="strip stripOut"><b>${esc(c.no)} 봉투</b> — 개봉 조건이 차기 전에는 펴지 않습니다</div>`;
+  }).join('')}</div>`;
+}
+
 function sheets(cards, data, head) {
-  let out = '';
+  let out = `<div class="sheetPage headPage">${head}</div>`
+    + '<div class="sheetPage headPage"><p class="headBack">이 면은 비워 둡니다 — 안내 면의 뒷면입니다.</p></div>';
   for (let i = 0; i < cards.length; i += 9) {
     const pageCards = cards.slice(i, i + 9);
     const thin = pageCards.length <= 3
       ? '<p class="sparseNote">이 면에서는 카드가 <b>' + pageCards.length
         + '장</b>만 나옵니다. 빈 종이가 아닙니다 — <b>버리지 마세요.</b></p>'
       : '';
-    out += `<div class="sheetPage">${i === 0 ? head : ''}`
-      + `<div class="sheet">${pageCards.map((c) => front(c, data)).join('')}</div>${thin}</div>`;
+    out += '<div class="sheetPage">'
+      + `<div class="sheet">${pageCards.map((c) => front(c, data)).join('')}</div>${stripRow(pageCards, 'front')}${thin}</div>`;
     const mirrored = [];
     for (let r = 0; r < pageCards.length; r += 3) {
       const row = pageCards.slice(r, r + 3);
@@ -211,7 +239,7 @@ function sheets(cards, data, head) {
       mirrored.push(...row.reverse());
     }
     out += `<div class="sheetPage"><div class="sheet">${
-      mirrored.map((c) => (c ? back(c) : '<div class="cardGap"></div>')).join('')}</div>${thin}</div>`;
+      mirrored.map((c) => (c ? back(c) : '<div class="cardGap"></div>')).join('')}</div>${stripRow(pageCards, 'back')}${thin}</div>`;
   }
   return out;
 }
@@ -278,10 +306,20 @@ const CARD_CSS = `
 .sparseNote { margin: 12mm auto 0; width: 189mm; text-align: center; font-size: 12pt;
               font-weight: 700; color: #6b4a1e; background: #fdf6e6;
               border: 0.6mm dashed #c9a24a; border-radius: 2mm; padding: 6mm 4mm; }
-/* 덱 머리글 — 카드 세 줄(264mm)을 빼면 한 면에 30mm 쯤 남는다. 그 안에 들어가야 한다. */
-.deckHd { padding: 5mm 12mm 0; }
-.deckHd h1 { font-size: 13pt; margin: 0 0 1.2mm; }
-.deckHd p { font-size: 6.9pt; line-height: 1.45; margin: 0; color: #4a4436; }
+/* 덱 머리글 — 카드 면에 얹지 않고 따로 한 장이다(뒷면은 빈 면). 카드 판은 모든 면에서 같은 y 다. */
+.deckHd { padding: 18mm 18mm 0; }
+.deckHd h1 { font-size: 17pt; margin: 0 0 4mm; }
+.deckHd p { font-size: 10pt; line-height: 1.7; margin: 0 0 3mm; color: #4a4436; }
+.headBack { margin: 120mm 0 0; text-align: center; font-size: 9pt; color: #9a9384; }
+/* 봉투 속 띠 — 카드 판 아래 남는 자리(약 30mm). 카드와 같은 63mm 폭이다. */
+.strips { display: grid; grid-template-columns: repeat(3, 63mm); justify-content: center;
+          margin-top: 2mm; }
+.strip { height: 24mm; border: 0.35mm dashed #8a5a2b; padding: 1.6mm 2.4mm; overflow: hidden; }
+.stripHd { font-size: 6.5pt; font-weight: 800; color: #8a5a2b; line-height: 1.3; margin-bottom: 1mm; }
+.stripBd { font-size: 7pt; line-height: 1.4; }
+/* 바깥 면 — 아래 변을 축으로 앞면 쪽에 접으면 위아래가 뒤집혀 보인다. 미리 돌려 찍는다. */
+.stripOut { display: flex; align-items: center; justify-content: center; text-align: center;
+            font-size: 7.4pt; color: #8a5a2b; line-height: 1.4; transform: rotate(180deg); }
 `;
 
 /* 넘치는 카드만 골라 담기는 데까지 줄인다. QR 은 0.8배(16mm)까지도 잘 읽힌다. */
@@ -322,6 +360,7 @@ export function genCards(parsed, data = {}) {
     counts[d] = (counts[d] || 0) + 1;
   }
   const tally = Object.entries(counts).map(([d, k]) => `${d} ${k}`).join(' · ');
+  const strips = cards.filter((c) => c.inside).map((c) => c.no);
 
   const head = `<div class="deckHd">
     <h1>「야간조」 단서 카드 <span style="font-weight:400;font-size:9pt;color:#6b6760">— ${n}장</span></h1>
@@ -329,8 +368,12 @@ export function genCards(parsed, data = {}) {
       한 면에 3×3 = 9장이고, 뒷면 면은 행마다 좌우가 이미 뒤집혀 있습니다 — 그대로 뽑으면 맞습니다.<br>
       자르기 전에 <b>카드 한 장을 자로 재세요. 63 × 88mm</b> 가 아니면 배율이 잘못된 것입니다.
       한 장을 빛에 비춰 <b>뒷면 번호가 앞면 카드와 겹치는지</b>도 보세요.<br>
-      더미 — ${esc(tally)}. QR 은 ${nQr}장에 붙어 있습니다.
-      <b>V 더미 뒷면에는 번호도 이름도 없습니다</b> — 카메라와 시간대뿐입니다(룰북 §3-b).</p></div>`;
+      이 안내 면과 그 뒷면(빈 면)은 카드가 아닙니다 — 카드는 셋째 면부터입니다.</p>
+    <p>더미 — ${esc(tally)}. QR 은 ${nQr}장에 붙어 있습니다.
+      <b>V 더미 뒷면에는 번호도 이름도 없습니다</b> — 카메라와 시간대뿐입니다(룰북 §3-b).</p>
+    ${strips.length ? `<p><b>${strips.map(esc).join(' · ')} 봉투 속</b> — 그 카드가 있는 면의 아래 띠입니다.
+      오려서 카드 아래 변에 붙이고 <b>앞면 쪽으로 접어 테이프로 봉합니다.</b>
+      개봉 조건이 차기 전에는 아무도 못 읽습니다.</p>` : ''}</div>`;
 
   const body = sheets(cards, data, head);
   return {

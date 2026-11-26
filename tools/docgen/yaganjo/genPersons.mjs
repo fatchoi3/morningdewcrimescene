@@ -1,24 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // 야간조 인쇄물 ③ — 인물 시트 일곱
 //
-//   한 사람에 **A4 가로 한 장, 양면(짧은 쪽 넘김)**. 가운데를 세로로 반 접으면
-//   A5 책자 네 면이 된다 — 인물시트.md 머리가 그렇게 선언하고 있고, 그 형식을 지킨다.
+//   한 사람에 **A4 가로 두 장, 양면(짧은 쪽 넘김)**. 두 장을 포개어 가운데를 세로로
+//   함께 반 접으면 A5 8쪽 책자가 된다 — 바깥은 1면(겉표지)과 빈 뒤표지뿐이다.
+//   (한 장 네 면으로 접던 때는 4면이 뒤표지로 바깥에 나왔다. 글자도 6pt 밑으로 내려갔다.)
 //
-//   ── 네 면이 종이의 어디에 찍히는가 ────────────────────────────────────────
-//   짧은 쪽 넘김이면 뒷면은 **세로축**으로 뒤집힌다. 그래서 종이의 왼쪽 반(이하 A)의
-//   뒷면에는 «인쇄 데이터의 오른쪽 칸» 이 찍히고, 오른쪽 반(B)의 뒷면에는 «왼쪽 칸» 이 찍힌다.
+//   ── 면이 종이의 어디에 찍히는가 ──────────────────────────────────────────
+//   짧은 쪽 넘김이면 뒷면은 **세로축**으로 뒤집힌다. 그래서 종이의 왼쪽 반의
+//   뒷면에는 «인쇄 데이터의 오른쪽 칸» 이 찍히고, 오른쪽 반의 뒷면에는 «왼쪽 칸» 이 찍힌다.
+//   쪽 배치는 personSheets() 머리 주석에 있다. 이 자리가 이 파일에서 가장 틀리기 쉽다.
 //
-//     1면(겉)  →  1쪽 왼쪽    … 접었을 때 위로 오는 면
-//     4면      →  1쪽 오른쪽  … 접었을 때 바닥을 향하는 면
-//     3면      →  2쪽 왼쪽    … 펼쳤을 때 오른쪽
-//     2면      →  2쪽 오른쪽  … 펼쳤을 때 왼쪽
-//
-//   즉 **2쪽은 [3면 | 2면] 순서로 찍는다.** 이 줄이 이 파일에서 가장 틀리기 쉬운 자리다 —
-//   순서를 바꾸면 펼쳤을 때 대본이 먼저 나오고 비밀 시나리오가 뒤에 온다.
-//
-//   ── 접는 방향을 종이에 적는다 ─────────────────────────────────────────────
-//   네 면 중 **셋이 본인만 보는 면**이라, 접는 방향을 틀리면 비밀이 바깥을 본다.
-//   1면에 「이 면이 위로 오게」, 4면에 「이 면은 바닥을 향한다」를 찍어 방향을 못 박는다.
+//   ── 형사(재해조사관) ─────────────────────────────────────────────────────
+//   숨길 넷째 면이 없어 A4 한 장이다. 바깥은 겉면과 빈 면, 안쪽 두 면이 본인만 보는 면이다.
 //
 //   ── 파일명 ────────────────────────────────────────────────────────────────
 //   `보드_` 로 시작한다(build.mjs `marginFor()` → 여백 0). 그리고 build.mjs 의
@@ -102,14 +95,39 @@ const half = (inner, cls = '') => (cls.includes('cover')
   ? `<div class="half ${cls}">${inner}</div>`
   : `<div class="half ${cls}"><div class="hbody">${inner}</div></div>`);
 
-const sheet = (left, right) => `<div class="fold">
-  ${left}<div class="foldline"></div><div class="foldtag">세로로 접는 선</div>${right}</div>`;
+const sheet = (left, right, tag = '') => `<div class="fold">
+  ${left}<div class="foldline"></div><div class="foldtag">세로로 접는 선${tag ? ` · ${esc(tag)}` : ''}</div>${right}</div>`;
+
+// 안쪽 쪽들을 한 줄로 잇는다(책자 순서). 면은 늘 새 쪽에서 시작하고, 넘치는 꼬리는
+// 다음 쪽으로 흐른다 — 인쇄 직전에 FIT 가 나눈다. 같은 data-chain 의 쪽들이 한 줄이다.
+//   faces 의 i 번째 면은 처음에 i 번째 쪽에 들어 있다(스크립트가 없을 때도 읽히게).
+let chainSeq = 0;
+function chainHalves(faces, count, labelOf) {
+  const id = `c${++chainSeq}`;
+  return Array.from({ length: count }, (_, i) => {
+    const f = faces[i];
+    const face = f ? ` data-face="${esc(labelOf(f))}"` : '';
+    return `<div class="half inner" data-chain="${id}" data-seq="${i}"${face}><div class="hbody">${f ? faceBody(f) : ''}</div></div>`;
+  });
+}
 
 const blankHalf = (note) => half(`<div class="blankHalf">${esc(note || '')}</div>`, 'cover');
 
+// 안쪽 첫 면 맨 위의 「먼저 읽을 다섯 줄」 인용 상자는 굵은 테두리 상자로 그린다 —
+// 시트를 펴자마자 눈에 걸려야 하는 줄이라 다른 인용과 모양을 가른다.
+const FIRST5 = /^\s*\**\s*먼저 읽을 다섯 줄/;
 function faceBody(face) {
   if (!face) return '';
-  return `<h1>${inline(face.title)}</h1>${renderBlocks(face.blocks)}`;
+  // 면 끝의 가름줄(---)은 원고의 면 구분일 뿐이다 — 면은 어차피 새 쪽에서 시작한다.
+  const blocks = face.blocks.slice();
+  while (blocks.length && blocks[blocks.length - 1].type === 'hr') blocks.pop();
+  const [b0, ...rest] = blocks;
+  const p0 = b0 && b0.type === 'quote' && b0.blocks[0];
+  const head = `<h1>${inline(face.title)}</h1>`;
+  if (p0 && p0.type === 'p' && FIRST5.test(p0.text)) {
+    return `${head}<div class="first5">${renderBlocks(b0.blocks)}</div>${renderBlocks(rest)}`;
+  }
+  return `${head}${renderBlocks(blocks)}`;
 }
 
 // 1면 — 겉. 남이 봐도 되는 것만 있다. 시트를 받자마자 무엇을 하는지도 여기 적는다.
@@ -121,27 +139,29 @@ function coverFace(p) {
     </div>
     <div class="covBody">${renderBlocks((p.faces[0] || {}).blocks || [])}</div>
     <div class="covHow"><b>받자마자 이렇게 하세요</b>
-      <div>① <b>펴지 말고</b> 가운데 접힌 선을 확인합니다. <b>이 면이 위로</b> 오는 것이 맞습니다.</div>
-      <div>② 혼자 펼쳐 <b>안쪽 두 면</b>과 <b>바닥을 향하던 면</b>을 5분 동안 읽습니다.</div>
-      <div>③ 다시 접어 <b>이 면만 보이게</b> 자기 앞에 둡니다.</div>
+      <div>① <b>펴지 말고</b> 가운데 접힌 선을 확인합니다. <b>이 면이 위로</b>, 접힌 선이 왼쪽에 오는 것이 맞습니다.</div>
+      <div>② 혼자 책처럼 펼쳐 <b>안쪽 여섯 쪽</b>(2·3·4면)을 12~15분 동안 읽습니다.</div>
+      <div>③ 다시 접어 <b>이 면만 보이게</b> 자기 앞에 둡니다. 뒤표지는 빈 면입니다.</div>
       <div class="covWarn">1라운드 시작 전에 이 면의 내용만 자기 말로 소개합니다.
         안쪽은 끝까지 아무에게도 보여 주지 않습니다.</div></div>`, 'cover');
 }
 
-// 4면 — 접으면 바닥을 향하는 면. 본인만 보는 내용이라 그 사실을 면 자체에 적어 둔다.
-function backFace(p) {
-  const f = p.faces.find((x) => x.n === 4);
-  return half(`<div class="faceWarn">이 면은 접으면 <b>바닥을 향합니다</b> — 탁자에 그대로 두세요</div>`
-    + faceBody(f), 'inner');
-}
-
+// 한 사람 = A4 가로 **두 장을 포개어** 함께 반 접은 8쪽 책자다(바깥 장 X · 안쪽 장 Y).
+//   접었을 때 바깥에 나오는 것은 1면(겉표지)과 빈 뒤표지뿐이고, 비밀 세 면은 전부 안쪽이다.
+//   한 장으로 접던 때는 4면이 뒤표지로 바깥에 나와, 들고 읽으면 맞은편에서 보였다.
+//
+//   표지가 오른쪽 반이라 접힌 선이 표지의 왼쪽에 오고, 책처럼 왼쪽으로 넘긴다.
+//   짧은 쪽 넘김이면 오른쪽 반의 뒷면은 뒷장의 **왼쪽 칸**이다. 그래서 쪽 번호(책자 순서)는
+//     X 앞 [8 뒤표지 | 1 표지]   X 뒤 [2 | 7]
+//     Y 앞 [6 | 3]               Y 뒤 [4 | 5]
+//   안쪽 여섯 쪽(2~7)에 2면 · 3면 · 4면을 차례로 흘린다(chainHalves). 면마다 새 쪽에서 시작한다.
 function personSheets(p) {
-  const f2 = p.faces.find((x) => x.n === 2);
-  const f3 = p.faces.find((x) => x.n === 3);
-  // 1쪽(겉면) — 왼쪽이 1면, 오른쪽이 4면.
-  // 2쪽(안쪽) — 짧은 쪽 넘김이라 [3면 | 2면] 순서로 찍어야 펼쳤을 때 2면이 왼쪽에 온다.
-  return sheet(coverFace(p), backFace(p))
-    + sheet(half(faceBody(f3), 'inner'), half(faceBody(f2), 'inner'));
+  const faces = [2, 3, 4].map((n) => p.faces.find((x) => x.n === n)).filter(Boolean);
+  const [p2, p3, p4, p5, p6, p7] = chainHalves(faces, 6, (f) => `${f.n}면`);
+  return sheet(blankHalf('뒤표지 — 비워 둡니다'), coverFace(p), `${p.name} · 바깥 장`)
+    + sheet(p2, p7, `${p.name} · 바깥 장`)
+    + sheet(p6, p3, `${p.name} · 안쪽 장`)
+    + sheet(p4, p5, `${p.name} · 안쪽 장`);
 }
 
 function detectiveSheets(d) {
@@ -154,11 +174,12 @@ function detectiveSheets(d) {
       <div>여섯이 하면 <b>이 한 장을 빼세요.</b></div>
       <div>형사는 용의자가 아닙니다 — 아무도 형사를 지목하지 않습니다.</div>
       <div class="covWarn">안쪽 두 면은 본인만 봅니다.</div></div>`, 'cover');
-  const inner1 = half(faceBody(d.inner[0]), 'inner');
-  const inner2 = half(d.inner[1] ? faceBody(d.inner[1]) : '', 'inner');
+  const [inner1, inner2] = chainHalves(d.inner.slice(0, 2), 2,
+    (f) => String(f.title).split(/\s*·\s*/)[0]);
   // 형사는 숨길 시나리오가 없어 넷째 면이 없다 — 없는 면을 가리키지 않는다.
-  return sheet(cover, blankHalf('형사 시트는 이 한 장뿐입니다'))
-    + sheet(inner2, inner1);
+  // 인물 시트와 같은 방향으로 접는다 — 표지가 오른쪽 반, 뒷장 왼쪽 칸이 펼친 왼쪽이다.
+  return sheet(blankHalf('형사 시트는 이 한 장뿐입니다'), cover, `${d.name}`)
+    + sheet(inner1, inner2, `${d.name}`);
 }
 
 /* ── CSS ─────────────────────────────────────────────────────────────────── */
@@ -168,36 +189,42 @@ body { padding: 0; }
         flex-direction: row; position: relative; overflow: hidden; }
 .fold:last-of-type { page-break-after: auto; }
 .half { --fit: 1; flex: 0 0 148.5mm; width: 148.5mm; height: 210mm;
-        padding: 9mm 9mm 6mm; overflow: hidden; position: relative; display: block; }
+        padding: 9mm 9mm 6mm; overflow: hidden; position: relative; display: block;
+        contain: layout paint; }
 .half.cover { display: flex; flex-direction: column; }
 .hbody { }
 .foldline { position: absolute; top: 0; bottom: 0; left: 148.5mm;
             border-left: 0.3mm dashed #c3bcae; }
 .foldtag { position: absolute; left: 148.5mm; bottom: 4mm; transform: translateX(-50%);
-           font-size: 6pt; color: #b3aa99; background: #fff; padding: 0 1.5mm; }
+           font-size: 6.5pt; color: #b3aa99; background: #fff; padding: 0 1.5mm; white-space: nowrap; }
 .blankHalf { height: 100%; display: flex; align-items: flex-end; justify-content: center;
              padding-bottom: 12mm; font-size: 7.5pt; color: #b3aa99; }
-/* 안쪽 면 — 글이 많다. 크기는 인쇄 직전에 면마다 스스로 정한다(FIT). */
+/* 안쪽 면 — 글이 많다. 크기는 인쇄 직전에 면마다 스스로 정한다(FIT).
+   FIT 의 바닥(0.9)에서도 본문이 6.5pt 이상이 되게 기준 크기를 잡았다. 줄 간격은 배율과 따로 1.3 이상. */
 .half h1 { font-size: calc(11.5pt * var(--fit)); margin: 0 0 calc(2mm * var(--fit));
            padding-bottom: 1mm; border-bottom: 0.8px solid #14120f; line-height: 1.25; }
 .half h1 sub { font-size: 7pt; font-weight: 400; color: #6b6760; }
-.half h2 { font-size: calc(8.6pt * var(--fit)); margin: calc(2.2mm * var(--fit)) 0 calc(0.9mm * var(--fit));
+.half h2 { font-size: calc(9pt * var(--fit)); margin: calc(2.2mm * var(--fit)) 0 calc(0.9mm * var(--fit));
            padding-bottom: 0.6mm; border-bottom: 0.7px solid #cfc7b6; break-after: avoid; }
-.half h3, .half h4 { font-size: calc(7.6pt * var(--fit)); margin: calc(1.8mm * var(--fit)) 0 calc(0.7mm * var(--fit));
+.half h3, .half h4 { font-size: calc(8.2pt * var(--fit)); margin: calc(1.8mm * var(--fit)) 0 calc(0.7mm * var(--fit));
                      color: #4a4436; }
-.half p { font-size: calc(7pt * var(--fit)); line-height: calc(1.5 * var(--fit));
+.half p { font-size: calc(8pt * var(--fit)); line-height: 1.45;
           margin: 0 0 calc(1.2mm * var(--fit)); }
-.half .mdlist { font-size: calc(7pt * var(--fit)); line-height: calc(1.45 * var(--fit));
+.half .mdlist { font-size: calc(8pt * var(--fit)); line-height: 1.4;
                 margin: 0 0 calc(1.2mm * var(--fit)) 4mm; }
 .half .mdlist li { margin-bottom: calc(0.4mm * var(--fit)); }
-.half .mdq { font-size: calc(6.8pt * var(--fit)); padding: calc(1.2mm * var(--fit)) 2mm;
-             margin: calc(1.2mm * var(--fit)) 0; border-left-width: 0.6mm; }
-.half .mdtable { font-size: calc(6.8pt * var(--fit)); margin: calc(1.2mm * var(--fit)) 0; }
+.half .mdq { font-size: calc(7.8pt * var(--fit)); padding: calc(1.2mm * var(--fit)) 2mm;
+             margin: calc(1.2mm * var(--fit)) 0; border-left-width: 0.6mm; line-height: 1.4; }
+.half .mdq p { font-size: inherit; }
+.half .mdtable { font-size: calc(7.6pt * var(--fit)); margin: calc(1.2mm * var(--fit)) 0; }
 .half .mdtable th, .half .mdtable td { padding: calc(0.8mm * var(--fit)) 1.2mm;
-                                       font-size: calc(6.8pt * var(--fit)); line-height: 1.4; }
+                                       font-size: calc(7.6pt * var(--fit)); line-height: 1.35; }
 .half .mdhr { margin: calc(2mm * var(--fit)) 0; }
-.half .mdpre { font-size: calc(6.4pt * var(--fit)); padding: 1.2mm 1.6mm; }
-.half code { font-size: calc(6.3pt * var(--fit)); }
+.half .mdpre { font-size: calc(7.4pt * var(--fit)); padding: 1.2mm 1.6mm; line-height: 1.35; }
+.half code { font-size: calc(7.3pt * var(--fit)); }
+/* 두 쪽에 흘린 면의 뒤쪽 머리 */
+.half.cont::before { content: attr(data-cont); display: block; font-size: 7pt; font-weight: 800;
+                     color: #8a6d1f; margin-bottom: 1.6mm; }
 /* 겉면 */
 .cover { justify-content: space-between; }
 .covTop { text-align: center; padding-top: 6mm; }
@@ -219,7 +246,14 @@ body { padding: 0; }
 .half.two h1, .half.two .faceWarn { column-span: all; }
 .half.two h2, .half.two h3, .half.two h4 { break-after: avoid; }
 .half.two .mdtable, .half.two .mdq { break-inside: avoid; }
-/* 안쪽 면 머리의 경고 한 줄 */
+/* 안쪽 첫 면 맨 위 — 먼저 읽을 다섯 줄 */
+.first5 { border: 0.7mm solid #14120f; border-radius: 1.5mm; background: #fffdf4;
+          padding: calc(1.1mm * var(--fit)) 2.2mm calc(0.8mm * var(--fit));
+          margin: 0 0 calc(1.8mm * var(--fit)); break-inside: avoid; }
+.first5 > p:first-child { font-weight: 800; margin-bottom: calc(0.4mm * var(--fit)); }
+.first5 .mdlist { font-size: calc(7.4pt * var(--fit)); line-height: 1.3; margin-bottom: 0; }
+.first5 .mdlist li { margin-bottom: 0; }
+.half.two .first5 { column-span: all; }/* 안쪽 면 머리의 경고 한 줄 */
 .faceWarn { font-size: 6.4pt; color: #8a3b3b; background: #fdf0ee; border: 0.25mm solid #e0bdb8;
             border-radius: 1mm; padding: 0.8mm 1.6mm; margin-bottom: 2mm; text-align: center; }
 /* 인쇄 요령 한 장 — 이 문서를 처음 뽑는 사람이 제일 먼저 보는 면 */
@@ -238,39 +272,88 @@ body { padding: 0; }
              font-size: 9pt; color: #9a9384; }
 `;
 
-/* 면마다 글 양이 달라 한 크기로는 안 된다. 인쇄 직전에 면이 스스로 배율을 고른다 —
+/* 면마다 글 양이 달라 한 크기로는 안 된다. 인쇄 직전에 시트가 스스로 배율을 고른다 —
    넘치지 않는 가장 큰 --fit 을 이분법으로 찾는다. 겉면은 고정 크기라 건드리지 않는다.
 
-   한 단으로는 안 담기는 면이 있다(임기석 4면처럼 대응표가 긴 면). 글자만 줄이면
-   4pt 대까지 내려가 못 읽는다 — READ 아래로 내려가야 하는 면은 **두 단으로 돌린다.**
-   A5 면을 두 단으로 나누면 62mm 단이 되고, 같은 양이 0.8 대 배율로 들어간다.
-   그래도 안 담기는 면만 MIN 까지 내려간다. */
+   안쪽 쪽들은 한 줄(data-chain)이다. 면마다 새 쪽에서 시작해 넘치는 꼬리를 다음 쪽으로
+   흘린다(pour). 바닥(FLOOR = 0.9, 본문 6.5pt 남짓)까지는 한 단으로 담고, 한 단으로 안 되면
+   두 단으로 돌린다. 그래도 안 담기는 시트만 바닥 밑으로 내려가고 data-over 표시를 남긴다 —
+   조용히 작아지는 인쇄가 제일 위험하다. */
 const FIT = `<script>
 (function () {
-  var MIN = 0.58, MAX = 1.28, READ = 0.80;
+  var FLOOR = 0.9, MIN = 0.7, MAX = 1.15, cache = {};
   function over(el) { return el.scrollHeight - el.clientHeight > 1; }
-  function best(el) {
-    el.style.setProperty("--fit", "1");
-    var lo, hi;
-    if (over(el)) { lo = MIN; hi = 1; } else { lo = 1; hi = MAX; }
-    for (var n = 0; n < 11; n++) {
-      var mid = (lo + hi) / 2;
-      el.style.setProperty("--fit", mid.toFixed(3));
-      if (over(el)) hi = mid; else lo = mid;
+  function body(el) { return el.querySelector(".hbody"); }
+  function chainOf(id) {
+    if (cache[id]) return cache[id];
+    var hs = [].slice.call(document.querySelectorAll('.half.inner[data-chain="' + id + '"]'));
+    hs.sort(function (x, y) { return +x.getAttribute("data-seq") - +y.getAttribute("data-seq"); });
+    var items = [];
+    hs.forEach(function (h) {
+      if (!h.hasAttribute("data-face")) return;
+      var label = h.getAttribute("data-face"), kids = [].slice.call(body(h).children);
+      kids.forEach(function (n, k) { items.push({ node: n, label: label, start: k === 0 }); });
+    });
+    return (cache[id] = { halves: hs, items: items });
+  }
+  /* 쪽에 차례로 붓는다. 다 담으면 true. 못 담으면 남은 것을 마지막 쪽에 몰아 두고 false. */
+  function pour(c) {
+    var hs = c.halves, it = c.items, i = -1, ok = true;
+    hs.forEach(function (h) {
+      var B = body(h);
+      while (B.firstChild) B.removeChild(B.firstChild);
+      h.classList.remove("cont");
+    });
+    for (var k = 0; k < it.length; k++) {
+      var x = it[k];
+      if (!ok) { body(hs[hs.length - 1]).appendChild(x.node); continue; }
+      if (x.start || i < 0) {
+        i++;
+        if (i >= hs.length) { ok = false; i = hs.length - 1; body(hs[i]).appendChild(x.node); continue; }
+      }
+      var h = hs[i];
+      body(h).appendChild(x.node);
+      if (!over(h)) continue;
+      if (body(h).children.length > 1 && i + 1 < hs.length) {
+        i++;
+        h = hs[i];
+        h.setAttribute("data-cont", x.label + " — 이어서");
+        h.classList.add("cont");
+        body(h).appendChild(x.node);
+        if (!over(h)) continue;
+      }
+      ok = false;
     }
-    el.style.setProperty("--fit", lo.toFixed(3));
-    return lo;
+    return ok;
+  }
+  function fitChain(c) {
+    function ok(f, two) {
+      for (var i = 0; i < c.halves.length; i++) {
+        c.halves[i].style.setProperty("--fit", f.toFixed(3));
+        c.halves[i].classList.toggle("two", two);
+      }
+      return pour(c);
+    }
+    c.halves[0].removeAttribute("data-over");
+    var two = false, lo = FLOOR, hi = MAX;
+    if (!ok(FLOOR, false)) {
+      two = true;
+      if (!ok(FLOOR, true)) { lo = MIN; hi = FLOOR; c.halves[0].setAttribute("data-over", "1"); }
+    }
+    if (ok(hi, two)) lo = hi;
+    else for (var n = 0; n < 9; n++) {
+      var mid = (lo + hi) / 2;
+      if (ok(mid, two)) lo = mid; else hi = mid;
+    }
+    ok(lo, two);
   }
   function fit() {
-    var faces = document.querySelectorAll(".half.inner");
+    var seen = {}, faces = document.querySelectorAll(".half.inner[data-chain]");
     for (var i = 0; i < faces.length; i++) {
-      var el = faces[i];
-      el.classList.remove("two");
-      var one = best(el);
-      if (one >= READ) continue;
-      el.classList.add("two");
-      /* 두 단이 더 크게 담기면 두 단으로 둔다. 아니면 한 단으로 되돌린다. */
-      if (best(el) <= one) { el.classList.remove("two"); best(el); }
+      var id = faces[i].getAttribute("data-chain");
+      if (seen[id]) continue;
+      seen[id] = 1;
+      fitChain(chainOf(id));
     }
   }
   if (document.readyState === "complete") fit();
@@ -288,19 +371,20 @@ export function genPersons(parsed, data = {}) {
   const n = list.length + (cop ? 1 : 0);
   const howto = `<div class="howto">
     <h1>인물 시트 — 뽑는 법</h1>
-    <p><b>혼자 있을 때 뽑으세요.</b> ${n * 4}면 가운데 ${n * 3}면이 남의 비밀입니다.
+    <p><b>혼자 있을 때 뽑으세요.</b> 겉표지 말고는 전부 남의 비밀입니다.
       나온 그대로 집어 <b>읽지 말고</b> 접어서 겉면만 보이게 엎어 두세요.</p>
     <table>
       <tr><th style="width:22%">종이</th><td><b>A4 가로</b></td></tr>
       <tr><th>인쇄</th><td><b>양면 · 「짧은 쪽 넘김」</b> · 배율 100%(「페이지에 맞춤」을 끄세요)</td></tr>
-      <tr><th>장수</th><td><b>${n}장</b>(이 안내 면을 빼고). 한 사람에 한 장입니다
-        ${cop ? '— 마지막 한 장이 <b>형사(재해조사관)</b> 시트이고, <b>여섯이 하면 그 장을 뺍니다</b>' : ''}</td></tr>
-      <tr><th>접기</th><td>가운데 점선을 <b>세로로</b> 접습니다.
-        <b>「1면 · 공개 프로필」이 위로 오게</b> 접으세요 — 그러면 나머지 세 면이 안쪽과 바닥으로 갑니다</td></tr>
+      <tr><th>장수</th><td><b>${list.length * 2 + (cop ? 1 : 0)}장</b>(이 안내 면을 빼고). <b>한 사람에 두 장</b>입니다
+        ${cop ? '— 마지막 한 장이 <b>형사(재해조사관)</b> 시트이고(한 장뿐), <b>여섯이 하면 그 장을 뺍니다</b>' : ''}</td></tr>
+      <tr><th>접기</th><td>한 사람의 두 장 가운데 <b>이름이 크게 찍힌 장(바깥 장)</b>을 밖으로, 다른 장(안쪽 장)을 그 안에
+        포개어 가운데 점선을 <b>세로로 함께</b> 접습니다. 점선 아래에 이름과 「바깥 장 · 안쪽 장」이 적혀 있습니다.
+        <b>「1면 · 공개 프로필」이 위로</b>, 접힌 선이 왼쪽에 오게 두면 바깥에는 겉표지와 빈 뒤표지만 보입니다</td></tr>
     </table>
-    <div class="warn"><b>접기 전에 한 번만 확인하세요.</b> 펼쳤을 때 <b>왼쪽이 2면(비밀 시나리오)</b>,
-      <b>오른쪽이 3면(대본)</b>이면 넘김 방향이 맞습니다.
-      2면과 3면이 서로 바뀌었거나 글자가 거꾸로 서 있으면 <b>「긴 쪽 넘김」으로 뽑힌 것</b>입니다 —
+    <div class="warn"><b>접기 전에 한 번만 확인하세요.</b> 책처럼 펼쳤을 때 <b>2면 · 3면 · 4면</b>이 차례로 나오고
+      글자가 바로 서 있으면 넘김 방향이 맞습니다.
+      면 순서가 뒤섞였거나 글자가 거꾸로 서 있으면 <b>「긴 쪽 넘김」으로 뽑힌 것</b>입니다 —
       인쇄 설정을 <b>짧은 쪽 넘김</b>으로 바꿔 다시 뽑으세요.</div>
     <p class="note">시트에는 그 사람이 아는 것만 적혀 있습니다. 남이 무엇을 했는지는 어느 시트에도 없습니다.</p>
   </div>`;
